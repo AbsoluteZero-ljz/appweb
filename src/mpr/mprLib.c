@@ -7597,7 +7597,7 @@ PUBLIC char *mprGetRandomString(ssize size)
     bytes = mprAlloc(size / 2);
     ascii = mprAlloc(size + 1);
 
-    if (mprGetRandomBytes(bytes, sizeof(bytes), 0) < 0) {
+    if (mprGetRandomBytes(bytes, size / 2, 0) < 0) {
         mprLog("critical mpr", 0, "Failed to get random bytes");
         now = mprGetTime();
         pid = (int) getpid();
