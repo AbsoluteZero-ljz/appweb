@@ -3,7 +3,7 @@
 #
 
 NAME                  = appweb
-VERSION               = 7.0.1
+VERSION               = 7.0.2
 
 OS                    = windows
 PA                    = $(PROCESSOR_ARCHITECTURE)
@@ -797,13 +797,13 @@ DEPS_52 = $(DEPS_52) build\$(CONFIG)\inc\appweb.h
 DEPS_52 = $(DEPS_52) build\$(CONFIG)\inc\customize.h
 DEPS_52 = $(DEPS_52) build\$(CONFIG)\obj\config.obj
 DEPS_52 = $(DEPS_52) build\$(CONFIG)\obj\convenience.obj
-DEPS_52 = $(DEPS_52) build\$(CONFIG)\obj\rom.obj
 DEPS_52 = $(DEPS_52) build\$(CONFIG)\obj\cgiHandler.obj
 DEPS_52 = $(DEPS_52) build\$(CONFIG)\obj\espHandler.obj
+DEPS_52 = $(DEPS_52) build\$(CONFIG)\obj\rom.obj
 
 build\$(CONFIG)\bin\libappweb.lib: $(DEPS_52)
 	@echo ..... [Link] build\$(CONFIG)\bin\libappweb.lib
-	"lib.exe" -nologo -out:$(BUILD)\bin\libappweb.lib "$(BUILD)\obj\config.obj" "$(BUILD)\obj\convenience.obj" "$(BUILD)\obj\rom.obj" "$(BUILD)\obj\cgiHandler.obj" "$(BUILD)\obj\espHandler.obj" $(LOG)
+	"lib.exe" -nologo -out:$(BUILD)\bin\libappweb.lib "$(BUILD)\obj\config.obj" "$(BUILD)\obj\convenience.obj" "$(BUILD)\obj\cgiHandler.obj" "$(BUILD)\obj\espHandler.obj" "$(BUILD)\obj\rom.obj" $(LOG)
 
 #
 #   appweb
