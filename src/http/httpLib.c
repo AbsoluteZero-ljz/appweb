@@ -17484,11 +17484,9 @@ PUBLIC HttpRoute *httpCreateRoute(HttpHost *host)
     route->defaultLanguage = sclone("en");
     route->home = route->documents = mprGetCurrentPath();
     route->flags = HTTP_ROUTE_STEALTH;
-#if FUTURE
     /* Enable in version 6 */
     route->flags |= HTTP_ROUTE_ENV_ESCAPE;
     route->envPrefix = sclone("CGI_");
-#endif
     route->host = host;
     route->http = HTTP;
     route->lifespan = ME_MAX_CACHE_DURATION;
