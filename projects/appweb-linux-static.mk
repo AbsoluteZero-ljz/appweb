@@ -3,7 +3,7 @@
 #
 
 NAME                  := appweb
-VERSION               := 7.0.1
+VERSION               := 7.0.2
 PROFILE               ?= static
 ARCH                  ?= $(shell uname -m | sed 's/i.86/x86/;s/x86_64/x64/;s/arm.*/arm/;s/mips.*/mips/')
 CC_ARCH               ?= $(shell echo $(ARCH) | sed 's/x86/i686/;s/x64/x86_64/')
@@ -672,13 +672,13 @@ DEPS_48 += $(BUILD)/inc/appweb.h
 DEPS_48 += $(BUILD)/inc/customize.h
 DEPS_48 += $(BUILD)/obj/config.o
 DEPS_48 += $(BUILD)/obj/convenience.o
-DEPS_48 += $(BUILD)/obj/rom.o
 DEPS_48 += $(BUILD)/obj/cgiHandler.o
 DEPS_48 += $(BUILD)/obj/espHandler.o
+DEPS_48 += $(BUILD)/obj/rom.o
 
 $(BUILD)/bin/libappweb.a: $(DEPS_48)
 	@echo '      [Link] $(BUILD)/bin/libappweb.a'
-	ar -cr $(BUILD)/bin/libappweb.a "$(BUILD)/obj/config.o" "$(BUILD)/obj/convenience.o" "$(BUILD)/obj/rom.o" "$(BUILD)/obj/cgiHandler.o" "$(BUILD)/obj/espHandler.o"
+	ar -cr $(BUILD)/bin/libappweb.a "$(BUILD)/obj/config.o" "$(BUILD)/obj/convenience.o" "$(BUILD)/obj/cgiHandler.o" "$(BUILD)/obj/espHandler.o" "$(BUILD)/obj/rom.o"
 
 #
 #   appweb

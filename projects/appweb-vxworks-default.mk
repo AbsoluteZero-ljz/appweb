@@ -3,7 +3,7 @@
 #
 
 NAME                  := appweb
-VERSION               := 7.0.1
+VERSION               := 7.0.2
 PROFILE               ?= default
 ARCH                  ?= $(shell echo $(WIND_HOST_TYPE) | sed 's/-.*$(ME_ROOT_PREFIX)/')
 CPU                   ?= $(subst X86,PENTIUM,$(shell echo $(ARCH) | tr a-z A-Z))
@@ -681,13 +681,13 @@ DEPS_48 += $(BUILD)/inc/appweb.h
 DEPS_48 += $(BUILD)/inc/customize.h
 DEPS_48 += $(BUILD)/obj/config.o
 DEPS_48 += $(BUILD)/obj/convenience.o
-DEPS_48 += $(BUILD)/obj/rom.o
 DEPS_48 += $(BUILD)/obj/cgiHandler.o
 DEPS_48 += $(BUILD)/obj/espHandler.o
+DEPS_48 += $(BUILD)/obj/rom.o
 
 $(BUILD)/bin/libappweb.out: $(DEPS_48)
 	@echo '      [Link] $(BUILD)/bin/libappweb.out'
-	$(CC) -r -o $(BUILD)/bin/libappweb.out $(LDFLAGS) $(LIBPATHS) "$(BUILD)/obj/config.o" "$(BUILD)/obj/convenience.o" "$(BUILD)/obj/rom.o" "$(BUILD)/obj/cgiHandler.o" "$(BUILD)/obj/espHandler.o" $(LIBS) -lmpr-version -lmpr-mbedtls -lmbedtls 
+	$(CC) -r -o $(BUILD)/bin/libappweb.out $(LDFLAGS) $(LIBPATHS) "$(BUILD)/obj/config.o" "$(BUILD)/obj/convenience.o" "$(BUILD)/obj/cgiHandler.o" "$(BUILD)/obj/espHandler.o" "$(BUILD)/obj/rom.o" $(LIBS) -lmpr-version -lmpr-mbedtls -lmbedtls 
 
 #
 #   appweb
