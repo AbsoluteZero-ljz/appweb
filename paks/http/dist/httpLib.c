@@ -11864,7 +11864,10 @@ PUBLIC char *httpReadString(HttpConn *conn)
     char        *content;
 
     rx = conn->rx;
-    remaining = (ssize) min(MAXSSIZE, rx->length);
+    if (rx->length < 0) {
+        return 0;
+    }
+    remaining = (rx->length > MAXSSIZE) ? MAXSIZE: rx->length;
 
     if (remaining > 0) {
         if ((content = mprAlloc(remaining + 1)) == 0) {
