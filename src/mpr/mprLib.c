@@ -7594,10 +7594,10 @@ PUBLIC char *mprGetRandomString(ssize size)
     int         i, pid;
 
     len = size / 2;
-    bytes = mprAlloc(size / 2);
+    bytes = mprAlloc(len);
     ascii = mprAlloc(size + 1);
 
-    if (mprGetRandomBytes(bytes, size / 2, 0) < 0) {
+    if (mprGetRandomBytes(bytes, len, 0) < 0) {
         mprLog("critical mpr", 0, "Failed to get random bytes");
         now = mprGetTime();
         pid = (int) getpid();
@@ -18186,6 +18186,9 @@ PUBLIC MprList *mprGlobPathFiles(cchar *path, cchar *pattern, int flags)
             exclude = &pattern[1];
         }
         globPathFiles(result, path, rewritePattern(pattern, flags), relativeTo, exclude, flags);
+        if (!(flags & (MPR_PATH_DEPTH_FIRST))) {
+            mprSortList(result, NULL, NULL);
+        }
     }
     return result;
 }
@@ -19293,11 +19296,13 @@ PUBLIC char *mprSearchPath(cchar *file, int flags, cchar *search, ...)
     if ((result = checkPath(file, flags)) != 0) {
         return result;
     }
+#if ME_WIN_LIKE
     if ((flags & MPR_SEARCH_EXE) && *ME_EXE) {
         if ((result = checkPath(mprJoinPathExt(file, ME_EXE), flags)) != 0) {
             return result;
         }
     }
+#endif
     for (nextDir = (char*) search; nextDir; nextDir = va_arg(args, char*)) {
         tok = NULL;
         nextDir = sclone(nextDir);
@@ -19308,12 +19313,14 @@ PUBLIC char *mprSearchPath(cchar *file, int flags, cchar *search, ...)
                 va_end(args);
                 return mprNormalizePath(result);
             }
+#if ME_WIN_LIKE
             if ((flags & MPR_SEARCH_EXE) && *ME_EXE) {
                 if ((result = checkPath(mprJoinPathExt(path, ME_EXE), flags)) != 0) {
                     va_end(args);
                     return mprNormalizePath(result);
                 }
             }
+#endif
             dir = stok(0, MPR_SEARCH_SEP, &tok);
         }
     }
@@ -23281,6 +23288,9 @@ PUBLIC int mprParseSocketAddress(cchar *address, char **pip, int *pport, int *ps
         *psecure = sncmp(address, "https", 5) == 0;
     }
     ip = sclone(address);
+    /*
+        Split off spaces and step over ://
+     */
     if ((cp = strchr(ip, ' ')) != 0) {
         *cp++ = '\0';
     }
@@ -23289,7 +23299,7 @@ PUBLIC int mprParseSocketAddress(cchar *address, char **pip, int *pport, int *ps
     }
     if (ipv6(ip)) {
         /*
-            IPv6. If port is present, it will follow a closing bracket ']'
+            IPv6 - has 2 colons minimum. If port is present, it will follow a closing bracket ']'
          */
         if ((cp = strchr(ip, ']')) != 0) {
             cp++;
