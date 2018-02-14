@@ -5397,6 +5397,12 @@ static void parseTrace(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
+static void parseWebSocketsProtocol(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    route->webSocketsProtocol = sclone(prop->value);
+}
+
+
 static void parseXsrf(HttpRoute *route, cchar *key, MprJson *prop)
 {
     httpSetRouteXsrf(route, (prop->type & MPR_JSON_TRUE) ? 1 : 0);
@@ -5590,6 +5596,7 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.timeouts.request", parseTimeoutsRequest);
     httpAddConfig("http.timeouts.session", parseTimeoutsSession);
     httpAddConfig("http.trace", parseTrace);
+    httpAddConfig("http.websockets.protocol", parseWebSocketsProtocol);
     httpAddConfig("http.xsrf", parseXsrf);
 
 #if DEPRECATE
