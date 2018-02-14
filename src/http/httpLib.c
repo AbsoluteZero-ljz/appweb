@@ -11652,19 +11652,11 @@ PUBLIC void httpAssignQueue(HttpQueue *q, HttpStage *stage, int dir)
     q->open = stage->open;
     q->start = stage->start;
     if (dir == HTTP_QUEUE_TX) {
-        if (stage->outgoing) {
-            q->put = stage->outgoing;
-        }
-        if (stage->outgoingService) {
-            q->service = stage->outgoingService;
-        }
+        q->put = stage->outgoing;
+        q->service = stage->outgoingService;
     } else {
-        if (stage->incoming) {
-            q->put = stage->incoming;
-        }
-        if (stage->incomingService) {
-            q->service = stage->incomingService;
-        }
+        q->put = stage->incoming;
+        q->service = stage->incomingService;
     }
 }
 
