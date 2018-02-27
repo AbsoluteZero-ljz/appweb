@@ -136,7 +136,7 @@ Me.load({
 
                     perform: function(ignored, to, options) {
                         for each (pak in Path(me.dir.paks).files(['angular', 'esp-*'])) {
-                            let version = pak.join('package.json').readJSON().version || '0.0.0'
+                            let version = pak.join('pak.json').readJSON().version || '0.0.0'
                             let dir = me.globals.abin.join('../esp', pak.basename, version)
                             makeDirectory(dir)
                             for each (from in pak.files('**')) {
@@ -249,7 +249,7 @@ Me.load({
                                 'Makefile', 
                                 'make.bat', 
                                 'main.me', 
-                                'package.json' 
+                                'pak.json' 
                     ],
                     to:         '${src}/',
 
