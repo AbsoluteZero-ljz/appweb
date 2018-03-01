@@ -40,8 +40,6 @@
         "dist/",
         "doc/"
     ],
-    "pak": {
-        "import": true,
-        "origin": "embedthis/makerom"
-    }
+    "import": true,
+    "origin": "embedthis/makerom"
 }

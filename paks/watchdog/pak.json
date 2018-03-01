@@ -40,8 +40,6 @@
         "dist/**",
         "doc/"
     ],
-    "pak": {
-        "import": true,
-        "origin": "embedthis/watchdog"
-    }
+    "import": true,
+    "origin": "embedthis/watchdog"
 }
