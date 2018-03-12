@@ -60,7 +60,5 @@
         "dist/",
         "doc/api/"
     ],
-    "pak": {
-        "import": true
-    }
+    "import": true
 }
