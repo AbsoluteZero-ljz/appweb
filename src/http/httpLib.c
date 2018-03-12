@@ -1713,6 +1713,9 @@ PUBLIC bool httpLogin(HttpConn *conn, cchar *username, cchar *password)
         /* If using auto-login, replace the username */
         username = auth->username;
         password = 0;
+
+    } else if (!username || !password) {
+        return 0;
     }
     if (!(verifyUser)(conn, username, password)) {
         return 0;
@@ -2028,7 +2031,7 @@ static bool configVerifyUser(HttpConn *conn, cchar *username, cchar *password)
         httpTrace(conn, "auth.login.error", "error", "msg: 'Unknown user', username:'%s'", username);
         return 0;
     }
-    if (password || 1) {
+    if (password) {
         if (auth->realm == 0 || *auth->realm == '\0') {
             mprLog("error http auth", 0, "No AuthRealm defined");
         }
@@ -14572,8 +14575,7 @@ static int authCondition(HttpConn *conn, HttpRoute *route, HttpRouteOp *op)
         return HTTP_ROUTE_OK;
     }
     if (!httpIsAuthenticated(conn)) {
-        httpGetCredentials(conn, &username, &password);
-        if (!httpLogin(conn, username, password)) {
+        if (!httpGetCredentials(conn, &username, &password) || !httpLogin(conn, username, password)) {
             if (!conn->tx->finalized) {
                 if (auth && auth->type) {
                     (auth->type->askLogin)(conn);
@@ -14612,8 +14614,7 @@ static int unauthorizedCondition(HttpConn *conn, HttpRoute *route, HttpRouteOp *
     if (httpIsAuthenticated(conn)) {
         return HTTP_ROUTE_REJECT;
     }
-    httpGetCredentials(conn, &username, &password);
-    if (httpLogin(conn, username, password)) {
+    if (httpGetCredentials(conn, &username, &password) && httpLogin(conn, username, password)) {
         return HTTP_ROUTE_REJECT;
     }
     return HTTP_ROUTE_OK;
