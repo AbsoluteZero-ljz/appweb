@@ -2028,7 +2028,7 @@ static bool configVerifyUser(HttpConn *conn, cchar *username, cchar *password)
         httpTrace(conn, "auth.login.error", "error", "msg: 'Unknown user', username:'%s'", username);
         return 0;
     }
-    if (password) {
+    if (password || 1) {
         if (auth->realm == 0 || *auth->realm == '\0') {
             mprLog("error http auth", 0, "No AuthRealm defined");
         }
