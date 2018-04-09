@@ -10,8 +10,6 @@
     "directories": {
         "export": "contents/lib"
     },
-    "pak": {
-        "mode": "debug",
-        "import": true
-    }
+    "import": true,
+    "pak": "debug"
 }

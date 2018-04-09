@@ -16,3 +16,4 @@ test/tmp/test.dat
 src/server/certs
 .port.log
 *.guid
+test/exploits/
