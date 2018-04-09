@@ -794,50 +794,44 @@
 		A27F3A0AA27F55EA0000002C /* authpass.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = authpass.c; path = src/utils/authpass.c; sourceTree = "<group>"; };
 		A27F3A0AA27F55EA000000F4 /* authpass */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = authpass; sourceTree = BUILT_PRODUCTS_DIR; };
 		A27F3A0AA27F55EA0000002E /* esp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = esp.c; path = src/esp/esp.c; sourceTree = "<group>"; };
-		A27F3A0AA27F55EA000000F5 /* esp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = esp.h; path = src/esp/esp.h; sourceTree = "<group>"; };
+		A27F3A0AA27F55EA000000F5 /* esp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = esp.h; path = build/macosx-x64-static/inc/esp.h; sourceTree = "<group>"; };
 		A27F3A0AA27F55EA000000F6 /* mpr-version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mpr-version.h; path = build/macosx-x64-static/inc/mpr-version.h; sourceTree = "<group>"; };
 		A27F3A0AA27F55EA000000F7 /* espcmd */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = appweb-esp; sourceTree = BUILT_PRODUCTS_DIR; };
 		A27F3A0AA27F55EA00000030 /* http.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = http.c; path = src/http/http.c; sourceTree = "<group>"; };
-		A27F3A0AA27F55EA000000F8 /* http.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = http.h; path = src/http/http.h; sourceTree = "<group>"; };
+		A27F3A0AA27F55EA000000F8 /* http.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = http.h; path = build/macosx-x64-static/inc/http.h; sourceTree = "<group>"; };
 		A27F3A0AA27F55EA000000F9 /* httpcmd */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = http; sourceTree = BUILT_PRODUCTS_DIR; };
 		A27F3A0AA27F55EA00000032 /* config.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = config.c; path = src/config.c; sourceTree = "<group>"; };
-		A27F3A0AA27F55EA000000FA /* appweb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = appweb.h; path = src/appweb.h; sourceTree = "<group>"; };
-		A27F3A0AA27F55EA000000FB /* pcre.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pcre.h; path = build/macosx-x64-static/inc/pcre.h; sourceTree = "<group>"; };
+		A27F3A0AA27F55EA000000FA /* pcre.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pcre.h; path = build/macosx-x64-static/inc/pcre.h; sourceTree = "<group>"; };
 		A27F3A0AA27F55EA00000034 /* convenience.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = convenience.c; path = src/convenience.c; sourceTree = "<group>"; };
 		A27F3A0AA27F55EA00000036 /* cgiHandler.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cgiHandler.c; path = src/modules/cgiHandler.c; sourceTree = "<group>"; };
 		A27F3A0AA27F55EA00000038 /* espHandler.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = espHandler.c; path = src/modules/espHandler.c; sourceTree = "<group>"; };
-		A27F3A0AA27F55EA000000FC /* esp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = esp.h; path = build/macosx-x64-static/inc/esp.h; sourceTree = "<group>"; };
 		A27F3A0AA27F55EA0000003A /* rom.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = rom.c; path = src/rom.c; sourceTree = "<group>"; };
-		A27F3A0AA27F55EA000000FD /* mpr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mpr.h; path = build/macosx-x64-static/inc/mpr.h; sourceTree = "<group>"; };
+		A27F3A0AA27F55EA000000FB /* mpr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mpr.h; path = build/macosx-x64-static/inc/mpr.h; sourceTree = "<group>"; };
 		A27F3A0AA27F55EA0000004E /* libappweb */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libappweb.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		A27F3A0AA27F55EA0000003C /* espLib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = espLib.c; path = src/esp/espLib.c; sourceTree = "<group>"; };
-		A27F3A0AA27F55EA000000FE /* http.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = http.h; path = build/macosx-x64-static/inc/http.h; sourceTree = "<group>"; };
 		A27F3A0AA27F55EA00000050 /* libesp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libesp.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		A27F3A0AA27F55EA0000003E /* httpLib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = httpLib.c; path = src/http/httpLib.c; sourceTree = "<group>"; };
 		A27F3A0AA27F55EA00000054 /* libhttp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libhttp.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		A27F3A0AA27F55EA00000040 /* mbedtls.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mbedtls.c; path = src/mbedtls/mbedtls.c; sourceTree = "<group>"; };
-		A27F3A0AA27F55EA000000FF /* mbedtls.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mbedtls.h; path = src/mbedtls/mbedtls.h; sourceTree = "<group>"; };
+		A27F3A0AA27F55EA000000FC /* mbedtls.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mbedtls.h; path = build/macosx-x64-static/inc/mbedtls.h; sourceTree = "<group>"; };
 		A27F3A0AA27F55EA0000005C /* libmbedtls */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libmbedtls.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		A27F3A0AA27F55EA00000042 /* mprLib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mprLib.c; path = src/mpr/mprLib.c; sourceTree = "<group>"; };
-		A27F3A0AA27F55EA00000100 /* mpr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mpr.h; path = src/mpr/mpr.h; sourceTree = "<group>"; };
 		A27F3A0AA27F55EA00000058 /* libmpr */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libmpr.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		A27F3A0AA27F55EA00000044 /* mpr-mbedtls.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mpr-mbedtls.c; path = src/mpr-mbedtls/mpr-mbedtls.c; sourceTree = "<group>"; };
 		A27F3A0AA27F55EA0000005A /* libmpr-mbedtls */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libmpr-mbedtls.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		A27F3A0AA27F55EA00000046 /* mpr-version.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mpr-version.c; path = src/mpr-version/mpr-version.c; sourceTree = "<group>"; };
-		A27F3A0AA27F55EA00000101 /* mpr-version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mpr-version.h; path = src/mpr-version/mpr-version.h; sourceTree = "<group>"; };
 		A27F3A0AA27F55EA00000052 /* libmpr-version */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libmpr-version.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		A27F3A0AA27F55EA00000048 /* pcre.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre.c; path = src/pcre/pcre.c; sourceTree = "<group>"; };
-		A27F3A0AA27F55EA00000102 /* me.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = me.h; path = build/macosx-x64-static/inc/me.h; sourceTree = "<group>"; };
-		A27F3A0AA27F55EA00000103 /* pcre.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pcre.h; path = src/pcre/pcre.h; sourceTree = "<group>"; };
+		A27F3A0AA27F55EA000000FD /* me.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = me.h; path = build/macosx-x64-static/inc/me.h; sourceTree = "<group>"; };
 		A27F3A0AA27F55EA00000056 /* libpcre */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libpcre.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		A27F3A0AA27F55EA0000004A /* makerom.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = makerom.c; path = src/makerom/makerom.c; sourceTree = "<group>"; };
-		A27F3A0AA27F55EA00000104 /* makerom */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = makerom; sourceTree = BUILT_PRODUCTS_DIR; };
+		A27F3A0AA27F55EA000000FE /* makerom */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = makerom; sourceTree = BUILT_PRODUCTS_DIR; };
 		A27F3A0AA27F55EA0000004C /* watchdog.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = watchdog.c; path = src/watchdog/watchdog.c; sourceTree = "<group>"; };
-		A27F3A0AA27F55EA00000105 /* watchdog */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = appman; sourceTree = BUILT_PRODUCTS_DIR; };
+		A27F3A0AA27F55EA000000FF /* watchdog */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = appman; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		A27F3A0AA27F55EA00000106 /* Frameworks and Libraries for appweb */ = {
+		A27F3A0AA27F55EA00000100 /* Frameworks and Libraries for appweb */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
@@ -852,7 +846,7 @@
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
-		A27F3A0AA27F55EA00000107 /* Frameworks and Libraries for authpass */ = {
+		A27F3A0AA27F55EA00000101 /* Frameworks and Libraries for authpass */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
@@ -867,7 +861,7 @@
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
-		A27F3A0AA27F55EA00000108 /* Frameworks and Libraries for espcmd */ = {
+		A27F3A0AA27F55EA00000102 /* Frameworks and Libraries for espcmd */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
@@ -881,7 +875,7 @@
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
-		A27F3A0AA27F55EA00000109 /* Frameworks and Libraries for httpcmd */ = {
+		A27F3A0AA27F55EA00000103 /* Frameworks and Libraries for httpcmd */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
@@ -893,7 +887,7 @@
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
-		A27F3A0AA27F55EA0000010A /* Frameworks and Libraries for libappweb */ = {
+		A27F3A0AA27F55EA00000104 /* Frameworks and Libraries for libappweb */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
@@ -907,7 +901,7 @@
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
-		A27F3A0AA27F55EA0000010B /* Frameworks and Libraries for libesp */ = {
+		A27F3A0AA27F55EA00000105 /* Frameworks and Libraries for libesp */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
@@ -920,7 +914,7 @@
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
-		A27F3A0AA27F55EA0000010C /* Frameworks and Libraries for libhttp */ = {
+		A27F3A0AA27F55EA00000106 /* Frameworks and Libraries for libhttp */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
@@ -931,7 +925,7 @@
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
-		A27F3A0AA27F55EA0000010D /* Frameworks and Libraries for libmbedtls */ = {
+		A27F3A0AA27F55EA00000107 /* Frameworks and Libraries for libmbedtls */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
@@ -939,7 +933,7 @@
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
-		A27F3A0AA27F55EA0000010E /* Frameworks and Libraries for libmpr */ = {
+		A27F3A0AA27F55EA00000108 /* Frameworks and Libraries for libmpr */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
@@ -948,7 +942,7 @@
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
-		A27F3A0AA27F55EA0000010F /* Frameworks and Libraries for libmpr-mbedtls */ = {
+		A27F3A0AA27F55EA00000109 /* Frameworks and Libraries for libmpr-mbedtls */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
@@ -956,7 +950,7 @@
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
-		A27F3A0AA27F55EA00000110 /* Frameworks and Libraries for libmpr-version */ = {
+		A27F3A0AA27F55EA0000010A /* Frameworks and Libraries for libmpr-version */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
@@ -964,7 +958,7 @@
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
-		A27F3A0AA27F55EA00000111 /* Frameworks and Libraries for libpcre */ = {
+		A27F3A0AA27F55EA0000010B /* Frameworks and Libraries for libpcre */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
@@ -972,7 +966,7 @@
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
-		A27F3A0AA27F55EA00000112 /* Frameworks and Libraries for makerom */ = {
+		A27F3A0AA27F55EA0000010C /* Frameworks and Libraries for makerom */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
@@ -982,7 +976,7 @@
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
-		A27F3A0AA27F55EA00000113 /* Frameworks and Libraries for watchdog */ = {
+		A27F3A0AA27F55EA0000010D /* Frameworks and Libraries for watchdog */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
@@ -995,28 +989,28 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		A27F3A0AA27F55EA00000114 /* Top Group */ = {
+		A27F3A0AA27F55EA0000010E /* Top Group */ = {
                 isa = PBXGroup;
                 children = (
-				A27F3A0AA27F55EA00000115 /* libappweb */,
-				A27F3A0AA27F55EA00000116 /* libesp */,
-				A27F3A0AA27F55EA00000117 /* libhttp */,
-				A27F3A0AA27F55EA00000118 /* libmbedtls */,
-				A27F3A0AA27F55EA00000119 /* libmpr */,
-				A27F3A0AA27F55EA0000011A /* libmpr-mbedtls */,
-				A27F3A0AA27F55EA0000011B /* libmpr-version */,
-				A27F3A0AA27F55EA0000011C /* libpcre */,
-				A27F3A0AA27F55EA0000011D /* appweb */,
-				A27F3A0AA27F55EA0000011E /* authpass */,
-				A27F3A0AA27F55EA0000011F /* espcmd */,
-				A27F3A0AA27F55EA00000120 /* httpcmd */,
-				A27F3A0AA27F55EA00000121 /* makerom */,
-				A27F3A0AA27F55EA00000122 /* watchdog */,
-				A27F3A0AA27F55EA00000123 /* Products */,
+				A27F3A0AA27F55EA0000010F /* libappweb */,
+				A27F3A0AA27F55EA00000110 /* libesp */,
+				A27F3A0AA27F55EA00000111 /* libhttp */,
+				A27F3A0AA27F55EA00000112 /* libmbedtls */,
+				A27F3A0AA27F55EA00000113 /* libmpr */,
+				A27F3A0AA27F55EA00000114 /* libmpr-mbedtls */,
+				A27F3A0AA27F55EA00000115 /* libmpr-version */,
+				A27F3A0AA27F55EA00000116 /* libpcre */,
+				A27F3A0AA27F55EA00000117 /* appweb */,
+				A27F3A0AA27F55EA00000118 /* authpass */,
+				A27F3A0AA27F55EA00000119 /* espcmd */,
+				A27F3A0AA27F55EA0000011A /* httpcmd */,
+				A27F3A0AA27F55EA0000011B /* makerom */,
+				A27F3A0AA27F55EA0000011C /* watchdog */,
+				A27F3A0AA27F55EA0000011D /* Products */,
 			);
                 sourceTree = "<group>";
             };
-		A27F3A0AA27F55EA0000011D /* appweb */ = {
+		A27F3A0AA27F55EA00000117 /* appweb */ = {
                 isa = PBXGroup;
                 children = (
 				A27F3A0AA27F55EA0000002A /* appweb.c */,
@@ -1025,7 +1019,7 @@
                 path = ..;
                 sourceTree = SOURCE_ROOT;
             };
-		A27F3A0AA27F55EA0000011E /* authpass */ = {
+		A27F3A0AA27F55EA00000118 /* authpass */ = {
                 isa = PBXGroup;
                 children = (
 				A27F3A0AA27F55EA0000002C /* authpass.c */,
@@ -1034,7 +1028,7 @@
                 path = ..;
                 sourceTree = SOURCE_ROOT;
             };
-		A27F3A0AA27F55EA0000011F /* espcmd */ = {
+		A27F3A0AA27F55EA00000119 /* espcmd */ = {
                 isa = PBXGroup;
                 children = (
 				A27F3A0AA27F55EA0000002E /* esp.c */,
@@ -1043,7 +1037,7 @@
                 path = ..;
                 sourceTree = SOURCE_ROOT;
             };
-		A27F3A0AA27F55EA00000120 /* httpcmd */ = {
+		A27F3A0AA27F55EA0000011A /* httpcmd */ = {
                 isa = PBXGroup;
                 children = (
 				A27F3A0AA27F55EA00000030 /* http.c */,
@@ -1052,10 +1046,10 @@
                 path = ..;
                 sourceTree = SOURCE_ROOT;
             };
-		A27F3A0AA27F55EA00000115 /* libappweb */ = {
+		A27F3A0AA27F55EA0000010F /* libappweb */ = {
                 isa = PBXGroup;
                 children = (
-				A27F3A0AA27F55EA000000FA /* appweb.h */,
+				A27F3A0AA27F55EA000000F2 /* appweb.h */,
 				A27F3A0AA27F55EA00000032 /* config.c */,
 				A27F3A0AA27F55EA00000034 /* convenience.c */,
 				A27F3A0AA27F55EA00000036 /* cgiHandler.c */,
@@ -1066,7 +1060,7 @@
                 path = ..;
                 sourceTree = SOURCE_ROOT;
             };
-		A27F3A0AA27F55EA00000116 /* libesp */ = {
+		A27F3A0AA27F55EA00000110 /* libesp */ = {
                 isa = PBXGroup;
                 children = (
 				A27F3A0AA27F55EA000000F5 /* esp.h */,
@@ -1076,7 +1070,7 @@
                 path = ..;
                 sourceTree = SOURCE_ROOT;
             };
-		A27F3A0AA27F55EA00000117 /* libhttp */ = {
+		A27F3A0AA27F55EA00000111 /* libhttp */ = {
                 isa = PBXGroup;
                 children = (
 				A27F3A0AA27F55EA000000F8 /* http.h */,
@@ -1086,27 +1080,27 @@
                 path = ..;
                 sourceTree = SOURCE_ROOT;
             };
-		A27F3A0AA27F55EA00000118 /* libmbedtls */ = {
+		A27F3A0AA27F55EA00000112 /* libmbedtls */ = {
                 isa = PBXGroup;
                 children = (
-				A27F3A0AA27F55EA000000FF /* mbedtls.h */,
+				A27F3A0AA27F55EA000000FC /* mbedtls.h */,
 				A27F3A0AA27F55EA00000040 /* mbedtls.c */,
 			);
                 name = "libmbedtls";
                 path = ..;
                 sourceTree = SOURCE_ROOT;
             };
-		A27F3A0AA27F55EA00000119 /* libmpr */ = {
+		A27F3A0AA27F55EA00000113 /* libmpr */ = {
                 isa = PBXGroup;
                 children = (
-				A27F3A0AA27F55EA00000100 /* mpr.h */,
+				A27F3A0AA27F55EA000000FB /* mpr.h */,
 				A27F3A0AA27F55EA00000042 /* mprLib.c */,
 			);
                 name = "libmpr";
                 path = ..;
                 sourceTree = SOURCE_ROOT;
             };
-		A27F3A0AA27F55EA0000011A /* libmpr-mbedtls */ = {
+		A27F3A0AA27F55EA00000114 /* libmpr-mbedtls */ = {
                 isa = PBXGroup;
                 children = (
 				A27F3A0AA27F55EA00000044 /* mpr-mbedtls.c */,
@@ -1115,27 +1109,27 @@
                 path = ..;
                 sourceTree = SOURCE_ROOT;
             };
-		A27F3A0AA27F55EA0000011B /* libmpr-version */ = {
+		A27F3A0AA27F55EA00000115 /* libmpr-version */ = {
                 isa = PBXGroup;
                 children = (
-				A27F3A0AA27F55EA00000101 /* mpr-version.h */,
+				A27F3A0AA27F55EA000000F6 /* mpr-version.h */,
 				A27F3A0AA27F55EA00000046 /* mpr-version.c */,
 			);
                 name = "libmpr-version";
                 path = ..;
                 sourceTree = SOURCE_ROOT;
             };
-		A27F3A0AA27F55EA0000011C /* libpcre */ = {
+		A27F3A0AA27F55EA00000116 /* libpcre */ = {
                 isa = PBXGroup;
                 children = (
-				A27F3A0AA27F55EA00000103 /* pcre.h */,
+				A27F3A0AA27F55EA000000FA /* pcre.h */,
 				A27F3A0AA27F55EA00000048 /* pcre.c */,
 			);
                 name = "libpcre";
                 path = ..;
                 sourceTree = SOURCE_ROOT;
             };
-		A27F3A0AA27F55EA00000121 /* makerom */ = {
+		A27F3A0AA27F55EA0000011B /* makerom */ = {
                 isa = PBXGroup;
                 children = (
 				A27F3A0AA27F55EA0000004A /* makerom.c */,
@@ -1144,7 +1138,7 @@
                 path = ..;
                 sourceTree = SOURCE_ROOT;
             };
-		A27F3A0AA27F55EA00000122 /* watchdog */ = {
+		A27F3A0AA27F55EA0000011C /* watchdog */ = {
                 isa = PBXGroup;
                 children = (
 				A27F3A0AA27F55EA0000004C /* watchdog.c */,
@@ -1153,7 +1147,7 @@
                 path = ..;
                 sourceTree = SOURCE_ROOT;
             };
-		A27F3A0AA27F55EA00000123 /* Products */ = {
+		A27F3A0AA27F55EA0000011D /* Products */ = {
                 isa = PBXGroup;
                 children = (
 				A27F3A0AA27F55EA000000F3 /* appweb */,
@@ -1168,8 +1162,8 @@
 				A27F3A0AA27F55EA0000005A /* libmpr-mbedtls */,
 				A27F3A0AA27F55EA00000052 /* libmpr-version */,
 				A27F3A0AA27F55EA00000056 /* libpcre */,
-				A27F3A0AA27F55EA00000104 /* makerom */,
-				A27F3A0AA27F55EA00000105 /* watchdog */,
+				A27F3A0AA27F55EA000000FE /* makerom */,
+				A27F3A0AA27F55EA000000FF /* watchdog */,
 			);
                 name = "Products";
                 path = ..;
@@ -1180,23 +1174,23 @@
 /* Begin PBXNativeTarget section */
 		A27F3A0AA27F55EA000000E4 /* appweb */ = {
     			isa = PBXNativeTarget;
-    			buildConfigurationList = A27F3A0AA27F55EA00000125 /* Build configuration list for PBXNativeTarget "appweb" */;
+    			buildConfigurationList = A27F3A0AA27F55EA0000011F /* Build configuration list for PBXNativeTarget "appweb" */;
     			buildPhases = (
-    				A27F3A0AA27F55EA00000124 /* Sources */,
-    				A27F3A0AA27F55EA00000106 /* Frameworks */,
+    				A27F3A0AA27F55EA0000011E /* Sources */,
+    				A27F3A0AA27F55EA00000100 /* Frameworks */,
     			);
     			buildRules = (
     			);
     			dependencies = (
-    				A27F3A0AA27F55EA00000126 /* Prep */,
-				A27F3A0AA27F55EA00000127 /* libmbedtls */,
-				A27F3A0AA27F55EA00000128 /* libmpr-mbedtls */,
-				A27F3A0AA27F55EA00000129 /* libmpr */,
-				A27F3A0AA27F55EA0000012A /* libpcre */,
-				A27F3A0AA27F55EA0000012B /* libhttp */,
-				A27F3A0AA27F55EA0000012C /* libmpr-version */,
-				A27F3A0AA27F55EA0000012D /* libesp */,
-				A27F3A0AA27F55EA0000012E /* libappweb */,				
+    				A27F3A0AA27F55EA00000120 /* Prep */,
+				A27F3A0AA27F55EA00000121 /* libmbedtls */,
+				A27F3A0AA27F55EA00000122 /* libmpr-mbedtls */,
+				A27F3A0AA27F55EA00000123 /* libmpr */,
+				A27F3A0AA27F55EA00000124 /* libpcre */,
+				A27F3A0AA27F55EA00000125 /* libhttp */,
+				A27F3A0AA27F55EA00000126 /* libmpr-version */,
+				A27F3A0AA27F55EA00000127 /* libesp */,
+				A27F3A0AA27F55EA00000128 /* libappweb */,				
     			);
     			name = appweb;
     			productName = appweb;
@@ -1205,23 +1199,23 @@
     		};
 		A27F3A0AA27F55EA000000E6 /* authpass */ = {
     			isa = PBXNativeTarget;
-    			buildConfigurationList = A27F3A0AA27F55EA00000130 /* Build configuration list for PBXNativeTarget "authpass" */;
+    			buildConfigurationList = A27F3A0AA27F55EA0000012A /* Build configuration list for PBXNativeTarget "authpass" */;
     			buildPhases = (
-    				A27F3A0AA27F55EA0000012F /* Sources */,
-    				A27F3A0AA27F55EA00000107 /* Frameworks */,
+    				A27F3A0AA27F55EA00000129 /* Sources */,
+    				A27F3A0AA27F55EA00000101 /* Frameworks */,
     			);
     			buildRules = (
     			);
     			dependencies = (
-    				A27F3A0AA27F55EA00000131 /* Prep */,
-				A27F3A0AA27F55EA00000132 /* libmbedtls */,
-				A27F3A0AA27F55EA00000133 /* libmpr-mbedtls */,
-				A27F3A0AA27F55EA00000134 /* libmpr */,
-				A27F3A0AA27F55EA00000135 /* libpcre */,
-				A27F3A0AA27F55EA00000136 /* libhttp */,
-				A27F3A0AA27F55EA00000137 /* libmpr-version */,
-				A27F3A0AA27F55EA00000138 /* libesp */,
-				A27F3A0AA27F55EA00000139 /* libappweb */,				
+    				A27F3A0AA27F55EA0000012B /* Prep */,
+				A27F3A0AA27F55EA0000012C /* libmbedtls */,
+				A27F3A0AA27F55EA0000012D /* libmpr-mbedtls */,
+				A27F3A0AA27F55EA0000012E /* libmpr */,
+				A27F3A0AA27F55EA0000012F /* libpcre */,
+				A27F3A0AA27F55EA00000130 /* libhttp */,
+				A27F3A0AA27F55EA00000131 /* libmpr-version */,
+				A27F3A0AA27F55EA00000132 /* libesp */,
+				A27F3A0AA27F55EA00000133 /* libappweb */,				
     			);
     			name = authpass;
     			productName = appweb;
@@ -1230,22 +1224,22 @@
     		};
 		A27F3A0AA27F55EA000000E8 /* espcmd */ = {
     			isa = PBXNativeTarget;
-    			buildConfigurationList = A27F3A0AA27F55EA0000013B /* Build configuration list for PBXNativeTarget "espcmd" */;
+    			buildConfigurationList = A27F3A0AA27F55EA00000135 /* Build configuration list for PBXNativeTarget "espcmd" */;
     			buildPhases = (
-    				A27F3A0AA27F55EA0000013A /* Sources */,
-    				A27F3A0AA27F55EA00000108 /* Frameworks */,
+    				A27F3A0AA27F55EA00000134 /* Sources */,
+    				A27F3A0AA27F55EA00000102 /* Frameworks */,
     			);
     			buildRules = (
     			);
     			dependencies = (
-    				A27F3A0AA27F55EA0000013C /* Prep */,
-				A27F3A0AA27F55EA0000013D /* libmbedtls */,
-				A27F3A0AA27F55EA0000013E /* libmpr-mbedtls */,
-				A27F3A0AA27F55EA0000013F /* libmpr */,
-				A27F3A0AA27F55EA00000140 /* libpcre */,
-				A27F3A0AA27F55EA00000141 /* libhttp */,
-				A27F3A0AA27F55EA00000142 /* libmpr-version */,
-				A27F3A0AA27F55EA00000143 /* libesp */,				
+    				A27F3A0AA27F55EA00000136 /* Prep */,
+				A27F3A0AA27F55EA00000137 /* libmbedtls */,
+				A27F3A0AA27F55EA00000138 /* libmpr-mbedtls */,
+				A27F3A0AA27F55EA00000139 /* libmpr */,
+				A27F3A0AA27F55EA0000013A /* libpcre */,
+				A27F3A0AA27F55EA0000013B /* libhttp */,
+				A27F3A0AA27F55EA0000013C /* libmpr-version */,
+				A27F3A0AA27F55EA0000013D /* libesp */,				
     			);
     			name = espcmd;
     			productName = appweb;
@@ -1254,20 +1248,20 @@
     		};
 		A27F3A0AA27F55EA000000EB /* httpcmd */ = {
     			isa = PBXNativeTarget;
-    			buildConfigurationList = A27F3A0AA27F55EA00000145 /* Build configuration list for PBXNativeTarget "httpcmd" */;
+    			buildConfigurationList = A27F3A0AA27F55EA0000013F /* Build configuration list for PBXNativeTarget "httpcmd" */;
     			buildPhases = (
-    				A27F3A0AA27F55EA00000144 /* Sources */,
-    				A27F3A0AA27F55EA00000109 /* Frameworks */,
+    				A27F3A0AA27F55EA0000013E /* Sources */,
+    				A27F3A0AA27F55EA00000103 /* Frameworks */,
     			);
     			buildRules = (
     			);
     			dependencies = (
-    				A27F3A0AA27F55EA00000146 /* Prep */,
-				A27F3A0AA27F55EA00000147 /* libmbedtls */,
-				A27F3A0AA27F55EA00000148 /* libmpr-mbedtls */,
-				A27F3A0AA27F55EA00000149 /* libmpr */,
-				A27F3A0AA27F55EA0000014A /* libpcre */,
-				A27F3A0AA27F55EA0000014B /* libhttp */,				
+    				A27F3A0AA27F55EA00000140 /* Prep */,
+				A27F3A0AA27F55EA00000141 /* libmbedtls */,
+				A27F3A0AA27F55EA00000142 /* libmpr-mbedtls */,
+				A27F3A0AA27F55EA00000143 /* libmpr */,
+				A27F3A0AA27F55EA00000144 /* libpcre */,
+				A27F3A0AA27F55EA00000145 /* libhttp */,				
     			);
     			name = httpcmd;
     			productName = appweb;
@@ -1276,22 +1270,22 @@
     		};
 		A27F3A0AA27F55EA0000009B /* libappweb */ = {
     			isa = PBXNativeTarget;
-    			buildConfigurationList = A27F3A0AA27F55EA0000014D /* Build configuration list for PBXNativeTarget "libappweb" */;
+    			buildConfigurationList = A27F3A0AA27F55EA00000147 /* Build configuration list for PBXNativeTarget "libappweb" */;
     			buildPhases = (
-    				A27F3A0AA27F55EA0000014C /* Sources */,
-    				A27F3A0AA27F55EA0000010A /* Frameworks */,
+    				A27F3A0AA27F55EA00000146 /* Sources */,
+    				A27F3A0AA27F55EA00000104 /* Frameworks */,
     			);
     			buildRules = (
     			);
     			dependencies = (
-    				A27F3A0AA27F55EA0000014E /* Prep */,
-				A27F3A0AA27F55EA0000014F /* libmbedtls */,
-				A27F3A0AA27F55EA00000150 /* libmpr-mbedtls */,
-				A27F3A0AA27F55EA00000151 /* libmpr */,
-				A27F3A0AA27F55EA00000152 /* libpcre */,
-				A27F3A0AA27F55EA00000153 /* libhttp */,
-				A27F3A0AA27F55EA00000154 /* libmpr-version */,
-				A27F3A0AA27F55EA00000155 /* libesp */,				
+    				A27F3A0AA27F55EA00000148 /* Prep */,
+				A27F3A0AA27F55EA00000149 /* libmbedtls */,
+				A27F3A0AA27F55EA0000014A /* libmpr-mbedtls */,
+				A27F3A0AA27F55EA0000014B /* libmpr */,
+				A27F3A0AA27F55EA0000014C /* libpcre */,
+				A27F3A0AA27F55EA0000014D /* libhttp */,
+				A27F3A0AA27F55EA0000014E /* libmpr-version */,
+				A27F3A0AA27F55EA0000014F /* libesp */,				
     			);
     			name = libappweb;
     			productName = appweb;
@@ -1300,21 +1294,21 @@
     		};
 		A27F3A0AA27F55EA00000099 /* libesp */ = {
     			isa = PBXNativeTarget;
-    			buildConfigurationList = A27F3A0AA27F55EA00000157 /* Build configuration list for PBXNativeTarget "libesp" */;
+    			buildConfigurationList = A27F3A0AA27F55EA00000151 /* Build configuration list for PBXNativeTarget "libesp" */;
     			buildPhases = (
-    				A27F3A0AA27F55EA00000156 /* Sources */,
-    				A27F3A0AA27F55EA0000010B /* Frameworks */,
+    				A27F3A0AA27F55EA00000150 /* Sources */,
+    				A27F3A0AA27F55EA00000105 /* Frameworks */,
     			);
     			buildRules = (
     			);
     			dependencies = (
-    				A27F3A0AA27F55EA00000158 /* Prep */,
-				A27F3A0AA27F55EA00000159 /* libmbedtls */,
-				A27F3A0AA27F55EA0000015A /* libmpr-mbedtls */,
-				A27F3A0AA27F55EA0000015B /* libmpr */,
-				A27F3A0AA27F55EA0000015C /* libpcre */,
-				A27F3A0AA27F55EA0000015D /* libhttp */,
-				A27F3A0AA27F55EA0000015E /* libmpr-version */,				
+    				A27F3A0AA27F55EA00000152 /* Prep */,
+				A27F3A0AA27F55EA00000153 /* libmbedtls */,
+				A27F3A0AA27F55EA00000154 /* libmpr-mbedtls */,
+				A27F3A0AA27F55EA00000155 /* libmpr */,
+				A27F3A0AA27F55EA00000156 /* libpcre */,
+				A27F3A0AA27F55EA00000157 /* libhttp */,
+				A27F3A0AA27F55EA00000158 /* libmpr-version */,				
     			);
     			name = libesp;
     			productName = appweb;
@@ -1323,19 +1317,19 @@
     		};
 		A27F3A0AA27F55EA00000095 /* libhttp */ = {
     			isa = PBXNativeTarget;
-    			buildConfigurationList = A27F3A0AA27F55EA00000160 /* Build configuration list for PBXNativeTarget "libhttp" */;
+    			buildConfigurationList = A27F3A0AA27F55EA0000015A /* Build configuration list for PBXNativeTarget "libhttp" */;
     			buildPhases = (
-    				A27F3A0AA27F55EA0000015F /* Sources */,
-    				A27F3A0AA27F55EA0000010C /* Frameworks */,
+    				A27F3A0AA27F55EA00000159 /* Sources */,
+    				A27F3A0AA27F55EA00000106 /* Frameworks */,
     			);
     			buildRules = (
     			);
     			dependencies = (
-    				A27F3A0AA27F55EA00000161 /* Prep */,
-				A27F3A0AA27F55EA00000162 /* libmbedtls */,
-				A27F3A0AA27F55EA00000163 /* libmpr-mbedtls */,
-				A27F3A0AA27F55EA00000164 /* libmpr */,
-				A27F3A0AA27F55EA00000165 /* libpcre */,				
+    				A27F3A0AA27F55EA0000015B /* Prep */,
+				A27F3A0AA27F55EA0000015C /* libmbedtls */,
+				A27F3A0AA27F55EA0000015D /* libmpr-mbedtls */,
+				A27F3A0AA27F55EA0000015E /* libmpr */,
+				A27F3A0AA27F55EA0000015F /* libpcre */,				
     			);
     			name = libhttp;
     			productName = appweb;
@@ -1344,15 +1338,15 @@
     		};
 		A27F3A0AA27F55EA0000008D /* libmbedtls */ = {
     			isa = PBXNativeTarget;
-    			buildConfigurationList = A27F3A0AA27F55EA00000167 /* Build configuration list for PBXNativeTarget "libmbedtls" */;
+    			buildConfigurationList = A27F3A0AA27F55EA00000161 /* Build configuration list for PBXNativeTarget "libmbedtls" */;
     			buildPhases = (
-    				A27F3A0AA27F55EA00000166 /* Sources */,
-    				A27F3A0AA27F55EA0000010D /* Frameworks */,
+    				A27F3A0AA27F55EA00000160 /* Sources */,
+    				A27F3A0AA27F55EA00000107 /* Frameworks */,
     			);
     			buildRules = (
     			);
     			dependencies = (
-    				A27F3A0AA27F55EA00000168 /* Prep */,				
+    				A27F3A0AA27F55EA00000162 /* Prep */,				
     			);
     			name = libmbedtls;
     			productName = appweb;
@@ -1361,17 +1355,17 @@
     		};
 		A27F3A0AA27F55EA00000091 /* libmpr */ = {
     			isa = PBXNativeTarget;
-    			buildConfigurationList = A27F3A0AA27F55EA0000016A /* Build configuration list for PBXNativeTarget "libmpr" */;
+    			buildConfigurationList = A27F3A0AA27F55EA00000164 /* Build configuration list for PBXNativeTarget "libmpr" */;
     			buildPhases = (
-    				A27F3A0AA27F55EA00000169 /* Sources */,
-    				A27F3A0AA27F55EA0000010E /* Frameworks */,
+    				A27F3A0AA27F55EA00000163 /* Sources */,
+    				A27F3A0AA27F55EA00000108 /* Frameworks */,
     			);
     			buildRules = (
     			);
     			dependencies = (
-    				A27F3A0AA27F55EA0000016B /* Prep */,
-				A27F3A0AA27F55EA0000016C /* libmbedtls */,
-				A27F3A0AA27F55EA0000016D /* libmpr-mbedtls */,				
+    				A27F3A0AA27F55EA00000165 /* Prep */,
+				A27F3A0AA27F55EA00000166 /* libmbedtls */,
+				A27F3A0AA27F55EA00000167 /* libmpr-mbedtls */,				
     			);
     			name = libmpr;
     			productName = appweb;
@@ -1380,16 +1374,16 @@
     		};
 		A27F3A0AA27F55EA0000008F /* libmpr-mbedtls */ = {
     			isa = PBXNativeTarget;
-    			buildConfigurationList = A27F3A0AA27F55EA0000016F /* Build configuration list for PBXNativeTarget "libmpr-mbedtls" */;
+    			buildConfigurationList = A27F3A0AA27F55EA00000169 /* Build configuration list for PBXNativeTarget "libmpr-mbedtls" */;
     			buildPhases = (
-    				A27F3A0AA27F55EA0000016E /* Sources */,
-    				A27F3A0AA27F55EA0000010F /* Frameworks */,
+    				A27F3A0AA27F55EA00000168 /* Sources */,
+    				A27F3A0AA27F55EA00000109 /* Frameworks */,
     			);
     			buildRules = (
     			);
     			dependencies = (
-    				A27F3A0AA27F55EA00000170 /* Prep */,
-				A27F3A0AA27F55EA00000171 /* libmbedtls */,				
+    				A27F3A0AA27F55EA0000016A /* Prep */,
+				A27F3A0AA27F55EA0000016B /* libmbedtls */,				
     			);
     			name = libmpr-mbedtls;
     			productName = appweb;
@@ -1398,15 +1392,15 @@
     		};
 		A27F3A0AA27F55EA00000097 /* libmpr-version */ = {
     			isa = PBXNativeTarget;
-    			buildConfigurationList = A27F3A0AA27F55EA00000173 /* Build configuration list for PBXNativeTarget "libmpr-version" */;
+    			buildConfigurationList = A27F3A0AA27F55EA0000016D /* Build configuration list for PBXNativeTarget "libmpr-version" */;
     			buildPhases = (
-    				A27F3A0AA27F55EA00000172 /* Sources */,
-    				A27F3A0AA27F55EA00000110 /* Frameworks */,
+    				A27F3A0AA27F55EA0000016C /* Sources */,
+    				A27F3A0AA27F55EA0000010A /* Frameworks */,
     			);
     			buildRules = (
     			);
     			dependencies = (
-    				A27F3A0AA27F55EA00000174 /* Prep */,				
+    				A27F3A0AA27F55EA0000016E /* Prep */,				
     			);
     			name = libmpr-version;
     			productName = appweb;
@@ -1415,15 +1409,15 @@
     		};
 		A27F3A0AA27F55EA00000093 /* libpcre */ = {
     			isa = PBXNativeTarget;
-    			buildConfigurationList = A27F3A0AA27F55EA00000176 /* Build configuration list for PBXNativeTarget "libpcre" */;
+    			buildConfigurationList = A27F3A0AA27F55EA00000170 /* Build configuration list for PBXNativeTarget "libpcre" */;
     			buildPhases = (
-    				A27F3A0AA27F55EA00000175 /* Sources */,
-    				A27F3A0AA27F55EA00000111 /* Frameworks */,
+    				A27F3A0AA27F55EA0000016F /* Sources */,
+    				A27F3A0AA27F55EA0000010B /* Frameworks */,
     			);
     			buildRules = (
     			);
     			dependencies = (
-    				A27F3A0AA27F55EA00000177 /* Prep */,				
+    				A27F3A0AA27F55EA00000171 /* Prep */,				
     			);
     			name = libpcre;
     			productName = appweb;
@@ -1432,10 +1426,30 @@
     		};
 		A27F3A0AA27F55EA000000EE /* makerom */ = {
     			isa = PBXNativeTarget;
-    			buildConfigurationList = A27F3A0AA27F55EA00000179 /* Build configuration list for PBXNativeTarget "makerom" */;
+    			buildConfigurationList = A27F3A0AA27F55EA00000173 /* Build configuration list for PBXNativeTarget "makerom" */;
+    			buildPhases = (
+    				A27F3A0AA27F55EA00000172 /* Sources */,
+    				A27F3A0AA27F55EA0000010C /* Frameworks */,
+    			);
+    			buildRules = (
+    			);
+    			dependencies = (
+    				A27F3A0AA27F55EA00000174 /* Prep */,
+				A27F3A0AA27F55EA00000175 /* libmbedtls */,
+				A27F3A0AA27F55EA00000176 /* libmpr-mbedtls */,
+				A27F3A0AA27F55EA00000177 /* libmpr */,				
+    			);
+    			name = makerom;
+    			productName = appweb;
+    			productReference = A27F3A0AA27F55EA000000FE /* makerom */;
+    			productType = "com.apple.product-type.tool";
+    		};
+		A27F3A0AA27F55EA000000F1 /* watchdog */ = {
+    			isa = PBXNativeTarget;
+    			buildConfigurationList = A27F3A0AA27F55EA00000179 /* Build configuration list for PBXNativeTarget "watchdog" */;
     			buildPhases = (
     				A27F3A0AA27F55EA00000178 /* Sources */,
-    				A27F3A0AA27F55EA00000112 /* Frameworks */,
+    				A27F3A0AA27F55EA0000010D /* Frameworks */,
     			);
     			buildRules = (
     			);
@@ -1445,29 +1459,9 @@
 				A27F3A0AA27F55EA0000017C /* libmpr-mbedtls */,
 				A27F3A0AA27F55EA0000017D /* libmpr */,				
     			);
-    			name = makerom;
-    			productName = appweb;
-    			productReference = A27F3A0AA27F55EA00000104 /* makerom */;
-    			productType = "com.apple.product-type.tool";
-    		};
-		A27F3A0AA27F55EA000000F1 /* watchdog */ = {
-    			isa = PBXNativeTarget;
-    			buildConfigurationList = A27F3A0AA27F55EA0000017F /* Build configuration list for PBXNativeTarget "watchdog" */;
-    			buildPhases = (
-    				A27F3A0AA27F55EA0000017E /* Sources */,
-    				A27F3A0AA27F55EA00000113 /* Frameworks */,
-    			);
-    			buildRules = (
-    			);
-    			dependencies = (
-    				A27F3A0AA27F55EA00000180 /* Prep */,
-				A27F3A0AA27F55EA00000181 /* libmbedtls */,
-				A27F3A0AA27F55EA00000182 /* libmpr-mbedtls */,
-				A27F3A0AA27F55EA00000183 /* libmpr */,				
-    			);
     			name = watchdog;
     			productName = appweb;
-    			productReference = A27F3A0AA27F55EA00000105 /* watchdog */;
+    			productReference = A27F3A0AA27F55EA000000FF /* watchdog */;
     			productType = "com.apple.product-type.tool";
     		};
 /* End PBXNativeTarget section */
@@ -1642,8 +1636,8 @@ fi";
     			knownRegions = (
     				en,
     			);
-    			mainGroup = A27F3A0AA27F55EA00000114;
-    			productRefGroup = A27F3A0AA27F55EA00000123 /* Products */;
+    			mainGroup = A27F3A0AA27F55EA0000010E;
+    			productRefGroup = A27F3A0AA27F55EA0000011D /* Products */;
     			projectDirPath = "";
     			projectRoot = "";
     			targets = (
@@ -1671,7 +1665,7 @@ fi";
     /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
-		A27F3A0AA27F55EA00000124 /* appweb Sources */ = {
+		A27F3A0AA27F55EA0000011E /* appweb Sources */ = {
     			isa = PBXSourcesBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
@@ -1679,7 +1673,7 @@ fi";
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     		};
-		A27F3A0AA27F55EA0000012F /* authpass Sources */ = {
+		A27F3A0AA27F55EA00000129 /* authpass Sources */ = {
     			isa = PBXSourcesBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
@@ -1687,7 +1681,7 @@ fi";
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     		};
-		A27F3A0AA27F55EA0000013A /* espcmd Sources */ = {
+		A27F3A0AA27F55EA00000134 /* espcmd Sources */ = {
     			isa = PBXSourcesBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
@@ -1695,7 +1689,7 @@ fi";
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     		};
-		A27F3A0AA27F55EA00000144 /* httpcmd Sources */ = {
+		A27F3A0AA27F55EA0000013E /* httpcmd Sources */ = {
     			isa = PBXSourcesBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
@@ -1703,7 +1697,7 @@ fi";
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     		};
-		A27F3A0AA27F55EA0000014C /* libappweb Sources */ = {
+		A27F3A0AA27F55EA00000146 /* libappweb Sources */ = {
     			isa = PBXSourcesBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
@@ -1715,7 +1709,7 @@ fi";
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     		};
-		A27F3A0AA27F55EA00000156 /* libesp Sources */ = {
+		A27F3A0AA27F55EA00000150 /* libesp Sources */ = {
     			isa = PBXSourcesBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
@@ -1723,7 +1717,7 @@ fi";
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     		};
-		A27F3A0AA27F55EA0000015F /* libhttp Sources */ = {
+		A27F3A0AA27F55EA00000159 /* libhttp Sources */ = {
     			isa = PBXSourcesBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
@@ -1731,7 +1725,7 @@ fi";
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     		};
-		A27F3A0AA27F55EA00000166 /* libmbedtls Sources */ = {
+		A27F3A0AA27F55EA00000160 /* libmbedtls Sources */ = {
     			isa = PBXSourcesBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
@@ -1739,7 +1733,7 @@ fi";
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     		};
-		A27F3A0AA27F55EA00000169 /* libmpr Sources */ = {
+		A27F3A0AA27F55EA00000163 /* libmpr Sources */ = {
     			isa = PBXSourcesBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
@@ -1747,7 +1741,7 @@ fi";
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     		};
-		A27F3A0AA27F55EA0000016E /* libmpr-mbedtls Sources */ = {
+		A27F3A0AA27F55EA00000168 /* libmpr-mbedtls Sources */ = {
     			isa = PBXSourcesBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
@@ -1755,7 +1749,7 @@ fi";
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     		};
-		A27F3A0AA27F55EA00000172 /* libmpr-version Sources */ = {
+		A27F3A0AA27F55EA0000016C /* libmpr-version Sources */ = {
     			isa = PBXSourcesBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
@@ -1763,7 +1757,7 @@ fi";
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     		};
-		A27F3A0AA27F55EA00000175 /* libpcre Sources */ = {
+		A27F3A0AA27F55EA0000016F /* libpcre Sources */ = {
     			isa = PBXSourcesBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
@@ -1771,7 +1765,7 @@ fi";
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     		};
-		A27F3A0AA27F55EA00000178 /* makerom Sources */ = {
+		A27F3A0AA27F55EA00000172 /* makerom Sources */ = {
     			isa = PBXSourcesBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
@@ -1779,7 +1773,7 @@ fi";
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     		};
-		A27F3A0AA27F55EA0000017E /* watchdog Sources */ = {
+		A27F3A0AA27F55EA00000178 /* watchdog Sources */ = {
     			isa = PBXSourcesBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
@@ -1790,132 +1784,132 @@ fi";
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		A27F3A0AA27F55EA00000126 /* PBXTargetDependency appweb depends on Prep */ = {
+		A27F3A0AA27F55EA00000120 /* PBXTargetDependency appweb depends on Prep */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000027 /* Prep */;
     			targetProxy = A27F3A0AA27F55EA0000008B /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000127 /* PBXTargetDependency appweb depends on libmbedtls */ = {
+		A27F3A0AA27F55EA00000121 /* PBXTargetDependency appweb depends on libmbedtls */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA0000008D /* libmbedtls */;
     			targetProxy = A27F3A0AA27F55EA0000008C /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000128 /* PBXTargetDependency appweb depends on libmpr-mbedtls */ = {
+		A27F3A0AA27F55EA00000122 /* PBXTargetDependency appweb depends on libmpr-mbedtls */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA0000008F /* libmpr-mbedtls */;
     			targetProxy = A27F3A0AA27F55EA0000008E /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000129 /* PBXTargetDependency appweb depends on libmpr */ = {
+		A27F3A0AA27F55EA00000123 /* PBXTargetDependency appweb depends on libmpr */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000091 /* libmpr */;
     			targetProxy = A27F3A0AA27F55EA00000090 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA0000012A /* PBXTargetDependency appweb depends on libpcre */ = {
+		A27F3A0AA27F55EA00000124 /* PBXTargetDependency appweb depends on libpcre */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000093 /* libpcre */;
     			targetProxy = A27F3A0AA27F55EA00000092 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA0000012B /* PBXTargetDependency appweb depends on libhttp */ = {
+		A27F3A0AA27F55EA00000125 /* PBXTargetDependency appweb depends on libhttp */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000095 /* libhttp */;
     			targetProxy = A27F3A0AA27F55EA00000094 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA0000012C /* PBXTargetDependency appweb depends on libmpr-version */ = {
+		A27F3A0AA27F55EA00000126 /* PBXTargetDependency appweb depends on libmpr-version */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000097 /* libmpr-version */;
     			targetProxy = A27F3A0AA27F55EA00000096 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA0000012D /* PBXTargetDependency appweb depends on libesp */ = {
+		A27F3A0AA27F55EA00000127 /* PBXTargetDependency appweb depends on libesp */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000099 /* libesp */;
     			targetProxy = A27F3A0AA27F55EA00000098 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA0000012E /* PBXTargetDependency appweb depends on libappweb */ = {
+		A27F3A0AA27F55EA00000128 /* PBXTargetDependency appweb depends on libappweb */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA0000009B /* libappweb */;
     			targetProxy = A27F3A0AA27F55EA0000009A /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000131 /* PBXTargetDependency authpass depends on Prep */ = {
+		A27F3A0AA27F55EA0000012B /* PBXTargetDependency authpass depends on Prep */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000027 /* Prep */;
     			targetProxy = A27F3A0AA27F55EA0000009C /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000132 /* PBXTargetDependency authpass depends on libmbedtls */ = {
+		A27F3A0AA27F55EA0000012C /* PBXTargetDependency authpass depends on libmbedtls */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA0000008D /* libmbedtls */;
     			targetProxy = A27F3A0AA27F55EA0000009D /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000133 /* PBXTargetDependency authpass depends on libmpr-mbedtls */ = {
+		A27F3A0AA27F55EA0000012D /* PBXTargetDependency authpass depends on libmpr-mbedtls */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA0000008F /* libmpr-mbedtls */;
     			targetProxy = A27F3A0AA27F55EA0000009E /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000134 /* PBXTargetDependency authpass depends on libmpr */ = {
+		A27F3A0AA27F55EA0000012E /* PBXTargetDependency authpass depends on libmpr */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000091 /* libmpr */;
     			targetProxy = A27F3A0AA27F55EA0000009F /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000135 /* PBXTargetDependency authpass depends on libpcre */ = {
+		A27F3A0AA27F55EA0000012F /* PBXTargetDependency authpass depends on libpcre */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000093 /* libpcre */;
     			targetProxy = A27F3A0AA27F55EA000000A0 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000136 /* PBXTargetDependency authpass depends on libhttp */ = {
+		A27F3A0AA27F55EA00000130 /* PBXTargetDependency authpass depends on libhttp */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000095 /* libhttp */;
     			targetProxy = A27F3A0AA27F55EA000000A1 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000137 /* PBXTargetDependency authpass depends on libmpr-version */ = {
+		A27F3A0AA27F55EA00000131 /* PBXTargetDependency authpass depends on libmpr-version */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000097 /* libmpr-version */;
     			targetProxy = A27F3A0AA27F55EA000000A2 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000138 /* PBXTargetDependency authpass depends on libesp */ = {
+		A27F3A0AA27F55EA00000132 /* PBXTargetDependency authpass depends on libesp */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000099 /* libesp */;
     			targetProxy = A27F3A0AA27F55EA000000A3 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000139 /* PBXTargetDependency authpass depends on libappweb */ = {
+		A27F3A0AA27F55EA00000133 /* PBXTargetDependency authpass depends on libappweb */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA0000009B /* libappweb */;
     			targetProxy = A27F3A0AA27F55EA000000A4 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA0000013C /* PBXTargetDependency espcmd depends on Prep */ = {
+		A27F3A0AA27F55EA00000136 /* PBXTargetDependency espcmd depends on Prep */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000027 /* Prep */;
     			targetProxy = A27F3A0AA27F55EA000000A5 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA0000013D /* PBXTargetDependency espcmd depends on libmbedtls */ = {
+		A27F3A0AA27F55EA00000137 /* PBXTargetDependency espcmd depends on libmbedtls */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA0000008D /* libmbedtls */;
     			targetProxy = A27F3A0AA27F55EA000000A6 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA0000013E /* PBXTargetDependency espcmd depends on libmpr-mbedtls */ = {
+		A27F3A0AA27F55EA00000138 /* PBXTargetDependency espcmd depends on libmpr-mbedtls */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA0000008F /* libmpr-mbedtls */;
     			targetProxy = A27F3A0AA27F55EA000000A7 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA0000013F /* PBXTargetDependency espcmd depends on libmpr */ = {
+		A27F3A0AA27F55EA00000139 /* PBXTargetDependency espcmd depends on libmpr */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000091 /* libmpr */;
     			targetProxy = A27F3A0AA27F55EA000000A8 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000140 /* PBXTargetDependency espcmd depends on libpcre */ = {
+		A27F3A0AA27F55EA0000013A /* PBXTargetDependency espcmd depends on libpcre */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000093 /* libpcre */;
     			targetProxy = A27F3A0AA27F55EA000000A9 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000141 /* PBXTargetDependency espcmd depends on libhttp */ = {
+		A27F3A0AA27F55EA0000013B /* PBXTargetDependency espcmd depends on libhttp */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000095 /* libhttp */;
     			targetProxy = A27F3A0AA27F55EA000000AA /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000142 /* PBXTargetDependency espcmd depends on libmpr-version */ = {
+		A27F3A0AA27F55EA0000013C /* PBXTargetDependency espcmd depends on libmpr-version */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000097 /* libmpr-version */;
     			targetProxy = A27F3A0AA27F55EA000000AB /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000143 /* PBXTargetDependency espcmd depends on libesp */ = {
+		A27F3A0AA27F55EA0000013D /* PBXTargetDependency espcmd depends on libesp */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000099 /* libesp */;
     			targetProxy = A27F3A0AA27F55EA000000AC /* PBXContainerItemProxy */;
@@ -1925,32 +1919,32 @@ fi";
     			target = A27F3A0AA27F55EA00000027 /* Prep */;
     			targetProxy = A27F3A0AA27F55EA000000AD /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000146 /* PBXTargetDependency httpcmd depends on Prep */ = {
+		A27F3A0AA27F55EA00000140 /* PBXTargetDependency httpcmd depends on Prep */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000027 /* Prep */;
     			targetProxy = A27F3A0AA27F55EA000000AE /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000147 /* PBXTargetDependency httpcmd depends on libmbedtls */ = {
+		A27F3A0AA27F55EA00000141 /* PBXTargetDependency httpcmd depends on libmbedtls */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA0000008D /* libmbedtls */;
     			targetProxy = A27F3A0AA27F55EA000000AF /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000148 /* PBXTargetDependency httpcmd depends on libmpr-mbedtls */ = {
+		A27F3A0AA27F55EA00000142 /* PBXTargetDependency httpcmd depends on libmpr-mbedtls */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA0000008F /* libmpr-mbedtls */;
     			targetProxy = A27F3A0AA27F55EA000000B0 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000149 /* PBXTargetDependency httpcmd depends on libmpr */ = {
+		A27F3A0AA27F55EA00000143 /* PBXTargetDependency httpcmd depends on libmpr */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000091 /* libmpr */;
     			targetProxy = A27F3A0AA27F55EA000000B1 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA0000014A /* PBXTargetDependency httpcmd depends on libpcre */ = {
+		A27F3A0AA27F55EA00000144 /* PBXTargetDependency httpcmd depends on libpcre */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000093 /* libpcre */;
     			targetProxy = A27F3A0AA27F55EA000000B2 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA0000014B /* PBXTargetDependency httpcmd depends on libhttp */ = {
+		A27F3A0AA27F55EA00000145 /* PBXTargetDependency httpcmd depends on libhttp */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000095 /* libhttp */;
     			targetProxy = A27F3A0AA27F55EA000000B3 /* PBXContainerItemProxy */;
@@ -1960,162 +1954,162 @@ fi";
     			target = A27F3A0AA27F55EA00000027 /* Prep */;
     			targetProxy = A27F3A0AA27F55EA000000B4 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA0000014E /* PBXTargetDependency libappweb depends on Prep */ = {
+		A27F3A0AA27F55EA00000148 /* PBXTargetDependency libappweb depends on Prep */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000027 /* Prep */;
     			targetProxy = A27F3A0AA27F55EA000000B5 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA0000014F /* PBXTargetDependency libappweb depends on libmbedtls */ = {
+		A27F3A0AA27F55EA00000149 /* PBXTargetDependency libappweb depends on libmbedtls */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA0000008D /* libmbedtls */;
     			targetProxy = A27F3A0AA27F55EA000000B6 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000150 /* PBXTargetDependency libappweb depends on libmpr-mbedtls */ = {
+		A27F3A0AA27F55EA0000014A /* PBXTargetDependency libappweb depends on libmpr-mbedtls */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA0000008F /* libmpr-mbedtls */;
     			targetProxy = A27F3A0AA27F55EA000000B7 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000151 /* PBXTargetDependency libappweb depends on libmpr */ = {
+		A27F3A0AA27F55EA0000014B /* PBXTargetDependency libappweb depends on libmpr */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000091 /* libmpr */;
     			targetProxy = A27F3A0AA27F55EA000000B8 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000152 /* PBXTargetDependency libappweb depends on libpcre */ = {
+		A27F3A0AA27F55EA0000014C /* PBXTargetDependency libappweb depends on libpcre */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000093 /* libpcre */;
     			targetProxy = A27F3A0AA27F55EA000000B9 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000153 /* PBXTargetDependency libappweb depends on libhttp */ = {
+		A27F3A0AA27F55EA0000014D /* PBXTargetDependency libappweb depends on libhttp */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000095 /* libhttp */;
     			targetProxy = A27F3A0AA27F55EA000000BA /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000154 /* PBXTargetDependency libappweb depends on libmpr-version */ = {
+		A27F3A0AA27F55EA0000014E /* PBXTargetDependency libappweb depends on libmpr-version */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000097 /* libmpr-version */;
     			targetProxy = A27F3A0AA27F55EA000000BB /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000155 /* PBXTargetDependency libappweb depends on libesp */ = {
+		A27F3A0AA27F55EA0000014F /* PBXTargetDependency libappweb depends on libesp */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000099 /* libesp */;
     			targetProxy = A27F3A0AA27F55EA000000BC /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000158 /* PBXTargetDependency libesp depends on Prep */ = {
+		A27F3A0AA27F55EA00000152 /* PBXTargetDependency libesp depends on Prep */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000027 /* Prep */;
     			targetProxy = A27F3A0AA27F55EA000000BD /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000159 /* PBXTargetDependency libesp depends on libmbedtls */ = {
+		A27F3A0AA27F55EA00000153 /* PBXTargetDependency libesp depends on libmbedtls */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA0000008D /* libmbedtls */;
     			targetProxy = A27F3A0AA27F55EA000000BE /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA0000015A /* PBXTargetDependency libesp depends on libmpr-mbedtls */ = {
+		A27F3A0AA27F55EA00000154 /* PBXTargetDependency libesp depends on libmpr-mbedtls */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA0000008F /* libmpr-mbedtls */;
     			targetProxy = A27F3A0AA27F55EA000000BF /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA0000015B /* PBXTargetDependency libesp depends on libmpr */ = {
+		A27F3A0AA27F55EA00000155 /* PBXTargetDependency libesp depends on libmpr */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000091 /* libmpr */;
     			targetProxy = A27F3A0AA27F55EA000000C0 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA0000015C /* PBXTargetDependency libesp depends on libpcre */ = {
+		A27F3A0AA27F55EA00000156 /* PBXTargetDependency libesp depends on libpcre */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000093 /* libpcre */;
     			targetProxy = A27F3A0AA27F55EA000000C1 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA0000015D /* PBXTargetDependency libesp depends on libhttp */ = {
+		A27F3A0AA27F55EA00000157 /* PBXTargetDependency libesp depends on libhttp */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000095 /* libhttp */;
     			targetProxy = A27F3A0AA27F55EA000000C2 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA0000015E /* PBXTargetDependency libesp depends on libmpr-version */ = {
+		A27F3A0AA27F55EA00000158 /* PBXTargetDependency libesp depends on libmpr-version */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000097 /* libmpr-version */;
     			targetProxy = A27F3A0AA27F55EA000000C3 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000161 /* PBXTargetDependency libhttp depends on Prep */ = {
+		A27F3A0AA27F55EA0000015B /* PBXTargetDependency libhttp depends on Prep */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000027 /* Prep */;
     			targetProxy = A27F3A0AA27F55EA000000C4 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000162 /* PBXTargetDependency libhttp depends on libmbedtls */ = {
+		A27F3A0AA27F55EA0000015C /* PBXTargetDependency libhttp depends on libmbedtls */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA0000008D /* libmbedtls */;
     			targetProxy = A27F3A0AA27F55EA000000C5 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000163 /* PBXTargetDependency libhttp depends on libmpr-mbedtls */ = {
+		A27F3A0AA27F55EA0000015D /* PBXTargetDependency libhttp depends on libmpr-mbedtls */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA0000008F /* libmpr-mbedtls */;
     			targetProxy = A27F3A0AA27F55EA000000C6 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000164 /* PBXTargetDependency libhttp depends on libmpr */ = {
+		A27F3A0AA27F55EA0000015E /* PBXTargetDependency libhttp depends on libmpr */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000091 /* libmpr */;
     			targetProxy = A27F3A0AA27F55EA000000C7 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000165 /* PBXTargetDependency libhttp depends on libpcre */ = {
+		A27F3A0AA27F55EA0000015F /* PBXTargetDependency libhttp depends on libpcre */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000093 /* libpcre */;
     			targetProxy = A27F3A0AA27F55EA000000C8 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000168 /* PBXTargetDependency libmbedtls depends on Prep */ = {
+		A27F3A0AA27F55EA00000162 /* PBXTargetDependency libmbedtls depends on Prep */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000027 /* Prep */;
     			targetProxy = A27F3A0AA27F55EA000000C9 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA0000016B /* PBXTargetDependency libmpr depends on Prep */ = {
+		A27F3A0AA27F55EA00000165 /* PBXTargetDependency libmpr depends on Prep */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000027 /* Prep */;
     			targetProxy = A27F3A0AA27F55EA000000CA /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA0000016C /* PBXTargetDependency libmpr depends on libmbedtls */ = {
+		A27F3A0AA27F55EA00000166 /* PBXTargetDependency libmpr depends on libmbedtls */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA0000008D /* libmbedtls */;
     			targetProxy = A27F3A0AA27F55EA000000CB /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA0000016D /* PBXTargetDependency libmpr depends on libmpr-mbedtls */ = {
+		A27F3A0AA27F55EA00000167 /* PBXTargetDependency libmpr depends on libmpr-mbedtls */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA0000008F /* libmpr-mbedtls */;
     			targetProxy = A27F3A0AA27F55EA000000CC /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000170 /* PBXTargetDependency libmpr-mbedtls depends on Prep */ = {
+		A27F3A0AA27F55EA0000016A /* PBXTargetDependency libmpr-mbedtls depends on Prep */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000027 /* Prep */;
     			targetProxy = A27F3A0AA27F55EA000000CD /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000171 /* PBXTargetDependency libmpr-mbedtls depends on libmbedtls */ = {
+		A27F3A0AA27F55EA0000016B /* PBXTargetDependency libmpr-mbedtls depends on libmbedtls */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA0000008D /* libmbedtls */;
     			targetProxy = A27F3A0AA27F55EA000000CE /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000174 /* PBXTargetDependency libmpr-version depends on Prep */ = {
+		A27F3A0AA27F55EA0000016E /* PBXTargetDependency libmpr-version depends on Prep */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000027 /* Prep */;
     			targetProxy = A27F3A0AA27F55EA000000CF /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000177 /* PBXTargetDependency libpcre depends on Prep */ = {
+		A27F3A0AA27F55EA00000171 /* PBXTargetDependency libpcre depends on Prep */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000027 /* Prep */;
     			targetProxy = A27F3A0AA27F55EA000000D0 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA0000017A /* PBXTargetDependency makerom depends on Prep */ = {
+		A27F3A0AA27F55EA00000174 /* PBXTargetDependency makerom depends on Prep */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000027 /* Prep */;
     			targetProxy = A27F3A0AA27F55EA000000D1 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA0000017B /* PBXTargetDependency makerom depends on libmbedtls */ = {
+		A27F3A0AA27F55EA00000175 /* PBXTargetDependency makerom depends on libmbedtls */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA0000008D /* libmbedtls */;
     			targetProxy = A27F3A0AA27F55EA000000D2 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA0000017C /* PBXTargetDependency makerom depends on libmpr-mbedtls */ = {
+		A27F3A0AA27F55EA00000176 /* PBXTargetDependency makerom depends on libmpr-mbedtls */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA0000008F /* libmpr-mbedtls */;
     			targetProxy = A27F3A0AA27F55EA000000D3 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA0000017D /* PBXTargetDependency makerom depends on libmpr */ = {
+		A27F3A0AA27F55EA00000177 /* PBXTargetDependency makerom depends on libmpr */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000091 /* libmpr */;
     			targetProxy = A27F3A0AA27F55EA000000D4 /* PBXContainerItemProxy */;
@@ -2125,22 +2119,22 @@ fi";
     			target = A27F3A0AA27F55EA00000027 /* Prep */;
     			targetProxy = A27F3A0AA27F55EA000000D5 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000180 /* PBXTargetDependency watchdog depends on Prep */ = {
+		A27F3A0AA27F55EA0000017A /* PBXTargetDependency watchdog depends on Prep */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000027 /* Prep */;
     			targetProxy = A27F3A0AA27F55EA000000D6 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000181 /* PBXTargetDependency watchdog depends on libmbedtls */ = {
+		A27F3A0AA27F55EA0000017B /* PBXTargetDependency watchdog depends on libmbedtls */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA0000008D /* libmbedtls */;
     			targetProxy = A27F3A0AA27F55EA000000D7 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000182 /* PBXTargetDependency watchdog depends on libmpr-mbedtls */ = {
+		A27F3A0AA27F55EA0000017C /* PBXTargetDependency watchdog depends on libmpr-mbedtls */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA0000008F /* libmpr-mbedtls */;
     			targetProxy = A27F3A0AA27F55EA000000D8 /* PBXContainerItemProxy */;
     		};
-		A27F3A0AA27F55EA00000183 /* PBXTargetDependency watchdog depends on libmpr */ = {
+		A27F3A0AA27F55EA0000017D /* PBXTargetDependency watchdog depends on libmpr */ = {
     			isa = PBXTargetDependency;
     			target = A27F3A0AA27F55EA00000091 /* libmpr */;
     			targetProxy = A27F3A0AA27F55EA000000D9 /* PBXContainerItemProxy */;
@@ -2409,7 +2403,7 @@ ENABLE_TESTABILITY = YES;
     			};
     			name = Release;
     		};
-		A27F3A0AA27F55EA00000184 /* Debug */ = {
+		A27F3A0AA27F55EA0000017E /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = appweb;
@@ -2429,7 +2423,7 @@ ENABLE_TESTABILITY = YES;
     			};
     			name = Debug;
     		};
-    		A27F3A0AA27F55EA00000185 /* Release */ = {
+    		A27F3A0AA27F55EA0000017F /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = appweb;
@@ -2449,10 +2443,122 @@ ENABLE_TESTABILITY = YES;
     			};
     			name = Release;
     		};
-		A27F3A0AA27F55EA00000186 /* Debug */ = {
+		A27F3A0AA27F55EA00000180 /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = authpass;
+    
+    				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_FILE_OFFSET_BITS=64",
+					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
+					"ME_DEBUG=1",
+					"$(inherited)"
+				);
+				OTHER_LDFLAGS = (
+					"-lpam",
+					);
+
+				MACH_O_TYPE = mh_execute;
+
+    			};
+    			name = Debug;
+    		};
+    		A27F3A0AA27F55EA00000181 /* Release */ = {
+    			isa = XCBuildConfiguration;
+    			buildSettings = {
+    				PRODUCT_NAME = authpass;
+    
+    				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_FILE_OFFSET_BITS=64",
+					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
+					"ME_DEBUG=0",
+					"$(inherited)"
+				);
+				OTHER_LDFLAGS = (
+					"-lpam",
+					);
+
+				MACH_O_TYPE = mh_execute;
+
+    			};
+    			name = Release;
+    		};
+		A27F3A0AA27F55EA00000182 /* Debug */ = {
+    			isa = XCBuildConfiguration;
+    			buildSettings = {
+    				PRODUCT_NAME = appweb-esp;
+    
+    				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_FILE_OFFSET_BITS=64",
+					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
+					"ME_DEBUG=1",
+					"$(inherited)"
+				);
+				OTHER_LDFLAGS = (
+					"-lpam",
+					);
+
+				MACH_O_TYPE = mh_execute;
+
+    			};
+    			name = Debug;
+    		};
+    		A27F3A0AA27F55EA00000183 /* Release */ = {
+    			isa = XCBuildConfiguration;
+    			buildSettings = {
+    				PRODUCT_NAME = appweb-esp;
+    
+    				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_FILE_OFFSET_BITS=64",
+					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
+					"ME_DEBUG=0",
+					"$(inherited)"
+				);
+				OTHER_LDFLAGS = (
+					"-lpam",
+					);
+
+				MACH_O_TYPE = mh_execute;
+
+    			};
+    			name = Release;
+    		};
+		A27F3A0AA27F55EA00000184 /* Debug */ = {
+    			isa = XCBuildConfiguration;
+    			buildSettings = {
+    				PRODUCT_NAME = extras;
+    
+    				GCC_PREPROCESSOR_DEFINITIONS = (
+					"ME_DEBUG=1",
+					"$(inherited)"
+				);
+				OTHER_LDFLAGS = ();
+
+				MACH_O_TYPE = mh_execute;
+
+    			};
+    			name = Debug;
+    		};
+    		A27F3A0AA27F55EA00000185 /* Release */ = {
+    			isa = XCBuildConfiguration;
+    			buildSettings = {
+    				PRODUCT_NAME = extras;
+    
+    				GCC_PREPROCESSOR_DEFINITIONS = (
+					"ME_DEBUG=0",
+					"$(inherited)"
+				);
+				OTHER_LDFLAGS = ();
+
+				MACH_O_TYPE = mh_execute;
+
+    			};
+    			name = Release;
+    		};
+		A27F3A0AA27F55EA00000186 /* Debug */ = {
+    			isa = XCBuildConfiguration;
+    			buildSettings = {
+    				PRODUCT_NAME = http;
     
     				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_FILE_OFFSET_BITS=64",
@@ -2472,7 +2578,7 @@ ENABLE_TESTABILITY = YES;
     		A27F3A0AA27F55EA00000187 /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = authpass;
+    				PRODUCT_NAME = http;
     
     				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_FILE_OFFSET_BITS=64",
@@ -2492,17 +2598,13 @@ ENABLE_TESTABILITY = YES;
 		A27F3A0AA27F55EA00000188 /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = appweb-esp;
+    				PRODUCT_NAME = install-certs;
     
     				GCC_PREPROCESSOR_DEFINITIONS = (
-					"_FILE_OFFSET_BITS=64",
-					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=1",
 					"$(inherited)"
 				);
-				OTHER_LDFLAGS = (
-					"-lpam",
-					);
+				OTHER_LDFLAGS = ();
 
 				MACH_O_TYPE = mh_execute;
 
@@ -2512,17 +2614,13 @@ ENABLE_TESTABILITY = YES;
     		A27F3A0AA27F55EA00000189 /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = appweb-esp;
+    				PRODUCT_NAME = install-certs;
     
     				GCC_PREPROCESSOR_DEFINITIONS = (
-					"_FILE_OFFSET_BITS=64",
-					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=0",
 					"$(inherited)"
 				);
-				OTHER_LDFLAGS = (
-					"-lpam",
-					);
+				OTHER_LDFLAGS = ();
 
 				MACH_O_TYPE = mh_execute;
 
@@ -2532,110 +2630,6 @@ ENABLE_TESTABILITY = YES;
 		A27F3A0AA27F55EA0000018A /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = extras;
-    
-    				GCC_PREPROCESSOR_DEFINITIONS = (
-					"ME_DEBUG=1",
-					"$(inherited)"
-				);
-				OTHER_LDFLAGS = ();
-
-				MACH_O_TYPE = mh_execute;
-
-    			};
-    			name = Debug;
-    		};
-    		A27F3A0AA27F55EA0000018B /* Release */ = {
-    			isa = XCBuildConfiguration;
-    			buildSettings = {
-    				PRODUCT_NAME = extras;
-    
-    				GCC_PREPROCESSOR_DEFINITIONS = (
-					"ME_DEBUG=0",
-					"$(inherited)"
-				);
-				OTHER_LDFLAGS = ();
-
-				MACH_O_TYPE = mh_execute;
-
-    			};
-    			name = Release;
-    		};
-		A27F3A0AA27F55EA0000018C /* Debug */ = {
-    			isa = XCBuildConfiguration;
-    			buildSettings = {
-    				PRODUCT_NAME = http;
-    
-    				GCC_PREPROCESSOR_DEFINITIONS = (
-					"_FILE_OFFSET_BITS=64",
-					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
-					"ME_DEBUG=1",
-					"$(inherited)"
-				);
-				OTHER_LDFLAGS = (
-					"-lpam",
-					);
-
-				MACH_O_TYPE = mh_execute;
-
-    			};
-    			name = Debug;
-    		};
-    		A27F3A0AA27F55EA0000018D /* Release */ = {
-    			isa = XCBuildConfiguration;
-    			buildSettings = {
-    				PRODUCT_NAME = http;
-    
-    				GCC_PREPROCESSOR_DEFINITIONS = (
-					"_FILE_OFFSET_BITS=64",
-					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
-					"ME_DEBUG=0",
-					"$(inherited)"
-				);
-				OTHER_LDFLAGS = (
-					"-lpam",
-					);
-
-				MACH_O_TYPE = mh_execute;
-
-    			};
-    			name = Release;
-    		};
-		A27F3A0AA27F55EA0000018E /* Debug */ = {
-    			isa = XCBuildConfiguration;
-    			buildSettings = {
-    				PRODUCT_NAME = install-certs;
-    
-    				GCC_PREPROCESSOR_DEFINITIONS = (
-					"ME_DEBUG=1",
-					"$(inherited)"
-				);
-				OTHER_LDFLAGS = ();
-
-				MACH_O_TYPE = mh_execute;
-
-    			};
-    			name = Debug;
-    		};
-    		A27F3A0AA27F55EA0000018F /* Release */ = {
-    			isa = XCBuildConfiguration;
-    			buildSettings = {
-    				PRODUCT_NAME = install-certs;
-    
-    				GCC_PREPROCESSOR_DEFINITIONS = (
-					"ME_DEBUG=0",
-					"$(inherited)"
-				);
-				OTHER_LDFLAGS = ();
-
-				MACH_O_TYPE = mh_execute;
-
-    			};
-    			name = Release;
-    		};
-		A27F3A0AA27F55EA00000190 /* Debug */ = {
-    			isa = XCBuildConfiguration;
-    			buildSettings = {
     				PRODUCT_NAME = libappweb;
     				EXECUTABLE_EXTENSION = a;
 
@@ -2648,6 +2642,129 @@ ENABLE_TESTABILITY = YES;
 				OTHER_LDFLAGS = (
 					"",
 					);
+
+				MACH_O_TYPE = staticlib;
+
+    			};
+    			name = Debug;
+    		};
+    		A27F3A0AA27F55EA0000018B /* Release */ = {
+    			isa = XCBuildConfiguration;
+    			buildSettings = {
+    				PRODUCT_NAME = libappweb;
+    				EXECUTABLE_EXTENSION = a;
+
+    				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_FILE_OFFSET_BITS=64",
+					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
+					"ME_DEBUG=0",
+					"$(inherited)"
+				);
+				OTHER_LDFLAGS = (
+					"",
+					);
+
+				MACH_O_TYPE = staticlib;
+
+    			};
+    			name = Release;
+    		};
+		A27F3A0AA27F55EA0000018C /* Debug */ = {
+    			isa = XCBuildConfiguration;
+    			buildSettings = {
+    				PRODUCT_NAME = libesp;
+    				EXECUTABLE_EXTENSION = a;
+
+    				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_FILE_OFFSET_BITS=64",
+					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
+					"ME_DEBUG=1",
+					"$(inherited)"
+				);
+				OTHER_LDFLAGS = (
+					"",
+					);
+
+				MACH_O_TYPE = staticlib;
+
+    			};
+    			name = Debug;
+    		};
+    		A27F3A0AA27F55EA0000018D /* Release */ = {
+    			isa = XCBuildConfiguration;
+    			buildSettings = {
+    				PRODUCT_NAME = libesp;
+    				EXECUTABLE_EXTENSION = a;
+
+    				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_FILE_OFFSET_BITS=64",
+					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
+					"ME_DEBUG=0",
+					"$(inherited)"
+				);
+				OTHER_LDFLAGS = (
+					"",
+					);
+
+				MACH_O_TYPE = staticlib;
+
+    			};
+    			name = Release;
+    		};
+		A27F3A0AA27F55EA0000018E /* Debug */ = {
+    			isa = XCBuildConfiguration;
+    			buildSettings = {
+    				PRODUCT_NAME = libhttp;
+    				EXECUTABLE_EXTENSION = a;
+
+    				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_FILE_OFFSET_BITS=64",
+					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
+					"ME_DEBUG=1",
+					"$(inherited)"
+				);
+				OTHER_LDFLAGS = (
+					"",
+					);
+
+				MACH_O_TYPE = staticlib;
+
+    			};
+    			name = Debug;
+    		};
+    		A27F3A0AA27F55EA0000018F /* Release */ = {
+    			isa = XCBuildConfiguration;
+    			buildSettings = {
+    				PRODUCT_NAME = libhttp;
+    				EXECUTABLE_EXTENSION = a;
+
+    				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_FILE_OFFSET_BITS=64",
+					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
+					"ME_DEBUG=0",
+					"$(inherited)"
+				);
+				OTHER_LDFLAGS = (
+					"",
+					);
+
+				MACH_O_TYPE = staticlib;
+
+    			};
+    			name = Release;
+    		};
+		A27F3A0AA27F55EA00000190 /* Debug */ = {
+    			isa = XCBuildConfiguration;
+    			buildSettings = {
+    				PRODUCT_NAME = libmbedtls;
+    				EXECUTABLE_EXTENSION = a;
+
+    				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
+					"ME_DEBUG=1",
+					"$(inherited)"
+				);
+				OTHER_LDFLAGS = ();
 
 				MACH_O_TYPE = staticlib;
 
@@ -2657,18 +2774,15 @@ ENABLE_TESTABILITY = YES;
     		A27F3A0AA27F55EA00000191 /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = libappweb;
+    				PRODUCT_NAME = libmbedtls;
     				EXECUTABLE_EXTENSION = a;
 
     				GCC_PREPROCESSOR_DEFINITIONS = (
-					"_FILE_OFFSET_BITS=64",
 					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=0",
 					"$(inherited)"
 				);
-				OTHER_LDFLAGS = (
-					"",
-					);
+				OTHER_LDFLAGS = ();
 
 				MACH_O_TYPE = staticlib;
 
@@ -2678,7 +2792,7 @@ ENABLE_TESTABILITY = YES;
 		A27F3A0AA27F55EA00000192 /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = libesp;
+    				PRODUCT_NAME = libmpr;
     				EXECUTABLE_EXTENSION = a;
 
     				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -2687,9 +2801,7 @@ ENABLE_TESTABILITY = YES;
 					"ME_DEBUG=1",
 					"$(inherited)"
 				);
-				OTHER_LDFLAGS = (
-					"",
-					);
+				OTHER_LDFLAGS = ();
 
 				MACH_O_TYPE = staticlib;
 
@@ -2699,7 +2811,7 @@ ENABLE_TESTABILITY = YES;
     		A27F3A0AA27F55EA00000193 /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = libesp;
+    				PRODUCT_NAME = libmpr;
     				EXECUTABLE_EXTENSION = a;
 
     				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -2708,9 +2820,7 @@ ENABLE_TESTABILITY = YES;
 					"ME_DEBUG=0",
 					"$(inherited)"
 				);
-				OTHER_LDFLAGS = (
-					"",
-					);
+				OTHER_LDFLAGS = ();
 
 				MACH_O_TYPE = staticlib;
 
@@ -2720,7 +2830,7 @@ ENABLE_TESTABILITY = YES;
 		A27F3A0AA27F55EA00000194 /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = libhttp;
+    				PRODUCT_NAME = libmpr-mbedtls;
     				EXECUTABLE_EXTENSION = a;
 
     				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -2729,9 +2839,7 @@ ENABLE_TESTABILITY = YES;
 					"ME_DEBUG=1",
 					"$(inherited)"
 				);
-				OTHER_LDFLAGS = (
-					"",
-					);
+				OTHER_LDFLAGS = ();
 
 				MACH_O_TYPE = staticlib;
 
@@ -2741,7 +2849,7 @@ ENABLE_TESTABILITY = YES;
     		A27F3A0AA27F55EA00000195 /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = libhttp;
+    				PRODUCT_NAME = libmpr-mbedtls;
     				EXECUTABLE_EXTENSION = a;
 
     				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -2750,9 +2858,7 @@ ENABLE_TESTABILITY = YES;
 					"ME_DEBUG=0",
 					"$(inherited)"
 				);
-				OTHER_LDFLAGS = (
-					"",
-					);
+				OTHER_LDFLAGS = ();
 
 				MACH_O_TYPE = staticlib;
 
@@ -2762,11 +2868,10 @@ ENABLE_TESTABILITY = YES;
 		A27F3A0AA27F55EA00000196 /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = libmbedtls;
+    				PRODUCT_NAME = libmpr-version;
     				EXECUTABLE_EXTENSION = a;
 
     				GCC_PREPROCESSOR_DEFINITIONS = (
-					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=1",
 					"$(inherited)"
 				);
@@ -2780,11 +2885,10 @@ ENABLE_TESTABILITY = YES;
     		A27F3A0AA27F55EA00000197 /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = libmbedtls;
+    				PRODUCT_NAME = libmpr-version;
     				EXECUTABLE_EXTENSION = a;
 
     				GCC_PREPROCESSOR_DEFINITIONS = (
-					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=0",
 					"$(inherited)"
 				);
@@ -2798,12 +2902,11 @@ ENABLE_TESTABILITY = YES;
 		A27F3A0AA27F55EA00000198 /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = libmpr;
+    				PRODUCT_NAME = libpcre;
     				EXECUTABLE_EXTENSION = a;
 
     				GCC_PREPROCESSOR_DEFINITIONS = (
-					"_FILE_OFFSET_BITS=64",
-					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
+					"PCRE_CHAR=char",
 					"ME_DEBUG=1",
 					"$(inherited)"
 				);
@@ -2817,12 +2920,11 @@ ENABLE_TESTABILITY = YES;
     		A27F3A0AA27F55EA00000199 /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = libmpr;
+    				PRODUCT_NAME = libpcre;
     				EXECUTABLE_EXTENSION = a;
 
     				GCC_PREPROCESSOR_DEFINITIONS = (
-					"_FILE_OFFSET_BITS=64",
-					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
+					"PCRE_CHAR=char",
 					"ME_DEBUG=0",
 					"$(inherited)"
 				);
@@ -2836,9 +2938,8 @@ ENABLE_TESTABILITY = YES;
 		A27F3A0AA27F55EA0000019A /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = libmpr-mbedtls;
-    				EXECUTABLE_EXTENSION = a;
-
+    				PRODUCT_NAME = makerom;
+    
     				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_FILE_OFFSET_BITS=64",
 					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
@@ -2847,7 +2948,7 @@ ENABLE_TESTABILITY = YES;
 				);
 				OTHER_LDFLAGS = ();
 
-				MACH_O_TYPE = staticlib;
+				MACH_O_TYPE = mh_execute;
 
     			};
     			name = Debug;
@@ -2855,9 +2956,8 @@ ENABLE_TESTABILITY = YES;
     		A27F3A0AA27F55EA0000019B /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = libmpr-mbedtls;
-    				EXECUTABLE_EXTENSION = a;
-
+    				PRODUCT_NAME = makerom;
+    
     				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_FILE_OFFSET_BITS=64",
 					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
@@ -2866,7 +2966,7 @@ ENABLE_TESTABILITY = YES;
 				);
 				OTHER_LDFLAGS = ();
 
-				MACH_O_TYPE = staticlib;
+				MACH_O_TYPE = mh_execute;
 
     			};
     			name = Release;
@@ -2874,16 +2974,15 @@ ENABLE_TESTABILITY = YES;
 		A27F3A0AA27F55EA0000019C /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = libmpr-version;
-    				EXECUTABLE_EXTENSION = a;
-
+    				PRODUCT_NAME = cache;
+    
     				GCC_PREPROCESSOR_DEFINITIONS = (
 					"ME_DEBUG=1",
 					"$(inherited)"
 				);
 				OTHER_LDFLAGS = ();
 
-				MACH_O_TYPE = staticlib;
+				MACH_O_TYPE = mh_execute;
 
     			};
     			name = Debug;
@@ -2891,16 +2990,15 @@ ENABLE_TESTABILITY = YES;
     		A27F3A0AA27F55EA0000019D /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = libmpr-version;
-    				EXECUTABLE_EXTENSION = a;
-
+    				PRODUCT_NAME = cache;
+    
     				GCC_PREPROCESSOR_DEFINITIONS = (
 					"ME_DEBUG=0",
 					"$(inherited)"
 				);
 				OTHER_LDFLAGS = ();
 
-				MACH_O_TYPE = staticlib;
+				MACH_O_TYPE = mh_execute;
 
     			};
     			name = Release;
@@ -2908,17 +3006,17 @@ ENABLE_TESTABILITY = YES;
 		A27F3A0AA27F55EA0000019E /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = libpcre;
-    				EXECUTABLE_EXTENSION = a;
-
+    				PRODUCT_NAME = appman;
+    
     				GCC_PREPROCESSOR_DEFINITIONS = (
-					"PCRE_CHAR=char",
+					"_FILE_OFFSET_BITS=64",
+					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=1",
 					"$(inherited)"
 				);
 				OTHER_LDFLAGS = ();
 
-				MACH_O_TYPE = staticlib;
+				MACH_O_TYPE = mh_execute;
 
     			};
     			name = Debug;
@@ -2926,17 +3024,17 @@ ENABLE_TESTABILITY = YES;
     		A27F3A0AA27F55EA0000019F /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = libpcre;
-    				EXECUTABLE_EXTENSION = a;
-
+    				PRODUCT_NAME = appman;
+    
     				GCC_PREPROCESSOR_DEFINITIONS = (
-					"PCRE_CHAR=char",
+					"_FILE_OFFSET_BITS=64",
+					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=0",
 					"$(inherited)"
 				);
 				OTHER_LDFLAGS = ();
 
-				MACH_O_TYPE = staticlib;
+				MACH_O_TYPE = mh_execute;
 
     			};
     			name = Release;
@@ -2944,11 +3042,9 @@ ENABLE_TESTABILITY = YES;
 		A27F3A0AA27F55EA000001A0 /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = makerom;
+    				PRODUCT_NAME = All;
     
     				GCC_PREPROCESSOR_DEFINITIONS = (
-					"_FILE_OFFSET_BITS=64",
-					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=1",
 					"$(inherited)"
 				);
@@ -2962,11 +3058,9 @@ ENABLE_TESTABILITY = YES;
     		A27F3A0AA27F55EA000001A1 /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = makerom;
+    				PRODUCT_NAME = All;
     
     				GCC_PREPROCESSOR_DEFINITIONS = (
-					"_FILE_OFFSET_BITS=64",
-					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=0",
 					"$(inherited)"
 				);
@@ -2978,106 +3072,6 @@ ENABLE_TESTABILITY = YES;
     			name = Release;
     		};
 		A27F3A0AA27F55EA000001A2 /* Debug */ = {
-    			isa = XCBuildConfiguration;
-    			buildSettings = {
-    				PRODUCT_NAME = cache;
-    
-    				GCC_PREPROCESSOR_DEFINITIONS = (
-					"ME_DEBUG=1",
-					"$(inherited)"
-				);
-				OTHER_LDFLAGS = ();
-
-				MACH_O_TYPE = mh_execute;
-
-    			};
-    			name = Debug;
-    		};
-    		A27F3A0AA27F55EA000001A3 /* Release */ = {
-    			isa = XCBuildConfiguration;
-    			buildSettings = {
-    				PRODUCT_NAME = cache;
-    
-    				GCC_PREPROCESSOR_DEFINITIONS = (
-					"ME_DEBUG=0",
-					"$(inherited)"
-				);
-				OTHER_LDFLAGS = ();
-
-				MACH_O_TYPE = mh_execute;
-
-    			};
-    			name = Release;
-    		};
-		A27F3A0AA27F55EA000001A4 /* Debug */ = {
-    			isa = XCBuildConfiguration;
-    			buildSettings = {
-    				PRODUCT_NAME = appman;
-    
-    				GCC_PREPROCESSOR_DEFINITIONS = (
-					"_FILE_OFFSET_BITS=64",
-					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
-					"ME_DEBUG=1",
-					"$(inherited)"
-				);
-				OTHER_LDFLAGS = ();
-
-				MACH_O_TYPE = mh_execute;
-
-    			};
-    			name = Debug;
-    		};
-    		A27F3A0AA27F55EA000001A5 /* Release */ = {
-    			isa = XCBuildConfiguration;
-    			buildSettings = {
-    				PRODUCT_NAME = appman;
-    
-    				GCC_PREPROCESSOR_DEFINITIONS = (
-					"_FILE_OFFSET_BITS=64",
-					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
-					"ME_DEBUG=0",
-					"$(inherited)"
-				);
-				OTHER_LDFLAGS = ();
-
-				MACH_O_TYPE = mh_execute;
-
-    			};
-    			name = Release;
-    		};
-		A27F3A0AA27F55EA000001A6 /* Debug */ = {
-    			isa = XCBuildConfiguration;
-    			buildSettings = {
-    				PRODUCT_NAME = All;
-    
-    				GCC_PREPROCESSOR_DEFINITIONS = (
-					"ME_DEBUG=1",
-					"$(inherited)"
-				);
-				OTHER_LDFLAGS = ();
-
-				MACH_O_TYPE = mh_execute;
-
-    			};
-    			name = Debug;
-    		};
-    		A27F3A0AA27F55EA000001A7 /* Release */ = {
-    			isa = XCBuildConfiguration;
-    			buildSettings = {
-    				PRODUCT_NAME = All;
-    
-    				GCC_PREPROCESSOR_DEFINITIONS = (
-					"ME_DEBUG=0",
-					"$(inherited)"
-				);
-				OTHER_LDFLAGS = ();
-
-				MACH_O_TYPE = mh_execute;
-
-    			};
-    			name = Release;
-    		};
-		A27F3A0AA27F55EA000001A8 /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = Prep;
@@ -3093,7 +3087,7 @@ ENABLE_TESTABILITY = YES;
     			};
     			name = Debug;
     		};
-    		A27F3A0AA27F55EA000001A9 /* Release */ = {
+    		A27F3A0AA27F55EA000001A3 /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = Prep;
@@ -3121,7 +3115,34 @@ ENABLE_TESTABILITY = YES;
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		A27F3A0AA27F55EA00000125 /* Build configuration list for PBXNativeTarget "appweb" */ = {
+		A27F3A0AA27F55EA0000011F /* Build configuration list for PBXNativeTarget "appweb" */ = {
+    			isa = XCConfigurationList;
+    			buildConfigurations = (
+    				A27F3A0AA27F55EA0000017E /* Debug */,
+    				A27F3A0AA27F55EA0000017F /* Release */,
+    			);
+    			defaultConfigurationIsVisible = 0;
+    			defaultConfigurationName = Release;
+    		};
+		A27F3A0AA27F55EA0000012A /* Build configuration list for PBXNativeTarget "authpass" */ = {
+    			isa = XCConfigurationList;
+    			buildConfigurations = (
+    				A27F3A0AA27F55EA00000180 /* Debug */,
+    				A27F3A0AA27F55EA00000181 /* Release */,
+    			);
+    			defaultConfigurationIsVisible = 0;
+    			defaultConfigurationName = Release;
+    		};
+		A27F3A0AA27F55EA00000135 /* Build configuration list for PBXNativeTarget "espcmd" */ = {
+    			isa = XCConfigurationList;
+    			buildConfigurations = (
+    				A27F3A0AA27F55EA00000182 /* Debug */,
+    				A27F3A0AA27F55EA00000183 /* Release */,
+    			);
+    			defaultConfigurationIsVisible = 0;
+    			defaultConfigurationName = Release;
+    		};
+		A27F3A0AA27F55EA00000005 /* Build configuration list for PBXNativeTarget "extras" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
     				A27F3A0AA27F55EA00000184 /* Debug */,
@@ -3130,7 +3151,7 @@ ENABLE_TESTABILITY = YES;
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		A27F3A0AA27F55EA00000130 /* Build configuration list for PBXNativeTarget "authpass" */ = {
+		A27F3A0AA27F55EA0000013F /* Build configuration list for PBXNativeTarget "httpcmd" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
     				A27F3A0AA27F55EA00000186 /* Debug */,
@@ -3139,7 +3160,7 @@ ENABLE_TESTABILITY = YES;
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		A27F3A0AA27F55EA0000013B /* Build configuration list for PBXNativeTarget "espcmd" */ = {
+		A27F3A0AA27F55EA00000009 /* Build configuration list for PBXNativeTarget "install-certs" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
     				A27F3A0AA27F55EA00000188 /* Debug */,
@@ -3148,7 +3169,7 @@ ENABLE_TESTABILITY = YES;
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		A27F3A0AA27F55EA00000005 /* Build configuration list for PBXNativeTarget "extras" */ = {
+		A27F3A0AA27F55EA00000147 /* Build configuration list for PBXNativeTarget "libappweb" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
     				A27F3A0AA27F55EA0000018A /* Debug */,
@@ -3157,7 +3178,7 @@ ENABLE_TESTABILITY = YES;
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		A27F3A0AA27F55EA00000145 /* Build configuration list for PBXNativeTarget "httpcmd" */ = {
+		A27F3A0AA27F55EA00000151 /* Build configuration list for PBXNativeTarget "libesp" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
     				A27F3A0AA27F55EA0000018C /* Debug */,
@@ -3166,7 +3187,7 @@ ENABLE_TESTABILITY = YES;
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		A27F3A0AA27F55EA00000009 /* Build configuration list for PBXNativeTarget "install-certs" */ = {
+		A27F3A0AA27F55EA0000015A /* Build configuration list for PBXNativeTarget "libhttp" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
     				A27F3A0AA27F55EA0000018E /* Debug */,
@@ -3175,7 +3196,7 @@ ENABLE_TESTABILITY = YES;
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		A27F3A0AA27F55EA0000014D /* Build configuration list for PBXNativeTarget "libappweb" */ = {
+		A27F3A0AA27F55EA00000161 /* Build configuration list for PBXNativeTarget "libmbedtls" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
     				A27F3A0AA27F55EA00000190 /* Debug */,
@@ -3184,7 +3205,7 @@ ENABLE_TESTABILITY = YES;
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		A27F3A0AA27F55EA00000157 /* Build configuration list for PBXNativeTarget "libesp" */ = {
+		A27F3A0AA27F55EA00000164 /* Build configuration list for PBXNativeTarget "libmpr" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
     				A27F3A0AA27F55EA00000192 /* Debug */,
@@ -3193,7 +3214,7 @@ ENABLE_TESTABILITY = YES;
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		A27F3A0AA27F55EA00000160 /* Build configuration list for PBXNativeTarget "libhttp" */ = {
+		A27F3A0AA27F55EA00000169 /* Build configuration list for PBXNativeTarget "libmpr-mbedtls" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
     				A27F3A0AA27F55EA00000194 /* Debug */,
@@ -3202,7 +3223,7 @@ ENABLE_TESTABILITY = YES;
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		A27F3A0AA27F55EA00000167 /* Build configuration list for PBXNativeTarget "libmbedtls" */ = {
+		A27F3A0AA27F55EA0000016D /* Build configuration list for PBXNativeTarget "libmpr-version" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
     				A27F3A0AA27F55EA00000196 /* Debug */,
@@ -3211,7 +3232,7 @@ ENABLE_TESTABILITY = YES;
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		A27F3A0AA27F55EA0000016A /* Build configuration list for PBXNativeTarget "libmpr" */ = {
+		A27F3A0AA27F55EA00000170 /* Build configuration list for PBXNativeTarget "libpcre" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
     				A27F3A0AA27F55EA00000198 /* Debug */,
@@ -3220,7 +3241,7 @@ ENABLE_TESTABILITY = YES;
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		A27F3A0AA27F55EA0000016F /* Build configuration list for PBXNativeTarget "libmpr-mbedtls" */ = {
+		A27F3A0AA27F55EA00000173 /* Build configuration list for PBXNativeTarget "makerom" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
     				A27F3A0AA27F55EA0000019A /* Debug */,
@@ -3229,7 +3250,7 @@ ENABLE_TESTABILITY = YES;
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		A27F3A0AA27F55EA00000173 /* Build configuration list for PBXNativeTarget "libmpr-version" */ = {
+		A27F3A0AA27F55EA0000000D /* Build configuration list for PBXNativeTarget "server-cache" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
     				A27F3A0AA27F55EA0000019C /* Debug */,
@@ -3238,7 +3259,7 @@ ENABLE_TESTABILITY = YES;
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		A27F3A0AA27F55EA00000176 /* Build configuration list for PBXNativeTarget "libpcre" */ = {
+		A27F3A0AA27F55EA00000179 /* Build configuration list for PBXNativeTarget "watchdog" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
     				A27F3A0AA27F55EA0000019E /* Debug */,
@@ -3247,7 +3268,7 @@ ENABLE_TESTABILITY = YES;
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		A27F3A0AA27F55EA00000179 /* Build configuration list for PBXNativeTarget "makerom" */ = {
+		A27F3A0AA27F55EA00000011 /* Build configuration list for PBXNativeTarget "All" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
     				A27F3A0AA27F55EA000001A0 /* Debug */,
@@ -3256,38 +3277,11 @@ ENABLE_TESTABILITY = YES;
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		A27F3A0AA27F55EA0000000D /* Build configuration list for PBXNativeTarget "server-cache" */ = {
+		A27F3A0AA27F55EA00000026 /* Build configuration list for PBXNativeTarget "Prep" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
     				A27F3A0AA27F55EA000001A2 /* Debug */,
     				A27F3A0AA27F55EA000001A3 /* Release */,
-    			);
-    			defaultConfigurationIsVisible = 0;
-    			defaultConfigurationName = Release;
-    		};
-		A27F3A0AA27F55EA0000017F /* Build configuration list for PBXNativeTarget "watchdog" */ = {
-    			isa = XCConfigurationList;
-    			buildConfigurations = (
-    				A27F3A0AA27F55EA000001A4 /* Debug */,
-    				A27F3A0AA27F55EA000001A5 /* Release */,
-    			);
-    			defaultConfigurationIsVisible = 0;
-    			defaultConfigurationName = Release;
-    		};
-		A27F3A0AA27F55EA00000011 /* Build configuration list for PBXNativeTarget "All" */ = {
-    			isa = XCConfigurationList;
-    			buildConfigurations = (
-    				A27F3A0AA27F55EA000001A6 /* Debug */,
-    				A27F3A0AA27F55EA000001A7 /* Release */,
-    			);
-    			defaultConfigurationIsVisible = 0;
-    			defaultConfigurationName = Release;
-    		};
-		A27F3A0AA27F55EA00000026 /* Build configuration list for PBXNativeTarget "Prep" */ = {
-    			isa = XCConfigurationList;
-    			buildConfigurations = (
-    				A27F3A0AA27F55EA000001A8 /* Debug */,
-    				A27F3A0AA27F55EA000001A9 /* Release */,
     			);
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
