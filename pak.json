@@ -46,7 +46,7 @@
         "appweb-php": "~0.1",
         "certs": "~0.1",
         "ejscript": "~2.7",
-        "esp": "~6.2",
+        "esp": ">=7.0",
         "mpr-matrixssl": "~0.3",
         "mpr-mbedtls": "~0.5",
         "mpr-openssl": "~0.5",
