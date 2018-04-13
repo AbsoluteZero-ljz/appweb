@@ -2,20 +2,19 @@
 <html lang="en">
 <head>
     <title>Changelog</title>
-    <!-- Copyright Embedthis Software. All Rights Reserved. -->
+    
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <meta name="description" content="Changelog" />
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
-        rel='stylesheet' type='text/css'>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <meta name="description" content="Changelog">
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     
-    <link href="../images/favicon.ico" rel="shortcut icon" />
-    <link href="../lib/semantic-ui/semantic.css" rel="stylesheet" type="text/css" />
-    <link href="../css/all.css" rel="stylesheet" type="text/css" />
-    <link href="../css/api.css" rel="stylesheet" type="text/css" />
+    <link href="../images/favicon.ico" rel="shortcut icon">
+    <link href="/lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css">
+    <link href="/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="/css/api.min.css" rel="stylesheet" type="text/css">
     
 
 </head>
@@ -339,8 +338,7 @@
                 <li><p>ESP MVC applications will need to to have their package.json upgraded. The following
                 package.json properties have been moved or modified:</p>
                     <ul>
-                        <li>A top level <em>app</em> collection contains all non <a
-                            href="http://wiki.commonjs.org/wiki/Packages/1.1">CommonJS</a> properties.</li>
+                        <li>A top level <em>app</em> collection contains all non <a href="http://wiki.commonjs.org/wiki/Packages/1.1">CommonJS</a> properties.</li>
                         <li><em>client-scripts</em> has been renamed to <em>app.client.scripts</em>.</li>
                         <li>Most properties under <em>esp</em> have been moved to the <em>app.http</em> collection.</li>
                         <li>The <em>esp</em> property has been renamed <em>app.esp</em>.</li>
@@ -1696,7 +1694,7 @@
             </ul>
             <h2>Changes in 2.4.0</h2>
             <h3>This is essentially a re-branding of the development version version 2.3.4. Here are the major changes
-            compared to version 2.2.X.<br /></h3>
+            compared to version 2.2.X.<br></h3>
             <h3>Major</h3>
             <ul>
                 <li>Support conditional directives in Appweb configuration files using &lt;IF&gt;.</li>
@@ -2245,7 +2243,7 @@
             </ul>
             <h2>Changes in 1.3</h2>This is a major feature release and is part of the development
             branch. Users wanting stability should continue to use the stable 1.2.X series. This 1.3 release does have
-            some <a href="#compat">compatibility changes</a>.<br />
+            some <a href="#compat">compatibility changes</a>.<br>
             <h3>Major Features</h3>
             <ul>
                 <li>Embedded Server Pages greatly enhanced. New parser, new Embedded JavaScript. Now supporting:</li>
@@ -2309,8 +2307,8 @@
                 <li>The EJS module has been removed it is now integrated into the ESP module.</li>
                 <li>The previous session APIs have been integrated into MaRequest::setVar and MaRequest::getVar</li>
             </ul>
-            <h2>Features in 1.2.3</h2>This is a minor bug fix release.<br />
-            <h3>Fixes<br /></h3>
+            <h2>Features in 1.2.3</h2>This is a minor bug fix release.<br>
+            <h3>Fixes<br></h3>
             <ul>
                 <li>Fix compatibility issue in libcompatModule with GoAhead WebServer. Was not creating environment
                 variables for posted data. Will only do this if the data is URL encoded.</li>
@@ -2337,8 +2335,8 @@
                 terminated. There are no known security implications.</li>
             </ul>
             <h2>New Features in 1.2</h2>This 1.2 release rolls all the changes in the 1.1.X development
-            stream into a new stable release. The description below is a summary of the key changes.<br />
-            <br />
+            stream into a new stable release. The description below is a summary of the key changes.<br>
+            <br>
             <h3>Major Features</h3>
             <ul>
                 <li>Integrated module for PHP4 and PHP</li>
@@ -2365,7 +2363,7 @@
             </ul>
             <h3>Compatibility Changes</h3>
             <ul>
-                <li>None<br /></li>
+                <li>None<br></li>
             </ul>
             <h2>New Features in 1.1.3</h2>
             <h3>Major Features</h3>
@@ -2735,12 +2733,14 @@
         <p>&copy; Embedthis Software. All rights reserved.</p>
     </div>
 
-    <script src="../lib/jquery/jquery.min.js"></script>
-    <script src="../lib/semantic-ui/semantic.js"></script>
-    <script src="../scripts/sidebar.js"></script>
+    <script src="/lib/jquery/jquery.min.js"></script>
+    <script src="/lib/jquery/pak.min.js"></script>
+    <script src="/lib/semantic-ui/semantic.min.js"></script>
+    <script src="/scripts/sidebar.min.js"></script>
      
 
     
 
-</body>
-</html>
+
+
+
