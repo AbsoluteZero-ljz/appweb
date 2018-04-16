@@ -1,9 +1,9 @@
-/* 
+/*
     cgiHandler.c -- Common Gateway Interface Handler
 
     Support the CGI/1.1 standard for external gateway programs to respond to HTTP requests.
     This CGI handler uses async-pipes and non-blocking I/O for all communications.
- 
+
     Copyright (c) All Rights Reserved. See copyright notice at the bottom of the file.
  */
 
@@ -66,15 +66,15 @@ static int openCgi(HttpQueue *q)
 
     conn = q->conn;
     if ((nproc = (int) httpMonitorEvent(conn, HTTP_COUNTER_ACTIVE_PROCESSES, 1)) >= conn->limits->processMax) {
-        httpTrace(conn, "cgi.limit.error", "error", 
-            "msg=\"Too many concurrent processes\", activeProcesses=%d, maxProcesses=%d", 
+        httpTrace(conn, "cgi.limit.error", "error",
+            "msg=\"Too many concurrent processes\", activeProcesses=%d, maxProcesses=%d",
             nproc, conn->limits->processMax);
         httpError(conn, HTTP_CODE_SERVICE_UNAVAILABLE, "Server overloaded");
         httpMonitorEvent(q->conn, HTTP_COUNTER_ACTIVE_PROCESSES, -1);
         return MPR_ERR_CANT_OPEN;
     }
     if ((cgi = mprAllocObj(Cgi, manageCgi)) == 0) {
-        /* Normal mem handler recovery */ 
+        /* Normal mem handler recovery */
         return MPR_ERR_MEMORY;
     }
     httpTrimExtraPath(conn);
@@ -122,7 +122,7 @@ static void closeCgi(HttpQueue *q)
 }
 
 
-/*  
+/*
     Start the CGI command program. This commences the CGI gateway program. This will be called after content for
     form and upload requests (or if "RunHandler" before specified), otherwise it runs before receiving content data.
  */
@@ -162,17 +162,17 @@ static void startCgi(HttpQueue *q)
     buildArgs(conn, cmd, &argc, &argv);
     fileName = argv[0];
     baseName = mprGetPathBase(fileName);
-    
+
     /*
         nph prefix means non-parsed-header. Don't parse the CGI output for a CGI header
      */
-    if (strncmp(baseName, "nph-", 4) == 0 || 
+    if (strncmp(baseName, "nph-", 4) == 0 ||
             (strlen(baseName) > 4 && strcmp(&baseName[strlen(baseName) - 4], "-nph") == 0)) {
         /* Pretend we've seen the header for Non-parsed Header CGI programs */
         cgi->seenHeader = 1;
         tx->flags |= HTTP_TX_USE_OWN_HEADERS;
     }
-    /*  
+    /*
         Build environment variables
      */
     varCount = mprGetHashLength(rx->headers) + mprGetHashLength(rx->svars) + mprGetJsonLength(rx->params);
@@ -222,7 +222,7 @@ static void waitForCgi(Cgi *cgi, MprEvent *event)
 
 /*
     Accept incoming body data from the client destined for the CGI gateway. This is typically POST or PUT data.
-    Note: For POST "form" requests, this will be called before the command is actually started. 
+    Note: For POST "form" requests, this will be called before the command is actually started.
  */
 static void browserToCgiData(HttpQueue *q, HttpPacket *packet)
 {
@@ -330,12 +330,12 @@ static void cgiToBrowserService(HttpQueue *q)
     cmd = cgi->cmd;
 
     /*
-        This will copy outgoing packets downstream toward the network connector and on to the browser. 
-        This may disable the CGI queue if the downstream net connector queue overflows because the socket 
-        is full. In that case, httpEnableConnEvents will setup to listen for writable events. When the 
-        socket is writable again, the connector will drain its queue which will re-enable this queue 
+        This will copy outgoing packets downstream toward the network connector and on to the browser.
+        This may disable the CGI queue if the downstream net connector queue overflows because the socket
+        is full. In that case, httpEnableConnEvents will setup to listen for writable events. When the
+        socket is writable again, the connector will drain its queue which will re-enable this queue
         and schedule it for service again.
-     */ 
+     */
     httpDefaultOutgoingServiceStage(q);
     if (q->count < q->low) {
         mprEnableCmdOutputEvents(cmd, 1);
@@ -374,7 +374,7 @@ static void cgiCallback(MprCmd *cmd, int channel, void *data)
     case MPR_CMD_STDERR:
         readFromCgi(cgi, channel);
         break;
-            
+
     default:
         /* Child death notification */
         if (cmd->status != 0) {
@@ -390,7 +390,7 @@ static void cgiCallback(MprCmd *cmd, int channel, void *data)
         httpFinalize(conn);
         mprCreateEvent(conn->dispatcher, "cgiComplete", 0, httpIOEvent, conn, 0);
         return;
-    } 
+    }
     suspended = httpIsQueueSuspended(conn->writeq);
     assert(!suspended || conn->tx->writeBlocked);
     mprEnableCmdOutputEvents(cmd, !suspended);
@@ -437,7 +437,7 @@ static void readFromCgi(Cgi *cgi, int channel)
             }
             mprCloseCmdFd(cmd, channel);
             break;
-            
+
         } else if (nbytes == 0) {
             mprCloseCmdFd(cmd, channel);
             break;
@@ -458,7 +458,7 @@ static void readFromCgi(Cgi *cgi, int channel)
             }
             cgi->headers = 0;
             cgi->seenHeader = 1;
-        } 
+        }
         if (!tx->finalizedOutput && httpGetPacketLength(packet) > 0) {
             /* Put the data to the CGI readq, then cgiToBrowserService will take care of it */
             httpPutPacket(q, packet);
@@ -486,7 +486,7 @@ static bool parseCgiHeaders(Cgi *cgi, HttpPacket *packet)
     buf = packet->content;
     headers = mprGetBufStart(buf);
     blen = mprGetBufLength(buf);
-    
+
     /*
         Split the headers from the body. Add null to ensure we can search for line terminators.
      */
@@ -497,7 +497,7 @@ static bool parseCgiHeaders(Cgi *cgi, HttpPacket *packet)
                 /* Not EOF and less than max headers and have not yet seen an end of headers delimiter */
                 return 0;
             }
-        } 
+        }
         len = 2;
     } else {
         len = 4;
@@ -567,7 +567,7 @@ static bool parseFirstCgiResponse(Cgi *cgi, HttpPacket *packet)
 {
     MprBuf      *buf;
     char        *protocol, *status, *msg;
-    
+
     buf = packet->content;
     protocol = getCgiToken(buf, " ");
     if (protocol == 0 || protocol[0] == '\0') {
@@ -624,7 +624,7 @@ static void buildArgs(HttpConn *conn, MprCmd *cmd, int *argcp, cchar ***argvp)
         mprAddKey(rx->headers, "REDIRECT_STATUS", itos(HTTP_CODE_MOVED_TEMPORARILY));
     }
     /*
-        Count the args for ISINDEX queries. Only valid if there is not a "=" in the query. 
+        Count the args for ISINDEX queries. Only valid if there is not a "=" in the query.
         If this is so, then we must not have these args in the query env also?
      */
     indexQuery = rx->parsedUri->query;
@@ -672,7 +672,7 @@ static void buildArgs(HttpConn *conn, MprCmd *cmd, int *argcp, cchar ***argvp)
 
 
 /*
-    Get the next input token. The content buffer is advanced to the next token. This routine always returns a 
+    Get the next input token. The content buffer is advanced to the next token. This routine always returns a
     non-zero token. The empty string means the delimiter was not found.
  */
 static char *getCgiToken(MprBuf *buf, cchar *delim)
@@ -710,7 +710,7 @@ static void traceCGIData(MprCmd *cmd, char *src, ssize size)
 
     if (mprGetLogLevel() >= 5) {
         mprDebug("http cgi", 5, "CGI: process wrote (leading %zd bytes) => \n", min(sizeof(dest), size));
-        for (index = 0; index < size; ) { 
+        for (index = 0; index < size; ) {
             for (i = 0; i < (sizeof(dest) - 1) && index < size; i++) {
                 dest[i] = src[index];
                 index++;
@@ -734,7 +734,7 @@ static void copyInner(HttpConn *conn, cchar **envv, int index, cchar *key, cchar
     }
     if (conn->rx->route->flags & HTTP_ROUTE_ENV_ESCAPE) {
         /*
-            This will escape: &;`'\"|*?~<>^()[]{}$\\\n and also on windows \r%
+            This will escape: "&;`'\"|*?~<>^()[]{}$\\\n" and also on windows \r%
          */
         cp = mprEscapeCmd(cp, 0);
     }
@@ -829,7 +829,7 @@ static int scriptAliasDirective(MaState *state, cchar *key, cchar *value)
 }
 
 
-/*  
+/*
     Loadable module initialization
  */
 PUBLIC int httpCgiInit(Http *http, MprModule *module)
@@ -840,18 +840,18 @@ PUBLIC int httpCgiInit(Http *http, MprModule *module)
         return MPR_ERR_CANT_CREATE;
     }
     http->cgiHandler = handler;
-    handler->close = closeCgi; 
+    handler->close = closeCgi;
     handler->outgoingService = cgiToBrowserService;
-    handler->incoming = browserToCgiData; 
-    handler->open = openCgi; 
-    handler->start = startCgi; 
+    handler->incoming = browserToCgiData;
+    handler->open = openCgi;
+    handler->start = startCgi;
 
     if ((connector = httpCreateConnector("cgiConnector", module)) == 0) {
         return MPR_ERR_CANT_CREATE;
     }
     http->cgiConnector = connector;
     connector->outgoingService = browserToCgiService;
-    connector->incoming = cgiToBrowserData; 
+    connector->incoming = cgiToBrowserData;
 
     /*
         Add configuration file directives

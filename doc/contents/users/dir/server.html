@@ -107,12 +107,12 @@
                     <tr>
                         <td class="pivot">Notes</td>
                         <td>
-                            <p>The CanonicalName directive specifies the preferred, public, fully qualified hostname 
+                            <p>The CanonicalName directive specifies the preferred, public, fully qualified hostname
                             for the server. This address will be used when constructing URLs and redirections.
-                            The given hostname should be a fully qualified domain name with port number if using 
+                            The given hostname should be a fully qualified domain name with port number if using
                             a port other than the default port.</p>
                             <p>If a CanonicalName is not defined, the value provided by the client in the request
-                            HTTP Host header will be used.</p> 
+                            HTTP Host header will be used.</p>
                         </td>
                     </tr>
                 </tbody>
@@ -125,10 +125,10 @@
                 <tbody>
                     <tr>
                         <td class="pivot">Description</td>
-                        <td>Escape environment variables passed to CGI programs for special shell characters.
-                        If using shell scripts as CGI programs, this directive will escape all special 
-                            shell characters to make scripting easier and more secure. This will escape 
-                           (with \) the following characters: &amp;;`'\"|*?~&lt;&gt;^()[]{}$\\\n and also on windows \r%.</td>
+                        <td><p>Escape environment variables passed to CGI programs for special shell characters.
+                        If using shell scripts as CGI programs, this directive will escape all special
+                            shell characters to make scripting easier and more secure. This will escape
+                           (with \) the following characters: &amp;;`'\"|*?~&lt;&gt;^()[]{}$\\\n and also on windows \r%. The default value is "on". </p><p>Note: this will escape the QUERY_STRING and "&" characters will be converted to "\&".</p></td>
                     </tr>
                     <tr>
                         <td class="pivot">Synopsis</td>
@@ -144,8 +144,8 @@
                     </tr>
                     <tr>
                         <td class="pivot">Notes</td>
-                        <td>Shell script variables should always be uses inside quotes. 
-                            For example: use "${filename}" not $filename. This permits filenames with spaces and special 
+                        <td>Shell script variables should always be uses inside quotes.
+                            For example: use "${filename}" not $filename. This permits filenames with spaces and special
                             characters from being incorrectly interpreted by the shell.
                         </td>
                     </tr>
@@ -153,11 +153,11 @@
                         <td class="security">Security</td>
                         <td>Failing to escape CGI variables and then using $name to reference variables can cause
                             a security vulnerability by permitting user supplied data to inject shell special characters
-                            into the variable value. This will then be interpreted by the shell when the variable is 
+                            into the variable value. This will then be interpreted by the shell when the variable is
                             referenced. </td>
                     </tr>
                 </tbody>
-            </table> 
+            </table>
             <a id="cgiPrefix"></a>
             <h2>CgiPrefix</h2>
             <table class="directive" title="directive">
@@ -185,8 +185,8 @@
                     </tr>
                     <tr>
                         <td class="security">Security</td>
-                        <td>Failing to define 
-                            When coupled with lowering the privilege for the <a href="#userAccount">UserAccount</a> and 
+                        <td>Failing to define
+                            When coupled with lowering the privilege for the <a href="#userAccount">UserAccount</a> and
                             <a href="#groupAccount">GroupAccount</a> potential security exposures can be minimized.</td>
                     </tr>
                 </tbody>
@@ -197,7 +197,7 @@
                 <tbody>
                     <tr>
                         <td class="pivot">Description</td>
-                        <td>Directory containing a "chroot jail" in which for Appweb to execute. Once this 
+                        <td>Directory containing a "chroot jail" in which for Appweb to execute. Once this
                             directive is parsed, all files outside the jail will be inaccessible.</td>
                     </tr>
                     <tr>
@@ -222,7 +222,7 @@
                     <tr>
                         <td class="security">Security</td>
                         <td>A chroot jail enhances security by limiting system access should Appweb ever be compromised.
-                            When coupled with lowering the privilege for the <a href="#userAccount">UserAccount</a> and 
+                            When coupled with lowering the privilege for the <a href="#userAccount">UserAccount</a> and
                             <a href="#groupAccount">GroupAccount</a> potential security exposures can be minimized.</td>
                     </tr>
                 </tbody>
@@ -260,7 +260,7 @@
                             safest if the compromised application has as few privileges as possible.</p>
                             <p>When Appweb starts it initially runs as root or administrator and then changes account if a
                             group account is defined in the Appweb configuration file by the GroupAccount directive.  </p>
-                            <p>If logged in as root or administrator, the pseudo name of APPWEB will change group to 
+                            <p>If logged in as root or administrator, the pseudo name of APPWEB will change group to
                             _www on Mac, nogroup/nobody on Unix and Administrator on Windows.</p>
                         </td>
                     </tr>
@@ -270,7 +270,7 @@
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="home"></a>
             <h2>Home</h2>
             <table class="directive" title="directive">
@@ -330,7 +330,7 @@
                         <td>
                             <p>The Listen directive specifies the IP endpoints on which Appweb will listen for incoming
                             HTTP requests. If you specify only the port number and omit the IP address, Appweb will
-                            listen on all network interfaces including the loop-back adaptor. It will listen on both 
+                            listen on all network interfaces including the loop-back adaptor. It will listen on both
                             IPv4 and IPv6 if only a portNumber is specified. </p>
                             <p>To listen on IPv6 endpoints, enclose the IP address in square brackets. For example:
                             Listen [2001:05c0:9168:0000:0000:0000:0000:0001]</p>
@@ -342,7 +342,7 @@
                     </tr>
                 </tbody>
             </table>
-            
+
             <!-- UNUSED
             <a id="protocol"></a>
             <h2>Protocol</h2>
@@ -379,7 +379,7 @@
                 </tbody>
             </table>
             -->
-            
+
             <a id="serverName"></a>
             <h2>ServerName</h2>
             <table class="directive" title="directive">
@@ -414,11 +414,11 @@
                             host. The host name may be a fully qualified hostname with port number, a partial hostname
                             with a "*" wild card character or a regular expression.
 
-                            <p>If the ServerName begins with "*", it will match requests with a client HTTP Host header 
-                                that "contains" the given name. For example: a ServerName directive of "*.example.com" 
+                            <p>If the ServerName begins with "*", it will match requests with a client HTTP Host header
+                                that "contains" the given name. For example: a ServerName directive of "*.example.com"
                                 will match farm.example.com and www.example.com.</p>
                             <p>Similarly, if the ServerName ends with "*", it will match client HTTP Host headers that
-                            begin with the pattern. For example: "example.*" will match "example.com" and 
+                            begin with the pattern. For example: "example.*" will match "example.com" and
                             "example.org".</p>
                             <p>If the ServerName begins and ends with "/", the pattern is interpreted as a regular expression.</p>
 
@@ -429,7 +429,7 @@
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="streamInput"></a>
             <h2>StreamInput</h2>
             <table class="directive" title="directive">
@@ -456,11 +456,11 @@
                             <p>The StreamInput directive specifies if the request body data should be buffered
                             before processing the request or whether the processing should be started immediately and the
                             body data streamed to the handler.</p>
-                            <p>By default, POST forms that have a Content-Type of "application/x-www-form-urlencoded" or 
-                            "application/json" will have their request body data buffered before processing. 
-                            This enables form requests to use body data in the route processing. 
+                            <p>By default, POST forms that have a Content-Type of "application/x-www-form-urlencoded" or
+                            "application/json" will have their request body data buffered before processing.
+                            This enables form requests to use body data in the route processing.
                             By default, all other requests content types will be streamed. </p>
-                            <p>The mimeType specifies the required "Content-Type" HTTP header for the request. 
+                            <p>The mimeType specifies the required "Content-Type" HTTP header for the request.
                             The URI is optional and if supplied, specifies a matching URI prefix for qualifying requests.</p>
                             <pre>StreamInput application/x-gzip /upload</pre>
                             <p>The StreamInput applies to the entire host and is not specific per-route.</p>
@@ -468,7 +468,7 @@
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="typesConfig"></a>
             <h2>TypesConfig</h2>
             <table class="directive" title="directive">
@@ -506,7 +506,7 @@
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="userAccount"></a>
             <h2>UserAccount</h2>
             <table class="directive" title="directive">
