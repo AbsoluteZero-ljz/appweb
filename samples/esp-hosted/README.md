@@ -64,6 +64,3 @@ Documentation:
 * [Sandbox Limits](https://embedthis.com/appweb/doc/users/dir/sandbox.html)
 * [Security Considerations](https://embedthis.com/appweb/doc/users/security.html)
 * [User Authentication](https://embedthis.com/appweb/doc/users/authentication.html)
-
-See Also:
----
