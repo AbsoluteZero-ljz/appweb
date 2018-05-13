@@ -1,47 +1,36 @@
 {
     title:  "Compatibility",
-    crumbs: [ 
+    crumbs: [
         { 'Reference': '../ref/'} ,
     ],
 }
-   
-            <h1>Compatibility</h1>
-            <p>Appweb is provided in two supported versions:</p>
-            <ul>
-                <li><b>Appweb Development Versions (DEV)</b> &mdash; The goal of DEV versions is ongoing 
-                feature development. 
-                New features will be issued for DEV versions and APIs will evolve. Appweb 5 is the current DEV version.</li>
-                <li><b>Appweb Long Term Support (LTS)</b> &mdash; The goal of LTS versions is stability and compatibility. 
-                Bugs and security issues will be fixed, but no feature updates will be issued for LTS versions. 
-                Appweb 4.X is head of the LTS stream and it will be maintained with security updates and fixes until 
-                the end of 2015.</li>
-            </ul>
+
             <a id="api"></a>
-            <h2>API Compatibility</h2>
-            <p>In the development stream the Appweb APIs may evolve, and are thus subject to change 
-            between minor releases. The Appweb documentation
-            provides a <a href="stability.html">Stability Classification</a> for each 
-            API group that reflects their stability with respect to forward changes.</p>
-            
+            <h1>Compatibility</h1>
+            <p>Appweb APIs may evolve, and are thus subject to change between minor releases. The Appweb documentation provides a <a href="stability.html">Stability Classification</a> for each API group that reflects their stability with respect to forward changes.</p>
+
             <a id="r5"></a>
             <h2>Migrating to Appweb 5</h2>
-            <p>Appweb 4 and 5 are highly compatible. Code written for Appweb 4 should migrate to Appweb 5 with few 
+            <p>Appweb 4 and 5 are highly compatible. Code written for Appweb 4 should migrate to Appweb 5 with few
             changes required. Appweb 5 does use a newer version of the MakeMe/Bit and Pak tools.</p>
             <p>If you are migrating from Appweb 2 or 3, you should regard Appweb 5.X as a next generation web server.
-            You can migrate code from Appweb 2 or 3 to Appweb 5, however, you should anticipate significant refactoring 
+            You can migrate code from Appweb 2 or 3 to Appweb 5, however, you should anticipate significant refactoring
             work in the transition.</p>
+
             <a id="r4"></a>
             <h2>Appweb 4</h2>
             <p>Appweb 4 is an evolutionary release relative to Appweb 3. Many APIs have changed since Appweb 3
-            and new APIs have been added for increased functionality. Appweb 4 uses a new memory allocator that 
-            does not require a memory context as the first argument to most APIs. So many APIs have changed 
-            signature, while the underlying functionality remains largely similar. The memory allocator uses 
-            garbage collection and this eliminates the need to manually free up memory. You can migrate code 
+            and new APIs have been added for increased functionality. Appweb 4 uses a new memory allocator that
+            does not require a memory context as the first argument to most APIs. So many APIs have changed
+            signature, while the underlying functionality remains largely similar. The memory allocator uses
+            garbage collection and this eliminates the need to manually free up memory. You can migrate code
             from Appweb 3 to Appweb 4 with refactoring.</p>
+
             <a id="r2"></a>
             <h2>Appweb 2 and 3</h2>
             <p>Appweb versions 2 and 3 are now officially deprecated. Support is only available under special arrangements
             via custom dev services programs.</p>
+
             <h2>Standards</h2>
             <p>Appweb supports the following standards:</p>
             <ul>
