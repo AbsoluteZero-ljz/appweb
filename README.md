@@ -7,7 +7,7 @@ The fast, little web server for embedded applications.
 
 Branches
 ---
-The repository has three branches:
+The repository has two branches:
 
 * master - Most recent release of the software.
 * dev - Current ongoing development.
