@@ -37,7 +37,7 @@ PUBLIC int main(int argc, char *argv[])
     int         i, errflg, nextArg;
 
     mpr = mprCreate(argc, argv, 0);
-    programName = mprGetAppName(mpr);
+    programName = mprGetAppName();
 
     authFile = 0;
     username = 0;
@@ -71,7 +71,7 @@ PUBLIC int main(int argc, char *argv[])
                     authFile = argv[i];
                     break;
                 }
-                
+
             } else if (smatch(cp, "password") || smatch(cp, "p")) {
                 if (++i == argc) {
                     errflg++;
@@ -93,7 +93,7 @@ PUBLIC int main(int argc, char *argv[])
     if (errflg) {
         printUsage(programName);
         exit(2);
-    }   
+    }
     realm = argv[nextArg++];
     username = argv[nextArg++];
 
@@ -205,7 +205,7 @@ static char *getpass(char *prompt)
 }
 
 #endif /* ME_WIN_LIKE */
- 
+
 static void printUsage(cchar *programName)
 {
     mprEprintf("usage: %s [--cipher cipher] [--file path] [--password password] realm user roles...\n"
