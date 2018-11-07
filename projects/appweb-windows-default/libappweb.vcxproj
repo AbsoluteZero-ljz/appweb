@@ -107,9 +107,9 @@
       <ItemGroup>
     <ClCompile Include="..\..\src\config.c" />
     <ClCompile Include="..\..\src\convenience.c" />
-    <ClCompile Include="..\..\src\rom.c" />
     <ClCompile Include="..\..\src\modules\cgiHandler.c" />
     <ClCompile Include="..\..\src\modules\espHandler.c" />
+    <ClCompile Include="..\..\src\rom.c" />
   </ItemGroup>
 
       <ItemGroup>

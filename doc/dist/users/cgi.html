@@ -2,20 +2,19 @@
 <html lang="en">
 <head>
     <title>CGI</title>
-    <!-- Copyright Embedthis Software. All Rights Reserved. -->
+    
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <meta name="description" content="CGI" />
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
-        rel='stylesheet' type='text/css'>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <meta name="description" content="CGI">
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     
-    <link href="../images/favicon.ico" rel="shortcut icon" />
-    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css" />
-    <link href="../css/all.min.css" rel="stylesheet" type="text/css" />
-    <link href="../css/api.min.css" rel="stylesheet" type="text/css" />
+    <link href="../images/favicon.ico" rel="shortcut icon">
+    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css">
+    <link href="../css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="../css/api.min.css" rel="stylesheet" type="text/css">
     
 
 </head>
@@ -190,8 +189,7 @@
             results to the clients's browser. Plain HTML documents are typically static, while a CGI program allows the
             response data to be dynamically created.</p>
             <p>However, since CGI was first developed, several better means of creating dynamic web pages have been
-            created that are faster and more efficient. Read more about such replacements in <a href=
-            "frameworks.html">Web Frameworks</a>.</p>
+            created that are faster and more efficient. Read more about such replacements in <a href="frameworks.html">Web Frameworks</a>.</p>
             <p>Embedthis Appweb supports CGI so that existing CGI applications can be fully supported. Appweb has a
             high-performance and fully featured CGI Handler that alleviates many of the pains with configuring CGI
             setup.</p><a id="configuringCgi"></a>
@@ -208,8 +206,7 @@
             the web content. Consequently, invoking CGI programs by extension should only be used in combination with a
             URI prefix that allows the CGI directory to be specified.</p>
             <h3>Invoking by URI Prefix</h3>
-            <p>Appweb nominates a directory as a CGI directory via the <a href=
-            "dir/server.html#scriptAlias">ScriptAlias</a> configuration file directive. For example:</p>
+            <p>Appweb nominates a directory as a CGI directory via the <a href="dir/server.html#scriptAlias">ScriptAlias</a> configuration file directive. For example:</p>
 <pre class="ui code segment">
 ScriptAlias /cgi-bin/ $ROUTE_HOME/cgi-bin/ 
 </pre>
@@ -227,8 +224,7 @@ ScriptAlias /cgi-bin/ $ROUTE_HOME/cgi-bin/
 http://www.embedthis.com/cgi-bin/testCgi
 </pre>
             <h3>Invoking by URI Extension</h3>
-            <p>To configure Appweb to run CGI programs based on the URI extension use the <a href=
-            "dir/route.html#addHandler">AddHandler</a> configuration file directive. For example:</p>
+            <p>To configure Appweb to run CGI programs based on the URI extension use the <a href="dir/route.html#addHandler">AddHandler</a> configuration file directive. For example:</p>
             <pre class="ui code segment">
 AddHandler cgiHandler .myExt
 </pre>
@@ -635,10 +631,8 @@ Status: 500
             <h2>Other Resources</h2>
             <p>The following URIs may be helpful in further reading about CGI:</p>
             <ul>
-                <li>For an introduction to CGI: <a href=
-                "http://en.wikipedia.org/wiki/Common_Gateway_Interface">http://en.wikipedia.org/wiki/Common_Gateway_Interface</a></li>
-                <li>For the actual CGI specification: <a href=
-                "http://tools.ietf.org/html/draft-robinson-www-interface-00">http://tools.ietf.org/html/draft-robinson-www-interface-00</a></li>
+                <li>For an introduction to CGI: <a href="http://en.wikipedia.org/wiki/Common_Gateway_Interface">http://en.wikipedia.org/wiki/Common_Gateway_Interface</a></li>
+                <li>For the actual CGI specification: <a href="http://tools.ietf.org/html/draft-robinson-www-interface-00">http://tools.ietf.org/html/draft-robinson-www-interface-00</a></li>
                 <li>Other CGI resources: <a href="http://www.cgi-resources.com">http://www.cgi-resources.com</a></li>
             </ul>
 
@@ -654,5 +648,6 @@ Status: 500
 
     
 
-</body>
-</html>
+
+
+
