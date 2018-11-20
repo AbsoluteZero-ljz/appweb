@@ -100,9 +100,7 @@
 
       <CustomBuildStep>
         <Command>cd ..\..\src\esp
-if exist $(BinDir) del /Q $(BinDir)
 copy /Y esp-compile.json $(BinDir)
-if exist $(BinDir) del /Q $(BinDir)
 copy /Y vcvars.bat $(BinDir)
 cd ..\..\projects\appweb-windows-static</Command>
         <Outputs>$(BinDir)</Outputs>
