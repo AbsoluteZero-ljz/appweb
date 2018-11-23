@@ -8,11 +8,11 @@
         "http",
         "webserver"
     ],
-    "homepage": "https://embedthis.com/appweb/",
+    "homepage": "https://www.embedthis.com/appweb/",
     "author": {
         "name": "Embedthis Software",
         "email": "dev@embedthis.com",
-        "url": "https://embedthis.com"
+        "url": "https://www.embedthis.com"
     },
     "repository": {
         "type": "git",
@@ -29,7 +29,7 @@
         },
         {
             "type": "Commercial",
-            "url": "https://embedthis.com/licensing/"
+            "url": "https://www.embedthis.com/licensing/"
         }
     ],
     "dependencies": {
