@@ -1,10 +1,10 @@
 Embedthis Appweb GPL License Agreement
 
-This software is licensed according to the provisions of GNU GENERAL PUBLIC LICENSE below. 
+This software is licensed according to the provisions of GNU GENERAL PUBLIC LICENSE below.
 
 Commercial license are also available for those who require them.  The Embedthis Commercial License, allows you to provide commercial software licenses for products containing Embedthis software. This is for individuals or organizations that do not want to release their source code as open source / free software as governed by the GPL license below. For more information on licensing, please see:
 
-https://embedthis.com/licensing/index.html
+https://www.embedthis.com/licensing/index.html
 
 Some components of the sofware are licensed from third parties. See the end of this document for a list of licensed third party software.
 
@@ -105,5 +105,5 @@ Contributor license that grants Embedthis sufficient rights to execute this lice
 Trademarks and Copyrights
 
 Copyright (c) Embedthis Software. All Rights Reserved.
-Embedthis, Appweb, Ejscript, ESP and Embedthis GoAhead are trademarks of Embedthis Software, LLC. Other brands and their
+Embedthis, Appweb, ESP and Embedthis GoAhead are trademarks of Embedthis Software, LLC. Other brands and their
 products are trademarks of their respective holders.
