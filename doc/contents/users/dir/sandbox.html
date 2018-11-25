@@ -9,7 +9,7 @@
             <p>Appweb supports directives that limit its use of system resources such as memory and threads. This
             technique is know as "sandboxing" because it creates a limited or safer area in which Appweb
             executes.</p>
-            
+
             <a id="exitTimeout"></a>
             <h2>ExitTimeout</h2>
             <table class="directive" title="directive">
@@ -39,7 +39,7 @@
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="limitBuffer"></a>
             <h2>LimitBuffer</h2>
             <table class="directive" title="directive">
@@ -66,14 +66,14 @@
                             <p>This directive defines the maximum buffer size in bytes for each stage in the request
                             pipeline. This directive places a limit on the amount of memory consumed by pipeline stages.
                             <p>NOTE: this does not imply a maximum response size (See LimitResponseBody for that
-                            functionality). It merely limits the memory consumed when trying to buffer the response data. 
-                            Appweb handlers will flush the buffers and use HTTP/1.1 chunked output if the amount of 
+                            functionality). It merely limits the memory consumed when trying to buffer the response data.
+                            Appweb handlers will flush the buffers and use HTTP/1.1 chunked output if the amount of
                             response data exceeds the output buffer size.</p>
                         </td>
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="limitCache"></a>
             <h2>LimitCache</h2>
             <table class="directive" title="directive">
@@ -104,7 +104,7 @@
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="limitCacheItem"></a>
             <h2>LimitCacheItem</h2>
             <table class="directive" title="directive">
@@ -128,7 +128,7 @@
                     <tr>
                         <td class="pivot">Notes</td>
                         <td>
-                            <p>This directive defines the maximum size of a single item in the Appweb data cache. 
+                            <p>This directive defines the maximum size of a single item in the Appweb data cache.
                             This cache store is used for caching responses and for the session state date for ESP
                             applications. If the maximum size is exceeded, Appweb will not store the item in the cache.
                             The request will continue, but not be served from the cache.</p>
@@ -136,7 +136,7 @@
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="limitChunk"></a>
             <h2>LimitChunk</h2>
             <table class="directive" title="directive">
@@ -165,7 +165,7 @@
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="limitClients"></a>
             <h2>LimitClients</h2>
             <table class="directive" title="directive">
@@ -189,16 +189,16 @@
                     <tr>
                         <td class="pivot">Notes</td>
                         <td>
-                            <p>The LimitClients directive defines the maximum number of simultaneous 
-                            client systems that can connect to the server. Connections in excess of this count will 
-                            be rejected. A limit of '0' means unlimited.</p>
+                            <p>The LimitClients directive defines the maximum number of simultaneous
+                            client systems that can connect to the server. Connections in excess of this count will
+                            be rejected. Set to "unlimited" for no limit.</p>
                             <p>This directive counts the number of unique client systems. A system with many users all using
                             the same IP address will be counted as one client.</p>
                         </td>
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="limitConnections"></a>
             <h2>LimitConnections</h2>
             <table class="directive" title="directive">
@@ -222,16 +222,16 @@
                     <tr>
                         <td class="pivot">Notes</td>
                         <td>
-                            <p>The LimitConnections directive defines the maximum number of simultaneous 
-                            client connections to the server. Connections in excess of this count will 
-                            be rejected. A limit of '0' means unlimited.</p>
+                            <p>The LimitConnections directive defines the maximum number of simultaneous
+                            client connections to the server. Connections in excess of this count will
+                            be rejected. Set to "unlimited" for no limit.</p>
                             <p>This directive counts the number of client socket connections. A single browser may open
                             many separate connections (typically up to 6). </p>
                         </td>
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="limitFiles"></a>
             <h2>LimitFiles</h2>
             <table class="directive" title="directive">
@@ -266,7 +266,7 @@
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="limitKeepAlive"></a>
             <h2>LimitKeepAlive</h2>
             <table class="directive" title="directive">
@@ -303,7 +303,7 @@
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="limitMemory"></a>
             <h2>LimitMemory</h2>
             <table class="directive" title="directive">
@@ -329,7 +329,7 @@
                         <td>
                             <p>The LimitMemory directive defines the maximum amount of memory that Appweb can use.
                             On Linux and MacOSX, where a fast memory size API exists, this is the amount of memory currently
-                            used by the application. On other platforms, it is the amount of Appweb heap memory and 
+                            used by the application. On other platforms, it is the amount of Appweb heap memory and
                             does not include thread stack, code allocations, or memory allocated by means other than
                             the MPR memory allocation primitives.
                             If the memory limit is exceeded, Appweb will invoke the policy specified by the
@@ -338,7 +338,7 @@
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="limitProcesses"></a>
             <h2>LimitProcesses</h2>
             <table class="directive" title="directive">
@@ -368,7 +368,7 @@
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="limitRequestsPerClient"></a>
             <h2>LimitRequestsPerClient</h2>
             <table class="directive" title="directive">
@@ -392,9 +392,9 @@
                     <tr>
                         <td class="pivot">Notes</td>
                         <td>
-                            <p>The LimitRequestsPerClient directive defines the maximum number of simultaneous 
+                            <p>The LimitRequestsPerClient directive defines the maximum number of simultaneous
                             client HTTP requests that are permitted per single client IP address. Requests in excess of this
-                            count will be rejected. A limit of '0' means unlimited.</p>
+                            count will be rejected. Set to "unlimited" for no limit.</p>
                             <p>NOTE: that many browsers can and will initiate multiple requests when requesting a
                             page. Some browsers will initiate up to six requests at a time for a single tab.</p>
                         </td>
@@ -407,7 +407,7 @@
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="limitRequestBody"></a>
             <h2>LimitRequestBody</h2>
             <table class="directive" title="directive">
@@ -426,7 +426,7 @@
                     </tr>
                     <tr>
                         <td class="pivot">Example</td>
-                        <td>LimitRequestBody 65536</td>
+                        <td>LimitRequestBody 32K</td>
                     </tr>
                     <tr>
                         <td class="pivot">Notes</td>
@@ -435,7 +435,7 @@
                             applications, it is useful to limit the request body to the expected maximum. This ensures
                             that rogue or malicious requests will not cause the server to allocate unwanted memory to
                             servicing the request.</p>
-                            <p>The limit is an integer between zero and 2147483647 (2GB), where zero means unlimited.
+                            <p>The limit is an integer between zero and 2147483647 (2GB). Set to "unlimited" for no limit.
                             If a request is received that is larger than the limit, it will be rejected and the client
                             will receive an error. The default limit is 64 MB.</p>
                         </td>
@@ -449,7 +449,7 @@
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="limitRequestForm"></a>
             <h2>LimitRequestForm</h2>
             <table class="directive" title="directive">
@@ -473,15 +473,15 @@
                     <tr>
                         <td class="pivot">Notes</td>
                         <td>
-                            <p>The LimitRequestForm directive defines a maximum size for the request form data. 
+                            <p>The LimitRequestForm directive defines a maximum size for the request form data.
                             Form data is encoded with a Content-Type of "application/x-www-form-urlencoded". Form data
-                            is fully buffered before doing Route matching and constructing the pipeline. Whereas, 
+                            is fully buffered before doing Route matching and constructing the pipeline. Whereas,
                             non-form data is streamed to the handler and not buffered.</p>
                             <p>For embedded
                             applications, it is useful to limit the request body to the expected maximum. This ensures
                             that rogue or malicious requests will not cause the server to allocate unwanted memory to
                             servicing the request.</p>
-                            <p>The limit is an integer between zero and 2147483647 (2GB), where zero means unlimited.
+                            <p>The limit is an integer between zero and 2147483647 (2GB). Set to "unlimited" for no limit.
                             If a request is received that is larger than the limit, it will be rejected and the client
                             will receive an error. The default limit is 64 MB.</p>
                         </td>
@@ -495,8 +495,8 @@
                     </tr>
                 </tbody>
             </table>
-            
-            
+
+
             <a id="limitRequestHeader"></a>
             <h2>LimitRequestHeader</h2>
             <table class="directive" title="directive">
@@ -525,7 +525,7 @@
                             expected maximum. This ensures that rogue or malicious requests will not cause the server
                             to allocate unwanted memory to servicing the request. Typically, HTTP requests will not
                             have more than 4K of header data.</p>
-                            <p>The limit is an integer between zero and 1 MB, where zero means unlimited. If a request
+                            <p>The limit is an integer between zero and 1 MB. Set to "unlimited" for no limit. If a request
                             is received that has a header larger than the limit, it will be rejected and the client
                             will receive an error. The default limit is 8 K.</p>
                         </td>
@@ -539,7 +539,7 @@
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="limitRequestHeaderLines"></a>
             <h2>LimitRequestHeaderLines</h2>
             <table class="directive" title="directive">
@@ -568,7 +568,7 @@
                             header lines to the expected maximum. This ensures that rogue or malicious requests will
                             not cause the server to allocate unwanted memory to servicing the request. Typically, HTTP
                             requests will not have more than 15-20 header lines.</p>
-                            <p>The limit is an integer between zero and 4096, where zero means unlimited. If a request
+                            <p>The limit is an integer between zero and 4096. Set to "unlimited" for no limit. If a request
                             is received that has more header lines than the limit, it will be rejected and the client
                             will receive an error. The default limit is 40.</p>
                         </td>
@@ -582,8 +582,8 @@
                     </tr>
                 </tbody>
             </table>
-            
-            
+
+
             <a id="limitResponseBody"></a>
             <h2>LimitResponseBody</h2>
             <table class="directive" title="directive">
@@ -602,17 +602,18 @@
                     </tr>
                     <tr>
                         <td class="pivot">Example</td>
-                        <td>LimitResponseBody 65536</td>
+                        <td>LimitResponseBody 65K</td>
                     </tr>
                     <tr>
                         <td class="pivot">Notes</td>
                         <td>
                             <p>The LimitResponseBody directive defines the maximum size for response body data.
+                                Set to "unlimited" for no limit</p>
                         </td>
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="limitSessions"></a>
             <h2>LimitSessions</h2>
             <table class="directive" title="directive">
@@ -636,19 +637,19 @@
                     <tr>
                         <td class="pivot">Notes</td>
                         <td>
-                            <p>The LimitSessions directive defines the maximum number of simultaneous 
-                            client sessions that utilize server-side session state storage. Requests in excess of this 
-                            count will be rejected. A limit of '0' means unlimited.</p>
+                            <p>The LimitSessions directive defines the maximum number of simultaneous
+                            client sessions that utilize server-side session state storage. Requests in excess of this
+                            count will be rejected. Set to "unlimited" for no limit.</p>
                             <p>This directive limits the number of session states, whereas the LimitClients directive
                             limits the number of connected client systems.</p>
                             <p>NOTE: that many browsers can and will initiate multiple requests when requesting a
                             page. These will share the same session state storage. Some browsers will initiate up to six
-                            requests at a time for a single tab.</p> 
+                            requests at a time for a single tab.</p>
                         </td>
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="limitUri"></a>
             <h2>LimitUri</h2>
             <table class="directive" title="directive">
@@ -676,7 +677,7 @@
                             applications, it is useful to limit the number of header lines to the expected maximum.
                             This ensures that rogue or malicious requests will not cause the server to allocate
                             unwanted memory to servicing the request.</p>
-                            <p>The limit is an integer between zero and 256 K where zero means unlimited. If a request
+                            <p>The limit is an integer between zero and 256 K. Set to "unlimited" for no limit. If a request
                             is received that has a URL larger than the limit, it will be rejected and the client will
                             receive an error. The default limit is 4 K.</p>
                         </td>
@@ -690,8 +691,8 @@
                     </tr>
                 </tbody>
             </table>
-            
-            
+
+
             <a id="limitUpload"></a>
             <h2>LimitUpload</h2>
             <table class="directive" title="directive">
@@ -719,8 +720,8 @@
                             applications, it is useful to limit the maximum file upload size to ensure
                             that rogue or malicious requests will not cause the server to allocate unwanted space
                             for uploads.</p>
-                            <p>If set to zero, there is no limit. If a file larger than the limit is uploaded,
-                            Appweb will reject the request and the client will receive an error. 
+                            <p>Set to "unlimited" for no limit. If a file larger than the limit is uploaded,
+                            Appweb will reject the request and the client will receive an error.
                             The default value is unlimited.</p>
                         </td>
                     </tr>
@@ -733,8 +734,8 @@
                     </tr>
                 </tbody>
             </table>
-            
-            
+
+
             <a id="memoryPolicy"></a>
             <h2>Memory Policy</h2>
             <table class="directive" title="directive">
@@ -758,8 +759,8 @@
                     <tr>
                         <td class="pivot">Notes</td>
                         <td>
-                            <p>Appweb manages memory proactively and ensures reliable operation by preventing memory 
-                            allocation errors before they occur. It does this by defining a memory limit and applying 
+                            <p>Appweb manages memory proactively and ensures reliable operation by preventing memory
+                            allocation errors before they occur. It does this by defining a memory limit and applying
                             a memory policy for how to react when memory is depleted.</p>
                             <p>The MemoryPolicy directive defines how Appweb will respond to low memory conditions.
                             While the LimitMemory directive defines a maximum amount of memory that Appweb is permitted to
@@ -768,20 +769,20 @@
                             <p>If memory utilization exceeds the maximum memory limit, Appweb
                             will invoke the memory depletion policy defined by this directive.
                             Appweb also institutes a memory redline that is 85% of the memory limit. When memory
-                            utilization exceeds the redline value, Appweb will issue a warning to the error log and 
+                            utilization exceeds the redline value, Appweb will issue a warning to the error log and
                             attempt to free non-essential memory such as old session data and request caching. </p>
                             <p>If the memory policy is set to <em>continue</em>, Appweb will prune all non-essential memory,
                             but will continue to run. i.e. the limit becomes a soft limit and can be exceeded. If the policy
-                            is set to <em>restart</em>, then Appweb will do a graceful restart if the maximum is exceeded. 
+                            is set to <em>restart</em>, then Appweb will do a graceful restart if the maximum is exceeded.
                             A graceful restart will allow existing requests to complete up to the timeout specified by
-                            the ExitTimeout directive. Appweb relies on the <em>appman</em> manager application to restart 
+                            the ExitTimeout directive. Appweb relies on the <em>appman</em> manager application to restart
                             appweb in this case.</p>
                         </td>
                     </tr>
                 </tbody>
             </table>
-            
-            
+
+
             <a id="minWorkers"></a>
             <h2>MinWorkers</h2>
             <table class="directive" title="directive">
@@ -818,8 +819,8 @@
                     </tr>
                 </tbody>
             </table>
-            
-            
+
+
             <a id="threadStack"></a>
             <h2>ThreadStack</h2><br />
             <table class="directive" title="directive">
@@ -851,7 +852,7 @@
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="limitWebSocketsMessage"></a>
             <h2>LimitWebSocketsMessage</h2>
             <table class="directive" title="directive">
@@ -880,7 +881,7 @@
                         </td>
                     </tr>
                 </tbody>
-            </table>            
+            </table>
             <a id="limitWebSocketsPacket"></a>
             <h2>WorkerLimit</h2>
             <table class="directive" title="directive">
@@ -908,7 +909,7 @@
                         </td>
                     </tr>
                 </tbody>
-            </table>            
+            </table>
             <a id="limitWebSocketsFrame"></a>
             <h2>LimitWebSocketsFrame</h2>
             <table class="directive" title="directive">
@@ -937,7 +938,7 @@
                         </td>
                     </tr>
                 </tbody>
-            </table>            
+            </table>
             <a id="limitWorkers"></a>
             <h2>LimitWorkers</h2>
             <table class="directive" title="directive">
