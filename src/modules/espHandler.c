@@ -13,7 +13,7 @@
 /************************************* Code ***********************************/
 /*
     EspApp /path/to/some*dir/esp.json
-    EspApp prefix="/uri/prefix" config="/path/to/esp.json"
+    EspApp [prefix="/uri/prefix"] config="/path/to/esp.json"
  */
 static int espAppDirective(MaState *state, cchar *key, cchar *value)
 {
@@ -27,7 +27,8 @@ static int espAppDirective(MaState *state, cchar *key, cchar *value)
     saveRoute = state->route;
 
     if (scontains(value, "=")) {
-        path = prefix = 0;
+        path = 0;
+        prefix = "/";
         for (option = maGetNextArg(sclone(value), &tok); option; option = maGetNextArg(tok, &tok)) {
             option = stok(option, " =\t,", &ovalue);
             ovalue = strim(ovalue, "\"'", MPR_TRIM_BOTH);

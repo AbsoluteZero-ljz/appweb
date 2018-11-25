@@ -23,7 +23,7 @@ ws.onclose = function () {
 let i = 0
 while (true) {
     ws.send("Hello WebSocket World: " + i++)
-    App.sleep(100)
+    App.sleep(50)
 }
 
 ws.close()

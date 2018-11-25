@@ -9,8 +9,8 @@ program executable link, provided the module entry point is manually invoked fro
 
 Requirements
 ---
-* [Appweb](https://embedthis.com/appweb/download.html)
-* [MakeMe Build Tool](https://embedthis.com/makeme/download.html)
+* [Appweb](https://www.embedthis.com/appweb/download.html)
+* [MakeMe Build Tool](https://www.embedthis.com/makeme/download.html)
 
 To build:
 ---
@@ -32,10 +32,10 @@ Code:
 
 Documentation:
 ---
-* [Appweb Documentation](https://embedthis.com/appweb/doc/index.html)
-* [Creating Handlers](https://embedthis.com/appweb/doc/developers/handlers.html)
-* [Creating Modules](https://embedthis.com/appweb/doc/developers/modules.html)
-* [API Library](https://embedthis.com/appweb/doc/ref/native.html)
+* [Appweb Documentation](https://www.embedthis.com/appweb/doc/index.html)
+* [Creating Handlers](https://www.embedthis.com/appweb/doc/developers/handlers.html)
+* [Creating Modules](https://www.embedthis.com/appweb/doc/developers/modules.html)
+* [API Library](https://www.embedthis.com/appweb/doc/ref/native.html)
 
 See Also:
 ---

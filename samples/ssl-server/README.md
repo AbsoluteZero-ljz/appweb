@@ -5,8 +5,8 @@ This sample shows how to configure Appweb to use SSL.
 
 Requirements
 ---
-* [Appweb](https://embedthis.com/appweb/download.html)
-* [MakeMe Build Tool](https://embedthis.com/makeme/download.html)
+* [Appweb](https://www.embedthis.com/appweb/download.html)
+* [MakeMe Build Tool](https://www.embedthis.com/makeme/download.html)
 
 To build:
 ---
@@ -28,10 +28,10 @@ Code:
 
 Documentation:
 ---
-* [Appweb Documentation](https://embedthis.com/appweb/doc/index.html)
-* [Configuration Directives](https://embedthis.com/appweb/doc/users/configuration.html#directives)
-* [Security Considerations](https://embedthis.com/appweb/doc/users/security.html)
-* [SSL in Appweb](https://embedthis.com/appweb/doc/users/ssl.html)
+* [Appweb Documentation](https://www.embedthis.com/appweb/doc/index.html)
+* [Configuration Directives](https://www.embedthis.com/appweb/doc/users/configuration.html#directives)
+* [Security Considerations](https://www.embedthis.com/appweb/doc/users/security.html)
+* [SSL in Appweb](https://www.embedthis.com/appweb/doc/users/ssl.html)
 
 See Also:
 ---

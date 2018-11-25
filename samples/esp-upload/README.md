@@ -8,14 +8,14 @@ post the uploaded file to the web/upload/upload.esp page.
 
 Requirements
 ---
-* [ESP](https://embedthis.com/esp/download.html)
+* [ESP](https://www.embedthis.com/esp/download.html)
 
 To run:
 ---
     appweb
 
-The server listens on port 4000. Browse to: 
- 
+The server listens on port 8080. Browse to: 
+
      http://localhost:8080/upload-form.html
 
 Code:
@@ -26,14 +26,14 @@ Code:
 
 Documentation:
 ---
-* [Apwpeb Documentation](https://embedthis.com/appweb/doc/index.html)
-* [ESP Documentation](https://embedthis.com/esp/doc/index.html)
-* [ESP Configuration in Appweb](https://embedthis.com/appweb/doc/users/dir/esp.html)
-* [ESP Configuration](https://embedthis.com/esp/doc/users/config.html)
-* [File Upload)(https://embedthis.com/esp/doc/users/uploading.html)
-* [ESP APIs](https://embedthis.com/esp/doc/ref/api/esp.html)
-* [ESP Guide](https://embedthis.com/esp/doc/users/index.html)
-* [ESP Overview](https://embedthis.com/esp/doc/users/using.html)
+* [Apwpeb Documentation](https://www.embedthis.com/appweb/doc/index.html)
+* [ESP Documentation](https://www.embedthis.com/esp/doc/index.html)
+* [ESP Configuration in Appweb](https://www.embedthis.com/appweb/doc/users/dir/esp.html)
+* [ESP Configuration](https://www.embedthis.com/esp/doc/users/config.html)
+* [File Upload)(https://www.embedthis.com/esp/doc/users/uploading.html)
+* [ESP APIs](https://www.embedthis.com/esp/doc/ref/api/esp.html)
+* [ESP Guide](https://www.embedthis.com/esp/doc/users/index.html)
+* [ESP Overview](https://www.embedthis.com/esp/doc/users/using.html)
 
 See Also:
 ---

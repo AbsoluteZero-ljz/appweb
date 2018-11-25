@@ -2,7 +2,7 @@
 
 Please follow this template when submitting each and every issue. Issues without these details will be marked as "Incomplete" and will not get attention. Make sure you use:
 
-* Use markdown to format. Format code with three back ticks. Look at the source of this issue to see how it is done. 
+* Use markdown to format. Format code with three back ticks. Look at the source of this issue to see how it is done.
 
 * Edit down any logs. Please do not just dump large unedited logs. Only post the relevant portions.
 
@@ -14,11 +14,11 @@ Please follow this template when submitting each and every issue. Issues without
 
 ### Environment
 
-1. O/S Version: 
+1. O/S Version:
 
-2. Appweb Version: 
+2. Appweb Version:
 
-3. Hardware: 
+3. Hardware:
 
 ### Build
 

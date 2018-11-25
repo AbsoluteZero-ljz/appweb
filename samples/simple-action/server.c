@@ -1,16 +1,16 @@
 /*
     server.c - Appweb server to demonstrate actions
-  
+
     Copyright (c) All Rights Reserved. See copyright notice at the bottom of the file.
  */
- 
+
 /******************************* Includes *****************************/
 
 #include    "appweb.h"
 
 /********************************* Code *******************************/
 /*
-    This method is run when the action form is called from the web page. 
+    This method is run when the action form is called from the web page.
  */
 
 static void myaction(HttpConn *conn)
@@ -30,8 +30,8 @@ static void myaction(HttpConn *conn)
     httpSetHeaderString(conn, "Cache-Control", "no-cache");
 
     httpWrite(q, "<html><title>simpleAction</title><body>\r\n");
-    httpWrite(q, "<p>Name: %s</p>\n", httpGetParam(conn, "name", "-"));
-    httpWrite(q, "<p>Address: %s</p>\n", httpGetParam(conn, "address", "-"));
+    httpWrite(q, "<p>Name: %s</p>\n", httpGetParam(conn, "name", "unspecified"));
+    httpWrite(q, "<p>Address: %s</p>\n", httpGetParam(conn, "address", "unspecified"));
     httpWrite(q, "</body></html>\r\n");
 
     /*
@@ -86,21 +86,10 @@ int main(int argc, char **argv, char **envp)
 
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a 
+    You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */

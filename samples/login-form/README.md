@@ -1,12 +1,13 @@
 login-form Sample
 ===
 
-This sample shows how to configure a secure web form-based login with a simple web page UI. 
-This sample uses the a web form for entering username and password credentials.
+This sample shows how to configure a secure web form-based login with a simple web page UI.
+This sample uses the a web form for entering username and password credentials and does not require any
+specific web framework.
 
 This sample uses:
 
-* Https for encryption of traffic for login forms 
+* Https for encryption of traffic for login forms
 * Automatic redirection to a login page and logged out page
 * Automatic use of https for login forms and http once logged in
 * Self-signed certificate. You should obtain a real certificate.
@@ -31,18 +32,18 @@ Notes:
 
 Requirements
 ---
-* [Download Appweb](https://embedthis.com/appweb/download.html)
+* [Download Appweb](https://www.embedthis.com/appweb/download.html)
 
 To run:
 ---
     appweb -v
 
-The server listens on port 8080 for HTTP traffic and 4443 for SSL. Browse to: 
- 
+The server listens on port 8080 for HTTP traffic and 4443 for SSL. Browse to:
+
      http://localhost:8080/
 
-This will redirect to the login page using https (you will get a warning due to the 
-self-signed certificate). Continue and you will be prompted to login. The test 
+This will redirect to the login page using https (you will get a warning due to the
+self-signed certificate). Continue and you will be prompted to login. The test
 username/password is:
 
     joshua/pass1
@@ -56,6 +57,6 @@ Code:
 
 Documentation:
 ---
-* [Appweb Documentation](https://embedthis.com/appweb/doc/index.html)
-* [Appweb Configuration](https://embedthis.com/appweb/doc/users/configuration.html)
-* [Appweb User Authentication](https://embedthis.com/appweb/doc/users/authentication.html)
+* [Appweb Documentation](https://www.embedthis.com/appweb/doc/index.html)
+* [Appweb Configuration](https://www.embedthis.com/appweb/doc/users/configuration.html)
+* [Appweb User Authentication](https://www.embedthis.com/appweb/doc/users/authentication.html)

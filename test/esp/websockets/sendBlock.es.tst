@@ -4,7 +4,7 @@
 
 const PORT = tget('TM_HTTP_PORT') || "4100"
 const WS = "ws://127.0.0.1:" + PORT + "/websockets/basic/len"
-const TIMEOUT = 5000
+const TIMEOUT = 10000
 const LEN = 10 * 1024 * 1024
 
 let data = new ByteArray(LEN)
