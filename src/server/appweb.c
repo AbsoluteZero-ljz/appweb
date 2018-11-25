@@ -325,7 +325,7 @@ static int changeRoot(cchar *jail)
 
 static int createEndpoints(int argc, char **argv)
 {
-    cchar   *ip;
+    char    *ip;
     int     argind, port, secure;
 
     ip = 0;
