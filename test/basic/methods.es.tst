@@ -35,6 +35,7 @@ http.connect("OPTIONS", HTTP + "/tmp/index.html")
 ttrue(http.header("Allow").split(',').sort() == "DELETE,GET,OPTIONS,POST,PUT")
 
 //  Trace - should be disabled by default
+http.reset()
 http.connect("TRACE", HTTP + "/index.html")
 ttrue(http.status == 405)
 http.connect("TRACE", HTTP + "/trace/index.html")
