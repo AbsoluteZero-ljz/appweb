@@ -2,7 +2,7 @@
     <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
       <PropertyGroup Label="Globals">
-        <ProjectGuid>{ab1ef804-d023-41ba-95b8-caa1bb9b3809}</ProjectGuid>
+        <ProjectGuid>{9c5b6e38-eea9-4760-884d-bf801942fee1}</ProjectGuid>
         <RootNamespace />
         <Keyword>Win32Proj</Keyword>
       </PropertyGroup>
@@ -100,8 +100,10 @@
 
       <CustomBuildStep>
         <Command>cd ..\..\src\esp
-copy /Y esp-compile.json $(BinDir)
-copy /Y vcvars.bat $(BinDir)
+if exist $(BinDir)\esp-compile.json del /Q $(BinDir)\esp-compile.json
+copy /Y esp-compile.json $(BinDir)\esp-compile.json
+if exist $(BinDir)\vcvars.bat del /Q $(BinDir)\vcvars.bat
+copy /Y vcvars.bat $(BinDir)\vcvars.bat
 cd ..\..\projects\appweb-windows-default</Command>
         <Outputs>$(BinDir)</Outputs>
       </CustomBuildStep>
