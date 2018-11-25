@@ -1304,6 +1304,34 @@ static int limitFilesDirective(MaState *state, cchar *key, cchar *value)
 
 
 /*
+    LimitFrame bytes
+ */
+static int limitFrameDirective(MaState *state, cchar *key, cchar *value)
+{
+    int     size;
+
+    httpGraduateLimits(state->route, 0);
+    size = httpGetInt(value);
+    if (size > (1024 * 1024)) {
+        size = (1024 * 1024);
+    }
+    state->route->limits->frameSize = size;
+    return 0;
+}
+
+
+/*
+    LimitKeepAlive count
+ */
+static int limitKeepAliveDirective(MaState *state, cchar *key, cchar *value)
+{
+    httpGraduateLimits(state->route, 0);
+    state->route->limits->keepAliveMax = httpGetInt(value);
+    return 0;
+}
+
+
+/*
     LimitMemory size
 
     Redline set to 85%
@@ -1398,10 +1426,21 @@ static int limitResponseBodyDirective(MaState *state, cchar *key, cchar *value)
 /*
     LimitSessions count
  */
-static int limitSessionDirective(MaState *state, cchar *key, cchar *value)
+static int limitSessionsDirective(MaState *state, cchar *key, cchar *value)
 {
     httpGraduateLimits(state->route, 0);
     state->route->limits->sessionMax = httpGetInt(value);
+    return 0;
+}
+
+
+/*
+    LimitStreams count
+ */
+static int limitStreamsDirective(MaState *state, cchar *key, cchar *value)
+{
+    httpGraduateLimits(state->route, 0);
+    state->route->limits->streamsMax = httpGetInt(value);
     return 0;
 }
 
@@ -1429,6 +1468,39 @@ static int limitUploadDirective(MaState *state, cchar *key, cchar *value)
 
 
 /*
+    LimitWindow bytes
+ */
+static int limitWindowDirective(MaState *state, cchar *key, cchar *value)
+{
+    int     size;
+
+    httpGraduateLimits(state->route, 0);
+    size = httpGetInt(value);
+    if (size > (1024 * 1024)) {
+        size = (1024 * 1024);
+    }
+    state->route->limits->windowSize = size;
+    return 0;
+}
+
+
+/*
+    LimitWorkers count
+ */
+static int limitWorkersDirective(MaState *state, cchar *key, cchar *value)
+{
+    int     count;
+
+    count = atoi(value);
+    if (count < 1) {
+        count = MAXINT;
+    }
+    mprSetMaxWorkers(count);
+    return 0;
+}
+
+
+/*
     Listen ip:port      Listens only on the specified interface
     Listen ip           Listens only on the specified interface with the default port
     Listen port         Listens on both IPv4 and IPv6
@@ -1440,7 +1512,7 @@ static int listenDirective(MaState *state, cchar *key, cchar *value)
 {
     HttpEndpoint    *endpoint, *dual;
     HttpHost        *host;
-    char            *ip, *address;
+    cchar           *ip, *address;
     int             port;
 
     if (!maTokenize(state, value, "%S", &address)) {
@@ -1485,7 +1557,7 @@ static int listenSecureDirective(MaState *state, cchar *key, cchar *value)
 #if ME_COM_SSL
     HttpEndpoint    *endpoint, *dual;
     HttpHost        *host;
-    char            *address, *ip;
+    cchar           *address, *ip;
     int             port;
 
     if (!maTokenize(state, value, "%S", &address)) {
@@ -1530,14 +1602,6 @@ static int listenSecureDirective(MaState *state, cchar *key, cchar *value)
 #endif
 }
 
-
-#if DEPRECATED || 1
-static int logDirective(MaState *state, cchar *key, cchar *value)
-{
-    mprLog("error appweb config", 0, "Log directive is deprecated. Use Trace instead");
-    return -1;
-}
-#endif
 
 /*
     LogRoutes [full]
@@ -1591,48 +1655,10 @@ static int loadModuleDirective(MaState *state, cchar *key, cchar *value)
     if (!maTokenize(state, value, "%S %S", &name, &path)) {
         return MPR_ERR_BAD_SYNTAX;
     }
-#if DEPRECATE || 1
-    if (smatch(name, "cgiHandler")) {
-        name = "cgi";
-    } else if (smatch(name, "ejsHandler")) {
-        name = "ejs";
-    } else if (smatch(name, "espHandler")) {
-        name = "esp";
-    } else if (smatch(name, "phpHandler")) {
-        name = "php";
-    }
-#endif
     if (maLoadModule(name, path) < 0) {
         /*  Error messages already done */
         return MPR_ERR_CANT_CREATE;
     }
-    return 0;
-}
-
-
-/*
-    LimitKeepAlive count
- */
-static int limitKeepAliveDirective(MaState *state, cchar *key, cchar *value)
-{
-    httpGraduateLimits(state->route, 0);
-    state->route->limits->keepAliveMax = httpGetInt(value);
-    return 0;
-}
-
-
-/*
-    LimitWorkers count
- */
-static int limitWorkersDirective(MaState *state, cchar *key, cchar *value)
-{
-    int     count;
-
-    count = atoi(value);
-    if (count < 1) {
-        count = MAXINT;
-    }
-    mprSetMaxWorkers(count);
     return 0;
 }
 
@@ -1836,26 +1862,6 @@ static int monitorDirective(MaState *state, cchar *key, cchar *value)
 
 
 /*
-    NameVirtualHost ip[:port]
- */
-static int nameVirtualHostDirective(MaState *state, cchar *key, cchar *value)
-{
-#if DEPRECATED
-    char    *ip;
-    int     port;
-
-    if (mprParseSocketAddress(value, &ip, &port, NULL, -1) < 0) {
-        mprLog("error appweb config", 0, "Bad NameVirtualHost directive %s", value);
-    }
-    httpConfigureNamedVirtualEndpoints(ip, port);
-#else
-    mprLog("warn appweb config", 0, "The NameVirtualHost directive is no longer needed");
-#endif
-    return 0;
-}
-
-
-/*
     Options Indexes
  */
 static int optionsDirective(MaState *state, cchar *key, cchar *value)
@@ -2021,8 +2027,7 @@ static int requireDirective(MaState *state, cchar *key, cchar *value)
         httpSetAuthRequiredAbilities(state->auth, rest);
 
     /* Support require group for legacy support */
-    //  DEPRECATE "group"
-    } else if (scaselesscmp(type, "group") == 0 || scaselesscmp(type, "role") == 0) {
+    } else if (scaselesscmp(type, "role") == 0) {
         httpSetAuthRequiredAbilities(state->auth, rest);
 
     } else if (scaselesscmp(type, "secure") == 0) {
@@ -2416,33 +2421,7 @@ static int sslCipherSuiteDirective(MaState *state, cchar *key, cchar *value)
 
 
 /*
-    SSLEngine on
-    DEPRECATE in 6.0
- */
-static int sslEngineDirective(MaState *state, cchar *key, cchar *value)
-{
-    bool    on;
-
-    if (!maTokenize(state, value, "%B ?S", &on)) {
-        return MPR_ERR_BAD_SYNTAX;
-    }
-    if (on) {
-        checkSsl(state);
-        if (!state->host->secureEndpoint) {
-            if (httpSecureEndpointByName(state->host->name, state->route->ssl) < 0) {
-                mprLog("error ssl", 0, "No HttpEndpoint at %s to secure. Must use inside a VirtualHost block",
-                    state->host->name);
-                return MPR_ERR_BAD_STATE;
-            }
-        }
-    }
-    return 0;
-}
-
-
-/*
     SSLVerifyClient [on|off]
-    DEPRECATED: SSLVerifyClient [none|require]
  */
 static int sslVerifyClientDirective(MaState *state, cchar *key, cchar *value)
 {
@@ -2452,10 +2431,8 @@ static int sslVerifyClientDirective(MaState *state, cchar *key, cchar *value)
     checkSsl(state);
     if (scaselesscmp(value, "require") == 0) {
         on = 1;
-
     } else if (scaselesscmp(value, "none") == 0) {
         on = 0;
-
     } else {
         if (!maTokenize(state, value, "%B", &on)) {
             return MPR_ERR_BAD_SYNTAX;
@@ -2800,7 +2777,8 @@ static int virtualHostDirective(MaState *state, cchar *key, cchar *value)
 static int closeVirtualHostDirective(MaState *state, cchar *key, cchar *value)
 {
     HttpEndpoint    *endpoint;
-    char            *address, *ip, *addresses, *tok;
+    cchar           *address, *ip;
+    char            *addresses, *tok;
     int             port;
 
     if (state->enabled) {
@@ -2931,9 +2909,10 @@ static bool conditionalDefinition(MaState *state, cchar *key)
         } else if (scaselessmatch(key, "DIR_MODULE")) {
             result = ME_COM_DIR;
 
+#if DEPRECATED || 1
         } else if (scaselessmatch(key, "EJS_MODULE")) {
             result = ME_COM_EJSCRIPT;
-
+#endif
         } else if (scaselessmatch(key, "ESP_MODULE")) {
             result = ME_COM_ESP;
 
@@ -3169,14 +3148,6 @@ PUBLIC char *maGetNextArg(char *s, char **tok)
 }
 
 
-#if DEPRECATED
-PUBLIC char *maGetNextToken(char *s, char **tok)
-{
-    return maGetNextArg(s, tok);
-}
-#endif
-
-
 PUBLIC int maWriteAuthFile(HttpAuth *auth, char *path)
 {
     MprFile         *file;
@@ -3278,6 +3249,7 @@ static int parseInit()
     maAddDirective("LimitClients", limitClientsDirective);
     maAddDirective("LimitConnections", limitConnectionsDirective);
     maAddDirective("LimitFiles", limitFilesDirective);
+    maAddDirective("LimitFrame", limitFrameDirective);
     maAddDirective("LimitKeepAlive", limitKeepAliveDirective);
     maAddDirective("LimitMemory", limitMemoryDirective);
     maAddDirective("LimitProcesses", limitProcessesDirective);
@@ -3287,13 +3259,15 @@ static int parseInit()
     maAddDirective("LimitRequestHeaderLines", limitRequestHeaderLinesDirective);
     maAddDirective("LimitRequestHeader", limitRequestHeaderDirective);
     maAddDirective("LimitResponseBody", limitResponseBodyDirective);
-    maAddDirective("LimitSessions", limitSessionDirective);
+    maAddDirective("LimitSessions", limitSessionsDirective);
+    maAddDirective("LimitStreams", limitStreamsDirective);
     maAddDirective("LimitUri", limitUriDirective);
     maAddDirective("LimitUpload", limitUploadDirective);
     maAddDirective("LimitWebSockets", limitWebSocketsDirective);
     maAddDirective("LimitWebSocketsMessage", limitWebSocketsMessageDirective);
     maAddDirective("LimitWebSocketsFrame", limitWebSocketsFrameDirective);
     maAddDirective("LimitWebSocketsPacket", limitWebSocketsPacketDirective);
+    maAddDirective("LimitWindow", limitWindowDirective);
     maAddDirective("LimitWorkers", limitWorkersDirective);
     maAddDirective("Listen", listenDirective);
     maAddDirective("ListenSecure", listenSecureDirective);
@@ -3332,7 +3306,6 @@ static int parseInit()
     maAddDirective("Source", sourceDirective);
 
 #if ME_COM_SSL
-    maAddDirective("SSLEngine", sslEngineDirective);
     maAddDirective("SSLCACertificateFile", sslCaCertificateFileDirective);
     maAddDirective("SSLCACertificatePath", sslCaCertificatePathDirective);
     maAddDirective("SSLCertificateFile", sslCertificateFileDirective);
@@ -3343,12 +3316,14 @@ static int parseInit()
     maAddDirective("SSLVerifyIssuer", sslVerifyIssuerDirective);
     maAddDirective("SSLVerifyDepth", sslVerifyDepthDirective);
 #endif
+
     maAddDirective("Stealth", stealthDirective);
     maAddDirective("StreamInput", streamInputDirective);
     maAddDirective("Target", targetDirective);
     maAddDirective("Template", templateDirective);
     maAddDirective("ThreadStack", threadStackDirective);
     maAddDirective("Trace", traceDirective);
+    maAddDirective("TraceLog", traceLogDirective);
     maAddDirective("TypesConfig", typesConfigDirective);
     maAddDirective("Update", updateDirective);
     maAddDirective("UnloadModule", unloadModuleDirective);
@@ -3361,64 +3336,10 @@ static int parseInit()
     maAddDirective("WebSocketsProtocol", webSocketsProtocolDirective);
     maAddDirective("WebSocketsPing", webSocketsPingDirective);
 
-
     /*
         Fixes
      */
     maAddDirective("FixDotNetDigestAuth", fixDotNetDigestAuth);
-    maAddDirective("TraceLog", traceLogDirective);
-
-#if DEPRECATED
-    /* Use TraceLog */
-    maAddDirective("AccessLog", traceLogDirective);
-    /* Use AuthStore */
-    maAddDirective("AuthMethod", authStoreDirective);
-    maAddDirective("AuthGroupFile", authGroupFileDirective);
-    maAddDirective("AuthUserFile", authUserFileDirective);
-    /* Use AuthRealm */
-    maAddDirective("AuthName", authRealmDirective);
-    /* Use Map */
-    maAddDirective("Compress", compressDirective);
-    /* Use Documents */
-    maAddDirective("DocumentRoot", documentsDirective);
-    /* Use LimitConnections or LimitRequestsPerClient instead */
-    maAddDirective("LimitRequests", limitRequestsDirective);
-    /* Use LimitBuffer */
-    maAddDirective("LimitStageBuffer", limitBufferDirective);
-    /* Use LimitUri */
-    maAddDirective("LimitUrl", limitUriDirective);
-    /* Use LimitKeepAlive */
-    maAddDirective("MaxKeepAliveRequests", limitKeepAliveDirective);
-    /* Use Methods */
-    maAddDirective("PutMethod", putMethodDirective);
-    maAddDirective("ResetPipeline", resetPipelineDirective);
-    /* Use MinWorkers */
-    maAddDirective("StartWorkers", minWorkersDirective);
-    maAddDirective("StartThreads", minWorkersDirective);
-    /* Use requestTimeout */
-    maAddDirective("Timeout", requestTimeoutDirective);
-    maAddDirective("ThreadLimit", limitWorkersDirective);
-    /* Use Methods */
-    maAddDirective("TraceMethod", traceMethodDirective);
-    maAddDirective("WorkerLimit", limitWorkersDirective);
-    /* Use LimitRequestHeaderLines */
-    maAddDirective("LimitRequestFields", limitRequestHeaderLinesDirective);
-    /* Use LimitRequestHeader */
-    maAddDirective("LimitRequestFieldSize", limitRequestHeaderDirective);
-    /* Use InactivityTimeout */
-    maAddDirective("KeepAliveTimeout", inactivityTimeoutDirective);
-    /* Use <Route> */
-    maAddDirective("<Location", routeDirective);
-    maAddDirective("</Location", closeDirective);
-    /* Use Home */
-    maAddDirective("ServerRoot", homeDirective);
-#endif
-#if DEPRECATED || 1
-    /* Not needed */
-    maAddDirective("NameVirtualHost", nameVirtualHostDirective);
-    /* Use Trace */
-    maAddDirective("Log", logDirective);
-#endif
     return 0;
 }
 
@@ -3438,12 +3359,7 @@ PUBLIC int maLoadModule(cchar *name, cchar *libname)
     entry = sfmt("http%sInit", stitle(name));
     module = mprCreateModule(name, path, entry, HTTP);
     if (mprLoadModule(module) < 0) {
-#if DEPRECATED || 1
-        module->entry = sfmt("ma%sInit", stitle(name));
-        if (mprLoadModule(module) < 0) {
-            return MPR_ERR_CANT_CREATE;
-        }
-#endif
+        return MPR_ERR_CANT_CREATE;
     }
     return 0;
 }

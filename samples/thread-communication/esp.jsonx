@@ -1,0 +1,15 @@
+/*
+    esp.json - ESP configuration file
+ */
+{
+    name: 'thread-communication',
+    description: 'Foreign thread communication sample',
+    version: '0.2.0',
+    esp: {
+        app: true,
+    },
+    http: {
+        routes: [
+        ]
+    }
+}

@@ -3,7 +3,7 @@
  */
 
 Me.load({
-    makeme: '>=0.9.0',
+    makeme: '>=1.0.0',
 
     plugins: [ 'installs' ],
 
@@ -26,9 +26,9 @@ Me.load({
     },
 
     customize: [
-        /* 
+        /*
             The optional custom.me file is loaded after main.me is fully processed. It can
-            thus override any setting. Feel free to create and customize. 
+            thus override any setting. Feel free to create and customize.
          */
         'custom.me',
     ],
@@ -68,6 +68,7 @@ Me.load({
             /* Use PAM (Plugable Authentication Module) to store passwords */
             cmd: true,
             pam: true,
+            http2: true,
             webSockets: true,
         },
 
@@ -92,8 +93,8 @@ Me.load({
             },
             ssl: {
                 cache: 512,             /* Set the session cache size (items) */
-                logLevel: 5,            /* Starting logging level for SSL messages */
-                handshakes: 1,          /* Set maximum number of renegotiations (zero means infinite) */
+                logLevel: 6,            /* Starting logging level for SSL messages */
+                handshakes: 3,          /* Set maximum number of renegotiations (zero means infinite) */
                 ticket: true,           /* Enable session resumption via ticketing - client side session caching */
                 timeout: 86400,         /* Session and ticketing duration in seconds */
             },
@@ -122,7 +123,7 @@ Me.load({
     usage: {
         'configFile':           'Path of the appweb.conf file',
         'http.pam':             'Enable Unix Pluggable Auth Module (true|false)',
-        'http.webSockets':      'Enable WebSockets (true|false)',                
+        'http.webSockets':      'Enable WebSockets (true|false)',
         'mpr.logging':          'Enable application logging (true|false)',
         'serverRoot':           'Home directory for the server ',
     },
@@ -162,5 +163,3 @@ Me.load({
         'rom':          'Build without a file system (true|false)',
     }
 })
-
-

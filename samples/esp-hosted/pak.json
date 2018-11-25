@@ -1,17 +1,15 @@
 {
-    "name": "espapp",
-    "title": "Esp Application",
-    "description": "Esp Sample Application",
-    "license": "GPL",
-    "dependencies": {
-        "esp-html-skeleton": "~5.4"
-    },
-    "mode": "debug"
+    "name": "demo",
+    "title": "Demo Application",
+    "version": undefined,
+    "import": true,
+    "profile": "debug",
     "devDependencies": {
-        "esp": "~6.x"
+        "esp": ">=7.0"
     },
     "directories": {
         "dist": "dist",
-        "controllers": "controllers"
+        "controllers": "controllers",
+        "export": "contents/lib"
     }
 }

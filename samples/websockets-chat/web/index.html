@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset=utf-8>
-    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.js"></script>
     <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
 </head>
 
 <body>
     <h4>Outgoing Message</h4>
-    <form id="chat" action="hello.html">
+    <form id="chat">
         Message: <input id="msg" name="msg" type="text">
         <input type="submit" value="Send">
     </form>
@@ -17,11 +17,7 @@
     <div id="messages" />
 
     <script>
-        $("#chat").submit(function(e) {
-            var text = $('#msg').val();
-            ws.send(text);
-            e.preventDefault();
-        });
+    $(document).ready(function() {
         var ws = new WebSocket('ws://localhost:8080/ws/test/chat', ['chat']);
 
         ws.onopen = function (e) {
@@ -38,6 +34,14 @@
         ws.onerror = function (e) {
             console.log("Error " + e);
         };
+
+        $("#chat").submit(function(e) {
+            var text = $('#msg').val();
+            ws.send(text);
+            e.preventDefault();
+            return false;
+        });
+    });
     </script>
 
 </body>

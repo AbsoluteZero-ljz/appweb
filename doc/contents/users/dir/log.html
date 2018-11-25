@@ -104,17 +104,13 @@
                     <tr>
                         <td class="pivot">Synopsis</td>
                         <td>Trace [rx|tx] <br/>
-                            &nbsp; &rarr; connection=level <br/>
-                            &nbsp; &rarr; errors=level <br/>
-                            &nbsp; &rarr; info=level <br/>
-                            &nbsp; &rarr; rxFirst=level <br/>
-                            &nbsp; &rarr; rxHeaders=level <br/>
-                            &nbsp; &rarr; rxBody=level <br/>
-                            &nbsp; &rarr; txFirst=level <br/>
-                            &nbsp; &rarr; txHeaders=level <br/>
-                            &nbsp; &rarr; txBody=level <br/>
-                            &nbsp; &rarr; complete=level <br/>
-                            &nbsp; &rarr; content=bytes
+                            &nbsp; &rarr; debug=level <br/>
+                            &nbsp; &rarr; request=level <br/>
+                            &nbsp; &rarr; result=level <br/>
+                            &nbsp; &rarr; error=level <br/>
+                            &nbsp; &rarr; context=level <br/>
+                            &nbsp; &rarr; packet=level <br/>
+                            &nbsp; &rarr; network=level <br/>
                         </td>
                     </tr>
                     <tr>
@@ -132,16 +128,13 @@
                             <p>The Trace directive controls how HTTP requests are traced to the request log file.
                             The following classes of information can be traces.
                             <ul>
-                                <li>connection &mdash; connection oriented events</li>
-                                <li>errors &mdash; request errors resulting in abnormal termination</li>
-                                <li>info &mdash; request processing information</li>
-                                <li>rxFirst &mdash; first line of the HTTP request header</li>
-                                <li>rxHeaders &mdash; full request headers</li>
-                                <li>rxBody &mdash; request body content</li>
-                                <li>txFirst &mdash; first line of the HTTP response header</li>
-                                <li>txHeaders &mdash; full response headers</li>
-                                <li>txBody &mdash; response body content</li>
-                                <li>complete &mdash; Request completion</li>
+                                <li>debug &mdash; development debug events</li>
+                                <li>request &mdash; core request events</li>
+                                <li>response &mdash; core response events</li>
+                                <li>errors &mdash; request errors</li>
+                                <li>context &mdash; request processing information</li>
+                                <li>packet &mdash; Low level packet information</li>
+                                <li>verbose &mdash; Network level events</li>
                             </ul>
                             <p>For each class, the level defines the log level at which tracing will occur.</p>
                             <p>When tracing is enabled for a HTTP message, the headers and/or body of the message

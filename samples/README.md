@@ -15,7 +15,9 @@ The following samples are available:
 * [cpp-module](cpp-module/README.md)                C++ Module
 * [deploy-server](deploy-server/README.md)          Deploy Appweb files for copying to a target.
 * [esp-hosted](esp-hosted/README.md)                Host an ESP application.
+* [esp-upload](esp-upload/README.md)                File upload with an ESP application.
 * [login-basic](login-basic/README.md)              Login using Basic or Digest authentication (not recommended).
+* [login-database](login-database/README.md)        Login and verify user/password using a custom App auth store.
 * [login-form](login-form/README.md)                Login using Web Forms (recommended).
 * [max-server](max-server/README.md)                Maximum configuration in appweb.conf.
 * [min-server](min-server/README.md)                Minimum configuration in appweb.conf.
@@ -26,6 +28,7 @@ The following samples are available:
 * [simple-server](simple-server/README.md)          Simple Http server.
 * [spy-fliter](spy-filter/README.md)                Simple HTTP pipeline filter.
 * [ssl-server](ssl-server/README.md)                SSL server.
+* [thread-communication](thread-communication/README.md) Interthread communications and thread-safe APIs.
 * [tiny-server](tiny-server/README.md)              Configure Appweb to be tiny.
 * [typical-client](typical-client/README.md)        Using the client HTTP API to retrieve a document.
 * [typical-server](typical-server/README.md)        A more fully featured server main program.
@@ -61,14 +64,14 @@ The full product documentation is supplied in HTML format under the doc director
 Licensing
 ---
 
-Please see: 
+Please see:
 
 * https://www.embedthis.com/licensing/index.html
 
 
 Support
 ---
-Embedthis provides support for Appweb for commercial customers. If you are interested in commercial support, 
+Embedthis provides support for Appweb for commercial customers. If you are interested in commercial support,
 please contact Embedthis at:
 
 * sales@embedthis.com
@@ -81,5 +84,5 @@ For non-commercial customers, you may ask questions in the form of well describe
 Copyright
 ---
 
-Copyright (c) Embedthis Software. All Rights Reserved. Embedthis and Appweb are trademarks of 
+Copyright (c) Embedthis Software. All Rights Reserved. Embedthis and Appweb are trademarks of
 Embedthis Software, LLC. Other brands and their products are trademarks of their respective holders.

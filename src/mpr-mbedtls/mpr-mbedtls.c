@@ -195,7 +195,8 @@ static int configMbed(MprSsl *ssl, int flags, char **errorMsg)
     mbedtls_ssl_config  *mconf;
     cuchar              dhm_p[] = MBEDTLS_DHM_RFC3526_MODP_2048_P_BIN;
     cuchar              dhm_g[] = MBEDTLS_DHM_RFC3526_MODP_2048_G_BIN;
-    int                 rc;
+    char                *anext, *aprotocol;
+    int                 i, rc;
 
     if (ssl->config && !ssl->changed) {
         return 0;
@@ -301,6 +302,9 @@ static int configMbed(MprSsl *ssl, int flags, char **errorMsg)
 
     if ((cfg->ciphers = getCipherSuite(ssl)) != 0) {
         mbedtls_ssl_conf_ciphersuites(mconf, cfg->ciphers);
+    }
+    if (ssl->alpn) {
+        mbedtls_ssl_conf_alpn_protocols(mconf, (cchar**) ssl->alpn->items);
     }
     if (flags & MPR_SOCKET_SERVER && ssl->matchSsl) {
         mbedtls_ssl_conf_sni(mconf, sniCallback, 0);
@@ -496,10 +500,10 @@ static int getPeerCertInfo(MprSocket *sp)
         mbedtls_x509_dn_gets(cbuf, sizeof(cbuf), &peer->issuer);
         sp->peerCertIssuer = sclone(cbuf);
 
-        if (mprGetLogLevel() >= 5) {
+        if (mprGetLogLevel() >= 6) {
             char buf[4096];
             mbedtls_x509_crt_info(buf, sizeof(buf) - 1, "", peer);
-            mprLog("info mbedtls", 5, "Peer certificate\n%s", buf);
+            mprLog("info mbedtls", 6, "Peer certificate\n%s", buf);
         }
     }
     sp->cipher = replaceHyphen(sclone(mbedtls_ssl_get_ciphersuite(ctx)), '-', '_');
@@ -820,11 +824,11 @@ static int *getCipherSuite(MprSsl *ssl)
         static int once = 0;
         if (!once++) {
             cp = (ciphers && *ciphers) ? result : mbedtls_ssl_list_ciphersuites();
-            mprLog("info mbedtls", 5, "\nCiphers:");
+            mprLog("info mbedtls", 6, "\nCiphers:");
             for (; *cp; cp++) {
                 scopy(buf, sizeof(buf), mbedtls_ssl_get_ciphersuite_name(*cp));
                 replaceHyphen(buf, '-', '_');
-                mprLog("info mbedtls", 5, "0x%04X %s", *cp, buf);
+                mprLog("info mbedtls", 6, "0x%04X %s", *cp, buf);
             }
         }
     }

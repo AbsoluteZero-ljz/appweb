@@ -14,7 +14,7 @@ Notes:
 
     mkdir esp-hosted
     cd esp-hosted
-    pak init espapp
+    pak init demo
     pak install esp-html-skeleton
     esp generate scaffold post title:string body:text
     expansive render
@@ -31,14 +31,22 @@ To build:
 
 To run:
 ---
-    me run 
+    me run
 
 or
     appweb -v
 
-The server listens on port 8080 for HTTP traffic. Browse to: 
- 
-     http://localhost:8080/espapp/
+The server listens on port 8080 for HTTP traffic.
+
+Browse to this home page for a welcome page:
+
+    http://localhost:8080/
+
+
+Browse to this page for a simple blog post app
+
+    http://localhost:8080/post
+
 
 Code:
 ---
@@ -47,13 +55,13 @@ Code:
 * [client/index.esp](client/index.esp) - Home page
 * [controllers/post.c](controllers/post.c) - Controller code
 * [db](db) - Database and migrations
-* [documents](documents) - Public client-side documents. 
+* [documents](documents) - Public client-side documents.
 * [esp.json](esp.json) - ESP configuration file
 * [expansive.json](eexpansive.json) - Expansive configuration file
 * [layouts](layouts) - ESP layout pages
 * [package.json](package.json) - Package configuration file
 * [paks](paks) - Extension packages
-* [source](source) - Input client-side documents source. 
+* [source](source) - Input client-side documents source.
 
 Documentation:
 ---

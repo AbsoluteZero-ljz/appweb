@@ -8,19 +8,21 @@
             'version': { type: 'string' },
         },
         data: [
-            [ 1,'201501191728290',],
+            [ 1,'201004121637121',],
         ],
     },
-    'post': {
+    'user': {
         hints: {
-            ncols: 3
+            ncols: 4
         },
         schema: {
             'id': { type: 'int', autoinc: true, index: true, key: true },
-            'title': { type: 'string' },
-            'body': { type: 'text' },
+            'username': { type: 'string' },
+            'password': { type: 'string' },
+            'roles': { type: 'string' },
         },
         data: [
+            [ 1,'joshua','BF1:00128:NjmHiceSKNLMwuAq:CclS+mao0dIGF8GhuKj+Kbf4SBiTD+W+','user',],
         ],
     },
 }

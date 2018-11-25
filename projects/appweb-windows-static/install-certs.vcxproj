@@ -100,15 +100,24 @@
 
       <CustomBuildStep>
         <Command>cd ..\..\src\certs
-copy /Y samples\ca.crt $(BinDir)
-copy /Y samples\ca.key $(BinDir)
-copy /Y samples\ec.crt $(BinDir)
-copy /Y samples\ec.key $(BinDir)
-copy /Y samples\roots.crt $(BinDir)
-copy /Y samples\self.crt $(BinDir)
-copy /Y samples\self.key $(BinDir)
-copy /Y samples\test.crt $(BinDir)
-copy /Y samples\test.key $(BinDir)
+if exist $(BinDir)\ca.crt del /Q $(BinDir)\ca.crt
+copy /Y samples\ca.crt $(BinDir)\ca.crt
+if exist $(BinDir)\ca.key del /Q $(BinDir)\ca.key
+copy /Y samples\ca.key $(BinDir)\ca.key
+if exist $(BinDir)\ec.crt del /Q $(BinDir)\ec.crt
+copy /Y samples\ec.crt $(BinDir)\ec.crt
+if exist $(BinDir)\ec.key del /Q $(BinDir)\ec.key
+copy /Y samples\ec.key $(BinDir)\ec.key
+if exist $(BinDir)\roots.crt del /Q $(BinDir)\roots.crt
+copy /Y samples\roots.crt $(BinDir)\roots.crt
+if exist $(BinDir)\self.crt del /Q $(BinDir)\self.crt
+copy /Y samples\self.crt $(BinDir)\self.crt
+if exist $(BinDir)\self.key del /Q $(BinDir)\self.key
+copy /Y samples\self.key $(BinDir)\self.key
+if exist $(BinDir)\test.crt del /Q $(BinDir)\test.crt
+copy /Y samples\test.crt $(BinDir)\test.crt
+if exist $(BinDir)\test.key del /Q $(BinDir)\test.key
+copy /Y samples\test.key $(BinDir)\test.key
 cd ..\..\projects\appweb-windows-static</Command>
         <Outputs>$(BinDir)</Outputs>
       </CustomBuildStep>

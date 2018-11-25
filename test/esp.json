@@ -4,6 +4,6 @@
         combine: false,
         compile: true,
         optimize: false,
-        update: true
+        update: true,
     }
 }
