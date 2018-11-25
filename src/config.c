@@ -497,18 +497,6 @@ static int allowDirective(MaState *state, cchar *key, cchar *value)
 }
 
 
-#if DEPRECATED
-/*
-    AuthGroupFile path
- */
-static int authGroupFileDirective(MaState *state, cchar *key, cchar *value)
-{
-    mprLog("warn appweb config", 0, "The AuthGroupFile directive is deprecated. Use new User/Group directives instead.");
-    return 0;
-}
-#endif
-
-
 /*
     AuthStore NAME
  */
@@ -579,18 +567,6 @@ static int authTypeDirective(MaState *state, cchar *key, cchar *value)
     }
     return 0;
 }
-
-
-#if DEPRECATED
-/*
-    AuthUserFile path
- */
-static int authUserFileDirective(MaState *state, cchar *key, cchar *value)
-{
-    mprLog("warn appweb config", 0, "The AuthGroupFile directive is deprecated. Use new User/Group directives instead.");
-    return 0;
-}
-#endif
 
 
 /*
@@ -772,28 +748,6 @@ static int closeDirective(MaState *state, cchar *key, cchar *value)
     maPopState(state);
     return 0;
 }
-
-
-#if DEPRECATED
-/*
-    Compress [gzip|none]
- */
-static int compressDirective(MaState *state, cchar *key, cchar *value)
-{
-    char    *format;
-
-    if (!maTokenize(state, value, "%S", &format)) {
-        return MPR_ERR_BAD_SYNTAX;
-    }
-    if (scaselessmatch(format, "gzip") || scaselessmatch(format, "on")) {
-        httpSetRouteCompression(state->route, HTTP_ROUTE_GZIP);
-
-    } else if (scaselessmatch(format, "none") || scaselessmatch(format, "off")) {
-        httpSetRouteCompression(state->route, 0);
-    }
-    return 0;
-}
-#endif
 
 
 /*
@@ -1375,19 +1329,6 @@ static int limitProcessesDirective(MaState *state, cchar *key, cchar *value)
 }
 
 
-#if DEPRECATED
-/*
-    LimitRequests count
- */
-static int limitRequestsDirective(MaState *state, cchar *key, cchar *value)
-{
-    mprLog("error appweb config", 0,
-        "The LimitRequests directive is deprecated. Use LimitConnections or LimitRequestsPerClient instead.");
-    return 0;
-}
-#endif
-
-
 /*
     LimitRequestsPerClient count
  */
@@ -1833,14 +1774,6 @@ static int memoryPolicyDirective(MaState *state, cchar *key, cchar *value)
     } else if (scmp(policy, "continue") == 0) {
         flags = MPR_ALLOC_POLICY_PRUNE;
 
-#if DEPRECATED
-    } else if (scmp(policy, "exit") == 0) {
-        flags = MPR_ALLOC_POLICY_EXIT;
-
-    } else if (scmp(policy, "prune") == 0) {
-        flags = MPR_ALLOC_POLICY_PRUNE;
-#endif
-
     } else {
         mprLog("error appweb config", 0, "Unknown memory depletion policy '%s'", policy);
         return MPR_ERR_BAD_SYNTAX;
@@ -1985,44 +1918,6 @@ static int prefixDirective(MaState *state, cchar *key, cchar *value)
     httpSetRoutePrefix(state->route, value);
     return 0;
 }
-
-
-#if DEPRECATED
-/*
-    Protocol HTTP/1.0
-    Protocol HTTP/1.1
- */
-static int protocolDirective(MaState *state, cchar *key, cchar *value)
-{
-    httpSetRouteProtocol(state->host, value);
-    if (!scaselessmatch(value, "HTTP/1.0") && !scaselessmatch(value, "HTTP/1.1")) {
-        mprLog("error appweb config", 0, "Unknown http protocol %s. Should be HTTP/1.0 or HTTP/1.1", value);
-        return MPR_ERR_BAD_SYNTAX;
-    }
-    return 0;
-}
-#endif
-
-
-#if DEPRECATED
-/*
-    PutMethod on|off
- */
-static int putMethodDirective(MaState *state, cchar *key, cchar *value)
-{
-    bool    on;
-
-    if (!maTokenize(state, value, "%B", &on)) {
-        return MPR_ERR_BAD_SYNTAX;
-    }
-    if (on) {
-        httpAddRouteMethods(state->route, "DELETE, PUT");
-    } else {
-        httpRemoveRouteMethods(state->route, "DELETE, PUT");
-    }
-    return 0;
-}
-#endif
 
 
 /*
@@ -2217,18 +2112,6 @@ static int resetDirective(MaState *state, cchar *key, cchar *value)
     }
     return 0;
 }
-
-
-#if DEPRECATED
-/*
-    ResetPipeline (alias for Reset routes)
- */
-static int resetPipelineDirective(MaState *state, cchar *key, cchar *value)
-{
-    httpResetRoutePipeline(state->route);
-    return 0;
-}
-#endif
 
 
 /*
@@ -2762,27 +2645,6 @@ static int traceDirective(MaState *state, cchar *key, cchar *value)
     }
     return 0;
 }
-
-
-#if DEPRECATED
-/*
-    TraceMethod on|off
- */
-static int traceMethodDirective(MaState *state, cchar *key, cchar *value)
-{
-    bool    on;
-
-    if (!maTokenize(state, value, "%B", &on)) {
-        return MPR_ERR_BAD_SYNTAX;
-    }
-    if (on) {
-        httpAddRouteMethods(state->route, "TRACE");
-    } else {
-        httpRemoveRouteMethods(state->route, "TRACE");
-    }
-    return 0;
-}
-#endif
 
 
 /*

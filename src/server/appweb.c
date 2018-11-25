@@ -1,7 +1,9 @@
 /**
     appweb.c  -- AppWeb main program
 
-    Copyright (c) All Rights Reserved. See copyright notice at the bottom of the file.
+    This is the default appweb main program. If you need a simpler and smaller web
+    server, consider the samples/typical-server or samples/simple-server samples for
+    simpler main programs.
 
     usage: appweb [options]
     or:    appweb [options] [documents] [[ip][:port] ...]
@@ -16,6 +18,8 @@
             --version               # Output version information
             -v                      # Same as --log stdout:2
             -DIGIT                  # Same as --log stdout:DIGIT
+
+    Copyright (c) All Rights Reserved. See copyright notice at the bottom of the file.
  */
 
 /********************************* Includes ***********************************/
@@ -321,7 +325,7 @@ static int changeRoot(cchar *jail)
 
 static int createEndpoints(int argc, char **argv)
 {
-    char    *ip;
+    cchar   *ip;
     int     argind, port, secure;
 
     ip = 0;

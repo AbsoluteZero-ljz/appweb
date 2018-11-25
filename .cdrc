@@ -12,3 +12,5 @@ if [ "${PATH/$_MMPRODUCT\/build//}" = "${PATH}" ] ; then
     echo Setup \"${_MMPRODUCT}\" Environment
     echo
 fi
+
+export ME_COM_OPENSSL_PATH="/Users/mob/.paks/openssl/openssl/1.1.1a"

@@ -39,7 +39,5 @@ if (len != written) {
     //TODO print("RECEIVED", len)
     //dump(http.response)
 }
-//TODO print(len)
-//TODO print(written)
 ttrue(len == written)
 http.close()

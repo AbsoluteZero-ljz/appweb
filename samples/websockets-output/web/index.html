@@ -18,13 +18,13 @@
         */
     };
     ws.onmessage = function (event) {
-        $('#log').append('<p>Received: <b>' + event.data + '</b></p>');
+        $('#log').append('<p>Received:</p><p><b>' + event.data + '</b></p>');
     };
     ws.onclose = function (event) {
         $('#log').append('<p>Close message received</p>');
     };
     ws.onerror = function (event) {
-        $('#log').append('<p>Error message received: ' + event + '</p>');
+        $('#log').append('<p>Error message received: ' + event.data + '</p>');
     };
     </script>
 </body>
