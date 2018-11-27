@@ -129,7 +129,7 @@ RC                    = rc
 CFLAGS                = -nologo -GR- -W3 -Zi -Od -MDd
 DFLAGS                = -DME_DEBUG=1 -DME_COM_CGI=$(ME_COM_CGI) -DME_COM_COMPILER=$(ME_COM_COMPILER) -DME_COM_DIR=$(ME_COM_DIR) -DME_COM_EJS=$(ME_COM_EJS) -DME_COM_ESP=$(ME_COM_ESP) -DME_COM_HTTP=$(ME_COM_HTTP) -DME_COM_LIB=$(ME_COM_LIB) -DME_COM_LINK=$(ME_COM_LINK) -DME_COM_MATRIXSSL=$(ME_COM_MATRIXSSL) -DME_COM_MBEDTLS=$(ME_COM_MBEDTLS) -DME_COM_MDB=$(ME_COM_MDB) -DME_COM_MPR=$(ME_COM_MPR) -DME_COM_NANOSSL=$(ME_COM_NANOSSL) -DME_COM_OPENSSL=$(ME_COM_OPENSSL) -DME_COM_OSDEP=$(ME_COM_OSDEP) -DME_COM_PCRE=$(ME_COM_PCRE) -DME_COM_PHP=$(ME_COM_PHP) -DME_COM_RC=$(ME_COM_RC) -DME_COM_SSL=$(ME_COM_SSL) -DME_COM_VXWORKS=$(ME_COM_VXWORKS) -DME_COM_WATCHDOG=$(ME_COM_WATCHDOG) 
 IFLAGS                = -Ibuild\$(CONFIG)\inc
-LDFLAGS               = -nologo -incremental:no -debug -machine:$(ARCH)
+LDFLAGS               = -nologo -incremental:no -debug -machine:x64
 LIBPATHS              = "-libpath:$(BUILD)\bin"
 LIBS                  = ws2_32.lib advapi32.lib user32.lib kernel32.lib oldnames.lib shell32.lib
 
@@ -339,17 +339,11 @@ build\$(CONFIG)\inc\appwebMonitor.h: $(DEPS_6)
 	copy /Y /B src\server\windows\appwebMonitor.h+modified build\$(CONFIG)\inc\appwebMonitor.h $(LOG)
 
 #
-#   server.c
-#
-
-build\$(CONFIG)\inc\cache\server.c: $(DEPS_7)
-
-#
 #   customize.h
 #
-DEPS_8 = $(DEPS_8) src\customize.h
+DEPS_7 = $(DEPS_7) src\customize.h
 
-build\$(CONFIG)\inc\customize.h: $(DEPS_8)
+build\$(CONFIG)\inc\customize.h: $(DEPS_7)
 	@echo ..... [Copy] build\$(CONFIG)\inc\customize.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\customize.h+modified build\$(CONFIG)\inc\customize.h $(LOG)
@@ -357,9 +351,9 @@ build\$(CONFIG)\inc\customize.h: $(DEPS_8)
 #
 #   embedtls.h
 #
-DEPS_9 = $(DEPS_9) src\mbedtls\embedtls.h
+DEPS_8 = $(DEPS_8) src\mbedtls\embedtls.h
 
-build\$(CONFIG)\inc\embedtls.h: $(DEPS_9)
+build\$(CONFIG)\inc\embedtls.h: $(DEPS_8)
 	@echo ..... [Copy] build\$(CONFIG)\inc\embedtls.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\mbedtls\embedtls.h+modified build\$(CONFIG)\inc\embedtls.h $(LOG)
@@ -367,12 +361,12 @@ build\$(CONFIG)\inc\embedtls.h: $(DEPS_9)
 #
 #   esp.h
 #
-DEPS_10 = $(DEPS_10) src\esp\esp.h
-DEPS_10 = $(DEPS_10) build\$(CONFIG)\inc\me.h
-DEPS_10 = $(DEPS_10) build\$(CONFIG)\inc\osdep.h
-DEPS_10 = $(DEPS_10) build\$(CONFIG)\inc\http.h
+DEPS_9 = $(DEPS_9) src\esp\esp.h
+DEPS_9 = $(DEPS_9) build\$(CONFIG)\inc\me.h
+DEPS_9 = $(DEPS_9) build\$(CONFIG)\inc\osdep.h
+DEPS_9 = $(DEPS_9) build\$(CONFIG)\inc\http.h
 
-build\$(CONFIG)\inc\esp.h: $(DEPS_10)
+build\$(CONFIG)\inc\esp.h: $(DEPS_9)
 	@echo ..... [Copy] build\$(CONFIG)\inc\esp.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\esp\esp.h+modified build\$(CONFIG)\inc\esp.h $(LOG)
@@ -380,9 +374,9 @@ build\$(CONFIG)\inc\esp.h: $(DEPS_10)
 #
 #   mbedtls.h
 #
-DEPS_11 = $(DEPS_11) src\mbedtls\mbedtls.h
+DEPS_10 = $(DEPS_10) src\mbedtls\mbedtls.h
 
-build\$(CONFIG)\inc\mbedtls.h: $(DEPS_11)
+build\$(CONFIG)\inc\mbedtls.h: $(DEPS_10)
 	@echo ..... [Copy] build\$(CONFIG)\inc\mbedtls.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\mbedtls\mbedtls.h+modified build\$(CONFIG)\inc\mbedtls.h $(LOG)
@@ -390,9 +384,9 @@ build\$(CONFIG)\inc\mbedtls.h: $(DEPS_11)
 #
 #   monitorResources.h
 #
-DEPS_12 = $(DEPS_12) src\server\windows\monitorResources.h
+DEPS_11 = $(DEPS_11) src\server\windows\monitorResources.h
 
-build\$(CONFIG)\inc\monitorResources.h: $(DEPS_12)
+build\$(CONFIG)\inc\monitorResources.h: $(DEPS_11)
 	@echo ..... [Copy] build\$(CONFIG)\inc\monitorResources.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\server\windows\monitorResources.h+modified build\$(CONFIG)\inc\monitorResources.h $(LOG)
@@ -400,10 +394,10 @@ build\$(CONFIG)\inc\monitorResources.h: $(DEPS_12)
 #
 #   mpr-version.h
 #
-DEPS_13 = $(DEPS_13) src\mpr-version\mpr-version.h
-DEPS_13 = $(DEPS_13) build\$(CONFIG)\inc\mpr.h
+DEPS_12 = $(DEPS_12) src\mpr-version\mpr-version.h
+DEPS_12 = $(DEPS_12) build\$(CONFIG)\inc\mpr.h
 
-build\$(CONFIG)\inc\mpr-version.h: $(DEPS_13)
+build\$(CONFIG)\inc\mpr-version.h: $(DEPS_12)
 	@echo ..... [Copy] build\$(CONFIG)\inc\mpr-version.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\mpr-version\mpr-version.h+modified build\$(CONFIG)\inc\mpr-version.h $(LOG)
@@ -411,18 +405,24 @@ build\$(CONFIG)\inc\mpr-version.h: $(DEPS_13)
 #
 #   pcre.h
 #
-DEPS_14 = $(DEPS_14) src\pcre\pcre.h
+DEPS_13 = $(DEPS_13) src\pcre\pcre.h
 
-build\$(CONFIG)\inc\pcre.h: $(DEPS_14)
+build\$(CONFIG)\inc\pcre.h: $(DEPS_13)
 	@echo ..... [Copy] build\$(CONFIG)\inc\pcre.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\pcre\pcre.h+modified build\$(CONFIG)\inc\pcre.h $(LOG)
 
 #
+#   server.c
+#
+
+src\server\cache\server.c: $(DEPS_14)
+
+#
 #   appweb.obj
 #
 DEPS_15 = $(DEPS_15) build\$(CONFIG)\inc\appweb.h
-DEPS_15 = $(DEPS_15) build\$(CONFIG)\inc\cache\server.c
+DEPS_15 = $(DEPS_15) src\server\cache\server.c
 
 build\$(CONFIG)\obj\appweb.obj: \
     src\server\appweb.c $(DEPS_15)
@@ -758,7 +758,7 @@ LIBS_47 = $(LIBS_47) libmpr-mbedtls.lib
 
 build\$(CONFIG)\bin\libmpr.dll: $(DEPS_47)
 	@echo ..... [Link] build\$(CONFIG)\bin\libmpr.dll
-	"$(LD)" -dll -out:$(BUILD)\bin\libmpr.dll -entry:$(ENTRY) $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\mprLib.obj" $(LIBPATHS_47) $(LIBS_47) $(LIBS_47) $(LIBS)  $(LOG)
+	"$(LD)" -dll -out:$(BUILD)\bin\libmpr.dll -entry:_DllMainCRTStartup $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\mprLib.obj" $(LIBPATHS_47) $(LIBS_47) $(LIBS_47) $(LIBS)  $(LOG)
 
 !IF "$(ME_COM_PCRE)" == "1"
 #
@@ -769,7 +769,7 @@ DEPS_48 = $(DEPS_48) build\$(CONFIG)\obj\pcre.obj
 
 build\$(CONFIG)\bin\libpcre.dll: $(DEPS_48)
 	@echo ..... [Link] build\$(CONFIG)\bin\libpcre.dll
-	"$(LD)" -dll -out:$(BUILD)\bin\libpcre.dll -entry:$(ENTRY) $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\pcre.obj" $(LIBS)  $(LOG)
+	"$(LD)" -dll -out:$(BUILD)\bin\libpcre.dll -entry:_DllMainCRTStartup $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\pcre.obj" $(LIBS)  $(LOG)
 !ENDIF
 
 !IF "$(ME_COM_HTTP)" == "1"
@@ -809,7 +809,7 @@ LIBS_49 = $(LIBS_49) libmpr.lib
 
 build\$(CONFIG)\bin\libhttp.dll: $(DEPS_49)
 	@echo ..... [Link] build\$(CONFIG)\bin\libhttp.dll
-	"$(LD)" -dll -out:$(BUILD)\bin\libhttp.dll -entry:$(ENTRY) $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\httpLib.obj" $(LIBPATHS_49) $(LIBS_49) $(LIBS_49) $(LIBS)  $(LOG)
+	"$(LD)" -dll -out:$(BUILD)\bin\libhttp.dll -entry:_DllMainCRTStartup $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\httpLib.obj" $(LIBPATHS_49) $(LIBS_49) $(LIBS_49) $(LIBS)  $(LOG)
 !ENDIF
 
 #
@@ -867,7 +867,7 @@ LIBS_51 = $(LIBS_51) libhttp.lib
 
 build\$(CONFIG)\bin\libesp.dll: $(DEPS_51)
 	@echo ..... [Link] build\$(CONFIG)\bin\libesp.dll
-	"$(LD)" -dll -out:$(BUILD)\bin\libesp.dll -entry:$(ENTRY) $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\espLib.obj" $(LIBPATHS_51) $(LIBS_51) $(LIBS_51) $(LIBS)  $(LOG)
+	"$(LD)" -dll -out:$(BUILD)\bin\libesp.dll -entry:_DllMainCRTStartup $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\espLib.obj" $(LIBPATHS_51) $(LIBS_51) $(LIBS_51) $(LIBS)  $(LOG)
 !ENDIF
 
 #
@@ -928,7 +928,7 @@ LIBS_52 = $(LIBS_52) libesp.lib
 
 build\$(CONFIG)\bin\libappweb.dll: $(DEPS_52)
 	@echo ..... [Link] build\$(CONFIG)\bin\libappweb.dll
-	"$(LD)" -dll -out:$(BUILD)\bin\libappweb.dll -entry:$(ENTRY) $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\config.obj" "$(BUILD)\obj\convenience.obj" "$(BUILD)\obj\cgiHandler.obj" "$(BUILD)\obj\espHandler.obj" "$(BUILD)\obj\rom.obj" $(LIBPATHS_52) $(LIBS_52) $(LIBS_52) $(LIBS)  $(LOG)
+	"$(LD)" -dll -out:$(BUILD)\bin\libappweb.dll -entry:_DllMainCRTStartup $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\config.obj" "$(BUILD)\obj\convenience.obj" "$(BUILD)\obj\cgiHandler.obj" "$(BUILD)\obj\espHandler.obj" "$(BUILD)\obj\rom.obj" $(LIBPATHS_52) $(LIBS_52) $(LIBS_52) $(LIBS)  $(LOG)
 
 #
 #   appweb
@@ -1372,6 +1372,14 @@ installBinary: $(DEPS_66)
 	if not exist "$(ME_VAPP_PREFIX)\bin" md "$(ME_VAPP_PREFIX)\bin"
 	copy /Y /B build\$(CONFIG)\bin\appwebMonitor.exe+modified "$(ME_VAPP_PREFIX)\bin\appwebMonitor.exe" $(LOG)
 	copy /Y /B build\$(CONFIG)\bin\appwebMonitor.ico+modified "$(ME_VAPP_PREFIX)\bin\appwebMonitor.ico" $(LOG)
+!IF "$(ME_COM_ESP)" == "1"
+	if not exist "$(ME_VAPP_PREFIX)\bin" md "$(ME_VAPP_PREFIX)\bin"
+	copy /Y /B build\$(CONFIG)\bin\appweb-esp.exe+modified "$(ME_VAPP_PREFIX)\bin\appesp.exe" $(LOG)
+!ENDIF
+!IF "$(ME_COM_ESP)" == "1"
+	if not exist "$(ME_VAPP_PREFIX)\bin" md "$(ME_VAPP_PREFIX)\bin"
+	copy /Y /B build\$(CONFIG)\bin\appweb-esp.exe+modified "$(ME_VAPP_PREFIX)\bin\appweb-esp.exe" $(LOG)
+!ENDIF
 !IF "$(ME_COM_ESP)" == "1"
 !ENDIF
 !IF "$(ME_COM_ESP)" == "1"
