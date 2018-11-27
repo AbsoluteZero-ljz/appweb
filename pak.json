@@ -46,15 +46,14 @@
         "appweb-php": "~0.1",
         "certs": "~0.1",
         "ejscript": "~2.7",
-        "esp": ">=7.0",
-        "mpr-matrixssl": "~0.3",
+        "esp": "~7",
         "mpr-mbedtls": "~2",
-        "mpr-openssl": "~0.5",
+        "mpr-openssl": "~1",
         "sqlite": "~3"
     },
     "devDependencies": {
-        "makeme": ">=0.9.0",
-        "pak": ">=0.11.1"
+        "makeme": ">=1.0",
+        "pak": ">=1.0"
     },
     "files": [
         "dist/",
