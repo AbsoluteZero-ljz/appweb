@@ -138,14 +138,6 @@ struct  MprXml;
 /*
     Timeouts
  */
-#if KEEP
-#define MPR_TIMEOUT_CMD         60000       /**< Command Request timeout (60 sec) */
-#define MPR_TIMEOUT_SOCKETS     10000       /**< Socket connection socket timeout */
-#define MPR_TIMEOUT_LOG_STAMP   3600000     /**< Time between log time stamps (1 hr) */
-#define MPR_TIMEOUT_STOP_THREAD 10000       /**< Time to stop running threads */
-#define MPR_TIMEOUT_HANDLER     10000       /**< Wait period when removing a wait handler */
-#endif
-
 #define MPR_TIMEOUT_PRUNER      120000      /**< Time between worker thread pruner runs (2 min) */
 #define MPR_TIMEOUT_WORKER      60000       /**< Prune worker that has been idle for 1 min */
 #define MPR_TIMEOUT_START_TASK  10000       /**< Time to start tasks running */
@@ -2177,7 +2169,7 @@ PUBLIC char *srejoinv(char *buf, va_list args);
 
 /*
     Replace a pattern in a string
-    @description This will replace all occurrences of the pattern in the string. 
+    @description This will replace all occurrences of the pattern in the string.
     @param str String to examine
     @param pattern Pattern to search for. Can be null in which case the str is cloned.
     @param replacement Replacement pattern. If replacement is null, the pattern is removed.
@@ -4262,7 +4254,6 @@ PUBLIC MprKey *mprAddDuplicateKey(MprHash *table, cvoid *key, cvoid *ptr);
  */
 PUBLIC MprKey *mprAddKey(MprHash *table, cvoid *key, cvoid *ptr);
 
-#if UNUSED && KEEP
 /**
     Add a symbol value into the hash table and set the key type.
     @description Associate an arbitrary value with a string symbol key and insert into the symbol table.
@@ -4275,7 +4266,6 @@ PUBLIC MprKey *mprAddKey(MprHash *table, cvoid *key, cvoid *ptr);
     @stability internal.
  */
 PUBLIC MprKey *mprAddKeyWithType(MprHash *table, cvoid *key, cvoid *ptr, int type);
-#endif
 
 /**
     Add a key with a formatting value into the hash table
@@ -8044,7 +8034,6 @@ PUBLIC ssize mprWriteSocketVector(MprSocket *sp, MprIOVec *iovec, int count);
 #ifndef ME_SSL_ROOTS_CERT
     #define ME_SSL_ROOTS_CERT "roots.crt"
 #endif
-
 #ifndef ME_MPR_SSL_CACHE
     #define ME_MPR_SSL_CACHE 512
 #endif
@@ -8060,6 +8049,7 @@ PUBLIC ssize mprWriteSocketVector(MprSocket *sp, MprIOVec *iovec, int count);
 #ifndef ME_MPR_SSL_TIMEOUT
     #define ME_MPR_SSL_TIMEOUT 86400
 #endif
+#define ME_MPR_HAS_ALPN 1
 
 /**
     Callback function for SNI connections.

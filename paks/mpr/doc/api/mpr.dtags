@@ -1963,6 +1963,13 @@
       <arglist>(MprHash *table, cvoid *key, cchar *fmt,...)</arglist>
     </member>
     <member kind="function">
+      <type>MprKey *</type>
+      <name>mprAddKeyWithType</name>
+      <anchorfile>group___mpr_hash.html</anchorfile>
+      <anchor>gaac7c9c4282e5fb0a5d91517bd7ba7a54</anchor>
+      <arglist>(MprHash *table, cvoid *key, cvoid *ptr, int type)</arglist>
+    </member>
+    <member kind="function">
       <type>MprMime *</type>
       <name>mprAddMime</name>
       <anchorfile>group___mpr_mime.html</anchorfile>
@@ -7817,6 +7824,13 @@
       <anchorfile>group___mpr_hash.html</anchorfile>
       <anchor>gaf80b863b16c88df91aad0193b746e4c7</anchor>
       <arglist>(MprHash *table, cvoid *key, cchar *fmt,...)</arglist>
+    </member>
+    <member kind="function">
+      <type>MprKey *</type>
+      <name>mprAddKeyWithType</name>
+      <anchorfile>group___mpr_hash.html</anchorfile>
+      <anchor>gaac7c9c4282e5fb0a5d91517bd7ba7a54</anchor>
+      <arglist>(MprHash *table, cvoid *key, cvoid *ptr, int type)</arglist>
     </member>
     <member kind="function">
       <type>MprHash *</type>

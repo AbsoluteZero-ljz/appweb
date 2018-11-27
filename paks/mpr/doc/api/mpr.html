@@ -106,6 +106,7 @@
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___mpr_list_1gabf10109abc063c47702769c0e89442cf" class="nameRef">mprAddItem</a>(<a href="#group___mpr_list" class="ref">MprList</a> *list, <a href="osdep.html#osdep_8h_1a5272042f7e0f5c53e2fd4b49ff47d92d" class="ref">cvoid</a> *item)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add an item to a list.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#struct_mpr_key" class="ref">MprKey*</a></td><td><a href="#group___mpr_hash_1ga2567b7d48397b6059f76c8589978d654" class="nameRef">mprAddKey</a>(<a href="#group___mpr_hash" class="ref">MprHash</a> *table, <a href="osdep.html#osdep_8h_1a5272042f7e0f5c53e2fd4b49ff47d92d" class="ref">cvoid</a> *key, <a href="osdep.html#osdep_8h_1a5272042f7e0f5c53e2fd4b49ff47d92d" class="ref">cvoid</a> *ptr)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a symbol value into the hash table.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#struct_mpr_key" class="ref">MprKey*</a></td><td><a href="#group___mpr_hash_1gaf80b863b16c88df91aad0193b746e4c7" class="nameRef">mprAddKeyFmt</a>(<a href="#group___mpr_hash" class="ref">MprHash</a> *table, <a href="osdep.html#osdep_8h_1a5272042f7e0f5c53e2fd4b49ff47d92d" class="ref">cvoid</a> *key, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, ...)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a key with a formatting value into the hash table.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="#struct_mpr_key" class="ref">MprKey*</a></td><td><a href="#group___mpr_hash_1gaac7c9c4282e5fb0a5d91517bd7ba7a54" class="nameRef">mprAddKeyWithType</a>(<a href="#group___mpr_hash" class="ref">MprHash</a> *table, <a href="osdep.html#osdep_8h_1a5272042f7e0f5c53e2fd4b49ff47d92d" class="ref">cvoid</a> *key, <a href="osdep.html#osdep_8h_1a5272042f7e0f5c53e2fd4b49ff47d92d" class="ref">cvoid</a> *ptr, int type)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a symbol value into the hash table and set the key type.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___mpr_mime" class="ref">MprMime*</a></td><td><a href="#group___mpr_mime_1ga3eefe2cfee75a6ad3011ec9dde191399" class="nameRef">mprAddMime</a>(<a href="#group___mpr_hash" class="ref">MprHash</a> *table, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *ext, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *mimeType)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a mime type to the mime type table.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___mpr_list_1ga8a5c06bd4458f58c9ed20d043b21bba3" class="nameRef">mprAddNullItem</a>(<a href="#group___mpr_list" class="ref">MprList</a> *list)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a null item to the list.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_buf_1ga159c096de4aec192e25b275f1f5e031d" class="nameRef">mprAddNullToBuf</a>(<a href="#group___mpr_buf" class="ref">MprBuf</a> *buf)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a null character to the buffer contents.</td></tr>
@@ -6571,6 +6572,29 @@ Size of the buckets array.
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Integer count of the number of entries.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    <a href="#struct_mpr_hash" class="ref">MprHash</a></dd></dl>
+  </div>
+</div>
+<a name="group___mpr_hash_1gaac7c9c4282e5fb0a5d91517bd7ba7a54"></a>
+<div class="api">
+  <div class="prototype">
+    <a href="#struct_mpr_key" class="ref">MprKey</a> *
+    mprAddKeyWithType
+(<a href="#struct_mpr_hash" class="ref">MprHash</a> *table, <a href="osdep.html#osdep_8h_1a5272042f7e0f5c53e2fd4b49ff47d92d" class="ref">cvoid</a> *key, <a href="osdep.html#osdep_8h_1a5272042f7e0f5c53e2fd4b49ff47d92d" class="ref">cvoid</a> *ptr, int type)
+  </div>
+  <div class="apiDetail">
+<p>Add a symbol value into the hash table and set the key type.</p>
+    <dl><dt><b>Description</b>:</dt><dd>Associate an arbitrary value with a string symbol key and insert into the symbol table.</dd></dl>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">table</td><td>Symbol table returned via mprCreateHash.</td>
+    <tr><td class="param">key</td><td>String key of the symbol entry to delete.</td>
+    <tr><td class="param">ptr</td><td>Arbitrary pointer to associate with the key in the table.</td>
+    <tr><td class="param">type</td><td>Type of value.</td>
+    </table></dd></dl>
+    <dl><dt>Returns:</dt><dd>Added MprKey reference.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Internal.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_mpr_hash" class="ref">MprHash</a></dd></dl>
   </div>

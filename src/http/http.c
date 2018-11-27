@@ -943,7 +943,7 @@ static Stream *createStream(ThreadData *td, HttpConn *conn)
 
     /*
         Create file to save output
-        MOB - what if iterations?
+        TODO - what if iterations?
      */
     if (app->outFilename) {
         path = app->loadThreads > 1 ? sfmt("%s-%s.tmp", app->outFilename, mprGetCurrentThreadName()): app->outFilename;
@@ -974,8 +974,8 @@ static void startRequest(HttpConn *conn)
     }
     stream->written = 0;
 
-    //  MOB - reivew
-    //  MOB - why
+    //  TODO - reivew
+    //  TODO - why
     authType = conn->authType;
 
     app->url = stream->redirect ? stream->redirect : app->url;
@@ -1068,10 +1068,10 @@ static void checkRequestState(HttpConn *conn)
                 mprDebug("http", 4, "redirect %d of %d for: %s %s", stream->follow, app->maxFollow, app->method, app->url);
             } else {
 #if FUTURE
-                //  MOB - check this
+                //  TODO - check this
                 if (conn->rx && conn->rx->status == HTTP_CODE_UNAUTHORIZED && authType && smatch(authType, conn->authType)) {
                     httpError(conn, HTTP_CODE_UNAUTHORIZED, "Authentication failed");
-                    //MOB - should this stop all requests?
+                    //TODO - should this stop all requests?
                     break;
                 }
 #endif
@@ -1109,7 +1109,7 @@ static void parseStatus(HttpConn *conn)
     HttpRx      *rx;
 
     if (conn->net->error) {
-        //  MOB - need to stop all streams on this network
+        //  TODO - need to stop all streams on this network
         httpNetError(conn->net, "Connection I/O error");
 
     } else if (conn->error) {
@@ -1242,7 +1242,7 @@ static int processResponse(HttpConn *conn)
 }
 
 
-//  MOB - but this is blocking?
+//  TODO - but this is blocking?
 static void readBody(HttpConn *conn)
 {
     Stream      *stream;
@@ -1275,7 +1275,7 @@ static int setContentLength(HttpConn *conn)
 
     len = 0;
     if (app->upload) {
-        //  MOB?
+        //  TODO?
         httpEnableUpload(conn);
         return 0;
     }
@@ -1302,7 +1302,7 @@ static int setContentLength(HttpConn *conn)
 }
 
 
-//  MOB - how to make this non-blocking?
+//  TODO - how to make this non-blocking?
 static ssize writeBody(HttpConn *conn)
 {
     MprFile     *file;

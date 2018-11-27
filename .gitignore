@@ -18,3 +18,15 @@ src/server/certs
 .port.log
 *.guid
 test/exploits/
+start.me
+testme/
+projects/*/*.guid
+projects/.*.guid
+projects/*-macosx-mine*
+/start.me
+test/cgi-bin/.prepared
+test/future.json
+test/test.dat
+/projects/*mine*
+/projects/.vs
+/projects/*yours*

@@ -1939,6 +1939,9 @@ static void compileItems(HttpRoute *route)
     if ((sourceList = mprGetJsonObj(app->config, "esp.app.source")) != 0) {
         for (ITERATE_JSON(sourceList, source, index)) {
             files = mprGlobPathFiles(".", source->value, 0);
+            if (mprGetListLength(files) == 0) {
+                fail("ESP source pattern does not match any files \"%s\"", source->value);
+            }
             for (ITERATE_ITEMS(files, path, next)) {
                 if (mprPathExists(path, R_OK) && selectResource(path, "c")) {
                     compileFile(route, path, ESP_SRC);

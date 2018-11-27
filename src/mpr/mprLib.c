@@ -2758,7 +2758,9 @@ static void shutdownMonitor(void *data, MprEvent *event)
             }
         }
     } else {
-        mprLog("info mpr", 2, "Waiting for requests to complete, %lld secs remaining ...", remaining / TPS);
+        if (!mprGetDebugMode()) {
+            mprLog("info mpr", 2, "Waiting for requests to complete, %lld secs remaining ...", remaining / TPS);
+        }
         mprRescheduleEvent(event, 1000);
     }
 }
@@ -5493,10 +5495,6 @@ PUBLIC MprCmd *mprCreateCmd(MprDispatcher *dispatcher)
     if ((cmd = mprAllocObj(MprCmd, manageCmd)) == 0) {
         return 0;
     }
-#if KEEP
-    cmd->timeoutPeriod = MPR_TIMEOUT_CMD;
-    cmd->timestamp = mprGetTicks();
-#endif
     cmd->forkCallback = (MprForkCallback) closeFiles;
     cmd->dispatcher = dispatcher ? dispatcher : MPR->dispatcher;
     cmd->status = -1;
@@ -6364,10 +6362,6 @@ static void defaultCmdCallback(MprCmd *cmd, int channel, void *data)
     }
     len = mprReadCmd(cmd, channel, mprGetBufEnd(buf), space);
     errCode = mprGetError();
-#if KEEP
-    mprDebug("mpr cmd", 6, "defaultCmdCallback channel %d, read len %zd, pid %d, eof %d/%d", channel, len, cmd->pid,
-            cmd->eofCount, cmd->requiredEof);
-#endif
     if (len <= 0) {
         if (len == 0 || (len < 0 && !(errCode == EAGAIN || errCode == EWOULDBLOCK))) {
             mprCloseCmdFd(cmd, channel);
@@ -6426,17 +6420,6 @@ PUBLIC int mprGetCmdExitStatus(MprCmd *cmd)
 PUBLIC bool mprIsCmdRunning(MprCmd *cmd)
 {
     return cmd->pid > 0;
-}
-
-
-/* KEEP - not yet supported */
-
-PUBLIC void mprSetCmdTimeout(MprCmd *cmd, MprTicks timeout)
-{
-    assert(0);
-#if KEEP
-    cmd->timeoutPeriod = timeout;
-#endif
 }
 
 
@@ -27734,7 +27717,8 @@ static void validateTime(struct tm *tp, struct tm *defaults)
         tp->tm_sec = -1;
     }
 
-#if UNUSED
+#if KEEP
+    /* Not required */
     if (tp->tm_year != -MAXINT && tp->tm_mon >= 0 && tp->tm_mday >= 0 && tp->tm_hour >= 0) {
         /*  Everything defined */
         return;

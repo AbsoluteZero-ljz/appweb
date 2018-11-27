@@ -2,19 +2,20 @@
 <html lang="en">
 <head>
     <title>Migrating</title>
-    
+    <!-- Copyright Embedthis Software. All Rights Reserved. -->
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-    <meta name="description" content="Migrating">
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="description" content="Migrating" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
+        rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     
-    <link href="../images/favicon.ico" rel="shortcut icon">
-    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css">
-    <link href="../css/all.min.css" rel="stylesheet" type="text/css">
-    <link href="../css/api.min.css" rel="stylesheet" type="text/css">
+    <link href="../images/favicon.ico" rel="shortcut icon" />
+    <link href="../lib/semantic-ui/semantic.css" rel="stylesheet" type="text/css" />
+    <link href="../css/all.css" rel="stylesheet" type="text/css" />
+    <link href="../css/api.css" rel="stylesheet" type="text/css" />
     
 
 </head>
@@ -98,7 +99,9 @@
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/cpp-module">cpp-module</a>
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/deploy-server">deploy-server</a>
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/esp-hosted">esp-hosted</a>
+                    <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/esp-upload">esp-upload</a>
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/login-basic">login-basic</a>
+                    <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/login-database">login-database</a>
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/login-form">login-form</a>
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/max-server">max-server</a>
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/min-server">min-server</a>
@@ -182,29 +185,11 @@
     </div>
     <div class="content">
 
-            <h1>Migrating to Appweb Latest</h1>
+            <h1>Migrating to Appweb 4.X</h1>
             <p>This document provides some guidance when upgrading to the latest Appweb release.</p>
 
             <h2>Appweb 1-3</h2>
             <p>If you are migrating from Appweb 1, 2 or 3, you should regard the latest Appweb as a next generation web server. You can migrate code from Appweb 1, 2 or 3 to Appweb latest, however, you should anticipate significant refactoring work in the transition.</p>
-
-            <h2>Appweb 4-7</h2>
-            <p>Appweb 4 to latest are substantially compatible. Code written for Appweb 4 should migrate to Appweb latest with a few changes. Appweb 5 uses newer versions of the MakeMe and Pak tools.
-            This necessitates some changes to the build files.</p>
-
-            <a id="changes"></a>
-            <h2>Changes in Appweb 5</h2>
-            <p>Appweb latest APIs are substantially compatible with Appweb 4-6, though previously deprecated APIs have been removed.</p>
-
-            <h3>New Capabilities</h3>
-            <ul>
-                <li>ESP is now a stand-alone product and can be run separately</li>
-                <li>ESP applications are now configured via <em>esp.json</em> configuration files</li>
-                <li>Appweb and ESP are now more modular and heavily use the Pak tool to install and manage
-                    extension components from the <a href="https://embedthis.com/catalog/">Online Pak Catalog</a>.
-            </ul>
-
-            <p>Appweb 4.6+ use the MakeMe build system. New configure options and cross compiling capabilities have been added. See more details below in <a href="#makeme">MakeMe Changes</a>.</p>
 
             <h2>Changes in Appweb 4</h2>
             <p>Appweb 4 provides equivalent or greater functionality to that in Appweb 3. While Appweb 4 may have a different interface or API, the capabilities of Appweb 3 have been continued in Appweb 4, and in many cases, the features have been enhanced.</p>
@@ -260,7 +245,8 @@
             <p>The Appweb 4 configuration file is substantially the same as the Appweb 3. 'Include' directives can now contain wild cards and there are several new directives supporting Routing, Multi-language support and the Embedded Server Pages web framework. The big change is that Route directives replace the Directory and Location directives. </p>
 
             <h3>Routes vs Directory/Location Directives</h3>
-            <p>Appweb 4 uses a more flexible Route directive instead of the Appweb 2/3 Directory and Location directives. The Route directive has more flexibility and allows powerful regular expression URI parsing and routing. In nearly all cases, Location and Directory directives should easily migrate to Route directives. <p>See <a href="../users/configuration.html">Configuring Appweb</a> and <a href="../users/configuration.html#directives">Configuration Directives</a> for more details.</p>
+            <p>Appweb 4 uses a more flexible Route directive instead of the Appweb 2/3 Directory and Location directives. The Route directive has more flexibility and allows powerful regular expression URI parsing and routing. In nearly all cases, Location and Directory directives should easily migrate to Route directives. <p>See <a href="../users/configuration.html">Configuring Appweb</a> and <a href=
+            "../users/configuration.html#directives">Configuration Directives</a> for more details.</p>
 
             <a id="modules"></a>
             <h2>Migrating Modules and Handlers</h2>
@@ -292,12 +278,11 @@
     </div>
 
     <script src="../lib/jquery/jquery.min.js"></script>
-    <script src="../lib/semantic-ui/semantic.min.js"></script>
-    <script src="../scripts/sidebar.min.js"></script>
+    <script src="../lib/semantic-ui/semantic.js"></script>
+    <script src="../scripts/sidebar.js"></script>
      
 
     
 
-
-
-
+</body>
+</html>

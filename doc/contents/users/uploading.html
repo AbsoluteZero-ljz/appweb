@@ -6,7 +6,7 @@
 }
             <h1>File Upload</h1>
             <p>Appweb has an integrated file upload filter that accepts and processes file upload requests.
-            The Appweb upload filter intercepts uploaded files, saves them to disk and passes details about the 
+            The Appweb upload filter intercepts uploaded files, saves them to disk and passes details about the
             uploaded file to the request handler for processing.</p>
             <p>File upload uses multi-part mime encoding to transport files over HTTP POST requests. This is specified in
             the IETF standard <a href="http://www.ietf.org/rfc/rfc2388.txt">RFC 2388</a>. </p>
@@ -14,7 +14,7 @@
             <a id="overview"></a>
             <h2>Overview</h2>
             <p>Because uploaded files can be very large, Appweb uses specialized handling for the receipt, storage and
-            processing of uploaded files. When an upload request is received, Appweb will accept and store the 
+            processing of uploaded files. When an upload request is received, Appweb will accept and store the
             uploaded file before starting the request handler to respond to the request. The request handler does not
             directly receive the uploaded file. Rather, Appweb passes the name of the temporary file holding the uploaded
             file.
@@ -43,7 +43,7 @@
                     uploaded file may be.</li>
                 <li><a href="dir/route.html#uploadDir">UploadDir</a> &mdash; This specifies the directory to hold
                     uploaded files.</li>
-                <li><a href="dir/route.html#uploadAutoDelete">UploadAutoDelete</a> &mdash; This specifies if the 
+                <li><a href="dir/route.html#uploadAutoDelete">UploadAutoDelete</a> &mdash; This specifies if the
                     uploaded files should be automatically deleted from the upload directory after the handler has
                     completed processing the request.</li>
             </ul>
@@ -51,13 +51,13 @@
             <a id="details"></a>
             <h2>Upload File Details</h2>
             <p>Once a file is uploaded, the Appweb handler responsible for processing the request will receive details about
-            uploaded files via the request parameters. 
-            Different request handlers expose these request parameters 
+            uploaded files via the request parameters.
+            Different request handlers expose these request parameters
             in different ways. </p>
-            
+
             <h3>ESP Uploads</h3>
             <p>ESP provides direct access to the internal Appweb uploaded files structure. Each uploaded file is described
-            by a <a href="../ref/api/http.html#group___http_upload_file">HttpUploadFile</a> structure. 
+            by a <a href="../ref/api/http.html#group___http_upload_file">HttpUploadFile</a> structure.
             These structures are stored in an MprHash table indexed by their HTML file upload ID.</p>
             <p>The <a href="../ref/api/http.html#group___http_upload_file">HttpUploadFile</a> structure is defined as:
             <pre class="ui code segment">
@@ -82,12 +82,6 @@ for (ITERATE_KEY_DATA(conn-&gt;rx-&gt;files, kp, file)) {
 }
 </pre>
 
-            <h3>Ejscript Uploads</h3>
-            <p>Ejscript stores uploaded files in the <em><a
-                    href="https://embedthis.com/ejscript/doc/ref/api/ejscript/ejs.web-Request.html">request.files</a></em> property. Files is an object hash
-            of files indexed by the HTML ID. Each file is represented by an instance of the 
-            <a href="https://embedthis.com/ejscript/doc/ref/api/ejscript/ejs.web-UploadFile.html">UploadFile</a> class.
-
             <a id="post"></a>
             <h2>Alternative Upload Technique</h2>
             <p>File upload using POST requests is one way to upload files. Another is to use the HTTP PUT method.
@@ -105,8 +99,8 @@ for (ITERATE_KEY_DATA(conn-&gt;rx-&gt;files, kp, file)) {
             </ul>
 
             <h3>PHP Uploads</h3>
-            <p>PHP has its own file upload handler and should not be confused with the higher performing Appweb 
-            upload filter. If you wish to use the PHP upload mechanism, you must disable the upload filter for 
+            <p>PHP has its own file upload handler and should not be confused with the higher performing Appweb
+            upload filter. If you wish to use the PHP upload mechanism, you must disable the upload filter for
             your PHP requests. Do this by removing the <em>AddInputFilter uploadFilter</em> in the appweb.conf
             configuration file.</p>
 

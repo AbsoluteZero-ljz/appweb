@@ -3,7 +3,7 @@
 
       <ItemDefinitionGroup>
         <ClCompile>
-          <PreprocessorDefinitions>ME_DEBUG=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+          <PreprocessorDefinitions>ME_DEBUG=1;_FILE_OFFSET_BITS=64;MBEDTLS_USER_CONFIG_FILE="embedtls.h";%(PreprocessorDefinitions)</PreprocessorDefinitions>
           <AdditionalIncludeDirectories>$(IncDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -124,7 +124,7 @@
         
 
       <Link>
-        <AdditionalDependencies>libesp.lib;libmpr-version.lib;libhttp.lib;libpcre.lib;libmpr.lib;%(AdditionalDependencies)</AdditionalDependencies>
+        <AdditionalDependencies>libesp.lib;libmpr-version.lib;libhttp.lib;libpcre.lib;libmpr.lib;libmpr-mbedtls.lib;libmbedtls.lib;%(AdditionalDependencies)</AdditionalDependencies>
         <AdditionalLibraryDirectories>$(OutDir);build\$(Cfg)\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       </Link>
 

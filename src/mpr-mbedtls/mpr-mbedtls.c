@@ -303,9 +303,11 @@ static int configMbed(MprSsl *ssl, int flags, char **errorMsg)
     if ((cfg->ciphers = getCipherSuite(ssl)) != 0) {
         mbedtls_ssl_conf_ciphersuites(mconf, cfg->ciphers);
     }
+#if ME_MPR_HAS_ALPN
     if (ssl->alpn) {
         mbedtls_ssl_conf_alpn_protocols(mconf, (cchar**) ssl->alpn->items);
     }
+#endif
     if (flags & MPR_SOCKET_SERVER && ssl->matchSsl) {
         mbedtls_ssl_conf_sni(mconf, sniCallback, 0);
     }

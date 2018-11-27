@@ -154,7 +154,7 @@
     #define ME_TUNE "size"
 #endif
 #ifndef ME_VERSION
-    #define ME_VERSION "8.0.0"
+    #define ME_VERSION "8.0.0-beta.1"
 #endif
 #ifndef ME_WATCHDOG_NAME
     #define ME_WATCHDOG_NAME "appman"
@@ -261,10 +261,10 @@
     #define ME_MINOR_VERSION 0
 #endif
 #ifndef ME_PATCH_VERSION
-    #define ME_PATCH_VERSION 0
+    #define ME_PATCH_VERSION 0-beta
 #endif
 #ifndef ME_VNUM
-    #define ME_VNUM 800000000
+    #define ME_VNUM 800000000-beta
 #endif
 
 /* Components */

@@ -5620,9 +5620,12 @@ static bool preload(HttpRoute *route)
             if ((sources = mprGetJsonObj(route->config, "esp.app.source")) != 0) {
                 for (ITERATE_JSON(sources, si, index)) {
                     files = mprGlobPathFiles(".", si->value, 0);
+                    if (mprGetListLength(files) == 0) {
+                        mprLog("error esp", 0, "ESP source pattern does not match any files \"%s\"", si->value);
+                    }
                     for (ITERATE_ITEMS(files, source, next)) {
                         if (espLoadModule(route, NULL, "app", source, &errMsg, NULL) < 0) {
-                            //  MOB - why test combine?
+                            //  TODO - why test combine?
                             if (eroute->combine || 1) {
                                 mprLog("error esp", 0, "%s", errMsg);
                                 return 0;
@@ -5633,7 +5636,7 @@ static bool preload(HttpRoute *route)
             } else {
                 source = mprJoinPaths(route->home, httpGetDir(route, "SRC"), "app.c", NULL);
                 if (espLoadModule(route, NULL, "app", source, &errMsg, NULL) < 0) {
-                    //  MOB - why test combine?
+                    //  TODO - why test combine?
                     if (eroute->combine) {
                         mprLog("error esp", 0, "%s", errMsg);
                         return 0;

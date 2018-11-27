@@ -411,7 +411,7 @@ static DynLock *sslCreateDynLock(cchar *file, int line)
     DynLock     *dl;
 
     dl = mprAllocZeroed(sizeof(DynLock));
-    dl->mutex = mprCreateLock(dl);
+    dl->mutex = mprCreateLock();
     mprHold(dl->mutex);
     return dl;
 }

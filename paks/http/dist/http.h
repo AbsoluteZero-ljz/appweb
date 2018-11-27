@@ -46,9 +46,6 @@ struct HttpWebSocket;
 #ifndef ME_HTTP_HTTP2
     #define ME_HTTP_HTTP2           1
 #endif
-#ifndef ME_HTTP_HTTP2ONLY
-    #define ME_HTTP_HTTP2ONLY      0
-#endif
 #ifndef ME_HTTP_WEB_SOCKETS
     #define ME_HTTP_WEB_SOCKETS     1
 #endif
@@ -983,9 +980,7 @@ typedef struct Http {
 #if ME_HTTP_WEB_SOCKETS
     struct HttpStage *webSocketFilter;      /**< WebSocket filter */
 #endif
-#if !ME_HTTP_HTTP2ONLY
     struct HttpStage *http1Filter;          /**< Http/1 filter */
-#endif
 #if ME_HTTP_HTTP2
     struct HttpStage *http2Filter;          /**< Http/2 filter */
 #endif
@@ -1019,7 +1014,6 @@ typedef struct Http {
 
     char            *defaultClientHost;     /**< Default ip address */
     int             defaultClientPort;      /**< Default port */
-//  MOB - is this used?
     char            *proxyHost;             /**< Proxy ip address */
     int             proxyPort;              /**< Proxy port */
 
@@ -2074,10 +2068,10 @@ typedef void (*HttpQueueService)(struct HttpQueue *q);
         \n\n
         Data flows downstream from one queue to the next queue linked via the nextQ field.
     @defgroup HttpQueue HttpQueue
-    @see HttpConn HttpPacket HttpQueue httpDisableQueue httpDiscardQueueData httpEnableQueue httpFlushQueue httpGetQueueRoom
+    @see HttpConn HttpPacket HttpQueue httpDiscardQueueData httpFlushQueue httpGetQueueRoom
         httpIsEof httpIsPacketTooBig httpIsQueueEmpty httpIsQueueSuspended httpJoinPacketForService httpJoinPackets
         httpPutBackPacket httpPutForService httpPutPacket httpPutPacketToNext httpRemoveQueue httpResizePacket
-        httpResumeQueue httpScheduleQueue httpServiceQueue httpSetQueueLimits httpSuspendQueue
+        httpResumeQueue httpScheduleQueue httpSetQueueLimits httpSuspendQueue
         httpWillQueueAcceptPacket httpWillNextQueueAcceptSize httpWrite httpWriteBlock httpWriteBody httpWriteString
     @stability Internal
  */
@@ -2093,12 +2087,6 @@ typedef struct HttpQueue {
 
     struct HttpConn     *conn;                  /**< Connection owning this queue may be null */
     struct HttpNet      *net;                   /**< Network connection owning this queue */
-
-    //  MOB - reorder
-    ssize               max;                    /**< Advisory maxiumum queue size */
-    ssize               low;                    /**< Low water mark for flow control */
-    ssize               packetSize;             /**< Maximum acceptable packet size */
-
     struct HttpStage    *stage;                 /**< Stage owning this queue */
     HttpQueueOpen       open;                   /**< Open the queue */
     HttpQueueClose      close;                  /**< Close the queue */
@@ -2108,10 +2096,14 @@ typedef struct HttpQueue {
     struct HttpQueue    *scheduleNext;          /**< Next linkage when queue is on the service queue */
     struct HttpQueue    *schedulePrev;          /**< Previous linkage when queue is on the service queue */
     struct HttpQueue    *pair;                  /**< Queue for the same stage in the opposite direction */
-    int                 servicing;              /**< Currently being serviced */
-    int                 direction;              /**< Flow direction */
     void                *queueData;             /**< Stage instance data - must be a managed reference */
     void                *staticData;            /**< Stage instance data - must be an unmanaged reference */
+
+    ssize               max;                    /**< Advisory maxiumum queue size */
+    ssize               low;                    /**< Low water mark for flow control */
+    ssize               packetSize;             /**< Maximum acceptable packet size */
+    int                 servicing;              /**< Currently being serviced */
+    int                 direction;              /**< Flow direction */
 
     /*
         Connector instance data
@@ -2123,18 +2115,6 @@ typedef struct HttpQueue {
     MprOff              ioPos;                  /**< Position in file */
 } HttpQueue;
 
-
-//  MOB - does not exist
-/**
-    Disable a queue
-    @description Disable a queue so that it will not be scheduled for service. The queue will remain disabled until
-        httpEnableQueue is called.
-    @param q Queue reference
-    @ingroup HttpQueue
-    @stability Stable
- */
-PUBLIC void httpDisableQueue(HttpQueue *q);
-
 /**
     Discard all data from the queue
     @description Discard data from the queue. If removePackets (not yet implemented) is "true", then remove the packets.
@@ -2145,17 +2125,6 @@ PUBLIC void httpDisableQueue(HttpQueue *q);
     @stability Stable
  */
 PUBLIC void httpDiscardQueueData(HttpQueue *q, bool removePackets);
-
-//  MOB - does not exist/
-/**
-    Enable a queue after it has been disabled.
-    @description Enable a queue for service and schedule it to run. This will cause the service routine
-        to run as soon as possible.
-    @param q Queue reference
-    @ingroup HttpQueue
-    @stability Stable
- */
-PUBLIC void httpEnableQueue(HttpQueue *q);
 
 /**
     Flush queue data
@@ -2356,6 +2325,7 @@ PUBLIC void httpResumeQueue(HttpQueue *q);
  */
 PUBLIC void httpScheduleQueue(HttpQueue *q);
 
+#if UNUSED
 /**
     Service a queue
     @description Service a queue by invoking its service() routine.
@@ -2364,6 +2334,7 @@ PUBLIC void httpScheduleQueue(HttpQueue *q);
     @stability Stable
  */
 PUBLIC void httpServiceQueue(HttpQueue *q);
+#endif
 
 /**
     Set a queue's flow control low and high water marks
@@ -2536,20 +2507,19 @@ PUBLIC ssize httpWriteString(HttpQueue *q, cchar *s);
 
 /* Internal */
 
-/* MOB - convert as many APIs to internal as possible */
 PUBLIC HttpQueue *httpAppendQueue(HttpQueue *q, HttpQueue *prev);
-PUBLIC cchar *httpTraceHeaders(HttpQueue *q, MprHash *headers);
-PUBLIC HttpQueue *httpFindPreviousQueue(HttpQueue *q);
-PUBLIC HttpQueue *httpCreateQueueHead(struct HttpNet *net, struct HttpConn *conn, cchar *name, int dir);
+PUBLIC void httpAssignQueueCallbacks(HttpQueue *q, struct HttpStage *stage, int dir);
 PUBLIC HttpQueue *httpCreateQueue(struct HttpNet *net, struct HttpConn *conn, struct HttpStage *stage, int dir, HttpQueue *prev);
+PUBLIC HttpQueue *httpCreateQueueHead(struct HttpNet *net, struct HttpConn *conn, cchar *name, int dir);
+PUBLIC HttpQueue *httpFindPreviousQueue(HttpQueue *q);
 PUBLIC HttpQueue *httpGetNextQueueForService(HttpQueue *q);
 PUBLIC void httpInitSchedulerQueue(HttpQueue *q);
 PUBLIC void httpMarkQueueHead(HttpQueue *q);
-PUBLIC void httpAssignQueueCallbacks(HttpQueue *q, struct HttpStage *stage, int dir);
+PUBLIC void httpOpenQueues(struct HttpConn *conn);
 PUBLIC void httpPairQueues(HttpQueue *q1, HttpQueue *q2);
 PUBLIC void httpRemovePacket(HttpQueue *q, HttpPacket *prev, HttpPacket *packet);
+PUBLIC cchar *httpTraceHeaders(HttpQueue *q, MprHash *headers);
 PUBLIC void httpTraceQueues(struct HttpConn *conn);
-PUBLIC void httpOpenQueues(struct HttpConn *conn);
 
 /******************************** Pipeline Stages *****************************/
 /*
@@ -2911,32 +2881,37 @@ PUBLIC int httpOpenTailFilter();
 /*
     HTTP/2 Frame sizes
  */
-#define HTTP2_FRAME_OVERHEAD        9
-#define HTTP2_SETTINGS_SIZE         6
-#define HTTP2_WINDOW_SIZE           4
-#define HTTP2_RESET_SIZE            4
-#define HTTP2_GOAWAY_SIZE           8
+#define HTTP2_FRAME_OVERHEAD        9                       /**< Minimum HTTP/2 frame size */
+#define HTTP2_SETTINGS_SIZE         6                       /**< Size of settings frame data */
+#define HTTP2_WINDOW_SIZE           4                       /**< Size of windows frame data */
+#define HTTP2_RESET_SIZE            4                       /**< Size of rest frame data */
+#define HTTP2_GOAWAY_SIZE           8                       /**< Size of goaway frame data */
 
 /*
     HTTP/2 parameters
  */
-#define HTTP2_MAX_FRAME_SIZE        ((1 << 24) - 1)
-#define HTTP2_MAX_STREAM            ((1U << 31) - 1)
-#define HTTP2_MAX_WINDOW            ((1U << 31) - 1)
+#define HTTP2_MAX_FRAME_SIZE        ((1 << 24) - 1)         /**< Maximum frame size by spec */
+#define HTTP2_MAX_STREAM            ((1U << 31) - 1)        /**< Maximum stream number by spec */
+#define HTTP2_MAX_WINDOW            ((1U << 31) - 1)        /**< Maximum window size by spec */
 
 /*
     Do not change these defaults. They are defined by the spec.
  */
-#define HTTP2_DEFAULT_WINDOW        65535
-#define HTTP2_DEFAULT_FRAME_SIZE   (16 * 1024)
-#define HTTP2_DEFAULT_WEIGHT        16
+#define HTTP2_DEFAULT_WINDOW        65535                   /**< Initial default window size by spec */
+#define HTTP2_DEFAULT_FRAME_SIZE    (16 * 1024)             /**< Default frame size - modified by config */
+#define HTTP2_DEFAULT_WEIGHT        16                      /**< Unused */
 
+/*
+    Misc flags and constants
+ */
+#define HTTP2_PREFACE               "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
+#define HTTP2_PREFACE_SIZE          24
 #define HTTP2_ENCODE_RAW            0
 #define HTTP2_ENCODE_HUFF           0x80
-#define HTTP2_INT_OCTETS            4
 #define HTTP2_HEADER_TABLE_SIZE     512
 #define HTTP2_TABLE_SIZE            4096
-#define HTTP2_HEADER_OVERHEAD       32
+#define HTTP2_HEADER_OVERHEAD       32                      /**< HPACK table overhead by spec */
+#define HTTP_STREAM_MASK            0x7fffffff
 
 /*
     HTTP/2 Frame types
@@ -2955,7 +2930,6 @@ PUBLIC int httpOpenTailFilter();
 
 /*
     HTTP/2 frame flags
-    CLEAN
  */
 #define HTTP2_ACK_FLAG              0x1
 #define HTTP2_END_STREAM_FLAG       0x1
@@ -2974,20 +2948,11 @@ PUBLIC int httpOpenTailFilter();
 #define HTTP2_MAX_HEADER_SIZE_SETTING      0x6
 
 /*
-    HTTP2
-    Http/2 frame types
- */
-#define HTTP2_PREFACE               "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
-#define HTTP2_PREFACE_SIZE          24
-
-/*
-    Errors
-    CLEAN
-    MOB - which are being used?
+    HTTP2 error codes
  */
 #define HTTP2_NO_ERROR              0x0
-#define HTTP2_PROTOCOL_ERROR        0x1
 #define HTTP2_INTERNAL_ERROR        0x2
+#define HTTP2_PROTOCOL_ERROR        0x1
 #define HTTP2_FLOW_CONTROL_ERROR    0x3
 #define HTTP2_SETTINGS_TIMEOUT      0x4
 #define HTTP2_STREAM_CLOSED         0x5
@@ -3031,16 +2996,16 @@ typedef struct HttpHeaderTable {
     ssize           max;
 } HttpHeaderTable;
 
+/*
+    Internal
+ */
 PUBLIC void httpCreatePackedHeaders();
 PUBLIC int httpLookupPackedHeader(HttpHeaderTable *headers, cchar *key, cchar *value, bool *withValue);
 PUBLIC MprKeyValue *httpGetPackedHeader(HttpHeaderTable *headers, int index);
 PUBLIC int httpAddPackedHeader(HttpHeaderTable *headers, cchar *key, cchar *value);
 PUBLIC int httpSetPackedHeadersMax(HttpHeaderTable *headers, int size);
-
-//  MOB - rename with http prefix
 PUBLIC ssize httpHuffEncode(cchar *src, ssize len, char *dst, uint lower);
 PUBLIC cchar *httpHuffDecode(uchar *src, int len);
-
 #endif /* ME_HTTP_HTTP2 */
 
 /********************************* Network *************************************/
@@ -3052,6 +3017,7 @@ PUBLIC cchar *httpHuffDecode(uchar *src, int len);
     @stability Evolving
   */
 typedef void (*HttpIOCallback)(struct HttpNet *net, MprEvent *event);
+
 /*
     HTTP protocol variants
  */
@@ -3059,11 +3025,10 @@ typedef void (*HttpIOCallback)(struct HttpNet *net, MprEvent *event);
 #define HTTP_1_1        1
 #define HTTP_2          2
 
+#define HTTP_NET_ASYNC  0x1
 
 /*
-    MOB - doc
-    MOB - check all fields are required
-    In this is the control object for the network connection. The HttpConn object is for the logical connection
+    Control object for the network connection. The HttpConn object is for the logical connection
     which in the case of HTTP/2 is a multiplexed stream.
  */
 typedef struct HttpNet {
@@ -3103,7 +3068,7 @@ typedef struct HttpNet {
     MprTicks        lastActivity;           /**< Last activity on the connection */
     MprOff          bytesWritten;           /**< Total bytes written */
 
-    //  MOB - these should probably not be here
+    //  TODO - these should probably not be here
     void            *context;               /**< Embedding context (EjsRequest) */
     void            *data;                  /**< Custom data */
     void            *ejs;                   /**< Embedding VM */
@@ -3136,63 +3101,87 @@ typedef struct HttpNet {
 /**
     Create a network object.
     @description The network object defines the underlying network connection over which HttpConn connection streams will
-    be transported.
+    be multiplexed.
     @param dispatcher Event MprDispatcher object to serialize events for the network.
     @param endpoint Server-side HttpEndpoint object. Set to NULL for client-side.
     @param protocol HTTP protocol to use by default. Set to 1 for HTTP/1 and 2 for HTTP/2.
     @param flags Set to HTTP_NET_ASYNC if you wish to use async I/O. Otherwise set to zero.
-    @returns A new connection object
+    @returns A new network object
     @ingroup HttpNet
-    @stability Internal
+    @stability Evolving
 */
 PUBLIC HttpNet *httpCreateNet(MprDispatcher *dispatcher, struct HttpEndpoint *endpoint, int protocol, int flags);
+
+/**
+    Destroy the network object
+    @description This call closes the network socket, destroys the connection dispatcher, disconnects the HttpTx and
+        HttpRx property objects and removes the network from the HttpHost list of networks. All active stream connections
+        (HttpConn) will also be destroyed. Thereafter, the garbage collector can reclaim all memory. It may be called by
+        client connections at any time from a top-level event running on the connection's dispatcher. Server-side code
+        should not need to explicitly destroy the connection as it will be done automatically via httpIOEvent.
+    @param net HttpNet object created via #httpCreateNet
+    @ingroup HttpNet
+    @stability Internal
+ */
+PUBLIC void httpDestroyNet(HttpNet *net);
 
 /**
     Respond to a HTTP I/O event
     @description This routine responds to I/O described by the supplied eventMask.
     If any readable data is present, it allocates a standard sized packet and reads data into this and then invokes
     the #httpProcess engine.
-    @param net HttpNet object created via #httpCreateConn
+    @param net HttpNet object created via #httpCreateNet
     @param event Event structure
-    @ingroup HttpConn
-    @stability Stable
+    @ingroup HttpNet
+    @stability Internal
  */
 PUBLIC void httpIOEvent(struct HttpNet *net, MprEvent *event);
+
+/**
+    Error handling for the network.
+    @description The httpNetError call is used to flag the current network as failed. If httpNetError is called multiple
+        times, those calls are ignored and only the first call to httpNetError has effect.
+        This call will close all network streams and discard all data in output pipeline queues.
+    @param net HttpNet object created via #httpCreateNet
+    @param fmt Printf style formatted string
+    @param ... Arguments for fmt
+    @ingroup HttpNet
+    @stability Evolving
+ */
+PUBLIC void httpNetError(HttpNet *net, cchar *fmt, ...);
 
 /**
     Service pipeline queues to flow data.
     @description This routine should not be called by handlers, filters or user applications. It should only be called
         by the http pipeline and support routines.
-    @param net HttpNet object created via #httpCreateConn
+    @param net HttpNet object created via #httpCreateNet
     @param flags Set to HTTP_BLOCK to yield for GC if due
     @return True if work was done servicing queues.
-    @ingroup HttpConn
-    @stability Internal
+    @ingroup HttpNet
+    @stability Evolving
  */
 PUBLIC bool httpServiceQueues(HttpNet *net, int flags);
 
 /**
-    Define an I/O callback for connections
-    @description The I/O callback is invoked when I/O events are detected on the connection. The default I/O callback
+    Define an I/O callback for network connections
+    @description The I/O callback is invoked when I/O events are detected on the network. The default I/O callback
         is #httpIOEvent.
     @param net HttpNet object created via #httpCreateNet
     @param fn Callback function to invoke
     @ingroup HttpNet
-    @stability Stable
+    @stability Evolving
   */
 PUBLIC void httpSetIOCallback(struct HttpNet *net, HttpIOCallback fn);
 
 /**
-    Test if the connection queues need service
-    @param net HttpNet object created via #httpCreateConn
+    Test if the network queues need service
+    @param net HttpNet object created via #httpCreateNet
     @return True if there are queues that require servicing
-    @ingroup HttpConn
-    @stability Stable
+    @ingroup HttpNet
+    @stability Evolving
   */
 PUBLIC bool httpQueuesNeedService(HttpNet *net);
 
-
-//  MOB - all must be evolving
 /**
     Set the network context object
     @param net HttpNet object created via #httpCreateNet
@@ -3203,109 +3192,135 @@ PUBLIC bool httpQueuesNeedService(HttpNet *net);
 PUBLIC void httpSetNetContext(HttpNet *net, void *context);
 
 /**
-    Steal a socket from a connection
+    Steal a socket from a network
     @description Steal the MprSocket object from a network so the caller can assume total responsibility for the socket.
     This routine returns a clone of the networks's socket object with the socket O/S handle. The handle is removed from the
-    networks's socket object. The network retains ownership of the original MprSocket object. This is done to preserve
-    the HttpNetwork.sock object but remove the socket handle from its management.
+    networks's socket object. The network retains ownership of the original MprSocket object -- sans the socket handle.
+    This is done to preserve the HttpNetwork.sock object but remove the socket handle from its management.
     \n\n
     Note: The current request is aborted and queue data is discarded.
     After calling, the normal Appweb request and inactivity timeouts will not apply to the returned socket object.
     It is the callers responsibility to call mprCloseSocket on the returned MprSocket when ready.
     \n\n
-    An alternative to this routine is #httpBorrowConn which temporarily loans the connection and secures it from destruction.
+    An alternative to this routine is #httpBorrowNet which temporarily loans the network socket and secures it from destruction.
     @param net HttpNet object created via #httpCreateNet
-    @return A clone of the connection's MprSocket object with the socket handle.
-    @ingroup HttpConn
+    @return A clone of the network's MprSocket object with the socket handle.
+    @ingroup HttpNet
     @stability Evolving
  */
 PUBLIC MprSocket *httpStealSocket(HttpNet *net);
 
 /**
-    Steal the O/S socket handle from the connection socket object.
-    @description This removes the O/S socket handle from active management by the connection. After calling,
-    normal request and inactivity timeouts will apply to the connection, but will not disturb the underlying
+    Steal the O/S socket handle from the network socket object.
+    @description This removes the O/S socket handle from active management by the network. After calling,
+    normal request and inactivity timeouts will apply to the network, but will not disturb the underlying
     actual socket handle.  It is the callers responsibility to call close() on the socket handle when ready.
     @param net HttpNet object created via #httpCreateNet
     @return The O/S Socket handle.
-    @ingroup HttpConn
-    @stability Prototype
+    @ingroup HttpNet
+    @stability Evolving
  */
 PUBLIC Socket httpStealSocketHandle(HttpNet *net);
 
 /**
-    Enable connection events
-    @description Connection events are automatically disabled upon receipt of an I/O event on a connection. This
-        permits a connection to process the I/O without fear of interruption by another I/O event. At the completion
-        of processing of the I/O request, the connection should be re-enabled via httpEnableNetEvents. This call is
-        made for requests in #httpIOEvent. Client-side connections may need to enable connection events if the are
+    Enable network events
+    @description Network events are automatically disabled upon receipt of an I/O event on a network connection. This
+        permits a network to process the I/O without fear of interruption by another I/O event. At the completion
+        of processing of the I/O request, the network should be re-enabled via httpEnableNetEvents. This call is
+        made for requests in #httpIOEvent. Client-side networks may need to enable network events if they are
         running in async mode and encounter a blocking condition.
-    @param net HttpNet connection object created via #httpCreateConn
-    @ingroup HttpConn
-    @stability Internal
+    @param net HttpNet Network object created via #httpCreateNet
+    @ingroup HttpNet
+    @stability Evolving
  */
 PUBLIC void httpEnableNetEvents(HttpNet *net);
 
 /**
-    Schedule a connection timeout event on a connection
-    @description This call schedules an event to run serialized on the connection dispatcher. When run, it will
-        cancels the current request, disconnects the socket and issues an error to the error log.
+    Schedule a network connection timeout event on a network
+    @description This call schedules a timeout event to run serialized on the network's dispatcher. When run, it will
+        cancel all current requests on the network, disconnect the socket and issue an error to the error log.
         This call is normally invoked by the httpTimer which runs regularly to check for timed out requests.
-    @param net HttpNet connection object created via #httpCreateConn
-    @ingroup HttpConn
+    @param net HttpNet Network object created via #httpCreateNet
+    @ingroup HttpNet
     @stability Internal
   */
 PUBLIC void httpNetTimeout(HttpNet *net);
 
 /**
-    Set the Http protocol variant for this connection
+    Set the Http protocol variant for this network connection
     @description Set the Http protocol variant to use.
-    @param net HttpNet connection object created via #httpCreateNet
+    @param net HttpNet Network object created via #httpCreateNet
     @param protocol  Integer representing the protocol variant. Valid values are: 0 for HTTP/1.0, 1 for HTTP/1.1 and 2 for HTTP/2.
     @ingroup HttpNet
     @stability Evolving
  */
 PUBLIC void httpSetNetProtocol(HttpNet *net, int protocol);
+
+/**
+    Get the Http protocol variant for this network connection
+    @param net HttpNet Network object created via #httpCreateNet
+    @return HTTP/1.0, HTTP/1.1 or HTTP/2.
+    @ingroup HttpNet
+    @stability Evolving
+ */
 PUBLIC cchar *httpGetProtocol(HttpNet *net);
 
 /**
-    Get the async mode value for the connection
+    Get the async mode value for the network
     @param net HttpNet object created via #httpCreateNet
-    @return True if the connection is in async mode
+    @return True if the Network is in async mode
     @ingroup HttpNet
     @stability Evolving
  */
 PUBLIC bool httpGetAsync(HttpNet *net);
 
 /**
-    Set the async mode value for the connection
+    Set the async mode value for the network
     @param net HttpNet object created via #httpCreateNet
     @param async Set to 1 to enable async mode
-    @return True if the connection is in async mode
+    @return True if the network is in async mode
     @ingroup HttpNet
     @stability Evolving
  */
 PUBLIC void httpSetAsync(HttpNet *net, bool async);
 
+/**
+    Test if the network is a server-side network
+    @param net HttpNet Network object created via #httpCreateNet
+    @return true if the network is server-side
+    @ingroup HttpNet
+    @stability Prototype
+  */
 #define httpIsServer(net) (net && net->endpoint)
+
+/**
+    Test if the network is a client-side network
+    @param net HttpNet Network object created via #httpCreateNet
+    @return true if the network is client-side
+    @ingroup HttpNet
+    @stability Prototype
+  */
 #define httpIsClient(net) (net && !net->endpoint)
 
-//  MOB - some of these should be public
-//  MOB DOC
+/**
+    Connect the network to a remote peer.
+    @param net HttpNet Network object created via #httpCreateNet
+    @param ip Remote IP address to connect to
+    @param port TCP/IP port to connect to
+    @param ssl MprSsl object that defines the SSL context
+    @return Zero if successful, otherwise a negative MPR error code.
+    @ingroup HttpNet
+    @stability Prototype
+  */
 PUBLIC int httpConnectNet(HttpNet *net, cchar *ip, int port, MprSsl *ssl);
-//  MOB DOC
+
+/*
+    Internal
+ */
 PUBLIC void httpGetUriAddress(HttpUri *uri, cchar **ip, int *port);
-
-//  MOB - does not exist
 PUBLIC void httpSetNetTimeout(HttpNet *net, MprTicks inactivityTimeout);
-//  MOB - DOC
 PUBLIC void httpSendGoAway(struct HttpNet *net, int status, cchar *fmt, ...);
-//  MOB - DOC
-
-#define HTTP_NET_ASYNC  0x1
-
 PUBLIC void httpBindSocket(HttpNet *net, MprSocket *sock);
-PUBLIC void httpDestroyNet(HttpNet *net);
 PUBLIC void httpNetClosed(HttpNet *net);
 PUBLIC void httpDisconnectAllConns(HttpNet *net);
 PUBLIC void httpUsePrimary(HttpNet *net);
@@ -3521,12 +3536,11 @@ PUBLIC void httpClosePipeline(HttpConn *conn);
  */
 PUBLIC void httpBorrowConn(HttpConn *conn);
 
-//  MOB - improve doc
 /**
     Create a connection object.
     @description Most interactions with the Http library are via a connection object. It is used for server-side
         communications when responding to client requests and it is used to initiate outbound client requests.
-        Connections are multiplexed onto HttpNet objects (see HTTP/2).
+        In HTTP/2 networks, connections are multiplexed onto HttpNet objects.
     @param net Network object owning the connection. Can be NULL and a HttpNetwork object will be transparently
         created and defined as HttpConn.net.
     @returns A new connection object
@@ -3614,9 +3628,6 @@ PUBLIC void httpEnableUpload(HttpConn *conn);
     @stability Stable
  */
 PUBLIC void httpError(HttpConn *conn, int status, cchar *fmt, ...) PRINTF_ATTRIBUTE(3,4);
-
-//  MOB DOC
-PUBLIC void httpNetError(HttpNet *net, cchar *fmt, ...);
 
 /**
     Emit an error message for limit violations
@@ -3722,7 +3733,7 @@ PUBLIC ssize httpGetWriteQueueCount(HttpConn *conn);
 /**
     Test if the connection is a server-side connection
     @param conn HttpConn connection object created via #httpCreateConn
-    @return true if the connection is client-side
+    @return true if the connection is server-side
     @ingroup HttpConn
     @stability Stable
   */
@@ -4849,7 +4860,7 @@ typedef struct HttpRoute {
     ssize           startSegmentLen;        /**< Prefix length */
 
     MprJson         *config;                /**< Configuration file content */
-    cchar           *mode;                  /**< Application run mode (debug|release) */
+    cchar           *mode;                  /**< Application run profile mode (debug|release) */
 
     cchar           *database;              /**< Name of database for route */
     cchar           *responseFormat;        /**< Client response format */
@@ -5735,6 +5746,7 @@ PUBLIC int httpSetRouteConnector(HttpRoute *route, cchar *name);
     @stability Stable
  */
 PUBLIC void httpSetRouteData(HttpRoute *route, cchar *key, void *data);
+PUBLIC void httpSetRouteModuleData(HttpRoute *route, cchar *key, void *data);
 
 /**
     Set the default language for the route
@@ -6954,9 +6966,15 @@ PUBLIC int httpTestParam(HttpConn *conn, cchar *var);
  */
 PUBLIC void httpTrimExtraPath(HttpConn *conn);
 
-//  MOB improve doc -- sort
 /**
     Process Http requests and responses
+    @description the httpProcess function drives the HTTP request and response state machine. Once a request is received from the peer and the HTTP headers have been parsed into HttpConn and HttpTx, the httpProcess() function should be called to drive the request pipeline to process the request.
+    \n\n
+    The HTTP state machine drives the HttpConn.state through the states from
+    HTTP_STATE_BEGIN, HTTP_STATE_CONNECTED, HTTP_STATE_FIRST, HTTP_STATE_PARSED, HTTP_STATE_CONTENT, HTTP_STATE_READY, HTTP_STATE_RUNNING, HTTP_STATE_FINALIZED to HTTP_STATE_COMPLETE. For each state, the notifier defined by
+    #httpSetConnNotifier will be invoked.
+    \n\n
+    httpProcess is invoked by the HTTP/1 and HTTP/2 filters after they have decoded input packets and whenever the network socket becomes newly writable and can absorb more output data.
     @param q HttpQueue queue object
     @ingroup HttpRx
     @stability Evolving
@@ -6976,7 +6994,6 @@ PUBLIC void httpProcessWriteEvent(HttpConn *conn);
 /********************************** HttpTx *********************************/
 /*
     Tx flags
-    MOB - should be bit fields
  */
 #define HTTP_TX_NO_BODY             0x1     /**< No transmission body, only send headers */
 #define HTTP_TX_HEADERS_CREATED     0x2     /**< Response headers have been created */
@@ -6998,7 +7015,7 @@ PUBLIC void httpProcessWriteEvent(HttpConn *conn);
     httpConnect httpCreateTx httpDestroyTx httpFinalize httpFlush httpFollowRedirects httpFormatBody httpFormatError
     httpFormatErrorV httpFormatResponse httpFormatResponseBody httpFormatResponsev httpGetQueueData
     httpIsChunked httpIsComplete httpIsOutputFinalized httpNeedRetry httpOmitBody httpRedirect httpRemoveHeader
-    httpSetContentLength httpSetContentType httpSetCookie httpSetEntityLength httpSetHeader httpSetHeaderString
+    httpSetContentLength httpSetContentType httpSetCookie httpSetHeader httpSetHeaderString
     httpSetResponded httpSetStatus httpWait httpWriteHeaders httpWriteUploadData
     @stability Internal
  */
@@ -7006,34 +7023,22 @@ typedef struct HttpTx {
     /* Ordered for debugging */
     HttpUri         *parsedUri;             /**< Client request uri */
     cchar           *filename;              /**< Name of a real file being served (typically pathInfo mapped) */
+    int             status;                 /**< HTTP response status */
 
-    //  MOB order
-    bool            needChunking:1;         /**< Use chunk encoding */
     bool            endHeaders:1;           /**< Processed all header packets */
     bool            endData:1;              /**< Processed the last data packet */
     bool            finalized:1;            /**< Request response generated and handler processing is complete */
-    bool            pendingFinalize:1;      /**< Call httpFinalize again once the Tx pipeline is created */
     bool            finalizedConnector:1;   /**< Connector has finished sending the response */
     bool            finalizedInput:1;       /**< Handler has finished processing all input */
     bool            finalizedOutput:1;      /**< Handler or surrogate has finished writing output */
+    bool            needChunking:1;         /**< Use chunk encoding */
+    bool            pendingFinalize:1;      /**< Call httpFinalize again once the Tx pipeline is created */
     bool            responded:1;            /**< The handler has started to respond. Some output has been initiated. */
     bool            started:1;              /**< Handler has been started */
     uint            flags:16;               /**< Response flags */
 
-    int             status;                 /**< HTTP response status */
-
     MprOff          bytesWritten;           /**< Bytes written including headers */
-    //  MOB - review and remove
-    MprOff          entityLength;           /**< Original content length before range subsetting */
     ssize           chunkSize;              /**< Chunk size to use when using transfer encoding. Zero for unchunked. */
-    cchar           *ext;                   /**< Filename extension */
-    char            *etag;                  /**< Unique identifier tag */
-    HttpStage       *handler;               /**< Final handler serving the request */
-    MprOff          length;                 /**< Transmission content length */
-    char            *method;                /**< Client request method GET, HEAD, POST, DELETE, OPTIONS, PUT, TRACE */
-    cchar           *errorDocument;         /**< Error document to render */
-    cchar           *mimeType;              /**< Mime type of the request payload (ENV: CONTENT_TYPE) */
-
     struct HttpConn *conn;                  /**< Current connection object */
     MprList         *outputPipeline;        /**< Output processing */
     HttpStage       *connector;             /**< Network connector to send / receive socket data */
@@ -7043,7 +7048,18 @@ typedef struct HttpTx {
     MprBuf          *cacheBuffer;           /**< Response caching buffer */
     ssize           cacheBufferLength;      /**< Current size of the cache buffer data */
     cchar           *cachedContent;         /**< Retrieved cached response to send */
+    MprOff          entityLength;           /**< Original content length before range subsetting */
+    cchar           *errorDocument;         /**< Error document to render */
+    cchar           *ext;                   /**< Filename extension */
+    char            *etag;                  /**< Unique identifier tag */
+    HttpStage       *handler;               /**< Final handler serving the request */
+    MprOff          length;                 /**< Transmission content length */
+    char            *method;                /**< Client request method GET, HEAD, POST, DELETE, OPTIONS, PUT, TRACE */
+    cchar           *mimeType;              /**< Mime type of the request payload (ENV: CONTENT_TYPE) */
 
+    /*
+        Range fields
+     */
     HttpRange       *outputRanges;          /**< Data ranges for tx data */
     HttpRange       *currentRange;          /**< Current range being fullfilled */
     char            *rangeBoundary;         /**< Inter-range boundary */
@@ -7173,24 +7189,22 @@ PUBLIC void httpFinalizeConnector(HttpConn *conn);
 
 /**
     Finalize transmission of the http response
-    @description This routine should be called by clients and Handlers to signify the end of the body content being sent with
-    the request or response body. This call will force the transmission of buffered content to the peer. HttpFinalizeOutput
-    will set the finalizedOutput flag and write a final chunk trailer if using chunked transfers. If the output is already
-    finalized, this call does nothing.  Note that after finalization, incoming content may continue to be processed.
-    i.e. httpFinalizeOutput can be called before all incoming data has been received. Use httpFinalizeInput to signify
-    that processing all input is complete.
+    @description This routine should be called by applications and handlers to signify the end of the body content being sent with the request or response body. This call will force the transmission of buffered content to the peer. HttpFinalizeOutput will set the HttpTx.finalizedOutput flag and write a final chunk trailer if using chunked transfers. If the output is already finalized, this call does nothing. Note that after finalization, incoming content may continue to be processed. i.e. httpFinalizeOutput can be called before all incoming data has been received. Use httpFinalizeInput to signify that processing all input is complete.
     \n\n
-    The difference between #httpFinalize and #httpFinalizeOutput is that #httpFinalize implies that all request
-    processing is complete including both input and output. Whereas #httpFinalizeOutput implies that the output
-    is generated. Note that while the output may be fully generated, it may not be fully transmitted by the pipeline
-    and connector. When the output is fully transmitted, the connector will call #httpFinalizeConnector.
+    The difference between #httpFinalize and #httpFinalizeOutput is that #httpFinalize implies that all request processing is complete including both input and output. Whereas #httpFinalizeOutput implies that the output is generated. Note that while the output may be fully generated, it may not be fully transmitted by the pipeline and connector. When the output is fully transmitted, the connector will call #httpFinalizeConnector.
+    @param conn HttpConn Queue object.
+    @ingroup HttpTx
+    @stability Evolving
+ */
+PUBLIC void httpFinalizeOutput(HttpConn *conn);
+
+/**
+    Finalize receiption of the http content
+    @description This routine should be called by clients and Handlers to signify that all processing of the input is complete. the request or response body.
     @param conn HttpConn Queue object.
     @ingroup HttpTx
     @stability Stable
  */
-PUBLIC void httpFinalizeOutput(HttpConn *conn);
-
-//  MOB DOC
 PUBLIC void httpFinalizeInput(HttpConn *conn);
 
 /**
@@ -7458,16 +7472,17 @@ PUBLIC void httpSetCookie(HttpConn *conn, cchar *name, cchar *value, cchar *path
  */
 PUBLIC void httpRemoveCookie(HttpConn *conn, cchar *name);
 
-//  MOB - remove?
+#if UNUSED
 /**
     Define the length of the transmission content. When static content is used for the transmission body, defining
     the entity length permits the request pipeline to know when all the data has been sent.
     @param conn HttpConn connection object created via #httpCreateConn
     @param len Transmission body length in bytes
     @ingroup HttpTx
-    @stability Stable
+    @stability Prototype
  */
 PUBLIC void httpSetEntityLength(HttpConn *conn, MprOff len);
+#endif
 
 /**
     Set the filename to serve for a request
@@ -7571,7 +7586,7 @@ PUBLIC void httpSetResponded(HttpConn *conn);
 PUBLIC int httpWait(HttpConn *conn, int state, MprTicks timeout);
 
 /**
-    Write the transmission headers into the given packet
+    Create a HTTP header packet
     @description Write the Http transmission headers into the given packet. This should only be called by connectors
         just prior to sending output to the client. It should be delayed as long as possible if the content length is
         not yet known to give the pipeline a chance to determine the transmission length. This way, a non-chunked
@@ -7583,12 +7598,6 @@ PUBLIC int httpWait(HttpConn *conn, int state, MprTicks timeout);
  */
 PUBLIC HttpPacket *httpCreateHeaders(HttpQueue *q, HttpPacket *packet);
 #define httpWriteHeaders(q, packet) httpCreateHeaders
-
-//  MOB DOC
-PUBLIC void httpDefineHeaders(HttpConn *conn);
-PUBLIC void httpCreateHeaders1(HttpQueue *q, HttpPacket *packet);
-PUBLIC void httpCreateHeaders2(HttpQueue *q, HttpPacket *packet);
-
 
 /**
     Write Http upload body data
@@ -7604,6 +7613,13 @@ PUBLIC void httpCreateHeaders2(HttpQueue *q, HttpPacket *packet);
     @stability Stable
  */
 PUBLIC ssize httpWriteUploadData(HttpConn *conn, MprList *formData, MprList *fileData);
+
+/*
+    Internal
+ */
+PUBLIC void httpPrepareHeaders(HttpConn *conn);
+PUBLIC void httpCreateHeaders1(HttpQueue *q, HttpPacket *packet);
+PUBLIC void httpCreateHeaders2(HttpQueue *q, HttpPacket *packet);
 
 /********************************* HttpEndpoint ***********************************/
 /*

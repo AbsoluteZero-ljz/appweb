@@ -1,0 +1,59 @@
+{
+    title:  'Migrating',
+    crumbs: [
+        { "Developer's Guide": '../developers/' },
+    ],
+}
+            <h1>Migrating to Appweb 8</h1>
+
+Architectural Changes
+    -HTTP/2
+    - Improved pipeline
+    - Do this for memory allocator and GC
+    - Pipeline
+	- timing of end packet
+    - New auth type "app"
+    - Upload filter is always part of pipeline
+        - Upload directory now not per route — needs to be defined before routing
+
+Removed
+    - removed send connector
+
+Changed APIs
+    - httpRequest - gains a protocol argument
+    - httpTrace - first arg changed from conn to HttpTrace
+    - httpCreateConn arguments changed to take a HttpNet argument
+        - httpCreateConn(endpoint, dispatcher) -> - httpCreateConn(net)
+    - httpSteal APIs changed to work with HttpNet httpStealSocket(conn) ->
+	- httpStealSocket(net)
+    - Handlers must call httpFinalizeOutput / httpFinalize
+    - Rename httpPrepClientConn -> httpResetClientConn
+    - APIs operating on HttpNet instead of HttpConn
+        - httpSetAsync(conn -> httpSetAsync(net
+        - httpServiceQueues(conn) -> (net)
+        - httpEnableConnEvents -> httpEnableNetEvents
+        - tx->writeBlocked -> net->writeBlocked
+        - HttpTx.writeBlocked -> HttpNet.writeBlocked
+        - httpIOEvent(conn) -> takes net
+    - httpNeedRetry(, url -> url changed from char* to cchar*
+    - HttpConn.retries removed and httpSetRetries
+    - httpFinalize* takes queue. Default to use conn->writer (why)
+    - ME_MAX_BUFFER -> ME_BUFSIZE
+    - Web sockets esp callbacks must be prepared to handle multiple packets on the conn->reads
+    - TracePacket type of "body" is now changed to "packet"
+    - Upload filter always defined — to remove, do Reset pipeline and define route configuration
+    - AddConnector is a NOP
+    - mpr-openssl support 1.0 and 1.1
+
+New Capabilities
+	- mprCreateEvent blocking option
+	- httpSetAuthStoreVerify for setting the auth verify globally
+
+- ESP Improvements
+	- esp.app.source for list of source files
+	- Easier to specify cflags, …
+	- Compile fixes
+		- Names with ‘-‘
+    - Config
+    	- esp.app.source to specify list of source files
+    	- esp.app.tokens to specify compiler tokens (CFLAGS, …)
