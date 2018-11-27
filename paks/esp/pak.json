@@ -2,16 +2,16 @@
     "name": "esp",
     "description": "Embedthis ESP, the amazingly fast C-Language web framework",
     "title": "Embedthis ESP",
-    "version": "7.0.2",
+    "version": "7.0.3",
     "keywords": [
         "esp",
         "package"
     ],
-    "homepage": "https://www.embedthis.com/esp",
+    "homepage": "https://embedthis.com/esp",
     "author": {
         "name": "Embedthis Software",
         "email": "dev@embedthis.com",
-        "url": "https://www.embedthis.com"
+        "url": "https://embedthis.com"
     },
     "repository": {
         "type": "git",
@@ -27,7 +27,7 @@
         },
         {
             "type": "Commercial",
-            "url": "https://www.embedthis.com/licensing/"
+            "url": "https://embedthis.com/licensing/"
         }
     ],
     "dependencies": {

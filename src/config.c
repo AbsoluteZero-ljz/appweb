@@ -1440,7 +1440,7 @@ static int listenDirective(MaState *state, cchar *key, cchar *value)
 {
     HttpEndpoint    *endpoint, *dual;
     HttpHost        *host;
-    char            *ip, *address;
+    cchar           *ip, *address;
     int             port;
 
     if (!maTokenize(state, value, "%S", &address)) {
@@ -1485,7 +1485,7 @@ static int listenSecureDirective(MaState *state, cchar *key, cchar *value)
 #if ME_COM_SSL
     HttpEndpoint    *endpoint, *dual;
     HttpHost        *host;
-    char            *address, *ip;
+    cchar           *address, *ip;
     int             port;
 
     if (!maTokenize(state, value, "%S", &address)) {
@@ -2800,7 +2800,8 @@ static int virtualHostDirective(MaState *state, cchar *key, cchar *value)
 static int closeVirtualHostDirective(MaState *state, cchar *key, cchar *value)
 {
     HttpEndpoint    *endpoint;
-    char            *address, *ip, *addresses, *tok;
+    cchar           *ip;
+    char            *address, *addresses, *tok;
     int             port;
 
     if (state->enabled) {
