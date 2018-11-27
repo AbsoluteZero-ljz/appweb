@@ -1,10 +1,10 @@
 {
-    "name": "watchdog",
-    "description": "Embedthis Watchdog",
-    "title": "Embedthis Watchdog",
-    "version": "0.2.1",
+    "name": "makerom",
+    "description": "Embedthis Makerom",
+    "title": "Embedthis Makerom",
+    "version": "0.3.0",
     "keywords": [
-        "watchdog",
+        "makerom",
         "mpr"
     ],
     "author": {
@@ -13,11 +13,11 @@
         "url": "https://embedthis.com"
     },
     "bugs": {
-        "url": "http://github.com/embedthis/watchdog/issues"
+        "url": "http://github.com/embedthis/makerom/issues"
     },
     "repository": {
         "type": "git",
-        "url": "git://github.com/embedthis/watchdog.git"
+        "url": "git://github.com/embedthis/makerom.git"
     },
     "licenses": [
         {
@@ -30,18 +30,16 @@
         }
     ],
     "dependencies": {
-        "mpr": "~6.2"
+        "mpr": "~6"
     },
     "devDependencies": {
-        "makeme": ">=0.9.0",
-        "pak": ">=0.11.0"
+        "makeme": ">=0.10.0",
+        "pak": ">=0.12.0"
     },
     "files": [
-        "dist/**",
+        "dist/",
         "doc/"
     ],
-    "pak": {
-        "import": true,
-        "origin": "embedthis/watchdog"
-    }
+    "import": true,
+    "origin": "embedthis/makerom"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "http",
-    "description": "Embedthis Http Library",
-    "title": "Embedthis Http",
-    "version": "6.2.4",
+    "name": "mpr",
+    "description": "Embedthis Multithreaded Portable Runtime",
+    "title": "Embedthis MPR",
+    "version": "8.0.0",
     "keywords": [
-        "http",
-        "webserver"
+        "mpr",
+        "runtime"
     ],
     "author": {
         "name": "Embedthis Software",
@@ -14,10 +14,10 @@
     },
     "repository": {
         "type": "git",
-        "url": "git://github.com/embedthis/http.git"
+        "url": "git://github.com/embedthis/mpr.git"
     },
     "bugs": {
-        "url": "http://github.com/embedthis/http/issues"
+        "url": "http://github.com/embedthis/mpr/issues"
     },
     "licenses": [
         {
@@ -30,15 +30,13 @@
         }
     ],
     "dependencies": {
-        "certs": "~0.1",
-        "mpr": "~6.2",
-        "mpr-mbedtls": "~0.5",
-        "osdep": "~0.9",
-        "pcre": "~1.0",
-        "ssl": "~0.9"
+        "osdep": "~1"
     },
     "optionalDependencies": {
-        "mpr-openssl": "~0.5"
+        "certs": "~0.1",
+        "ssl": "~0.9",
+        "mpr-openssl": "~1",
+        "mpr-mbedtls": "~2"
     },
     "devDependencies": {
         "makeme": ">=0.9.0",
@@ -48,8 +46,6 @@
         "dist/",
         "doc/api/"
     ],
-    "pak": {
-        "import": true,
-        "origin": "embedthis/http"
-    }
+    "import": true,
+    "origin": "embedthis/mpr"
 }

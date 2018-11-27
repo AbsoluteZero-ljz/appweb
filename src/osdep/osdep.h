@@ -490,8 +490,8 @@
             /**
                 Boolean data type.
              */
-            #if _MSC_VER <= 1800
-                typedef char bool;
+            #if WINDOWS && _MSC_VER <= 1800
+                typedef int bool;
             #endif
         #endif
     #endif

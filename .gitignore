@@ -15,3 +15,5 @@ samples/certs
 test/tmp/test.dat
 src/server/certs
 .port.log
+/projects/*mine*
+/projects/.vs
