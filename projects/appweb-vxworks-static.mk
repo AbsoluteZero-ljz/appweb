@@ -681,13 +681,13 @@ DEPS_48 += $(BUILD)/inc/appweb.h
 DEPS_48 += $(BUILD)/inc/customize.h
 DEPS_48 += $(BUILD)/obj/config.o
 DEPS_48 += $(BUILD)/obj/convenience.o
-DEPS_48 += $(BUILD)/obj/rom.o
 DEPS_48 += $(BUILD)/obj/cgiHandler.o
 DEPS_48 += $(BUILD)/obj/espHandler.o
+DEPS_48 += $(BUILD)/obj/rom.o
 
 $(BUILD)/bin/libappweb.a: $(DEPS_48)
 	@echo '      [Link] $(BUILD)/bin/libappweb.a'
-	arundefined -cr $(BUILD)/bin/libappweb.a "$(BUILD)/obj/config.o" "$(BUILD)/obj/convenience.o" "$(BUILD)/obj/rom.o" "$(BUILD)/obj/cgiHandler.o" "$(BUILD)/obj/espHandler.o"
+	arundefined -cr $(BUILD)/bin/libappweb.a "$(BUILD)/obj/config.o" "$(BUILD)/obj/convenience.o" "$(BUILD)/obj/cgiHandler.o" "$(BUILD)/obj/espHandler.o" "$(BUILD)/obj/rom.o"
 
 #
 #   appweb

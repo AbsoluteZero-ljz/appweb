@@ -93,9 +93,9 @@
 		911F3010911F4DB60000002F /* http.c in Sources */ = {isa = PBXBuildFile; fileRef = 911F3010911F4DB600000030 /* http.c */; };
 		911F3010911F4DB600000031 /* config.c in Sources */ = {isa = PBXBuildFile; fileRef = 911F3010911F4DB600000032 /* config.c */; };
 		911F3010911F4DB600000033 /* convenience.c in Sources */ = {isa = PBXBuildFile; fileRef = 911F3010911F4DB600000034 /* convenience.c */; };
-		911F3010911F4DB600000035 /* rom.c in Sources */ = {isa = PBXBuildFile; fileRef = 911F3010911F4DB600000036 /* rom.c */; };
-		911F3010911F4DB600000037 /* cgiHandler.c in Sources */ = {isa = PBXBuildFile; fileRef = 911F3010911F4DB600000038 /* cgiHandler.c */; };
-		911F3010911F4DB600000039 /* espHandler.c in Sources */ = {isa = PBXBuildFile; fileRef = 911F3010911F4DB60000003A /* espHandler.c */; };
+		911F3010911F4DB600000035 /* cgiHandler.c in Sources */ = {isa = PBXBuildFile; fileRef = 911F3010911F4DB600000036 /* cgiHandler.c */; };
+		911F3010911F4DB600000037 /* espHandler.c in Sources */ = {isa = PBXBuildFile; fileRef = 911F3010911F4DB600000038 /* espHandler.c */; };
+		911F3010911F4DB600000039 /* rom.c in Sources */ = {isa = PBXBuildFile; fileRef = 911F3010911F4DB60000003A /* rom.c */; };
 		911F3010911F4DB60000003B /* espLib.c in Sources */ = {isa = PBXBuildFile; fileRef = 911F3010911F4DB60000003C /* espLib.c */; };
 		911F3010911F4DB60000003D /* httpLib.c in Sources */ = {isa = PBXBuildFile; fileRef = 911F3010911F4DB60000003E /* httpLib.c */; };
 		911F3010911F4DB60000003F /* mbedtls.c in Sources */ = {isa = PBXBuildFile; fileRef = 911F3010911F4DB600000040 /* mbedtls.c */; };
@@ -804,11 +804,11 @@
 		911F3010911F4DB6000000FA /* appweb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = appweb.h; path = src/appweb.h; sourceTree = "<group>"; };
 		911F3010911F4DB6000000FB /* pcre.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pcre.h; path = build/macosx-x64-default/inc/pcre.h; sourceTree = "<group>"; };
 		911F3010911F4DB600000034 /* convenience.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = convenience.c; path = src/convenience.c; sourceTree = "<group>"; };
-		911F3010911F4DB600000036 /* rom.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = rom.c; path = src/rom.c; sourceTree = "<group>"; };
-		911F3010911F4DB6000000FC /* mpr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mpr.h; path = build/macosx-x64-default/inc/mpr.h; sourceTree = "<group>"; };
-		911F3010911F4DB600000038 /* cgiHandler.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cgiHandler.c; path = src/modules/cgiHandler.c; sourceTree = "<group>"; };
-		911F3010911F4DB60000003A /* espHandler.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = espHandler.c; path = src/modules/espHandler.c; sourceTree = "<group>"; };
-		911F3010911F4DB6000000FD /* esp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = esp.h; path = build/macosx-x64-default/inc/esp.h; sourceTree = "<group>"; };
+		911F3010911F4DB600000036 /* cgiHandler.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cgiHandler.c; path = src/modules/cgiHandler.c; sourceTree = "<group>"; };
+		911F3010911F4DB600000038 /* espHandler.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = espHandler.c; path = src/modules/espHandler.c; sourceTree = "<group>"; };
+		911F3010911F4DB6000000FC /* esp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = esp.h; path = build/macosx-x64-default/inc/esp.h; sourceTree = "<group>"; };
+		911F3010911F4DB60000003A /* rom.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = rom.c; path = src/rom.c; sourceTree = "<group>"; };
+		911F3010911F4DB6000000FD /* mpr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mpr.h; path = build/macosx-x64-default/inc/mpr.h; sourceTree = "<group>"; };
 		911F3010911F4DB60000004E /* libappweb */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libappweb.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		911F3010911F4DB60000003C /* espLib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = espLib.c; path = src/esp/espLib.c; sourceTree = "<group>"; };
 		911F3010911F4DB6000000FE /* http.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = http.h; path = build/macosx-x64-default/inc/http.h; sourceTree = "<group>"; };
@@ -1058,9 +1058,9 @@
 				911F3010911F4DB6000000FA /* appweb.h */,
 				911F3010911F4DB600000032 /* config.c */,
 				911F3010911F4DB600000034 /* convenience.c */,
-				911F3010911F4DB600000036 /* rom.c */,
-				911F3010911F4DB600000038 /* cgiHandler.c */,
-				911F3010911F4DB60000003A /* espHandler.c */,
+				911F3010911F4DB600000036 /* cgiHandler.c */,
+				911F3010911F4DB600000038 /* espHandler.c */,
+				911F3010911F4DB60000003A /* rom.c */,
 			);
                 name = "libappweb";
                 path = ..;
@@ -1483,7 +1483,8 @@
 ../src/esp/vcvars.bat
     			);
     			outputPaths = (
-    ../build/macosx-x64-default/bin
+    ../build/macosx-x64-default/bin/esp-compile.json,
+../build/macosx-x64-default/bin/vcvars.bat
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     			shellPath = /bin/bash;
@@ -1511,7 +1512,15 @@ cd ..
 ../src/certs/samples/test.key
     			);
     			outputPaths = (
-    ../build/macosx-x64-default/bin
+    ../build/macosx-x64-default/bin/ca.crt,
+../build/macosx-x64-default/bin/ca.key,
+../build/macosx-x64-default/bin/ec.crt,
+../build/macosx-x64-default/bin/ec.key,
+../build/macosx-x64-default/bin/roots.crt,
+../build/macosx-x64-default/bin/self.crt,
+../build/macosx-x64-default/bin/self.key,
+../build/macosx-x64-default/bin/test.crt,
+../build/macosx-x64-default/bin/test.key
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     			shellPath = /bin/bash;
@@ -1538,7 +1547,7 @@ cd ..
     
     			);
     			outputPaths = (
-    ../src/server/cache
+    
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     			shellPath = /bin/bash;
@@ -1709,9 +1718,9 @@ fi";
     			files = (
     				911F3010911F4DB600000031 /* config.c in Sources */,
 				911F3010911F4DB600000033 /* convenience.c in Sources */,
-				911F3010911F4DB600000035 /* rom.c in Sources */,
-				911F3010911F4DB600000037 /* cgiHandler.c in Sources */,
-				911F3010911F4DB600000039 /* espHandler.c in Sources */,
+				911F3010911F4DB600000035 /* cgiHandler.c in Sources */,
+				911F3010911F4DB600000037 /* espHandler.c in Sources */,
+				911F3010911F4DB600000039 /* rom.c in Sources */,
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     		};

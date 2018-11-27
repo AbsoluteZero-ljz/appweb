@@ -1,5 +1,5 @@
 /*
-    me.h -- MakeMe Configure Header for windows-x86-default
+    me.h -- MakeMe Configure Header for windows-x64-default
 
     This header is created by Me during configuration. To change settings, re-run
     configure or define variables in your Makefile to override these default values.
@@ -136,7 +136,7 @@
     #define ME_MPR_SSL_CACHE 512
 #endif
 #ifndef ME_MPR_SSL_HANDSHAKES
-    #define ME_MPR_SSL_HANDSHAKES 1
+    #define ME_MPR_SSL_HANDSHAKES 3
 #endif
 #ifndef ME_MPR_SSL_LOG_LEVEL
     #define ME_MPR_SSL_LOG_LEVEL 5
@@ -259,7 +259,7 @@
 
 /* Profile */
 #ifndef ME_CONFIG_CMD
-    #define ME_CONFIG_CMD "me -d -q -platform windows-x86-default -configure . -without ssl -gen vs"
+    #define ME_CONFIG_CMD "me -d -q -platform windows-x64-default -configure . -without ssl -gen vs"
 #endif
 #ifndef ME_APPWEB_PRODUCT
     #define ME_APPWEB_PRODUCT 1
