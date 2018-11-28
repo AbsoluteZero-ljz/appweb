@@ -31,3 +31,5 @@ test/test.dat
 /projects/.vs
 /projects/*yours*
 /test/.test-prepared
+cache/
+/build
