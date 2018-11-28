@@ -18,3 +18,5 @@ src/server/certs
 .port.log
 *.guid
 test/exploits/
+cache/
+/build
