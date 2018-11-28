@@ -4448,7 +4448,7 @@ static cchar *map(HttpConn *conn, MprHash *options)
 static Esp *esp;
 
 /*
-    UNUSED. espRenderView flags are reserved
+    espRenderView flags are reserved (UNUSED)
  */
 #define ESP_DONT_RENDER 0x1
 
@@ -4466,10 +4466,9 @@ static void startEsp(HttpQueue *q);
 static int unloadEsp(MprModule *mp);
 
 #if !ME_STATIC
-static int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kind, cchar *source, cchar **errMsg,
-    bool *loaded);
+static int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kind, cchar *source, cchar **errMsg, bool *loaded);
 static cchar *getModuleName(HttpRoute *route, cchar *kind, cchar *target);
-static char *getModuleEntry(EspRoute *eroute, cchar *kind, cchar *source, cchar *cacheName);
+static char *getModuleEntry(EspRoute *eroute, cchar *kind, cchar *source, cchar *cache);
 static bool layoutIsStale(EspRoute *eroute, cchar *source, cchar *module);
 #endif
 
@@ -4747,6 +4746,9 @@ static void startEsp(HttpQueue *q)
 }
 
 
+/*
+    Yields
+ */
 static bool loadController(HttpConn *conn)
 {
 #if !ME_STATIC
@@ -4767,6 +4769,8 @@ static bool loadController(HttpConn *conn)
         controller = schr(route->sourceName, '$') ? stemplateJson(route->sourceName, rx->params) : route->sourceName;
         controller = controllers ? mprJoinPath(controllers, controller) : mprJoinPath(route->home, controller);
 
+        /* May yield */
+        route->source = controller;
         if (espLoadModule(route, conn->dispatcher, "controller", controller, &errMsg, &loaded) < 0) {
             if (mprPathExists(controller, R_OK)) {
                 httpError(conn, HTTP_CODE_NOT_FOUND, "%s", errMsg);
@@ -4835,6 +4839,7 @@ static int runAction(HttpConn *conn)
         }
         return 1;
     }
+    /* May yield */
     if (!loadController(conn)) {
         return 0;
     }
@@ -4858,7 +4863,10 @@ static int runAction(HttpConn *conn)
 }
 
 
-static cchar *loadView(HttpConn *conn, cchar *target)
+/*
+    May yield
+ */
+static bool loadView(HttpConn *conn, cchar *target)
 {
 #if !ME_STATIC
     HttpRx      *rx;
@@ -4873,24 +4881,22 @@ static cchar *loadView(HttpConn *conn, cchar *target)
     assert(eroute);
 
     if (!eroute->combine && (eroute->update || !mprLookupKey(eroute->top->views, target))) {
-        /* WARNING: GC yield - need target below */
-        target = sclone(target);
-        mprHold(target);
         path = mprJoinPath(route->documents, target);
+        httpTrace(conn->trace, "esp.handler", "context", "msg: 'Loading module %s'", path);
+        /* May yield */
+        route->source = path;
         if (espLoadModule(route, conn->dispatcher, "view", path, &errMsg, &loaded) < 0) {
             httpError(conn, HTTP_CODE_NOT_FOUND, "%s", errMsg);
-            mprRelease(target);
             return 0;
         }
-        if (loaded) {
-            httpTrace(conn->trace, "esp.handler", "context", "msg: 'Load module %s'", path);
-        }
-        mprRelease(target);
     }
 #endif
-    return target;
+    return 1;
 }
 
+/*
+    WARNING: this can yield
+ */
 PUBLIC bool espRenderView(HttpConn *conn, cchar *target, int flags)
 {
     HttpRx      *rx;
@@ -4902,7 +4908,8 @@ PUBLIC bool espRenderView(HttpConn *conn, cchar *target, int flags)
     route = rx->route;
     eroute = route->eroute;
 
-    if ((target = loadView(conn, target)) == 0) {
+    /* WARNING: may yield */
+    if (!loadView(conn, target)) {
         return 0;
     }
     if ((viewProc = mprLookupKey(eroute->top->views, target)) == 0) {
@@ -4917,7 +4924,7 @@ PUBLIC bool espRenderView(HttpConn *conn, cchar *target, int flags)
         }
         httpSetContentType(conn, "text/html");
         httpSetFilename(conn, mprJoinPath(route->documents, target), 0);
-        /* WARNING: may GC yield */
+        /* WARNING: may yield */
         (viewProc)(conn);
     }
     return 1;
@@ -5014,6 +5021,7 @@ static cchar *checkView(HttpConn *conn, cchar *target, cchar *filename, cchar *e
     If target is a directory with an index.esp, return the index.esp without a redirect.
     If target is a directory without a trailing "/" but with an index.esp, do an external redirect to "URI/".
     Otherwise relay to the fileHandler.
+    May yield.
  */
 PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
 {
@@ -5030,6 +5038,7 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
             if (kp->data == HTTP->espHandler && kp->key && kp->key[0]) {
                 if ((dest = checkView(conn, target, 0, kp->key)) != 0) {
                     httpTrace(conn->trace, "esp.handler", "context", "msg: 'Render view %s'", dest);
+                    /* May yield */
                     espRenderView(conn, dest, 0);
                     return;
                 }
@@ -5050,6 +5059,7 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
             return;
         }
         httpTrace(conn->trace, "esp.handler", "context", "msg: 'Render index %s'", dest);
+        /* May yield */
         espRenderView(conn, dest, 0);
         return;
     }
@@ -5166,12 +5176,12 @@ static cchar *getCacheName(HttpRoute *route, cchar *kind, cchar *target)
 
 
 #if !ME_STATIC
-static char *getModuleEntry(EspRoute *eroute, cchar *kind, cchar *source, cchar *cacheName)
+static char *getModuleEntry(EspRoute *eroute, cchar *kind, cchar *source, cchar *cache)
 {
     char    *cp, *entry;
 
     if (smatch(kind, "view")) {
-        entry = sfmt("esp_%s", cacheName);
+        entry = sfmt("esp_%s", cache);
 
     } else if (smatch(kind, "app")) {
         if (eroute->combine) {
@@ -5198,39 +5208,41 @@ static char *getModuleEntry(EspRoute *eroute, cchar *kind, cchar *source, cchar 
 
 static cchar *getModuleName(HttpRoute *route, cchar *kind, cchar *target)
 {
-    cchar   *cache, *cacheName;
+    cchar   *cacheDir, *cache;
 
-    cacheName = getCacheName(route, "view", target);
-    if ((cache = httpGetDir(route, "CACHE")) == 0) {
+    cache = getCacheName(route, "view", target);
+    if ((cacheDir = httpGetDir(route, "CACHE")) == 0) {
         /* May not be set for non esp apps */
-        cache = "cache";
+        cacheDir = "cache";
     }
-    return mprJoinPathExt(mprJoinPaths(route->home, cache, cacheName, NULL), ME_SHOBJ);
+    return mprJoinPathExt(mprJoinPaths(route->home, cacheDir, cache, NULL), ME_SHOBJ);
 }
 
 
 /*
-    WARNING: GC yield
+    Load an ESP module. WARNING: this routine may yield. Take precautions to preserve the source argument so callers
+    dont have to.
  */
-static int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kind, cchar *source, cchar **errMsg,
-    bool *loaded)
+static int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kind, cchar *source, cchar **errMsg, bool *loaded)
 {
     EspRoute    *eroute;
     MprModule   *mp;
-    cchar       *cache, *cacheName, *entry, *module;
+    cchar       *cacheDir, *cache, *entry, *module;
     int         isView, recompile;
 
     eroute = route->eroute;
     *errMsg = "";
+    assert(mprIsValid(source));
+    route->source = source;
 
     if (loaded) {
         *loaded = 0;
     }
-    cacheName = getCacheName(route, kind, source);
-    if ((cache = httpGetDir(route, "CACHE")) == 0) {
-        cache = "cache";
+    cache = getCacheName(route, kind, source);
+    if ((cacheDir = httpGetDir(route, "CACHE")) == 0) {
+        cacheDir = "cache";
     }
-    module = mprJoinPathExt(mprJoinPaths(route->home, cache, cacheName, NULL), ME_SHOBJ);
+    module = mprJoinPathExt(mprJoinPaths(route->home, cacheDir, cache, NULL), ME_SHOBJ);
 
     lock(esp);
     if (mprLookupModule(source) == 0 || eroute->update) {
@@ -5239,13 +5251,13 @@ static int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
             isView = smatch(kind, "view");
             if (recompile || (isView && layoutIsStale(eroute, source, module))) {
                 if (recompile) {
-                    mprHoldBlocks(source, module, cacheName, NULL);
-                    if (!espCompile(route, dispatcher, source, module, cacheName, isView, (char**) errMsg)) {
-                        mprReleaseBlocks(source, module, cacheName, NULL);
+                    /*
+                        WARNING: espCompile may yield. espCompile will retain the arguments (source, module, cache) for us.
+                     */
+                    if (!espCompile(route, dispatcher, source, module, cache, isView, (char**) errMsg)) {
                         unlock(esp);
                         return MPR_ERR_CANT_WRITE;
                     }
-                    mprReleaseBlocks(source, module, cacheName, NULL);
                 }
             }
         }
@@ -5256,7 +5268,7 @@ static int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
             unlock(esp);
             return MPR_ERR_CANT_FIND;
         }
-        entry = getModuleEntry(eroute, kind, source, cacheName);
+        entry = getModuleEntry(eroute, kind, source, cache);
         if ((mp = mprCreateModule(source, module, entry, route)) == 0) {
             *errMsg = "Memory allocation error loading module";
             unlock(esp);
@@ -5624,6 +5636,8 @@ static bool preload(HttpRoute *route)
                         mprLog("error esp", 0, "ESP source pattern does not match any files \"%s\"", si->value);
                     }
                     for (ITERATE_ITEMS(files, source, next)) {
+                        /* May yield */
+                        route->source = source;
                         if (espLoadModule(route, NULL, "app", source, &errMsg, NULL) < 0) {
                             //  TODO - why test combine?
                             if (eroute->combine || 1) {
@@ -5635,6 +5649,8 @@ static bool preload(HttpRoute *route)
                 }
             } else {
                 source = mprJoinPaths(route->home, httpGetDir(route, "SRC"), "app.c", NULL);
+                /* May yield */
+                route->source = source;
                 if (espLoadModule(route, NULL, "app", source, &errMsg, NULL) < 0) {
                     //  TODO - why test combine?
                     if (eroute->combine) {
@@ -5652,6 +5668,8 @@ static bool preload(HttpRoute *route)
                     kind = "controller";
                 }
                 source = mprJoinPaths(route->home, httpGetDir(route, "CONTROLLERS"), source, NULL);
+                /* May yield */
+                route->source = source;
                 if (espLoadModule(route, NULL, kind, source, &errMsg, NULL) < 0) {
                     mprLog("error esp", 0, "Cannot preload esp module %s. %s", source, errMsg);
                     return 0;
@@ -5894,6 +5912,7 @@ static void ifConfigModified(HttpRoute *route, cchar *path, bool *modified)
     }
 }
 
+
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
     This software is distributed under commercial and open source licenses.
@@ -5942,8 +5961,17 @@ typedef struct EspParse {
     MprBuf  *token;                         /**< Input token */
 } EspParse;
 
+
+typedef struct CompileContext {
+    cchar   *csource;
+    cchar   *source;
+    cchar   *module;
+    cchar   *cache;
+} CompileContext;
+
 /************************************ Forwards ********************************/
 
+static CompileContext* allocContext(cchar *source, cchar *csource, cchar *module, cchar *cache);
 static int getEspToken(EspParse *parse);
 static cchar *getDebug(EspRoute *eroute);
 static cchar *getEnvString(HttpRoute *route, cchar *key, cchar *defaultValue);
@@ -5957,6 +5985,7 @@ static cchar *getLibs(cchar *os);
 static cchar *getMappedArch(cchar *arch);
 static cchar *getObjExt(cchar *os);
 static cchar *getVxCPU(cchar *arch);
+static void manageContext(CompileContext *context, int flags);
 static bool matchToken(cchar **str, cchar *token);
 
 #if ME_WIN_LIKE
@@ -6146,7 +6175,6 @@ static int runCommand(HttpRoute *route, MprDispatcher *dispatcher, cchar *comman
     EspRoute    *eroute;
     cchar       **env, *commandLine;
     char        *err, *out;
-    int         rc;
 
     *errMsg = 0;
     eroute = route->eroute;
@@ -6172,18 +6200,14 @@ static int runCommand(HttpRoute *route, MprDispatcher *dispatcher, cchar *comman
     /*
         WARNING: GC will run here
      */
-    mprHold((void*) commandLine);
-    rc = mprRunCmd(cmd, commandLine, env, NULL, &out, &err, -1, 0);
-    mprRelease((void*) commandLine);
-
-    if (rc != 0) {
+    if (mprRunCmd(cmd, commandLine, env, NULL, &out, &err, -1, 0) != 0) {
         if (err == 0 || *err == '\0') {
             /* Windows puts errors to stdout Ugh! */
             err = out;
         }
-        mprLog("error esp", 0, "Cannot run command: %s, error %s", commandLine, err);
+        mprLog("error esp", 0, "Cannot run command: %s, error %s", command, err);
         if (route->flags & HTTP_ROUTE_SHOW_ERRORS) {
-            *errMsg = sfmt("Cannot run command: %s, error %s", commandLine, err);
+            *errMsg = sfmt("Cannot run command: %s, error %s", command, err);
         } else {
             *errMsg = "Cannot compile view";
         }
@@ -6223,16 +6247,17 @@ PUBLIC int espLoadCompilerRules(HttpRoute *route)
     source      ESP source file name
     module      Module file name
 
-    WARNING: this routine blocks and runs GC. All parameters must be retained.
+    WARNING: this routine yields and runs GC. All parameters must be retained by the caller.
  */
 PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *source, cchar *module, cchar *cacheName,
     int isView, char **errMsg)
 {
-    MprFile     *fp;
-    EspRoute    *eroute;
-    cchar       *csource, *layoutsDir;
-    char        *layout, *script, *page, *err;
-    ssize       len;
+    MprFile         *fp;
+    EspRoute        *eroute;
+    CompileContext  *context;
+    cchar           *csource, *layoutsDir;
+    char            *layout, *script, *page, *err;
+    ssize           len;
 
     eroute = route->eroute;
     assert(eroute->compile);
@@ -6298,15 +6323,20 @@ PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *sourc
         return 0;
     }
 
+    context = allocContext(source, csource, module, cacheName);
+    mprAddRoot(context);
+
     /*
         Run compiler: WARNING: GC yield here
      */
     if (runCommand(route, dispatcher, eroute->compileCmd, csource, module, errMsg) != 0) {
+        mprRemoveRoot(context);
         return 0;
     }
     if (eroute->linkCmd) {
         /* WARNING: GC yield here */
         if (runCommand(route, dispatcher, eroute->linkCmd, csource, module, errMsg) != 0) {
+            mprRemoveRoot(context);
             return 0;
         }
 #if !MACOSX
@@ -6322,6 +6352,7 @@ PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *sourc
             Windows leaves intermediate object in the current directory
          */
         cchar   *path;
+//  MOB - csource may be freed here
         path = mprReplacePathExt(mprGetPathBase(csource), "obj");
         if (mprPathExists(path, F_OK)) {
             mprDeletePath(path);
@@ -6331,6 +6362,7 @@ PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *sourc
     if (!eroute->keep && isView) {
         mprDeletePath(csource);
     }
+    mprRemoveRoot(context);
     return 1;
 }
 
@@ -7230,6 +7262,35 @@ static cchar *getCompilerPath(cchar *os, cchar *arch)
 #else
     return getCompilerName(os, arch);
 #endif
+}
+
+
+static CompileContext* allocContext(cchar *source, cchar *csource, cchar *module, cchar *cache)
+{
+    CompileContext *context;
+
+    if ((context = mprAllocObj(CompileContext, manageContext)) == 0) {
+        return 0;
+    }
+    /*
+        Use actual references to ensure we retain the memory
+     */
+    context->csource = csource;
+    context->source = source;
+    context->module = module;
+    context->cache = cache;
+    return context;
+}
+
+
+static void manageContext(CompileContext *context, int flags)
+{
+    if (flags & MPR_MANAGE_MARK) {
+        mprMark(context->csource);
+        mprMark(context->source);
+        mprMark(context->module);
+        mprMark(context->cache);
+    }
 }
 
 /*
@@ -8847,7 +8908,7 @@ static char *DataTypeToSqlType[] = {
     "text":         "text",
     "time":         "time",
     "timestamp":    "datetime",
-    0, 0, 
+    0, 0,
 };
 #endif
 
@@ -8906,9 +8967,9 @@ static bool validName(cchar *str);
 
 static EdiProvider SdbProvider = {
     "sdb",
-    sdbAddColumn, sdbAddIndex, sdbAddTable, sdbChangeColumn, sdbClose, sdbCreateRec, sdbDelete, 
-    sdbGetColumns, sdbGetColumnSchema, sdbGetTables, sdbGetTableDimensions, NULL, sdbLookupField, sdbOpen, sdbQuery, 
-    sdbReadField, sdbReadRec, sdbReadWhere, sdbRemoveColumn, sdbRemoveIndex, sdbRemoveRec, sdbRemoveTable, 
+    sdbAddColumn, sdbAddIndex, sdbAddTable, sdbChangeColumn, sdbClose, sdbCreateRec, sdbDelete,
+    sdbGetColumns, sdbGetColumnSchema, sdbGetTables, sdbGetTableDimensions, NULL, sdbLookupField, sdbOpen, sdbQuery,
+    sdbReadField, sdbReadRec, sdbReadWhere, sdbRemoveColumn, sdbRemoveIndex, sdbRemoveRec, sdbRemoveTable,
     sdbRenameTable, sdbRenameColumn, sdbSave, sdbUpdateField, sdbUpdateRec,
 };
 
@@ -9137,7 +9198,7 @@ static MprList *sdbGetColumns(Edi *edi, cchar *tableName)
 
     assert(edi);
     assert(tableName && *tableName);
-    
+
     if ((schema = getSchema(edi, tableName)) == 0) {
         return 0;
     }
@@ -9225,7 +9286,7 @@ static int sdbGetTableDimensions(Edi *edi, cchar *tableName, int *numRows, int *
         return MPR_ERR_BAD_ARGS;
     }
     if (numRows) {
-        if ((grid = query(edi, sfmt("SELECT COUNT(*) FROM %s;", tableName), NULL)) == 0) { 
+        if ((grid = query(edi, sfmt("SELECT COUNT(*) FROM %s;", tableName), NULL)) == 0) {
             return MPR_ERR_BAD_STATE;
         }
         *numRows = grid->nrecords;
@@ -9248,7 +9309,7 @@ static int sdbLookupField(Edi *edi, cchar *tableName, cchar *fieldName)
     assert(edi);
     assert(tableName && *tableName);
     assert(fieldName && *fieldName);
-    
+
     if ((schema = getSchema(edi, tableName)) == 0) {
         return 0;
     }
@@ -9314,7 +9375,7 @@ static EdiGrid *setTableName(EdiGrid *grid, cchar *tableName)
 static EdiGrid *sdbReadWhere(Edi *edi, cchar *tableName, cchar *columnName, cchar *operation, cchar *value)
 {
     EdiGrid     *grid;
-    
+
     assert(tableName && *tableName);
 
     if (!validName(tableName)) {
@@ -9594,7 +9655,7 @@ static EdiGrid *queryv(Edi *edi, cchar *cmd, int argc, cchar **argv, va_list var
                     sdbError(edi, "SDB: cannot bind to arg: %d, %s, error: %s", index + 1, argv[index], sqlite3_errmsg(db));
                     return 0;
                 }
-            } 
+            }
         }
         ncol = sqlite3_column_count(stmt);
         for (nrows = 0; ; nrows++) {
@@ -9689,28 +9750,19 @@ static EdiField makeRecField(cchar *value, cchar *name, int type)
 
 static void *allocBlock(int size)
 {
-    void    *ptr;
-
-    if ((ptr = mprAlloc(size)) != 0) {
-        mprHold(ptr);
-    }
-    return ptr;
+    return palloc(size);
 }
 
 
 static void freeBlock(void *ptr)
 {
-    mprRelease(ptr);
+    pfree(ptr);
 }
 
 
 static void *reallocBlock(void *ptr, int size)
 {
-    mprRelease(ptr);
-    if ((ptr =  mprRealloc(ptr, size)) != 0) {
-        mprHold(ptr);
-    }
-    return ptr;
+    return prealloc(ptr, size);
 }
 
 
@@ -9738,7 +9790,7 @@ static void termAllocator(void *data)
 
 
 struct sqlite3_mem_methods mem = {
-    allocBlock, freeBlock, reallocBlock, blockSize, roundBlockSize, initAllocator, termAllocator, NULL 
+    allocBlock, freeBlock, reallocBlock, blockSize, roundBlockSize, initAllocator, termAllocator, NULL
 };
 
 
@@ -9763,7 +9815,7 @@ static int mapToEdiType(cchar *type)
 }
 
 
-static int mapSqliteTypeToEdiType(int type) 
+static int mapSqliteTypeToEdiType(int type)
 {
     if (type == SQLITE_INTEGER) {
         return EDI_TYPE_INT;

@@ -16,6 +16,7 @@ static void eventCallback(cchar *message)
         From here, you can safely use any Appweb/MPR API
     */
     mprLog("info", 0, "Message \"%s\"", message);
+    free(message);
 }
 
 
@@ -33,12 +34,13 @@ static void threadMain(void *data, MprThread *tp)
         This thread now behaves just like a foreign thread would. Other Appweb threads are running and we must be careful
         when interacting with Appweb APIs, memory and objects.
 
-        We can invoke an event inside Appweb on an Appweb thread by calling mprCreateEvent.
+        We can send a message from a foreign thread to an Appweb thread by calling mprCreateEvent with the MPR_EVENT_FOREIGN flag.
+        MPR_EVENT_STATIC_DATA means the message data is not allocated by the Appweb allocator via mprAlloc.
+        The message data must continue to exist until the event has run.
      */
     message = strdup("Hello World");
-    mprCreateEvent(NULL, "outside", 0, eventCallback, message, MPR_EVENT_WAIT | MPR_EVENT_STATIC_DATA);
+    mprCreateEvent(NULL, "outside", 0, eventCallback, message, MPR_EVENT_FOREIGN | MPR_EVENT_STATIC_DATA);
     mprLog("info", 0, "After event has completed");
-    free(message);
 }
 
 /*

@@ -30,3 +30,4 @@ test/test.dat
 /projects/*mine*
 /projects/.vs
 /projects/*yours*
+/test/.test-prepared

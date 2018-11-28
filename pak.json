@@ -35,11 +35,11 @@
     "dependencies": {
         "http": "~8",
         "makerom": "~0.3",
-        "mpr": "~7",
+        "mpr": "~8",
         "osdep": "~0.9",
         "pcre": "~1.0",
         "ssl": "~1.0",
-        "watchdog": "~0.2"
+        "watchdog": "~0.3"
     },
     "optionalDependencies": {
         "appweb-php": "~0.1",
