@@ -461,7 +461,7 @@ static int initQueues()
     for (freeq = heap->freeq, qindex = 0; freeq < &heap->freeq[MPR_ALLOC_NUM_QUEUES]; freeq++, qindex++) {
         /* Size includes MprMem header */
         freeq->minSize = (MprMemSize) qtosize(qindex);
-#if (ME_MPR_ALLOC_STATS && ME_MPR_ALLOC_DEBUG) && KEEP
+#if (ME_MPR_ALLOC_STATS && ME_MPR_ALLOC_DEBUG) && MPR_ALLOC_TRACE
         printf("Queue: %d, usize %u  size %u\n",
             (int) (freeq - heap->freeq), (int) freeq->minSize - (int) sizeof(MprMem), (int) freeq->minSize);
 #endif
@@ -653,7 +653,7 @@ static MprMem *growHeap(size_t required)
      */
     if (heap->stats.bytesAllocated > heap->stats.bytesAllocatedPeak) {
         heap->stats.bytesAllocatedPeak = heap->stats.bytesAllocated;
-#if (ME_MPR_ALLOC_STATS && ME_MPR_ALLOC_DEBUG) && KEEP
+#if (ME_MPR_ALLOC_STATS && ME_MPR_ALLOC_DEBUG) && ME_MPR_ALLOC_TRACE
         printf("MPR: Heap new max %lld request %lu\n", heap->stats.bytesAllocatedPeak, required);
 #endif
     }
@@ -1483,7 +1483,7 @@ static void sweep()
     }
     heap->stats.heapRegions = rcount;
     heap->stats.sweeps++;
-#if (ME_MPR_ALLOC_STATS && ME_MPR_ALLOC_DEBUG) && KEEP
+#if ME_MPR_ALLOC_STATS && ME_MPR_ALLOC_DEBUG && MPR_ALLOC_TRACE
     printf("GC: Marked %lld / %lld, Swept %lld / %lld, freed %lld, bytesFree %lld (prior %lld)\n"
                  "    WeightedCount %d / %d, allocated blocks %lld allocated bytes %lld\n"
                  "    Unpins %lld, Collections %lld\n",

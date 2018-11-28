@@ -740,6 +740,9 @@ PUBLIC void mprAtomicAdd64(volatile int64 *target, int64 value);
     #ifndef ME_MPR_ALLOC_STACK
         #define ME_MPR_ALLOC_STACK     1                   /**< Monitor stack usage */
     #endif
+    #ifndef ME_MPR_ALLOC_TRACE
+        #define ME_MPR_ALLOC_TRACE     0                   /**< Trace to stdout */
+    #endif
 #else
     #ifndef ME_MPR_ALLOC_DEBUG
         #define ME_MPR_ALLOC_DEBUG     0
@@ -749,6 +752,9 @@ PUBLIC void mprAtomicAdd64(volatile int64 *target, int64 value);
     #endif
     #ifndef ME_MPR_ALLOC_STACK
         #define ME_MPR_ALLOC_STACK     0
+    #endif
+    #ifndef ME_MPR_ALLOC_TRACE
+        #define ME_MPR_ALLOC_TRACE     0                   /**< Trace to stdout */
     #endif
 #endif
 

@@ -10051,7 +10051,6 @@ static void incomingHttp2(HttpQueue *q, HttpPacket *packet)
             if (conn && conn->disconnect && !conn->destroyed) {
                 sendReset(q, conn, HTTP2_INTERNAL_ERROR, "Stream request error %s", conn->errorMsg);
             }
-
         } else {
             break;
         }
@@ -10146,6 +10145,7 @@ static void outgoingHttp2Service(HttpQueue *q)
 
             if (packet->flags & HTTP_PACKET_DATA) {
 #if UNUSED
+                /* Already done above */
                 len = resizePacket(net->outputq, conn->outputq->max, packet, &done);
 #endif
                 conn->outputq->max -= len;
@@ -10430,6 +10430,7 @@ static void parseSettingsFrame(HttpQueue *q, HttpPacket *packet)
         sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Invalid setting packet length");
         return;
     }
+    mprFlushBuf(packet->content);
     sendFrame(q, defineFrame(q, packet, HTTP2_SETTINGS_FRAME, HTTP2_ACK_FLAG, 0));
 }
 
@@ -10615,6 +10616,7 @@ static void parsePingFrame(HttpQueue *q, HttpPacket *packet)
         return;
     }
     if (!(frame->flags & HTTP2_ACK_FLAG)) {
+        mprFlushBuf(packet->content);
         sendFrame(q, defineFrame(q, packet, HTTP2_PING_FRAME, HTTP2_ACK_FLAG, 0));
     }
 }
@@ -10709,15 +10711,17 @@ static void parseWindowFrame(HttpQueue *q, HttpPacket *packet)
  */
 static void parseHeaderFrames(HttpQueue *q, HttpConn *conn)
 {
+    HttpNet     *net;
     HttpPacket  *packet;
     HttpRx      *rx;
 
+    net = conn->net;
     rx = conn->rx;
     packet = rx->headerPacket;
-    while (httpGetPacketLength(packet) > 0 && !conn->error && !conn->net->error) {
+    while (httpGetPacketLength(packet) > 0 && !net->error && !net->goaway && !conn->error) {
         parseHeader(q, conn, packet);
     }
-    if (!q->net->goaway) {
+    if (!net->goaway) {
         if (!conn->error) {
             conn->state = HTTP_STATE_PARSED;
         }
@@ -10930,14 +10934,14 @@ static bool validateHeader(cchar *key, cchar *value)
             continue;
         }
         if (c == '\0' || c == '\n' || c == '\r' || c == ':' || ('A' <= c && c <= 'Z')) {
-            mprLog("info http", 5, "Invalid header name %s", key);
+            // mprLog("info http", 5, "Invalid header name %s", key);
             return 0;
         }
     }
     for (cp = (uchar*) value; *cp; cp++) {
         c = *cp;
         if (c == '\0' || c == '\n' || c == '\r') {
-            mprLog("info http", 5, "Invalid header value %s", value);
+            // mprLog("info http", 5, "Invalid header value %s", value);
             return 0;
         }
     }
@@ -11060,6 +11064,7 @@ static void sendGoAway(HttpQueue *q, int status, cchar *fmt, ...)
     }
     va_start(ap, fmt);
     msg = sfmtv(fmt, ap);
+    //  MOB should be trace
     mprLog("info http2", 3, "Send network goAway, lastStream=%d, status=%d, msg='%s'", net->lastStream, status, msg);
     va_end(ap);
 
@@ -11128,14 +11133,15 @@ static void sendReset(HttpQueue *q, HttpConn *conn, int status, cchar *fmt, ...)
     }
     va_start(ap, fmt);
     msg = sfmtv(fmt, ap);
+    httpTrace(conn->trace, "http2.tx", "context", "Send stream reset, stream=%d, status=%d, msg='%s'", conn->stream, status, msg);
     va_end(ap);
 
     mprPutUint32ToBuf(packet->content, status);
-    mprLog("info http2", 3, "Send stream reset, stream=%d, status=%d, msg='%s'", conn->stream, status, msg);
     sendFrame(q, defineFrame(q, packet, HTTP2_RESET_FRAME, 0, conn->stream));
 
+    httpError(conn, HTTP_CODE_COMMS_ERROR, "%s", msg);
     conn->streamReset = 1;
-    resetConn(conn, msg, 0);
+    httpProcess(conn->inputq);
 }
 
 
@@ -16288,9 +16294,10 @@ PUBLIC void httpProcess(HttpQueue *q)
 
         default:
             if (conn->error) {
-                httpSetState(conn, HTTP_STATE_COMPLETE);
+                httpSetState(conn, HTTP_STATE_FINALIZED);
+            } else {
+                more = 0;
             }
-            more = 0;
             break;
         }
         httpServiceQueues(conn->net, HTTP_BLOCK);
