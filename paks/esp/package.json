@@ -2,16 +2,16 @@
     "name": "esp",
     "description": "Embedthis ESP, the amazingly fast C-Language web framework",
     "title": "Embedthis ESP",
-    "version": "8.0.0",
+    "version": "6.2.3",
     "keywords": [
         "esp",
         "package"
     ],
-    "homepage": "https://www.embedthis.com/esp",
+    "homepage": "https://embedthis.com/esp",
     "author": {
         "name": "Embedthis Software",
         "email": "dev@embedthis.com",
-        "url": "https://www.embedthis.com"
+        "url": "https://embedthis.com"
     },
     "repository": {
         "type": "git",
@@ -27,12 +27,12 @@
         },
         {
             "type": "Commercial",
-            "url": "https://www.embedthis.com/licensing/"
+            "url": "https://embedthis.com/licensing/"
         }
     ],
     "dependencies": {
-        "http": "~8",
-        "mpr": "~8",
+        "http": "~6.2",
+        "mpr": "~6.2",
         "mpr-version": "~0.1",
         "osdep": "~0.9",
         "pcre": "~1.0"
@@ -40,9 +40,10 @@
     "optionalDependencies": {
         "certs": "~0.1",
         "mpr-matrixssl": "~0.3",
-        "mpr-mbedtls": "~2",
-        "mpr-openssl": "~1",
-        "sqlite": "~3",
+        "mpr-mbedtls": "~0.5",
+        "mpr-nanossl": "~0.3",
+        "mpr-openssl": "~0.5",
+        "sqlite": "~1.0",
         "ssl": "~0.9",
         "watchdog": "~0.2"
     },
@@ -54,6 +55,8 @@
         "dist/",
         "doc/api/"
     ],
-    "import": true,
-    "origin": "embedthis/esp"
+    "pak": {
+        "import": true,
+        "origin": "embedthis/esp"
+    }
 }
