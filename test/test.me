@@ -7,13 +7,15 @@ Me.load({
         test: {
             action: `run('testme --depth ' + me.settings.depth)`,
             platforms: [ 'local' ],
-            depends: [ 'test-prep' ],
+            depends: [ 'prep-test' ],
             generate: false,
         },
 
-        'test-prep': {
+        'prep-test': {
             platforms: [ 'local' ],
             depends: [ 'clean-test', 'build', 'cgiProgram', 'prep-cgi', 'test-testScript', 'test-cgiProgram' ],
+            generate: false,
+            action: `Path('.test-prepared').write('')`,
             generate: false,
         },
 
@@ -139,9 +141,10 @@ Me.load({
         },
 
         'clean-test': {
-            type: 'clean',                                                                                 
-            action: `                                                                                      
+            type: 'clean',
+            action: `
                 Cmd.run('testme --clean')
+                rm('.test-prepared')
                 rm('cache/*')
                 rm('app/cache/*')
                 rm('esp/*/cache/*')
