@@ -28200,7 +28200,6 @@ static MprWaitHandler *initWaitHandler(MprWaitHandler *wp, int fd, int mask, Mpr
         int             index;
 
         for (ITERATE_ITEMS(ws->handlers, op, index)) {
-            assert(op->fd >= 0);
             if (op->fd == fd) {
                 mprLog("error mpr event", 0, "Duplicate fd in wait handlers");
             } else if (op->fd < 0) {

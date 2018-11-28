@@ -1626,7 +1626,7 @@ PUBLIC bool mprEnableGC(bool on);
 
 /**
     Hold a memory block
-    @description This call will protect a memory block from freeing by the garbage collector. Call mprRelease to
+    @description This call will protect a memory block from freeing by the garbage collector. Call #mprRelease to
         allow the block to be collected.
     @param ptr Any memory block
     @ingroup MprMem
@@ -1637,7 +1637,7 @@ PUBLIC void mprHold(cvoid *ptr);
 /**
     Hold memory blocks
     @description This call will protect a set of memory blocks from freeing by the garbage collector.
-        Call mprReleaseBlocks to allow the blocks to be collected.
+        Call #mprReleaseBlocks to allow the blocks to be collected.
     @param ptr Any memory block
     @param ... Other memory blocks. Terminate the list with a NULL.
     @ingroup MprMem
@@ -1648,6 +1648,8 @@ PUBLIC void mprHoldBlocks(cvoid *ptr, ...);
 /**
     Release a memory block
     @description This call is used to allow a memory block to be freed by the garbage collector after calling mprHold.
+    You must not use or access the memory block after calling mprRelease. The memory may be freed even before the call returns.
+    Even if the memory block is marked elsewhere via mprMark, it is unsafe to access the memory once this call is made.
     @param ptr Any memory block
     @ingroup MprMem
     @stability Stable.

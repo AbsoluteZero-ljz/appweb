@@ -35,8 +35,8 @@
     "dependencies": {
         "http": "~7",
         "makerom": "~0.3",
-        "mpr": "~7",
-        "osdep": "~0.9",
+        "mpr": "~8",
+        "osdep": "~1",
         "pcre": "~1.0",
         "ssl": "~0.9",
         "watchdog": "~0.2"
