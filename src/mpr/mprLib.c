@@ -27410,11 +27410,7 @@ static int getNumOrSym(char **token, int sep, int kind, int *isAlpah)
     char    *cp;
     int     num;
 
-    assert(token && *token);
-    if (!token) {
-        return 0;
-    }
-    if (*token == 0) {
+    if (!token || *token == '\0') {
         return 0;
     }
     if (isalpha((uchar) **token)) {
@@ -28202,8 +28198,6 @@ static MprWaitHandler *initWaitHandler(MprWaitHandler *wp, int fd, int mask, Mpr
         for (ITERATE_ITEMS(ws->handlers, op, index)) {
             if (op->fd == fd) {
                 mprLog("error mpr event", 0, "Duplicate fd in wait handlers");
-            } else if (op->fd < 0) {
-                mprLog("error mpr event", 0, "Invalid fd in wait handlers, probably forgot to call mprRemoveWaitHandler");
             }
         }
     }

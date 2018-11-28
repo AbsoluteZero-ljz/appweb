@@ -491,6 +491,7 @@ PUBLIC void httpInitLimits(HttpLimits *limits, bool serverSide)
         HTTP/2 parameters. Default frameSize must be 16K and windowSize 65535 by spec. Do not change.
      */
     limits->frameSize = HTTP2_DEFAULT_FRAME_SIZE;
+    limits->hpackMax = ME_MAX_HPACK_SIZE;
     limits->streamsMax = ME_MAX_STREAMS;
     limits->windowSize = HTTP2_DEFAULT_WINDOW;
 #endif
@@ -9272,14 +9273,27 @@ PUBLIC int httpAddPackedHeader(HttpHeaderTable *headers, cchar *key, cchar *valu
     ssize           len;
     int             index;
 
+    len = slen(key) + slen(value) + HTTP2_HEADER_OVERHEAD;
+    if (len > headers->max) {
+        return MPR_ERR_WONT_FIT;
+    }
     /*
         Make room for the new entry if required. Evict the oldest entries first.
      */
-    len = slen(key) + slen(value) + HTTP2_HEADER_OVERHEAD;
     while ((headers->size + len) >= headers->max) {
+        if (headers->list->length == 0) {
+            break;
+        }
         kp = mprPopItem(headers->list);
         headers->size -= (slen(kp->key) + slen(kp->value) + HTTP2_HEADER_OVERHEAD);
+        if (headers->size < 0) {
+            /* Should never happen */
+            assert(0);
+            return MPR_ERR_BAD_STATE;
+        }
     }
+    assert (headers->size >= 0 && (headers->size + len) < headers->max);
+
     /*
         New entries are inserted at the start of the table and all existing entries shuffle down
      */
@@ -9305,7 +9319,6 @@ PUBLIC MprKeyValue *httpGetPackedHeader(HttpHeaderTable *headers, int index)
     }
     index = index - HTTP2_STATIC_TABLE_ENTRIES;
     if (index >= mprGetListLength(headers->list)) {
-        assert(index < mprGetListLength(headers->list));
         return 0;
     }
     return mprGetItem(headers->list, index);
@@ -9318,7 +9331,7 @@ PUBLIC MprKeyValue *httpGetPackedHeader(HttpHeaderTable *headers, int index)
 PUBLIC int httpSetPackedHeadersMax(HttpHeaderTable *headers, int max)
 {
     MprKeyValue     *kp;
-
+    
     if (max < 0) {
         return MPR_ERR_BAD_ARGS;
     }
@@ -9328,11 +9341,20 @@ PUBLIC int httpSetPackedHeadersMax(HttpHeaderTable *headers, int max)
     }
     headers->max = max;
     while (headers->size >= max) {
+        if (headers->list->length == 0) {
+            break;
+        }
         kp = mprPopItem(headers->list);
         headers->size -= (slen(kp->key) + slen(kp->value) + HTTP2_HEADER_OVERHEAD);
+        if (headers->size < 0) {
+            /* Should never happen */
+            assert(0);
+            return MPR_ERR_BAD_STATE;
+        }
     }
     return 0;
 }
+
 #endif /* ME_HTTP_HTTP2 */
 
 /*
@@ -9718,6 +9740,10 @@ static HttpPacket *parseFields(HttpQueue *q, HttpPacket *packet)
     if (smatch(httpGetHeader(conn, "transfer-encoding"), "chunked")) {
         httpInitChunking(conn);
     } else {
+        if (mprGetBufLength(packet->content) < 2) {
+            httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad header format");
+            return 0;
+        }
         mprAdjustBufStart(packet->content, 2);
     }
     httpSetState(conn, HTTP_STATE_PARSED);
@@ -10014,6 +10040,7 @@ static void incomingHttp2(HttpQueue *q, HttpPacket *packet)
      */
     for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
         if ((frame = parseFrame(q, packet)) != 0) {
+            conn = frame->conn;
             if (net->goaway && conn && (net->lastStream && conn->stream >= net->lastStream)) {
                 /* Network is being closed. Continue to process existing streams but accept no new streams */
                 continue;
@@ -10021,7 +10048,6 @@ static void incomingHttp2(HttpQueue *q, HttpPacket *packet)
             net->frame = frame;
             frameHandlers[frame->type](q, packet);
             net->frame = 0;
-            conn = frame->conn;
             if (conn && conn->disconnect && !conn->destroyed) {
                 sendReset(q, conn, HTTP2_INTERNAL_ERROR, "Stream request error %s", conn->errorMsg);
             }
@@ -10355,6 +10381,7 @@ static void parseSettingsFrame(HttpQueue *q, HttpPacket *packet)
 
         switch (field) {
         case HTTP2_HEADER_TABLE_SIZE_SETTING:
+            value = min((int) value, net->limits->hpackMax);
             httpSetPackedHeadersMax(net->txHeaders, value);
             break;
 
@@ -10754,7 +10781,10 @@ static void parseHeader(HttpQueue *q, HttpConn *conn, HttpPacket *packet)
             return;
         }
         addHeader(conn, name, value);
-        httpAddPackedHeader(net->rxHeaders, name, value);
+        if (httpAddPackedHeader(net->rxHeaders, name, value) < 0) {
+            sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Cannot fit header in hpack table");
+            return;
+        }
 
     } else if ((ch >> 5) == 1) {
         /* Dynamic table max size update */
