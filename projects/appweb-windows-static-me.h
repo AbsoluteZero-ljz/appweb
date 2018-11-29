@@ -1,5 +1,5 @@
 /*
-    me.h -- MakeMe Configure Header for windows-x86-static
+    me.h -- MakeMe Configure Header for windows-x64-static
 
     This header is created by Me during configuration. To change settings, re-run
     configure or define variables in your Makefile to override these default values.
@@ -132,6 +132,9 @@
 #ifndef ME_NAME
     #define ME_NAME "appweb"
 #endif
+#ifndef ME_OPENSSL_VERSION
+    #define ME_OPENSSL_VERSION "1.0"
+#endif
 #ifndef ME_PLATFORMS
     #define ME_PLATFORMS "local"
 #endif
@@ -241,7 +244,7 @@
 
 /* Profile */
 #ifndef ME_CONFIG_CMD
-    #define ME_CONFIG_CMD "me -d -q -platform windows-x86-static -static -configure . -without ssl -gen vs"
+    #define ME_CONFIG_CMD "me -d -q -platform windows-x64-static -static -configure . -without ssl -gen vs"
 #endif
 #ifndef ME_APPWEB_PRODUCT
     #define ME_APPWEB_PRODUCT 1

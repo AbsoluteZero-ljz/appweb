@@ -94,8 +94,8 @@ ME_COM_VXWORKS        = 0
 ME_COM_WATCHDOG       = 1
 !ENDIF
 
-!IF "$(ME_COM_OPENSSL)" == ""
-ME_COM_OPENSSL_PATH   = ""
+!IF "$(ME_COM_OPENSSL_PATH)" == ""
+ME_COM_OPENSSL_PATH   = "/path/to/openssl/inc32"
 !ENDIF
 
 !IF "$(ME_COM_LIB)" == "1"
@@ -129,7 +129,7 @@ RC                    = rc
 CFLAGS                = -nologo -GR- -W3 -Zi -Od -MDd
 DFLAGS                = -DME_DEBUG=1 -DME_COM_CGI=$(ME_COM_CGI) -DME_COM_COMPILER=$(ME_COM_COMPILER) -DME_COM_DIR=$(ME_COM_DIR) -DME_COM_EJS=$(ME_COM_EJS) -DME_COM_ESP=$(ME_COM_ESP) -DME_COM_HTTP=$(ME_COM_HTTP) -DME_COM_LIB=$(ME_COM_LIB) -DME_COM_LINK=$(ME_COM_LINK) -DME_COM_MATRIXSSL=$(ME_COM_MATRIXSSL) -DME_COM_MBEDTLS=$(ME_COM_MBEDTLS) -DME_COM_MDB=$(ME_COM_MDB) -DME_COM_MPR=$(ME_COM_MPR) -DME_COM_NANOSSL=$(ME_COM_NANOSSL) -DME_COM_OPENSSL=$(ME_COM_OPENSSL) -DME_COM_OSDEP=$(ME_COM_OSDEP) -DME_COM_PCRE=$(ME_COM_PCRE) -DME_COM_PHP=$(ME_COM_PHP) -DME_COM_RC=$(ME_COM_RC) -DME_COM_SSL=$(ME_COM_SSL) -DME_COM_VXWORKS=$(ME_COM_VXWORKS) -DME_COM_WATCHDOG=$(ME_COM_WATCHDOG) 
 IFLAGS                = -Ibuild\$(CONFIG)\inc
-LDFLAGS               = -nologo -incremental:no -debug -machine:$(ARCH)
+LDFLAGS               = -nologo -incremental:no -debug -machine:x64
 LIBPATHS              = "-libpath:$(BUILD)\bin"
 LIBS                  = ws2_32.lib advapi32.lib user32.lib kernel32.lib oldnames.lib shell32.lib
 
@@ -1236,6 +1236,14 @@ installBinary: $(DEPS_66)
 	copy /Y /B build\$(CONFIG)\bin\appwebMonitor.exe+modified "$(ME_VAPP_PREFIX)\bin\appwebMonitor.exe" $(LOG)
 	copy /Y /B build\$(CONFIG)\bin\appwebMonitor.ico+modified "$(ME_VAPP_PREFIX)\bin\appwebMonitor.ico" $(LOG)
 !IF "$(ME_COM_ESP)" == "1"
+	if not exist "$(ME_VAPP_PREFIX)\bin" md "$(ME_VAPP_PREFIX)\bin"
+	copy /Y /B build\$(CONFIG)\bin\appweb-esp.exe+modified "$(ME_VAPP_PREFIX)\bin\appesp.exe" $(LOG)
+!ENDIF
+!IF "$(ME_COM_ESP)" == "1"
+	if not exist "$(ME_VAPP_PREFIX)\bin" md "$(ME_VAPP_PREFIX)\bin"
+	copy /Y /B build\$(CONFIG)\bin\appweb-esp.exe+modified "$(ME_VAPP_PREFIX)\bin\appweb-esp.exe" $(LOG)
+!ENDIF
+!IF "$(ME_COM_ESP)" == "1"
 !ENDIF
 !IF "$(ME_COM_ESP)" == "1"
 	if not exist "$(ME_VAPP_PREFIX)\bin" md "$(ME_VAPP_PREFIX)\bin"
@@ -1285,7 +1293,7 @@ DEPS_69 = $(DEPS_69) compile
 
 run: $(DEPS_69)
 	cd src\server
-	appweb --log stdout:2
+	../../$(BUILD)/bin/appweb --log stdout:2
 	cd ..\..
 
 #

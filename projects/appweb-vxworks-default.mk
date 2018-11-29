@@ -36,7 +36,7 @@ ME_COM_SSL            ?= 0
 ME_COM_VXWORKS        ?= 0
 ME_COM_WATCHDOG       ?= 1
 
-ME_COM_OPENSSL_PATH   ?= "/usr/lib"
+ME_COM_OPENSSL_PATH   ?= "/path/to/openssl"
 
 ifeq ($(ME_COM_LIB),1)
     ME_COM_COMPILER := 1
@@ -842,7 +842,7 @@ DEPS_61 += compile
 run: $(DEPS_61)
 	( \
 	cd src/server; \
-	appweb --log stdout:2 ; \
+	../../$(BUILD)/bin/appweb --log stdout:2 ; \
 	)
 
 #
