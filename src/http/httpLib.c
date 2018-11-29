@@ -626,7 +626,6 @@ static void httpTimer(Http *http, MprEvent *event)
     int         next, active, abort, nextConn;
 
     updateCurrentDate();
-
     lock(http->networks);
 
     if (!mprGetDebugMode()) {
@@ -10529,13 +10528,13 @@ static HttpConn *getStream(HttpQueue *q, HttpPacket *packet)
             Servers create a new connection stream. Note: HttpConn is used for HTTP/2 streams (legacy).
          */
         if (mprGetListLength(net->connections) >= net->limits->requestsPerClientMax) {
-            sendReset(q, conn, HTTP2_REFUSED_STREAM, "Too many streams: %s %d/%d", net->ip,
+            sendReset(q, conn, HTTP2_REFUSED_STREAM, "Too many streams for IP: %s %d/%d", net->ip,
                 (int) mprGetListLength(net->connections), net->limits->requestsPerClientMax);
             return 0;
         }
         ///TODO httpMonitorEvent(conn, HTTP_COUNTER_REQUESTS, 1);
         if (mprGetListLength(net->connections) >= net->limits->streamsMax) {
-            sendReset(q, conn, HTTP2_REFUSED_STREAM, "Too many streams: %s %d/%d", net->ip,
+            sendReset(q, conn, HTTP2_REFUSED_STREAM, "Too many streams for connection: %s %d/%d", net->ip,
                 (int) mprGetListLength(net->connections), net->limits->streamsMax);
             return 0;
         }
@@ -16865,9 +16864,9 @@ static void processFinalized(HttpQueue *q)
     rx = conn->rx;
     tx = conn->tx;
 
-    assert(tx->finalized);
-    assert(tx->finalizedOutput);
-    assert(tx->finalizedInput);
+    tx->finalized = 1;
+    tx->finalizedOutput = 1;
+    tx->finalizedInput = 1;
 
 #if ME_TRACE_MEM
     mprDebug(1, "Request complete, status %d, error %d, connError %d, %s%s, memsize %.2f MB",
