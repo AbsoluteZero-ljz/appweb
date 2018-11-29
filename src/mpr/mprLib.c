@@ -1521,8 +1521,8 @@ PUBLIC void pfree(void *ptr)
 
 PUBLIC void *prealloc(void *ptr, size_t size)
 {
-    void    *mem;
-    ssize   oldSize;
+    void        *mem;
+    ssize_t     oldSize;
 
     oldSize = psize(ptr);
     if (size <= oldSize) {
