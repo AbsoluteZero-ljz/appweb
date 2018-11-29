@@ -3,7 +3,7 @@
 #
 
 NAME                  := appweb
-VERSION               := 7.0.4
+VERSION               := 7.1.0
 PROFILE               ?= static
 ARCH                  ?= $(shell echo $(WIND_HOST_TYPE) | sed 's/-.*$(ME_ROOT_PREFIX)/')
 CPU                   ?= $(subst X86,PENTIUM,$(shell echo $(ARCH) | tr a-z A-Z))
@@ -36,7 +36,7 @@ ME_COM_SSL            ?= 0
 ME_COM_VXWORKS        ?= 0
 ME_COM_WATCHDOG       ?= 1
 
-ME_COM_OPENSSL_PATH   ?= "/usr/lib"
+ME_COM_OPENSSL_PATH   ?= "/path/to/openssl"
 
 ifeq ($(ME_COM_LIB),1)
     ME_COM_COMPILER := 1
