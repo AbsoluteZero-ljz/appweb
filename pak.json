@@ -39,7 +39,7 @@
         "osdep": "~1",
         "pcre": "~1.0",
         "ssl": "~0.9",
-        "watchdog": "~0.2"
+        "watchdog": "~0.3"
     },
     "optionalDependencies": {
         "appweb-ejscript": "~0.2",
