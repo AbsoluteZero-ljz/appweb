@@ -272,7 +272,7 @@ PUBLIC Mpr *mprCreateMemService(MprManager manager, int flags)
     }
     heap->gcCond = mprCreateCond();
 
-    //  MOB - could just remove STATIC_VALUES
+    //  TODO - could just remove STATIC_VALUES
     heap->roots = mprCreateList(-1, MPR_LIST_STATIC_VALUES);
     mprAddRoot(MPR);
     return MPR;
@@ -1272,7 +1272,7 @@ static void markRoots()
     mprMark(heap->roots);
     mprMark(heap->gcCond);
 
-    //  MOB - could just remove STATIC_VALUES and remove this
+    //  TODO - could just remove STATIC_VALUES and remove this
     for (ITERATE_ITEMS(heap->roots, root, next)) {
         mprMark(root);
     }
