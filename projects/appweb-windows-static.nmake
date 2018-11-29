@@ -3,7 +3,7 @@
 #
 
 NAME                  = appweb
-VERSION               = 7.0.4
+VERSION               = 7.1.0
 
 OS                    = windows
 PA                    = $(PROCESSOR_ARCHITECTURE)
@@ -94,8 +94,8 @@ ME_COM_VXWORKS        = 0
 ME_COM_WATCHDOG       = 1
 !ENDIF
 
-!IF "$(ME_COM_OPENSSL)" == ""
-ME_COM_OPENSSL_PATH   = ""
+!IF "$(ME_COM_OPENSSL_PATH)" == ""
+ME_COM_OPENSSL_PATH   = "/path/to/openssl/inc32"
 !ENDIF
 
 !IF "$(ME_COM_LIB)" == "1"
