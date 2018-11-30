@@ -14828,9 +14828,8 @@ static void checkLen(HttpQueue *q)
     }
     if (count > maxCount) {
         maxCount = count;
-        print("Count %d, blocked %d, goaway %d, received goaway %d, eof %d", count, net->writeBlocked, net->goaway, net->receivedGoaway, net->eof);
         if (maxCount > 50) {
-            print("TOO BIG");
+            print("Count %d, blocked %d, goaway %d, received goaway %d, eof %d", count, net->writeBlocked, net->goaway, net->receivedGoaway, net->eof);
         }
     }
 }
