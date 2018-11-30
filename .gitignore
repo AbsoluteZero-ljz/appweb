@@ -33,3 +33,4 @@ test/test.dat
 /test/.test-prepared
 cache/
 /build
+/projects/setenv.bat
