@@ -38,7 +38,7 @@
         "mpr": "~6",
         "osdep": "~1.0",
         "pcre": "~1.0",
-        "ssl": "~0.9",
+        "ssl": "~1",
         "watchdog": "0.2.0"
     },
     "optionalDependencies": {

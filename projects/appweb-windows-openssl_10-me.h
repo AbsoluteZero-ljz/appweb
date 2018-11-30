@@ -1,5 +1,5 @@
 /*
-    me.h -- MakeMe Configure Header for windows-x64-default
+    me.h -- MakeMe Configure Header for windows-x64-openssl_10
 
     This header is created by Me during configuration. To change settings, re-run
     configure or define variables in your Makefile to override these default values.
@@ -262,13 +262,13 @@
 
 /* Profile */
 #ifndef ME_CONFIG_CMD
-    #define ME_CONFIG_CMD "me -d -q -platform windows-x64-default -configure . -without ssl -gen vs"
+    #define ME_CONFIG_CMD "me -d -q -platform windows-x64-openssl_10 -configure . --set openssl.version=1.0 -without ssl -gen vs"
 #endif
 #ifndef ME_APPWEB_PRODUCT
     #define ME_APPWEB_PRODUCT 1
 #endif
 #ifndef ME_PROFILE
-    #define ME_PROFILE "default"
+    #define ME_PROFILE "openssl_10"
 #endif
 #ifndef ME_TUNE_SIZE
     #define ME_TUNE_SIZE 1

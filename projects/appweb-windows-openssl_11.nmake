@@ -1,5 +1,5 @@
 #
-#   appweb-windows-default.nmake -- Makefile to build Embedthis Appweb for windows
+#   appweb-windows-openssl_11.nmake -- Makefile to build Embedthis Appweb for windows
 #
 
 NAME                  = appweb
@@ -8,7 +8,7 @@ VERSION               = 6.3.0
 OS                    = windows
 PA                    = $(PROCESSOR_ARCHITECTURE)
 !IF "$(PROFILE)" == ""
-PROFILE               = default
+PROFILE               = openssl_11
 !ENDIF
 
 
@@ -58,7 +58,7 @@ ME_COM_LINK           = 1
 ME_COM_MATRIXSSL      = 0
 !ENDIF
 !IF "$(ME_COM_MBEDTLS)" == ""
-ME_COM_MBEDTLS        = 1
+ME_COM_MBEDTLS        = 0
 !ENDIF
 !IF "$(ME_COM_MDB)" == ""
 ME_COM_MDB            = 1
@@ -70,7 +70,7 @@ ME_COM_MPR            = 1
 ME_COM_NANOSSL        = 0
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == ""
-ME_COM_OPENSSL        = 0
+ME_COM_OPENSSL        = 1
 !ENDIF
 !IF "$(ME_COM_OSDEP)" == ""
 ME_COM_OSDEP          = 1
@@ -95,7 +95,7 @@ ME_COM_WATCHDOG       = 1
 !ENDIF
 
 !IF "$(ME_COM_OPENSSL_PATH)" == ""
-ME_COM_OPENSSL_PATH   = "/path/to/openssl/inc32"
+ME_COM_OPENSSL_PATH   = "/path/to/openssl/include"
 !ENDIF
 
 !IF "$(ME_COM_LIB)" == "1"
@@ -189,7 +189,7 @@ prep:
 	@if not exist $(BUILD)\bin md $(BUILD)\bin
 	@if not exist $(BUILD)\inc md $(BUILD)\inc
 	@if not exist $(BUILD)\obj md $(BUILD)\obj
-	@if not exist $(BUILD)\inc\me.h copy projects\appweb-windows-default-me.h $(BUILD)\inc\me.h
+	@if not exist $(BUILD)\inc\me.h copy projects\appweb-windows-openssl_11-me.h $(BUILD)\inc\me.h
 
 !IF "$(SHOW)" != ""
 	@echo ..... [Info] Use "make SHOW=1" to trace executed commands and errors.
@@ -255,12 +255,11 @@ clean:
 	if exist "build\$(CONFIG)\bin\libhttp.lib" del /Q "build\$(CONFIG)\bin\libhttp.lib"
 	if exist "build\$(CONFIG)\bin\libhttp.pdb" del /Q "build\$(CONFIG)\bin\libhttp.pdb"
 	if exist "build\$(CONFIG)\bin\libhttp.exp" del /Q "build\$(CONFIG)\bin\libhttp.exp"
-	if exist "build\$(CONFIG)\bin\libmbedtls.lib" del /Q "build\$(CONFIG)\bin\libmbedtls.lib"
 	if exist "build\$(CONFIG)\bin\libmpr.dll" del /Q "build\$(CONFIG)\bin\libmpr.dll"
 	if exist "build\$(CONFIG)\bin\libmpr.lib" del /Q "build\$(CONFIG)\bin\libmpr.lib"
 	if exist "build\$(CONFIG)\bin\libmpr.pdb" del /Q "build\$(CONFIG)\bin\libmpr.pdb"
 	if exist "build\$(CONFIG)\bin\libmpr.exp" del /Q "build\$(CONFIG)\bin\libmpr.exp"
-	if exist "build\$(CONFIG)\bin\libmpr-mbedtls.lib" del /Q "build\$(CONFIG)\bin\libmpr-mbedtls.lib"
+	if exist "build\$(CONFIG)\bin\libmpr-openssl.lib" del /Q "build\$(CONFIG)\bin\libmpr-openssl.lib"
 	if exist "build\$(CONFIG)\bin\libmpr-version.lib" del /Q "build\$(CONFIG)\bin\libmpr-version.lib"
 	if exist "build\$(CONFIG)\bin\libpcre.dll" del /Q "build\$(CONFIG)\bin\libpcre.dll"
 	if exist "build\$(CONFIG)\bin\libpcre.lib" del /Q "build\$(CONFIG)\bin\libpcre.lib"
@@ -427,7 +426,7 @@ DEPS_15 = $(DEPS_15) src\server\cache\server.c
 build\$(CONFIG)\obj\appweb.obj: \
     src\server\appweb.c $(DEPS_15)
 	@echo .. [Compile] build\$(CONFIG)\obj\appweb.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\appweb.obj -Fd$(BUILD)\obj\appweb.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\server\appweb.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\appweb.obj -Fd$(BUILD)\obj\appweb.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\include" src\server\appweb.c $(LOG)
 
 #
 #   appwebMonitor.obj
@@ -437,7 +436,7 @@ DEPS_16 = $(DEPS_16) build\$(CONFIG)\inc\mpr.h
 build\$(CONFIG)\obj\appwebMonitor.obj: \
     src\server\windows\appwebMonitor.c $(DEPS_16)
 	@echo .. [Compile] build\$(CONFIG)\obj\appwebMonitor.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\appwebMonitor.obj -Fd$(BUILD)\obj\appwebMonitor.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\server\windows\appwebMonitor.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\appwebMonitor.obj -Fd$(BUILD)\obj\appwebMonitor.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\include" src\server\windows\appwebMonitor.c $(LOG)
 
 #
 #   appwebMonitor.res
@@ -456,7 +455,7 @@ DEPS_18 = $(DEPS_18) build\$(CONFIG)\inc\appweb.h
 build\$(CONFIG)\obj\authpass.obj: \
     src\utils\authpass.c $(DEPS_18)
 	@echo .. [Compile] build\$(CONFIG)\obj\authpass.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\authpass.obj -Fd$(BUILD)\obj\authpass.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\utils\authpass.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\authpass.obj -Fd$(BUILD)\obj\authpass.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\include" src\utils\authpass.c $(LOG)
 
 #
 #   appweb.h
@@ -472,7 +471,7 @@ DEPS_20 = $(DEPS_20) src\appweb.h
 build\$(CONFIG)\obj\cgiHandler.obj: \
     src\modules\cgiHandler.c $(DEPS_20)
 	@echo .. [Compile] build\$(CONFIG)\obj\cgiHandler.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\cgiHandler.obj -Fd$(BUILD)\obj\cgiHandler.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\modules\cgiHandler.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\cgiHandler.obj -Fd$(BUILD)\obj\cgiHandler.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\include" src\modules\cgiHandler.c $(LOG)
 
 #
 #   cgiProgram.obj
@@ -492,7 +491,7 @@ DEPS_22 = $(DEPS_22) build\$(CONFIG)\inc\pcre.h
 build\$(CONFIG)\obj\config.obj: \
     src\config.c $(DEPS_22)
 	@echo .. [Compile] build\$(CONFIG)\obj\config.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\config.obj -Fd$(BUILD)\obj\config.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\config.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\config.obj -Fd$(BUILD)\obj\config.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\include" src\config.c $(LOG)
 
 #
 #   convenience.obj
@@ -502,7 +501,7 @@ DEPS_23 = $(DEPS_23) src\appweb.h
 build\$(CONFIG)\obj\convenience.obj: \
     src\convenience.c $(DEPS_23)
 	@echo .. [Compile] build\$(CONFIG)\obj\convenience.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\convenience.obj -Fd$(BUILD)\obj\convenience.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\convenience.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\convenience.obj -Fd$(BUILD)\obj\convenience.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\include" src\convenience.c $(LOG)
 
 #
 #   esp.h
@@ -519,7 +518,7 @@ DEPS_25 = $(DEPS_25) build\$(CONFIG)\inc\mpr-version.h
 build\$(CONFIG)\obj\esp.obj: \
     src\esp\esp.c $(DEPS_25)
 	@echo .. [Compile] build\$(CONFIG)\obj\esp.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\esp.obj -Fd$(BUILD)\obj\esp.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\esp\esp.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\esp.obj -Fd$(BUILD)\obj\esp.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\include" src\esp\esp.c $(LOG)
 
 #
 #   espHandler.obj
@@ -530,7 +529,7 @@ DEPS_26 = $(DEPS_26) build\$(CONFIG)\inc\esp.h
 build\$(CONFIG)\obj\espHandler.obj: \
     src\modules\espHandler.c $(DEPS_26)
 	@echo .. [Compile] build\$(CONFIG)\obj\espHandler.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\espHandler.obj -Fd$(BUILD)\obj\espHandler.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\modules\espHandler.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\espHandler.obj -Fd$(BUILD)\obj\espHandler.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\include" src\modules\espHandler.c $(LOG)
 
 #
 #   espLib.obj
@@ -542,7 +541,7 @@ DEPS_27 = $(DEPS_27) build\$(CONFIG)\inc\http.h
 build\$(CONFIG)\obj\espLib.obj: \
     src\esp\espLib.c $(DEPS_27)
 	@echo .. [Compile] build\$(CONFIG)\obj\espLib.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\espLib.obj -Fd$(BUILD)\obj\espLib.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\esp\espLib.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\espLib.obj -Fd$(BUILD)\obj\espLib.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\include" src\esp\espLib.c $(LOG)
 
 #
 #   http.h
@@ -558,7 +557,7 @@ DEPS_29 = $(DEPS_29) src\http\http.h
 build\$(CONFIG)\obj\http.obj: \
     src\http\http.c $(DEPS_29)
 	@echo .. [Compile] build\$(CONFIG)\obj\http.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\http.obj -Fd$(BUILD)\obj\http.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\http\http.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\http.obj -Fd$(BUILD)\obj\http.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\include" src\http\http.c $(LOG)
 
 #
 #   httpLib.obj
@@ -569,7 +568,7 @@ DEPS_30 = $(DEPS_30) build\$(CONFIG)\inc\pcre.h
 build\$(CONFIG)\obj\httpLib.obj: \
     src\http\httpLib.c $(DEPS_30)
 	@echo .. [Compile] build\$(CONFIG)\obj\httpLib.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\httpLib.obj -Fd$(BUILD)\obj\httpLib.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\http\httpLib.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\httpLib.obj -Fd$(BUILD)\obj\httpLib.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\include" src\http\httpLib.c $(LOG)
 
 #
 #   makerom.obj
@@ -579,7 +578,7 @@ DEPS_31 = $(DEPS_31) build\$(CONFIG)\inc\mpr.h
 build\$(CONFIG)\obj\makerom.obj: \
     src\makerom\makerom.c $(DEPS_31)
 	@echo .. [Compile] build\$(CONFIG)\obj\makerom.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\makerom.obj -Fd$(BUILD)\obj\makerom.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\makerom\makerom.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\makerom.obj -Fd$(BUILD)\obj\makerom.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\include" src\makerom\makerom.c $(LOG)
 
 #
 #   mbedtls.h
@@ -615,7 +614,7 @@ DEPS_35 = $(DEPS_35) build\$(CONFIG)\inc\mpr.h
 build\$(CONFIG)\obj\mpr-openssl.obj: \
     src\mpr-openssl\mpr-openssl.c $(DEPS_35)
 	@echo .. [Compile] build\$(CONFIG)\obj\mpr-openssl.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\mpr-openssl.obj -Fd$(BUILD)\obj\mpr-openssl.pdb $(CFLAGS) $(DFLAGS) $(IFLAGS) "-I$(BUILD)\inc" "-I$(ME_COM_OPENSSL_PATH)\inc32" src\mpr-openssl\mpr-openssl.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\mpr-openssl.obj -Fd$(BUILD)\obj\mpr-openssl.pdb $(CFLAGS) $(DFLAGS) $(IFLAGS) "-I$(BUILD)\inc" "-I$(ME_COM_OPENSSL_PATH)\include" src\mpr-openssl\mpr-openssl.c $(LOG)
 
 #
 #   mpr-version.h
@@ -648,7 +647,7 @@ DEPS_39 = $(DEPS_39) src\mpr\mpr.h
 build\$(CONFIG)\obj\mprLib.obj: \
     src\mpr\mprLib.c $(DEPS_39)
 	@echo .. [Compile] build\$(CONFIG)\obj\mprLib.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\mprLib.obj -Fd$(BUILD)\obj\mprLib.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\mpr\mprLib.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\mprLib.obj -Fd$(BUILD)\obj\mprLib.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\include" src\mpr\mprLib.c $(LOG)
 
 #
 #   pcre.h
@@ -675,7 +674,7 @@ DEPS_42 = $(DEPS_42) build\$(CONFIG)\inc\mpr.h
 build\$(CONFIG)\obj\rom.obj: \
     src\rom.c $(DEPS_42)
 	@echo .. [Compile] build\$(CONFIG)\obj\rom.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\rom.obj -Fd$(BUILD)\obj\rom.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\rom.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\rom.obj -Fd$(BUILD)\obj\rom.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\include" src\rom.c $(LOG)
 
 #
 #   watchdog.obj
@@ -685,7 +684,7 @@ DEPS_43 = $(DEPS_43) build\$(CONFIG)\inc\mpr.h
 build\$(CONFIG)\obj\watchdog.obj: \
     src\watchdog\watchdog.c $(DEPS_43)
 	@echo .. [Compile] build\$(CONFIG)\obj\watchdog.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\watchdog.obj -Fd$(BUILD)\obj\watchdog.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\watchdog\watchdog.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\watchdog.obj -Fd$(BUILD)\obj\watchdog.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\include" src\watchdog\watchdog.c $(LOG)
 
 !IF "$(ME_COM_MBEDTLS)" == "1"
 #
@@ -753,16 +752,14 @@ LIBS_47 = $(LIBS_47) libmbedtls.lib
 LIBS_47 = $(LIBS_47) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_47 = $(LIBS_47) gdi32.lib
-LIBPATHS_47 = $(LIBPATHS_47) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!IF "$(ME_COM_SSL)" == "1"
+LIBS_47 = $(LIBS_47) ssl.lib
+LIBPATHS_47 = $(LIBPATHS_47) -libpath:$(ME_COM_OPENSSL_PATH)
+!ENDIF
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_47 = $(LIBS_47) libeay32.lib
-LIBPATHS_47 = $(LIBPATHS_47) -libpath:$(ME_COM_OPENSSL_PATH)/out32
-!ENDIF
-!IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_47 = $(LIBS_47) ssleay32.lib
-LIBPATHS_47 = $(LIBPATHS_47) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+LIBS_47 = $(LIBS_47) crypto.lib
+LIBPATHS_47 = $(LIBPATHS_47) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_47 = $(LIBS_47) libmpr-openssl.lib
@@ -811,16 +808,14 @@ LIBS_49 = $(LIBS_49) libmbedtls.lib
 LIBS_49 = $(LIBS_49) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_49 = $(LIBS_49) gdi32.lib
-LIBPATHS_49 = $(LIBPATHS_49) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!IF "$(ME_COM_SSL)" == "1"
+LIBS_49 = $(LIBS_49) ssl.lib
+LIBPATHS_49 = $(LIBPATHS_49) -libpath:$(ME_COM_OPENSSL_PATH)
+!ENDIF
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_49 = $(LIBS_49) libeay32.lib
-LIBPATHS_49 = $(LIBPATHS_49) -libpath:$(ME_COM_OPENSSL_PATH)/out32
-!ENDIF
-!IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_49 = $(LIBS_49) ssleay32.lib
-LIBPATHS_49 = $(LIBPATHS_49) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+LIBS_49 = $(LIBS_49) crypto.lib
+LIBPATHS_49 = $(LIBPATHS_49) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 LIBS_49 = $(LIBS_49) libmpr.lib
 !IF "$(ME_COM_OPENSSL)" == "1"
@@ -876,16 +871,14 @@ LIBS_51 = $(LIBS_51) libmbedtls.lib
 LIBS_51 = $(LIBS_51) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_51 = $(LIBS_51) gdi32.lib
-LIBPATHS_51 = $(LIBPATHS_51) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!IF "$(ME_COM_SSL)" == "1"
+LIBS_51 = $(LIBS_51) ssl.lib
+LIBPATHS_51 = $(LIBPATHS_51) -libpath:$(ME_COM_OPENSSL_PATH)
+!ENDIF
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_51 = $(LIBS_51) libeay32.lib
-LIBPATHS_51 = $(LIBPATHS_51) -libpath:$(ME_COM_OPENSSL_PATH)/out32
-!ENDIF
-!IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_51 = $(LIBS_51) ssleay32.lib
-LIBPATHS_51 = $(LIBPATHS_51) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+LIBS_51 = $(LIBS_51) crypto.lib
+LIBPATHS_51 = $(LIBPATHS_51) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 LIBS_51 = $(LIBS_51) libmpr.lib
 !IF "$(ME_COM_OPENSSL)" == "1"
@@ -946,16 +939,14 @@ LIBS_52 = $(LIBS_52) libmbedtls.lib
 LIBS_52 = $(LIBS_52) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_52 = $(LIBS_52) gdi32.lib
-LIBPATHS_52 = $(LIBPATHS_52) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!IF "$(ME_COM_SSL)" == "1"
+LIBS_52 = $(LIBS_52) ssl.lib
+LIBPATHS_52 = $(LIBPATHS_52) -libpath:$(ME_COM_OPENSSL_PATH)
+!ENDIF
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_52 = $(LIBS_52) libeay32.lib
-LIBPATHS_52 = $(LIBPATHS_52) -libpath:$(ME_COM_OPENSSL_PATH)/out32
-!ENDIF
-!IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_52 = $(LIBS_52) ssleay32.lib
-LIBPATHS_52 = $(LIBPATHS_52) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+LIBS_52 = $(LIBS_52) crypto.lib
+LIBPATHS_52 = $(LIBPATHS_52) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 LIBS_52 = $(LIBS_52) libmpr.lib
 !IF "$(ME_COM_OPENSSL)" == "1"
@@ -1009,16 +1000,14 @@ LIBS_53 = $(LIBS_53) libmbedtls.lib
 LIBS_53 = $(LIBS_53) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_53 = $(LIBS_53) gdi32.lib
-LIBPATHS_53 = $(LIBPATHS_53) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!IF "$(ME_COM_SSL)" == "1"
+LIBS_53 = $(LIBS_53) ssl.lib
+LIBPATHS_53 = $(LIBPATHS_53) -libpath:$(ME_COM_OPENSSL_PATH)
+!ENDIF
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_53 = $(LIBS_53) libeay32.lib
-LIBPATHS_53 = $(LIBPATHS_53) -libpath:$(ME_COM_OPENSSL_PATH)/out32
-!ENDIF
-!IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_53 = $(LIBS_53) ssleay32.lib
-LIBPATHS_53 = $(LIBPATHS_53) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+LIBS_53 = $(LIBS_53) crypto.lib
+LIBPATHS_53 = $(LIBPATHS_53) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 LIBS_53 = $(LIBS_53) libmpr.lib
 !IF "$(ME_COM_OPENSSL)" == "1"
@@ -1076,16 +1065,14 @@ LIBS_54 = $(LIBS_54) libmbedtls.lib
 LIBS_54 = $(LIBS_54) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_54 = $(LIBS_54) gdi32.lib
-LIBPATHS_54 = $(LIBPATHS_54) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!IF "$(ME_COM_SSL)" == "1"
+LIBS_54 = $(LIBS_54) ssl.lib
+LIBPATHS_54 = $(LIBPATHS_54) -libpath:$(ME_COM_OPENSSL_PATH)
+!ENDIF
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_54 = $(LIBS_54) libeay32.lib
-LIBPATHS_54 = $(LIBPATHS_54) -libpath:$(ME_COM_OPENSSL_PATH)/out32
-!ENDIF
-!IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_54 = $(LIBS_54) ssleay32.lib
-LIBPATHS_54 = $(LIBPATHS_54) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+LIBS_54 = $(LIBS_54) crypto.lib
+LIBPATHS_54 = $(LIBPATHS_54) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 LIBS_54 = $(LIBS_54) libmpr.lib
 !IF "$(ME_COM_OPENSSL)" == "1"
@@ -1150,16 +1137,14 @@ LIBS_56 = $(LIBS_56) libmbedtls.lib
 LIBS_56 = $(LIBS_56) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_56 = $(LIBS_56) gdi32.lib
-LIBPATHS_56 = $(LIBPATHS_56) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!IF "$(ME_COM_SSL)" == "1"
+LIBS_56 = $(LIBS_56) ssl.lib
+LIBPATHS_56 = $(LIBPATHS_56) -libpath:$(ME_COM_OPENSSL_PATH)
+!ENDIF
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_56 = $(LIBS_56) libeay32.lib
-LIBPATHS_56 = $(LIBPATHS_56) -libpath:$(ME_COM_OPENSSL_PATH)/out32
-!ENDIF
-!IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_56 = $(LIBS_56) ssleay32.lib
-LIBPATHS_56 = $(LIBPATHS_56) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+LIBS_56 = $(LIBS_56) crypto.lib
+LIBPATHS_56 = $(LIBPATHS_56) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 LIBS_56 = $(LIBS_56) libmpr.lib
 !IF "$(ME_COM_OPENSSL)" == "1"
@@ -1215,16 +1200,14 @@ LIBS_57 = $(LIBS_57) libmbedtls.lib
 LIBS_57 = $(LIBS_57) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_57 = $(LIBS_57) gdi32.lib
-LIBPATHS_57 = $(LIBPATHS_57) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!IF "$(ME_COM_SSL)" == "1"
+LIBS_57 = $(LIBS_57) ssl.lib
+LIBPATHS_57 = $(LIBPATHS_57) -libpath:$(ME_COM_OPENSSL_PATH)
+!ENDIF
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_57 = $(LIBS_57) libeay32.lib
-LIBPATHS_57 = $(LIBPATHS_57) -libpath:$(ME_COM_OPENSSL_PATH)/out32
-!ENDIF
-!IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_57 = $(LIBS_57) ssleay32.lib
-LIBPATHS_57 = $(LIBPATHS_57) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+LIBS_57 = $(LIBS_57) crypto.lib
+LIBPATHS_57 = $(LIBPATHS_57) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 LIBS_57 = $(LIBS_57) libmpr.lib
 !IF "$(ME_COM_OPENSSL)" == "1"
@@ -1290,16 +1273,14 @@ LIBS_59 = $(LIBS_59) libmbedtls.lib
 LIBS_59 = $(LIBS_59) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_59 = $(LIBS_59) gdi32.lib
-LIBPATHS_59 = $(LIBPATHS_59) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!IF "$(ME_COM_SSL)" == "1"
+LIBS_59 = $(LIBS_59) ssl.lib
+LIBPATHS_59 = $(LIBPATHS_59) -libpath:$(ME_COM_OPENSSL_PATH)
+!ENDIF
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_59 = $(LIBS_59) libeay32.lib
-LIBPATHS_59 = $(LIBPATHS_59) -libpath:$(ME_COM_OPENSSL_PATH)/out32
-!ENDIF
-!IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_59 = $(LIBS_59) ssleay32.lib
-LIBPATHS_59 = $(LIBPATHS_59) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+LIBS_59 = $(LIBS_59) crypto.lib
+LIBPATHS_59 = $(LIBPATHS_59) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 LIBS_59 = $(LIBS_59) libmpr.lib
 !IF "$(ME_COM_OPENSSL)" == "1"
@@ -1378,16 +1359,14 @@ LIBS_62 = $(LIBS_62) libmbedtls.lib
 LIBS_62 = $(LIBS_62) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_62 = $(LIBS_62) gdi32.lib
-LIBPATHS_62 = $(LIBPATHS_62) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!IF "$(ME_COM_SSL)" == "1"
+LIBS_62 = $(LIBS_62) ssl.lib
+LIBPATHS_62 = $(LIBPATHS_62) -libpath:$(ME_COM_OPENSSL_PATH)
+!ENDIF
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_62 = $(LIBS_62) libeay32.lib
-LIBPATHS_62 = $(LIBPATHS_62) -libpath:$(ME_COM_OPENSSL_PATH)/out32
-!ENDIF
-!IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_62 = $(LIBS_62) ssleay32.lib
-LIBPATHS_62 = $(LIBPATHS_62) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+LIBS_62 = $(LIBS_62) crypto.lib
+LIBPATHS_62 = $(LIBPATHS_62) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 LIBS_62 = $(LIBS_62) libmpr.lib
 !IF "$(ME_COM_OPENSSL)" == "1"
@@ -1430,16 +1409,14 @@ LIBS_64 = $(LIBS_64) libmbedtls.lib
 LIBS_64 = $(LIBS_64) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_64 = $(LIBS_64) gdi32.lib
-LIBPATHS_64 = $(LIBPATHS_64) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!IF "$(ME_COM_SSL)" == "1"
+LIBS_64 = $(LIBS_64) ssl.lib
+LIBPATHS_64 = $(LIBPATHS_64) -libpath:$(ME_COM_OPENSSL_PATH)
+!ENDIF
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_64 = $(LIBS_64) libeay32.lib
-LIBPATHS_64 = $(LIBPATHS_64) -libpath:$(ME_COM_OPENSSL_PATH)/out32
-!ENDIF
-!IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_64 = $(LIBS_64) ssleay32.lib
-LIBPATHS_64 = $(LIBPATHS_64) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+LIBS_64 = $(LIBS_64) crypto.lib
+LIBPATHS_64 = $(LIBPATHS_64) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 LIBS_64 = $(LIBS_64) libmpr.lib
 !IF "$(ME_COM_OPENSSL)" == "1"
