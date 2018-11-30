@@ -1398,7 +1398,7 @@ DEPS_69 = $(DEPS_69) compile
 
 run: $(DEPS_69)
 	cd src\server
-	../../$(BUILD)/bin/appweb --log stdout:2
+	..\..\build\$(CONFIG)\bin\appweb --log stdout:2
 	cd ..\..
 
 #
