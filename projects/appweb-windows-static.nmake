@@ -95,7 +95,7 @@ ME_COM_WATCHDOG       = 1
 !ENDIF
 
 !IF "$(ME_COM_OPENSSL_PATH)" == ""
-ME_COM_OPENSSL_PATH   = "/path/to/openssl/inc32"
+ME_COM_OPENSSL_PATH   = "/path/to/openssl"
 !ENDIF
 
 !IF "$(ME_COM_LIB)" == "1"
@@ -867,7 +867,7 @@ LIBS_53 = $(LIBS_53) libesp.lib
 
 build\$(CONFIG)\bin\appweb.exe: $(DEPS_53)
 	@echo ..... [Link] build\$(CONFIG)\bin\appweb.exe
-	"$(LD)" -nologo -out:$(BUILD)\bin\appweb.exe -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\appweb.obj" $(LIBPATHS_53) $(LIBS_53) $(LIBS_53) $(LIBS)  $(LOG)
+	"$(LD)" -nologo -out:$(BUILD)\bin\appweb.exe -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\appweb.obj" $(LIBPATHS_53) $(LIBS_53) $(LIBS)  $(LOG)
 
 #
 #   appwebMonitor
@@ -934,7 +934,7 @@ LIBS_54 = $(LIBS_54) libesp.lib
 
 build\$(CONFIG)\bin\appwebMonitor.exe: $(DEPS_54)
 	@echo ..... [Link] build\$(CONFIG)\bin\appwebMonitor.exe
-	"$(LD)" -nologo -out:$(BUILD)\bin\appwebMonitor.exe -entry:WinMainCRTStartup -subsystem:windows $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\appwebMonitor.res" "$(BUILD)\obj\appwebMonitor.obj" shell32.lib ws2_32.lib advapi32.lib user32.lib kernel32.lib oldnames.lib  $(LIBPATHS_54) $(LIBS_54) $(LIBS_54) $(LOG)
+	"$(LD)" -nologo -out:$(BUILD)\bin\appwebMonitor.exe -entry:WinMainCRTStartup -subsystem:windows $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\appwebMonitor.res" "$(BUILD)\obj\appwebMonitor.obj" shell32.lib ws2_32.lib advapi32.lib user32.lib kernel32.lib oldnames.lib  $(LIBPATHS_54) $(LIBS_54) $(LOG)
 
 #
 #   appwebMonitor.ico
@@ -1008,7 +1008,7 @@ LIBS_56 = $(LIBS_56) libesp.lib
 
 build\$(CONFIG)\bin\authpass.exe: $(DEPS_56)
 	@echo ..... [Link] build\$(CONFIG)\bin\authpass.exe
-	"$(LD)" -nologo -out:$(BUILD)\bin\authpass.exe -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\authpass.obj" $(LIBPATHS_56) $(LIBS_56) $(LIBS_56) $(LIBS)  $(LOG)
+	"$(LD)" -nologo -out:$(BUILD)\bin\authpass.exe -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\authpass.obj" $(LIBPATHS_56) $(LIBS_56) $(LIBS)  $(LOG)
 
 !IF "$(ME_COM_ESP)" == "1"
 #
@@ -1067,7 +1067,7 @@ LIBS_57 = $(LIBS_57) libhttp.lib
 
 build\$(CONFIG)\bin\appweb-esp.exe: $(DEPS_57)
 	@echo ..... [Link] build\$(CONFIG)\bin\appweb-esp.exe
-	"$(LD)" -nologo -out:$(BUILD)\bin\appweb-esp.exe -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\esp.obj" $(LIBPATHS_57) $(LIBS_57) $(LIBS_57) $(LIBS)  $(LOG)
+	"$(LD)" -nologo -out:$(BUILD)\bin\appweb-esp.exe -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\esp.obj" $(LIBPATHS_57) $(LIBS_57) $(LIBS)  $(LOG)
 !ENDIF
 
 !IF "$(ME_COM_ESP)" == "1"
@@ -1134,7 +1134,7 @@ LIBS_59 = $(LIBS_59) libmpr.lib
 
 build\$(CONFIG)\bin\http.exe: $(DEPS_59)
 	@echo ..... [Link] build\$(CONFIG)\bin\http.exe
-	"$(LD)" -nologo -out:$(BUILD)\bin\http.exe -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\http.obj" $(LIBPATHS_59) $(LIBS_59) $(LIBS_59) $(LIBS)  $(LOG)
+	"$(LD)" -nologo -out:$(BUILD)\bin\http.exe -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\http.obj" $(LIBPATHS_59) $(LIBS_59) $(LIBS)  $(LOG)
 !ENDIF
 
 #
@@ -1214,7 +1214,7 @@ LIBS_62 = $(LIBS_62) libmpr-mbedtls.lib
 
 build\$(CONFIG)\bin\makerom.exe: $(DEPS_62)
 	@echo ..... [Link] build\$(CONFIG)\bin\makerom.exe
-	"$(LD)" -nologo -out:$(BUILD)\bin\makerom.exe -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\makerom.obj" $(LIBPATHS_62) $(LIBS_62) $(LIBS_62) $(LIBS)  $(LOG)
+	"$(LD)" -nologo -out:$(BUILD)\bin\makerom.exe -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\makerom.obj" $(LIBPATHS_62) $(LIBS_62) $(LIBS)  $(LOG)
 
 #
 #   server-cache
@@ -1266,7 +1266,7 @@ LIBS_64 = $(LIBS_64) libmpr-mbedtls.lib
 
 build\$(CONFIG)\bin\appman.exe: $(DEPS_64)
 	@echo ..... [Link] build\$(CONFIG)\bin\appman.exe
-	"$(LD)" -nologo -out:$(BUILD)\bin\appman.exe -entry:WinMainCRTStartup -subsystem:windows $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\watchdog.obj" $(LIBPATHS_64) $(LIBS_64) $(LIBS_64) $(LIBS)  $(LOG)
+	"$(LD)" -nologo -out:$(BUILD)\bin\appman.exe -entry:WinMainCRTStartup -subsystem:windows $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\watchdog.obj" $(LIBPATHS_64) $(LIBS_64) $(LIBS)  $(LOG)
 !ENDIF
 
 #

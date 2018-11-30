@@ -151,7 +151,11 @@ Me.load({
             See installs/installs.me for the install targets
          */
         projects: {
-            action: `genProjects('')`,
+            action: `
+                genProjects('--set openssl.version=1.0 --with openssl', 'openssl_10', 'windows-x64')
+                genProjects('--set openssl.version=1.1 --with openssl', 'openssl_11', 'windows-x64')
+                genProjects('')
+            `,
         },
 
         publish: {

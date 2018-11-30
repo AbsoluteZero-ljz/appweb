@@ -44,7 +44,7 @@
     "optionalDependencies": {
         "appweb-php": "~0.1",
         "certs": "~0.1",
-        "esp": ">=7.0",
+        "esp": "~8",
         "mpr-matrixssl": "~0.3",
         "mpr-mbedtls": "~2",
         "mpr-openssl": "~1",
