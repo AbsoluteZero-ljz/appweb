@@ -144,6 +144,9 @@
 #ifndef ME_NAME
     #define ME_NAME "appweb"
 #endif
+#ifndef ME_OPENSSL_VERSION
+    #define ME_OPENSSL_VERSION "1.0"
+#endif
 #ifndef ME_PLATFORMS
     #define ME_PLATFORMS "local"
 #endif
