@@ -271,6 +271,8 @@ PUBLIC Mpr *mprCreateMemService(MprManager manager, int flags)
         heap->regions = region;
     }
     heap->gcCond = mprCreateCond();
+
+    //  TODO - could just remove STATIC_VALUES
     heap->roots = mprCreateList(-1, MPR_LIST_STATIC_VALUES);
     mprAddRoot(MPR);
     return MPR;
@@ -977,7 +979,7 @@ PUBLIC int mprGC(int flags)
     heap->freedBlocks = 0;
     if (!(flags & MPR_GC_NO_BLOCK)) {
         /*
-            Yield here, so the sweeper wont abort because this thread is not yielded
+            Yield here, so the sweeper can operate now
          */
         mprYield(MPR_YIELD_STICKY);
     }
@@ -1270,6 +1272,7 @@ static void markRoots()
     mprMark(heap->roots);
     mprMark(heap->gcCond);
 
+    //  TODO - could just remove STATIC_VALUES and remove this
     for (ITERATE_ITEMS(heap->roots, root, next)) {
         mprMark(root);
     }
@@ -1519,6 +1522,7 @@ PUBLIC void pfree(void *ptr)
 {
     if (ptr) {
         mprRelease(ptr);
+        /* Do not access ptr here - async sweeper() may have already run */
     }
 }
 
@@ -1526,12 +1530,17 @@ PUBLIC void pfree(void *ptr)
 PUBLIC void *prealloc(void *ptr, size_t size)
 {
     void    *mem;
+    size_t  oldSize;
 
+    oldSize = psize(ptr);
+    if (size <= oldSize) {
+        return ptr;
+    }
     if ((mem = mprAllocMem(size, MPR_ALLOC_HOLD | MPR_ALLOC_ZERO)) == 0) {
         return 0;
     }
     if (ptr) {
-        memcpy(mem, ptr, psize(ptr));
+        memcpy(mem, ptr, oldSize);
         mprRelease(ptr);
     }
     return mem;
