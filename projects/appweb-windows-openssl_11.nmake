@@ -752,13 +752,11 @@ LIBS_47 = $(LIBS_47) libmbedtls.lib
 LIBS_47 = $(LIBS_47) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-!IF "$(ME_COM_SSL)" == "1"
-LIBS_47 = $(LIBS_47) ssl.lib
+LIBS_47 = $(LIBS_47) libssl.lib
 LIBPATHS_47 = $(LIBPATHS_47) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
-!ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_47 = $(LIBS_47) crypto.lib
+LIBS_47 = $(LIBS_47) libcrypto.lib
 LIBPATHS_47 = $(LIBPATHS_47) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
@@ -808,13 +806,11 @@ LIBS_49 = $(LIBS_49) libmbedtls.lib
 LIBS_49 = $(LIBS_49) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-!IF "$(ME_COM_SSL)" == "1"
-LIBS_49 = $(LIBS_49) ssl.lib
+LIBS_49 = $(LIBS_49) libssl.lib
 LIBPATHS_49 = $(LIBPATHS_49) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
-!ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_49 = $(LIBS_49) crypto.lib
+LIBS_49 = $(LIBS_49) libcrypto.lib
 LIBPATHS_49 = $(LIBPATHS_49) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 LIBS_49 = $(LIBS_49) libmpr.lib
@@ -871,13 +867,11 @@ LIBS_51 = $(LIBS_51) libmbedtls.lib
 LIBS_51 = $(LIBS_51) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-!IF "$(ME_COM_SSL)" == "1"
-LIBS_51 = $(LIBS_51) ssl.lib
+LIBS_51 = $(LIBS_51) libssl.lib
 LIBPATHS_51 = $(LIBPATHS_51) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
-!ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_51 = $(LIBS_51) crypto.lib
+LIBS_51 = $(LIBS_51) libcrypto.lib
 LIBPATHS_51 = $(LIBPATHS_51) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 LIBS_51 = $(LIBS_51) libmpr.lib
@@ -939,13 +933,11 @@ LIBS_52 = $(LIBS_52) libmbedtls.lib
 LIBS_52 = $(LIBS_52) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-!IF "$(ME_COM_SSL)" == "1"
-LIBS_52 = $(LIBS_52) ssl.lib
+LIBS_52 = $(LIBS_52) libssl.lib
 LIBPATHS_52 = $(LIBPATHS_52) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
-!ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_52 = $(LIBS_52) crypto.lib
+LIBS_52 = $(LIBS_52) libcrypto.lib
 LIBPATHS_52 = $(LIBPATHS_52) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 LIBS_52 = $(LIBS_52) libmpr.lib
@@ -1000,13 +992,11 @@ LIBS_53 = $(LIBS_53) libmbedtls.lib
 LIBS_53 = $(LIBS_53) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-!IF "$(ME_COM_SSL)" == "1"
-LIBS_53 = $(LIBS_53) ssl.lib
+LIBS_53 = $(LIBS_53) libssl.lib
 LIBPATHS_53 = $(LIBPATHS_53) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
-!ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_53 = $(LIBS_53) crypto.lib
+LIBS_53 = $(LIBS_53) libcrypto.lib
 LIBPATHS_53 = $(LIBPATHS_53) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 LIBS_53 = $(LIBS_53) libmpr.lib
@@ -1065,13 +1055,11 @@ LIBS_54 = $(LIBS_54) libmbedtls.lib
 LIBS_54 = $(LIBS_54) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-!IF "$(ME_COM_SSL)" == "1"
-LIBS_54 = $(LIBS_54) ssl.lib
+LIBS_54 = $(LIBS_54) libssl.lib
 LIBPATHS_54 = $(LIBPATHS_54) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
-!ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_54 = $(LIBS_54) crypto.lib
+LIBS_54 = $(LIBS_54) libcrypto.lib
 LIBPATHS_54 = $(LIBPATHS_54) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 LIBS_54 = $(LIBS_54) libmpr.lib
@@ -1137,13 +1125,11 @@ LIBS_56 = $(LIBS_56) libmbedtls.lib
 LIBS_56 = $(LIBS_56) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-!IF "$(ME_COM_SSL)" == "1"
-LIBS_56 = $(LIBS_56) ssl.lib
+LIBS_56 = $(LIBS_56) libssl.lib
 LIBPATHS_56 = $(LIBPATHS_56) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
-!ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_56 = $(LIBS_56) crypto.lib
+LIBS_56 = $(LIBS_56) libcrypto.lib
 LIBPATHS_56 = $(LIBPATHS_56) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 LIBS_56 = $(LIBS_56) libmpr.lib
@@ -1200,13 +1186,11 @@ LIBS_57 = $(LIBS_57) libmbedtls.lib
 LIBS_57 = $(LIBS_57) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-!IF "$(ME_COM_SSL)" == "1"
-LIBS_57 = $(LIBS_57) ssl.lib
+LIBS_57 = $(LIBS_57) libssl.lib
 LIBPATHS_57 = $(LIBPATHS_57) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
-!ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_57 = $(LIBS_57) crypto.lib
+LIBS_57 = $(LIBS_57) libcrypto.lib
 LIBPATHS_57 = $(LIBPATHS_57) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 LIBS_57 = $(LIBS_57) libmpr.lib
@@ -1273,13 +1257,11 @@ LIBS_59 = $(LIBS_59) libmbedtls.lib
 LIBS_59 = $(LIBS_59) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-!IF "$(ME_COM_SSL)" == "1"
-LIBS_59 = $(LIBS_59) ssl.lib
+LIBS_59 = $(LIBS_59) libssl.lib
 LIBPATHS_59 = $(LIBPATHS_59) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
-!ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_59 = $(LIBS_59) crypto.lib
+LIBS_59 = $(LIBS_59) libcrypto.lib
 LIBPATHS_59 = $(LIBPATHS_59) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 LIBS_59 = $(LIBS_59) libmpr.lib
@@ -1359,13 +1341,11 @@ LIBS_62 = $(LIBS_62) libmbedtls.lib
 LIBS_62 = $(LIBS_62) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-!IF "$(ME_COM_SSL)" == "1"
-LIBS_62 = $(LIBS_62) ssl.lib
+LIBS_62 = $(LIBS_62) libssl.lib
 LIBPATHS_62 = $(LIBPATHS_62) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
-!ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_62 = $(LIBS_62) crypto.lib
+LIBS_62 = $(LIBS_62) libcrypto.lib
 LIBPATHS_62 = $(LIBPATHS_62) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 LIBS_62 = $(LIBS_62) libmpr.lib
@@ -1409,13 +1389,11 @@ LIBS_64 = $(LIBS_64) libmbedtls.lib
 LIBS_64 = $(LIBS_64) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-!IF "$(ME_COM_SSL)" == "1"
-LIBS_64 = $(LIBS_64) ssl.lib
+LIBS_64 = $(LIBS_64) libssl.lib
 LIBPATHS_64 = $(LIBPATHS_64) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
-!ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_64 = $(LIBS_64) crypto.lib
+LIBS_64 = $(LIBS_64) libcrypto.lib
 LIBPATHS_64 = $(LIBPATHS_64) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 LIBS_64 = $(LIBS_64) libmpr.lib
