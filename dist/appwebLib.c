@@ -7,9 +7,7 @@
 #if ME_COM_APPWEB
 
 
-
 /********* Start of file ../../../src/config.c ************/
-
 
 /**
     config.c - Parse the configuration file.
@@ -1073,7 +1071,7 @@ static int errorLogDirective(MaState *state, cchar *key, cchar *value)
         return MPR_ERR_BAD_SYNTAX;
     }
     mprSetLogLevel(level);
-    mprLogHeader();
+    mprLogConfig();
     if (stamp) {
         httpSetTimestamp(stamp);
     }
@@ -3609,9 +3607,7 @@ PUBLIC int maLoadModule(cchar *name, cchar *libname)
  */
 
 
-
 /********* Start of file ../../../src/convenience.c ************/
-
 
 /*
     convenience.c -- High level convenience API
@@ -3696,9 +3692,7 @@ PUBLIC int maRunSimpleWebServer(cchar *ip, int port, cchar *home, cchar *documen
  */
 
 
-
 /********* Start of file ../../../src/rom.c ************/
-
 
 /*
     romFiles -- Compiled Files
@@ -3719,9 +3713,7 @@ PUBLIC int romDummy;
 #endif /* ME_ROM */
 
 
-
 /********* Start of file ../../../src/modules/cgiHandler.c ************/
-
 
 /* 
     cgiHandler.c -- Common Gateway Interface Handler
@@ -4600,9 +4592,7 @@ PUBLIC int httpCgiInit(Http *http, MprModule *module)
  */
 
 
-
 /********* Start of file ../../../src/modules/espHandler.c ************/
-
 
 /*
     espHandler.c -- ESP Appweb handler

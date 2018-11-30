@@ -580,7 +580,7 @@ DEPS_33 = $(DEPS_33) src\mbedtls\mbedtls.h
 build\$(CONFIG)\obj\mbedtls.obj: \
     src\mbedtls\mbedtls.c $(DEPS_33)
 	@echo .. [Compile] build\$(CONFIG)\obj\mbedtls.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\mbedtls.obj -Fd$(BUILD)\obj\mbedtls.pdb -nologo -GR- -Zi -Od -MDd -Wno-format-zero-length $(DFLAGS) -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\mbedtls\mbedtls.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\mbedtls.obj -Fd$(BUILD)\obj\mbedtls.pdb -nologo -GR- -Zi -Od -MDd $(DFLAGS) -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\mbedtls\mbedtls.c $(LOG)
 
 #
 #   mpr-mbedtls.obj
