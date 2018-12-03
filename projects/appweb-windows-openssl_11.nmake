@@ -95,7 +95,7 @@ ME_COM_WATCHDOG       = 1
 !ENDIF
 
 !IF "$(ME_COM_OPENSSL_PATH)" == ""
-ME_COM_OPENSSL_PATH   = "/path/to/openssl/include"
+ME_COM_OPENSSL_PATH   = "/path/to/openssl"
 !ENDIF
 
 !IF "$(ME_COM_LIB)" == "1"
