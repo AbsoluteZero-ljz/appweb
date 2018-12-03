@@ -23,9 +23,9 @@ See [LICENSE.md](LICENSE.md) for details.
 
 You can build Appweb with make, Visual Studio, Xcode or [MakeMe](https://www.embedthis.com/makeme/).
 
-The default configuration for Make and the IDE projects will build with [ESP](https://www.embedthis.com/esp/) and SSL using the [MbedTLS](https://github.com/ARMmbed/mbedtls) TLS stack. To build with CGI, OpenSSL or other modules, read the [Projects Readme](projects/README.md) for details.
+The IDE projects and Makefiles will build with [ESP](https://www.embedthis.com/esp/) and SSL using the [MbedTLS](https://github.com/ARMmbed/mbedtls) TLS stack. To build with CGI, OpenSSL or other modules, read the [projects/README.md](projects/README.md) for details.
 
-### To build with Make:
+### To Build with Make:
 
 #### Linux or MacOS
 
@@ -39,6 +39,10 @@ You can pass make variables to tailor the build. For a list of variables:
 
 	make help
 
+To run
+
+	make run
+
 #### Windows
 
 First open a Windows cmd prompt window and then set your Visual Studio environment variables by running vcvarsall.bat from your Visual Studio installation folder.
@@ -47,13 +51,34 @@ Then run a Windows cmd prompt window and type:
 
     make
 
-### To build with Visual Studio:
+### To Build with Visual Studio:
 
-Open the projects/appweb-windows-default.sln solution file and select Build -> Solution.
+Open the solution file at:
 
-### To build with Xcode.
+    projects/appweb-windows-default.sln
 
-Open the projects/appweb-macosx-default.sln solution file and build the solution.
+Then select Build -> Solution.
+
+To run the debugger, right-click on the "appweb" project and set it as the startup project. Then modify the project properties and set the Debugging configuration properties. Set the working directory to be:
+
+    $(ProjectDir)\..\..\test
+
+Set the arguments to be
+    -v
+
+Then start debugging.
+
+### To Build with Xcode.
+
+Open the solution file:
+
+    projects/appweb-macosx-default.sln
+
+Choose Product -> Scheme -> Edit Scheme, and select "Build" on the left of the dialog. Click the "+" symbol at the bottom in the center and then select all targets to be built. Before leaving this dialog, set the debugger options by selecting "Run/Debug" on the left hand side. Under "Info" set the Executable to be "appweb", set the launch arguments to be "-v" and set the working directory to be an absolute path to the "./test" directory in the appweb source. The click "Close" to save.
+
+Click Project -> Build to build.
+
+Click Project -> Run to run.
 
 ### To build with MakeMe:
 
@@ -66,15 +91,9 @@ For a list of configure options:
 
 	./configure --help
 
-### To run
-
-	make run
-
-or
-
-    me run
-
 ### To install:
+
+If you have built from source using Make or MakeMe, you can install the software using:
 
     sudo make install
 
@@ -90,7 +109,9 @@ or
 
     sudo me uninstall
 
-### To test:
+### To Test:
+
+Build with MakeMe and then:
 
     me test
 
