@@ -127,7 +127,7 @@
     #define ME_MPR_SSL_CACHE 512
 #endif
 #ifndef ME_MPR_SSL_HANDSHAKES
-    #define ME_MPR_SSL_HANDSHAKES 1
+    #define ME_MPR_SSL_HANDSHAKES 3
 #endif
 #ifndef ME_MPR_SSL_LOG_LEVEL
     #define ME_MPR_SSL_LOG_LEVEL 5

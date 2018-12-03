@@ -100,8 +100,8 @@
 
       <CustomBuildStep>
         <Command>cd ..\..\src\server
-if exist $(BinDir)\appwebMonitor.ico\appwebMonitor.ico del /Q $(BinDir)\appwebMonitor.ico\appwebMonitor.ico
-copy /Y windows\appwebMonitor.ico $(BinDir)\appwebMonitor.ico\appwebMonitor.ico
+if exist $(BinDir)\appwebMonitor.ico del /Q $(BinDir)\appwebMonitor.ico
+copy /Y windows\appwebMonitor.ico $(BinDir)\appwebMonitor.ico
 cd ..\..\projects\appweb-windows-static</Command>
         <Outputs>$(BinDir)\appwebMonitor.ico</Outputs>
       </CustomBuildStep>

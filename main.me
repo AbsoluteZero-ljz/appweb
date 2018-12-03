@@ -97,7 +97,7 @@ Me.load({
             ssl: {
                 cache: 512,             /* Set the session cache size (items) */
                 logLevel: 5,            /* Starting logging level for SSL messages */
-                handshakes: 1,          /* Set maximum number of renegotiations (zero means infinite) */
+                handshakes: 3,          /* Set maximum number of renegotiations (zero means infinite) */
                 ticket: true,           /* Enable session resumption via ticketing - client side session caching */
                 timeout: 86400,         /* Session and ticketing duration in seconds */
             },
@@ -150,7 +150,12 @@ Me.load({
             See installs/installs.me for the install targets
          */
         projects: {
-            action: `genProjects('')`,
+            action: `
+                genProjects('--set openssl.version=1.0 --with openssl', 'openssl_10', 'windows-x64')
+                genProjects('--set openssl.version=1.1 --with openssl', 'openssl_11', 'windows-x64')
+                genProjects('--with openssl', 'openssl', 'macosx-x64')
+                genProjects('')
+            `,
         },
 
         publish: {
