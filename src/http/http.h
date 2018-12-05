@@ -73,14 +73,14 @@ struct HttpWebSocket;
     #ifndef ME_PACKET_SIZE
         #define ME_PACKET_SIZE      (16 * 1024)
     #endif
+    //  MOB should be CHUNK_SIZE
     #ifndef ME_CHUNK
         #define ME_CHUNK            (16 * 1024)
     #endif
 #endif
-#ifndef ME_SANITY_QBUFFER
-    #define ME_SANITY_QBUFFER       (128 * 1024)
+#ifndef ME_SANITY_PACKET
+    #define ME_SANITY_PACKET        (128 * 1024)
 #endif
-
 #ifndef ME_HTTP_DEFAULT_METHODS
     #define ME_HTTP_DEFAULT_METHODS "GET,POST"          /**< Default methods for routes */
 #endif
@@ -140,6 +140,9 @@ struct HttpWebSocket;
 #endif
 #ifndef ME_MAX_NUM_HEADERS
     #define ME_MAX_NUM_HEADERS      64                   /**< Maximum number of header lines */
+#endif
+#ifndef ME_QUEUE_MAX_FACTOR
+    #define ME_QUEUE_MAX_FACTOR     4                    /**< Queue max set to packetSize * factor */
 #endif
 #ifndef ME_MAX_PROCESSES
     #define ME_MAX_PROCESSES        10                   /**< Maximum concurrent processes */
@@ -538,17 +541,17 @@ PUBLIC int httpBanClient(cchar *ip, MprTicks period, int status, cchar *msg);
     @ingroup HttpMonitor
     @stability Evolving
   */
-PUBLIC void httpDumpCounters();
+PUBLIC void httpDumpCounters(void);
 
 /*
     Internal
  */
-PUBLIC void httpAddCounters();
-PUBLIC int httpAddRemedies();
+PUBLIC void httpAddCounters(void);
+PUBLIC int httpAddRemedies(void);
 PUBLIC MprTicks httpGetTicks(cchar *value);
 PUBLIC uint64 httpGetNumber(cchar *value);
 PUBLIC int httpGetInt(cchar *value);
-PUBLIC void httpPruneMonitors();
+PUBLIC void httpPruneMonitors(void);
 PUBLIC HttpAddress *httpMonitorAddress(struct HttpNet *net, int counterIndex);
 
 /********************************** HttpTrace *********************************/
@@ -740,7 +743,7 @@ PUBLIC void httpSetTraceLevel(int level);
     @ingroup HttpTrace
     @stability Evolving
  */
-PUBLIC int httpGetTraceLevel();
+PUBLIC int httpGetTraceLevel(void);
 
 /**
     Configure the tracing level for an event type
@@ -1053,7 +1056,7 @@ typedef struct Http {
      */
     PUBLIC Http *HTTP;
 #elif ME_WIN_LIKE
-    PUBLIC Http *httpGetHttp();
+    PUBLIC Http *httpGetHttp(void);
     #define HTTP httpGetHttp()
 #else
     PUBLIC_DATA Http *HTTP;
@@ -1074,7 +1077,7 @@ typedef void (*HttpConfigureProc)(void *arg);
     @ingroup Http
     @stability Evolving
  */
-PUBLIC int httpApplyChangedGroup();
+PUBLIC int httpApplyChangedGroup(void);
 
 /**
     Apply the changed user ID
@@ -1082,7 +1085,7 @@ PUBLIC int httpApplyChangedGroup();
     @ingroup Http
     @stability Evolving
  */
-PUBLIC int httpApplyChangedUser();
+PUBLIC int httpApplyChangedUser(void);
 
 /**
     Apply the changed user and group ID.
@@ -1091,7 +1094,7 @@ PUBLIC int httpApplyChangedUser();
     @ingroup Http
     @stability Evolving
  */
-PUBLIC int httpApplyUserGroup();
+PUBLIC int httpApplyUserGroup(void);
 
 /*
     Flags for httpCreate
@@ -1130,7 +1133,7 @@ PUBLIC Http *httpCreate(int flags);
     @ingroup Http
     @stability Internal
  */
-PUBLIC void httpDestroy();
+PUBLIC void httpDestroy(void);
 
 /**
     Get the http context object
@@ -1138,7 +1141,7 @@ PUBLIC void httpDestroy();
     @ingroup Http
     @stability Stable
  */
-PUBLIC void *httpGetContext();
+PUBLIC void *httpGetContext(void);
 
 /**
     Get the time as an ISO date string
@@ -1156,7 +1159,7 @@ PUBLIC char *httpGetDateString(MprPath *sbuf);
     @ingroup Http
     @stability Internal
  */
-PUBLIC void httpGetUserGroup();
+PUBLIC void httpGetUserGroup(void);
 
 /**
     Initialize the Http configuration parser
@@ -1164,7 +1167,7 @@ PUBLIC void httpGetUserGroup();
     @ingroup Http
     @stability Evolving
  */
-PUBLIC int httpInitParser();
+PUBLIC int httpInitParser(void);
 
 /**
     Lookup a Http status code
@@ -1297,12 +1300,12 @@ PUBLIC void httpAddConn(struct HttpNet *net, struct HttpConn *conn);
 PUBLIC void httpRemoveConn(struct HttpNet *net, struct HttpConn *conn);
 PUBLIC void httpAddNet(struct HttpNet *net);
 PUBLIC void httpRemoveNet(struct HttpNet *net);
-PUBLIC struct HttpEndpoint *httpGetFirstEndpoint();
+PUBLIC struct HttpEndpoint *httpGetFirstEndpoint(void);
 PUBLIC void httpAddEndpoint(struct HttpEndpoint *endpoint);
 PUBLIC void httpRemoveEndpoint(struct HttpEndpoint *endpoint);
 PUBLIC void httpAddHost(struct HttpHost *host);
 PUBLIC void httpRemoveHost(struct HttpHost *host);
-PUBLIC void httpDefineRouteBuiltins();
+PUBLIC void httpDefineRouteBuiltins(void);
 PUBLIC void httpSetInfoLevel(int level);
 PUBLIC void httpStopNetworks(void *data);
 
@@ -1371,7 +1374,6 @@ PUBLIC void httpGetStats(HttpStats *sp);
     @stability Internal
  */
 typedef struct HttpLimits {
-    int      bufferSize;                /**< Maximum buffering by any pipeline stage */
     int      cacheItemSize;             /**< Maximum size of a cachable item */
     ssize    chunkSize;                 /**< Maximum chunk size for transfer encoding */
     int      clientMax;                 /**< Maximum number of unique clients IP addresses */
@@ -1380,6 +1382,7 @@ typedef struct HttpLimits {
     int      headerSize;                /**< Maximum size of the total header */
     MprTicks inactivityTimeout;         /**< Timeout for keep-alive and idle requests (msec) */
     int      keepAliveMax;              /**< Maximum number of Keep-Alive requests to perform per socket */
+    int      packetSize;                /**< Maximum packet size for queues and stages */
     int      processMax;                /**< Maximum number of processes (CGI) */
     int      requestMax;                /**< Maximum number of simultaneous concurrent requests */
     MprTicks requestTimeout;            /**< Time a request can take (msec) */
@@ -1405,7 +1408,7 @@ typedef struct HttpLimits {
     int      frameSize;                 /**< HTTP/2 maximum frame size */
     int      hpackMax;                  /**< HTTP/2 maximum size of the hpack header table */
     int      streamsMax;                /**< HTTP/2 maximum number of streams per connection */
-    int      windowSize;                /**< HTTP/2 Initial rx window size (size willing to receive) */
+    int      window;                    /**< HTTP/2 Initial rx window size (size willing to receive) */
 #endif
 } HttpLimits;
 
@@ -1884,7 +1887,7 @@ PUBLIC HttpPacket *httpCreateDataPacket(ssize size);
     @ingroup HttpPacket
     @stability Stable
  */
-PUBLIC HttpPacket *httpCreateEndPacket();
+PUBLIC HttpPacket *httpCreateEndPacket(void);
 
 /**
     Create an entity data packet
@@ -1908,7 +1911,7 @@ PUBLIC HttpPacket *httpCreateEntityPacket(MprOff pos, MprOff size, HttpFillProc 
     @ingroup HttpPacket
     @stability Stable
  */
-PUBLIC HttpPacket *httpCreateHeaderPacket();
+PUBLIC HttpPacket *httpCreateHeaderPacket(void);
 
 /**
     Create a data packet
@@ -2103,6 +2106,7 @@ typedef struct HttpQueue {
     void                *queueData;             /**< Stage instance data - must be a managed reference */
     void                *staticData;            /**< Stage instance data - must be an unmanaged reference */
 
+    ssize               window;                 /**< HTTP/2 flow control window size */
     ssize               max;                    /**< Advisory maxiumum queue size */
     ssize               low;                    /**< Low water mark for flow control */
     ssize               packetSize;             /**< Maximum acceptable packet size */
@@ -2341,15 +2345,18 @@ PUBLIC void httpServiceQueue(HttpQueue *q);
 #endif
 
 /**
-    Set a queue's flow control low and high water marks
+    Set a queue's max packetSize and flow control low, max and window thresholds
+    @description If size parameters are set to -1, default values from the limits are used.
     @param q Queue reference
+    @param limits Default limits to use if other arguments are not provided.
     @param packetSize The default maximum packet size.
-    @param low The low water mark. Typically 5% of the max.
-    @param max The high water mark.
+    @param low The low water mark. Typically set to packet size by default.
+    @param max The high water mark. Set by default to packetSize * 4.
+    @param window HTTP/2 flow control window size. Must be at least HTTP_DEFAULT_WINDOW_SIZE.
     @ingroup HttpQueue
-    @stability Stable
+    @stability Evolving
  */
-PUBLIC void httpSetQueueLimits(HttpQueue *q, ssize packetSize, ssize low, ssize max);
+PUBLIC void httpSetQueueLimits(HttpQueue *q, HttpLimits *limits, ssize packetSize, ssize low, ssize max, ssize window);
 
 /**
     Suspend a queue.
@@ -2849,22 +2856,22 @@ PUBLIC void httpSetStageData(struct HttpConn *conn, cchar *key, cvoid *data);
 /* Internal APIs */
 PUBLIC void httpAddStage(HttpStage *stage);
 PUBLIC ssize httpFilterChunkData(HttpQueue *q, HttpPacket *packet);
-PUBLIC int httpOpenActionHandler();
-PUBLIC int httpOpenChunkFilter();
-PUBLIC int httpOpenCacheHandler();
-PUBLIC int httpOpenDirHandler();
-PUBLIC int httpOpenFileHandler();
-PUBLIC int httpOpenPassHandler();
-PUBLIC int httpOpenRangeFilter();
-PUBLIC int httpOpenNetConnector();
-PUBLIC int httpOpenUploadFilter();
-PUBLIC int httpOpenWebSockFilter();
+PUBLIC int httpOpenActionHandler(void);
+PUBLIC int httpOpenChunkFilter(void);
+PUBLIC int httpOpenCacheHandler(void);
+PUBLIC int httpOpenDirHandler(void);
+PUBLIC int httpOpenFileHandler(void);
+PUBLIC int httpOpenPassHandler(void);
+PUBLIC int httpOpenRangeFilter(void);
+PUBLIC int httpOpenNetConnector(void);
+PUBLIC int httpOpenUploadFilter(void);
+PUBLIC int httpOpenWebSockFilter(void);
 PUBLIC int httpSendOpen(HttpQueue *q);
 PUBLIC void httpSendOutgoingService(HttpQueue *q);
 PUBLIC int httpHandleDirectory(struct HttpConn *conn);
-PUBLIC int httpOpenHttp1Filter();
-PUBLIC int httpOpenHttp2Filter();
-PUBLIC int httpOpenTailFilter();
+PUBLIC int httpOpenHttp1Filter(void);
+PUBLIC int httpOpenHttp2Filter(void);
+PUBLIC int httpOpenTailFilter(void);
 
 /********************************** Http2 **************************************/
 #if ME_HTTP_HTTP2 || DOXYGEN
@@ -2902,7 +2909,7 @@ PUBLIC int httpOpenTailFilter();
     Do not change these defaults. They are defined by the spec.
  */
 #define HTTP2_DEFAULT_WINDOW        65535                   /**< Initial default window size by spec */
-#define HTTP2_DEFAULT_FRAME_SIZE    (16 * 1024)             /**< Default frame size - modified by config */
+#define HTTP2_DEFAULT_FRAME_SIZE    (16 * 1024)             /**< Default and minimum frame size - modified by config */
 #define HTTP2_DEFAULT_WEIGHT        16                      /**< Unused */
 
 /*
@@ -3003,7 +3010,7 @@ typedef struct HttpHeaderTable {
 /*
     Internal
  */
-PUBLIC void httpCreatePackedHeaders();
+PUBLIC void httpCreatePackedHeaders(void);
 PUBLIC int httpLookupPackedHeader(HttpHeaderTable *headers, cchar *key, cchar *value, bool *withValue);
 PUBLIC MprKeyValue *httpGetPackedHeader(HttpHeaderTable *headers, int index);
 PUBLIC int httpAddPackedHeader(HttpHeaderTable *headers, cchar *key, cchar *value);
@@ -4243,7 +4250,7 @@ typedef struct HttpAuth {
     @stability Stable
     @internal
  */
-PUBLIC HttpAuth *httpCreateAuth();
+PUBLIC HttpAuth *httpCreateAuth(void);
 
 /**
     Create an authorization protocol type. The pre-supplied types are 'basic', 'digest' and 'form'.
@@ -4602,7 +4609,7 @@ PUBLIC void httpDigestLogin(HttpConn *conn);
 PUBLIC int httpDigestParse(HttpConn *conn, cchar **username, cchar **password);
 PUBLIC bool httpDigestSetHeaders(HttpConn *conn, cchar *username, cchar *password);
 PUBLIC bool httpGetCredentials(HttpConn *conn, cchar **username, cchar **password);
-PUBLIC void httpInitAuth();
+PUBLIC void httpInitAuth(void);
 PUBLIC bool httpInternalVerifyUser(HttpConn *conn, cchar *username, cchar *password);
 PUBLIC HttpAuthType *httpLookupAuthType(cchar *type);
 PUBLIC bool httpPamVerifyUser(HttpConn *conn, cchar *username, cchar *password);
@@ -7833,7 +7840,7 @@ PUBLIC int httpStartEndpoint(HttpEndpoint *endpoint);
     @ingroup HttpEndpoint
     @stability Evolving
  */
-PUBLIC int httpStartEndpoints();
+PUBLIC int httpStartEndpoints(void);
 
 /**
     Stop listening for client connections on all endpoints
@@ -7841,7 +7848,7 @@ PUBLIC int httpStartEndpoints();
     @returns "Zero" if successful, otherwise a negative MPR error code.
     @ingroup HttpEndpoint
  */
-PUBLIC void httpStopEndpoints();
+PUBLIC void httpStopEndpoints(void);
 
 /**
     Stop the server listening for client connections.
@@ -7917,7 +7924,7 @@ PUBLIC HttpHost *httpCloneHost(HttpHost *parent);
     @ingroup HttpHost
     @stability Stable
  */
-PUBLIC HttpHost *httpCreateHost();
+PUBLIC HttpHost *httpCreateHost(void);
 
 /**
     Create the default host
@@ -7927,7 +7934,7 @@ PUBLIC HttpHost *httpCreateHost();
     @ingroup HttpHost
     @stability Evolving
  */
-PUBLIC HttpHost *httpCreateDefaultHost();
+PUBLIC HttpHost *httpCreateDefaultHost(void);
 
 /**
     Get the default host defined via httpSetDefaultHost
@@ -7935,7 +7942,7 @@ PUBLIC HttpHost *httpCreateDefaultHost();
     @ingroup HttpHost
     @stability Stable
  */
-PUBLIC HttpHost *httpGetDefaultHost();
+PUBLIC HttpHost *httpGetDefaultHost(void);
 
 /**
     Get the default route for a host

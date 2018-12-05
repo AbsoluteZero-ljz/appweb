@@ -49,7 +49,7 @@ typedef struct App {
     int         fetchCount;         /* Total count of fetches */
     cchar       *file;              /* File to put / upload */
     MprList     *files;             /* List of files to put / upload (only ever 1 entry) */
-    int         frameSize;          /* HTTP/2 input frame size (min 16K) */
+    int         packetSize;         /* HTTP/2 input frame size (min 16K) */
     int         hasData;            /* Request has body data */
     MprList     *formData;          /* Form body data */
     MprBuf      *bodyData;          /* Block body data */
@@ -96,7 +96,7 @@ typedef struct App {
     int         verifyPeer;         /* Validate server certs */
     int         verifyIssuer;       /* Validate the issuer. Permits self-signed certs if false. */
     int         verbose;            /* Trace progress */
-    int         windowSize;         /* HTTP/2 input window size (min 65535) */
+    int         window;             /* HTTP/2 input window size (min 65535) */
     int         workers;            /* Worker threads. >0 if multi-threaded */
     int         zeroOnErrors;       /* Exit zero status for any valid HTTP response code  */
 } App;
@@ -113,9 +113,9 @@ static char     *extendUrl(cchar *url);
 static void     finishStream(Stream *stream);
 static void     finishThread(MprThread *thread);
 static cchar    *formatOutput(HttpConn *conn, cchar *buf, ssize *count);
-static char     *getPassword();
+static char     *getPassword(void);
 static cchar    *getRedirectUrl(HttpConn *conn, cchar *url);
-static int      initSettings();
+static int      initSettings(void);
 static bool     isPort(cchar *name);
 static void     manageApp(App *app, int flags);
 static void     manageStream(Stream *stream, int flags);
@@ -127,13 +127,13 @@ static void     prepHeaders(HttpConn *conn);
 static void     readBody(HttpConn *conn);
 static int      processResponse(HttpConn *conn);
 static int      setContentLength(HttpConn *conn);
-static void     setDefaults();
-static int      showUsage();
+static void     setDefaults(void);
+static int      showUsage(void);
 static void     startRequest(HttpConn *conn);
-static void     startThreads();
+static void     startThreads(void);
 static void     threadMain(void *data, MprThread *tp);
 static void     trace(HttpConn *conn, cchar *url, int fetchCount, cchar *method, int status, MprOff contentLen);
-static void     waitForUser();
+static void     waitForUser(void);
 static ssize    writeBody(HttpConn *conn);
 
 /*********************************** Code *************************************/
@@ -250,8 +250,8 @@ static void setDefaults()
     app->headers = mprCreateList(0, MPR_LIST_STABLE);
     app->mutex = mprCreateLock();
 #if ME_HTTP_HTTP2
-    app->frameSize = HTTP2_DEFAULT_FRAME_SIZE;
-    app->windowSize = HTTP2_DEFAULT_WINDOW;
+    app->packetSize = HTTP2_DEFAULT_FRAME_SIZE;
+    app->window = HTTP2_DEFAULT_WINDOW;
 #endif
 #if WINDOWS
     _setmode(fileno(stdout), O_BINARY);
@@ -408,9 +408,9 @@ static int parseArgs(int argc, char **argv)
             if (nextArg >= argc) {
                 return showUsage();
             } else {
-                app->frameSize = atoi(argv[++nextArg]);
-                if (app->frameSize < HTTP2_DEFAULT_FRAME_SIZE) {
-                    app->frameSize = HTTP2_DEFAULT_FRAME_SIZE;
+                app->packetSize = atoi(argv[++nextArg]);
+                if (app->packetSize < HTTP2_DEFAULT_FRAME_SIZE) {
+                    app->packetSize = HTTP2_DEFAULT_FRAME_SIZE;
                 }
             }
 #endif
@@ -635,9 +635,9 @@ static int parseArgs(int argc, char **argv)
             if (nextArg >= argc) {
                 return showUsage();
             } else {
-                app->windowSize = atoi(argv[++nextArg]);
-                if (app->windowSize < HTTP2_DEFAULT_WINDOW) {
-                    app->windowSize = HTTP2_DEFAULT_WINDOW;
+                app->window = atoi(argv[++nextArg]);
+                if (app->window < HTTP2_DEFAULT_WINDOW) {
+                    app->window = HTTP2_DEFAULT_WINDOW;
                 }
             }
 #endif
@@ -751,10 +751,9 @@ static int initSettings()
         limits->requestTimeout = app->timeout;
     }
 #if ME_HTTP_HTTP2
-    limits->frameSize = app->frameSize;
-    limits->windowSize = app->windowSize;
+    limits->packetSize = app->packetSize;
+    limits->window = app->window;
 #endif
-
     mprSetMaxWorkers(app->workers);
 
     if (initSsl() < 0) {
