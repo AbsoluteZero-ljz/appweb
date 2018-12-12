@@ -109,10 +109,16 @@ or
 
     sudo me uninstall
 
+### To Run:
+
+The src/server directory contains a minimal appweb.conf suitable for production use without SSL. The test directory contains an appweb.conf that is fully configured for testing. When using the src/server/appweb.conf, change to the src/server directory to run. When using the test/appweb.conf, change to the test directory to run.
+
 ### To Test:
 
 Build with MakeMe and then:
 
+    ./configure
+    me
     me test
 
 Resources
