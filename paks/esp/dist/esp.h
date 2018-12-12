@@ -1895,7 +1895,7 @@ PUBLIC void espFinalize(HttpConn *conn);
 
 /**
     Flush transmit data.
-    @description This writes any buffered data.
+    @description This writes any buffered data and initiates writing to the peer. This will not block.
     @param conn HttpConn connection object
     @ingroup EspReq
     @stability Stable
@@ -2345,7 +2345,8 @@ PUBLIC void espRemoveSessionVar(HttpConn *conn, cchar *name);
 /**
     Render a formatted string.
     @description Render a formatted string of data into packets to the client. Data packets will be created
-        as required to store the write data. This call may block waiting for data to drain to the client.
+        as required to store the write data. This call may block waiting for data to drain to the client and
+        may yield to the garbage collector.
     @param conn HttpConn connection object
     @param fmt Printf style formatted string
     @param ... Arguments for fmt
@@ -2366,7 +2367,7 @@ PUBLIC ssize espRenderConfig(HttpConn *conn);
 
 /**
     Render a block of data to the client.
-    @description Render a block of data to the client. Data packets will be created as required to store the write data.
+    @description Render a block of data to the client. Data packets will be created as required to store the write data. This call may block waiting for the client to absorb the data.
     @param conn HttpConn connection object
     @param buf Buffer containing the write data
     @param size Size of the data in buf

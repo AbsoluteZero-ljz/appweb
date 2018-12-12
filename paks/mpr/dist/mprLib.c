@@ -272,8 +272,7 @@ PUBLIC Mpr *mprCreateMemService(MprManager manager, int flags)
     }
     heap->gcCond = mprCreateCond();
 
-    //  TODO - could just remove STATIC_VALUES
-    heap->roots = mprCreateList(-1, MPR_LIST_STATIC_VALUES);
+    heap->roots = mprCreateList(-1, 0/* UNUSED MPR_LIST_STATIC_VALUES */);
     mprAddRoot(MPR);
     return MPR;
 }
@@ -1262,9 +1261,6 @@ static void markAndSweep()
 
 static void markRoots()
 {
-    void    *root;
-    int     next;
-
 #if ME_MPR_ALLOC_STATS
     heap->stats.markVisited = 0;
     heap->stats.marked = 0;
@@ -1272,10 +1268,14 @@ static void markRoots()
     mprMark(heap->roots);
     mprMark(heap->gcCond);
 
-    //  TODO - could just remove STATIC_VALUES and remove this
+#if UNUSED
+    void    *root;
+    int     next;
+
     for (ITERATE_ITEMS(heap->roots, root, next)) {
         mprMark(root);
     }
+#endif
 }
 
 
@@ -9802,12 +9802,15 @@ PUBLIC int mprWaitForEvent(MprDispatcher *dispatcher, MprTicks timeout, int64 ma
     MprTicks            expires, delay;
     int                 runEvents, changed;
 
+    if (dispatcher->flags & MPR_DISPATCHER_DESTROYED) {
+        return 0;
+    }
     if (dispatcher == NULL) {
         dispatcher = MPR->dispatcher;
     }
     if ((runEvents = (dispatcher->owner == mprGetCurrentOsThread())) != 0) {
         /* Called from an event on a running dispatcher */
-        assert(isRunning(dispatcher));
+        assert(isRunning(dispatcher) || (dispatcher->flags & MPR_DISPATCHER_DESTROYED));
         if (dispatchEvents(dispatcher)) {
             return 0;
         }
@@ -9840,7 +9843,7 @@ PUBLIC int mprWaitForEvent(MprDispatcher *dispatcher, MprTicks timeout, int64 ma
 
     if (runEvents) {
         dispatchEvents(dispatcher);
-        assert(isRunning(dispatcher));
+        assert(isRunning(dispatcher) || (dispatcher->flags & MPR_DISPATCHER_DESTROYED));
     }
     return 0;
 }

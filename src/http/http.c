@@ -250,8 +250,8 @@ static void setDefaults()
     app->headers = mprCreateList(0, MPR_LIST_STABLE);
     app->mutex = mprCreateLock();
 #if ME_HTTP_HTTP2
-    app->packetSize = HTTP2_DEFAULT_FRAME_SIZE;
-    app->window = HTTP2_DEFAULT_WINDOW;
+    app->packetSize = HTTP2_MIN_FRAME_SIZE;
+    app->window = HTTP2_MIN_WINDOW;
 #endif
 #if WINDOWS
     _setmode(fileno(stdout), O_BINARY);
@@ -409,8 +409,8 @@ static int parseArgs(int argc, char **argv)
                 return showUsage();
             } else {
                 app->packetSize = atoi(argv[++nextArg]);
-                if (app->packetSize < HTTP2_DEFAULT_FRAME_SIZE) {
-                    app->packetSize = HTTP2_DEFAULT_FRAME_SIZE;
+                if (app->packetSize < HTTP2_MIN_FRAME_SIZE) {
+                    app->packetSize = HTTP2_MIN_FRAME_SIZE;
                 }
             }
 #endif
@@ -636,8 +636,8 @@ static int parseArgs(int argc, char **argv)
                 return showUsage();
             } else {
                 app->window = atoi(argv[++nextArg]);
-                if (app->window < HTTP2_DEFAULT_WINDOW) {
-                    app->window = HTTP2_DEFAULT_WINDOW;
+                if (app->window < HTTP2_MIN_WINDOW) {
+                    app->window = HTTP2_MIN_WINDOW;
                 }
             }
 #endif
@@ -886,7 +886,11 @@ static void threadMain(void *data, MprThread *thread)
 
     } else {
         for (i = 0; i < app->streams && app->success; i++) {
-            conn = httpCreateConn(net);
+            if ((conn = httpCreateConn(net, 0)) == 0) {
+                mprLog("error http", 0, "Cannot create connection: %s", net->errorMsg);
+                app->success = 0;
+                break;
+            }
             stream = createStream(td, conn);
             mprAddItem(td->streams, stream);
             /* Run serialized on the network dispatcher */
@@ -973,8 +977,7 @@ static void startRequest(HttpConn *conn)
     }
     stream->written = 0;
 
-    //  TODO - reivew
-    //  TODO - why
+    //  TODO - review
     authType = conn->authType;
 
     app->url = stream->redirect ? stream->redirect : app->url;

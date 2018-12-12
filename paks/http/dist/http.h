@@ -59,23 +59,22 @@ struct HttpWebSocket;
     #ifndef ME_PACKET_SIZE
         #define ME_PACKET_SIZE      (8 * 1024)      /**< Default packet size for pipeline packets */
     #endif
-    #ifndef ME_CHUNK
-        #define ME_CHUNK            (8 * 1024)      /**< Maximum chunk size for transfer chunk encoding */
+    #ifndef ME_CHUNK_SIZE
+        #define ME_CHUNK_SIZE       (8 * 1024)      /**< Maximum chunk size for transfer chunk encoding */
     #endif
 #elif ME_TUNE_SPEED
     #ifndef ME_PACKET_SIZE
         #define ME_PACKET_SIZE      (32 * 1024)
     #endif
-    #ifndef ME_CHUNK
-        #define ME_CHUNK            (32 * 1024)
+    #ifndef ME_CHUNK_SIZE
+        #define ME_CHUNK_SIZE       (32 * 1024)
     #endif
 #else
     #ifndef ME_PACKET_SIZE
         #define ME_PACKET_SIZE      (16 * 1024)
     #endif
-    //  MOB should be CHUNK_SIZE
-    #ifndef ME_CHUNK
-        #define ME_CHUNK            (16 * 1024)
+    #ifndef ME_CHUNK_SIZE
+        #define ME_CHUNK_SIZE       (16 * 1024)
     #endif
 #endif
 #ifndef ME_SANITY_PACKET
@@ -130,7 +129,7 @@ struct HttpWebSocket;
     #define ME_MAX_HPACK_SIZE       4096                 /**< Maximum size of the hpack table */
 #endif
 #ifndef ME_MAX_STREAMS
-    #define ME_MAX_STREAMS          20                    /**< Maximum concurrent streams per connection */
+    #define ME_MAX_STREAMS          20                    /**< Default maximum concurrent streams per connection */
 #endif
 #ifndef ME_MAX_HEADERS
     #define ME_MAX_HEADERS          8192                 /**< Maximum size of the headers (8K) */
@@ -1407,7 +1406,8 @@ typedef struct HttpLimits {
 #if ME_HTTP_HTTP2 || DOXYGEN
     int      frameSize;                 /**< HTTP/2 maximum frame size */
     int      hpackMax;                  /**< HTTP/2 maximum size of the hpack header table */
-    int      streamsMax;                /**< HTTP/2 maximum number of streams per connection */
+    int      streamsMax;                /**< HTTP/2 maximum number of streams per connection (both peer and self initiated) */
+    int      txStreamsMax;                 /**< HTTP/2 maximum number of streams the peer will permit per connection */
     int      window;                    /**< HTTP/2 Initial rx window size (size willing to receive) */
 #endif
 } HttpLimits;
@@ -2475,6 +2475,8 @@ PUBLIC ssize httpWrite(HttpQueue *q, cchar *fmt, ...) PRINTF_ATTRIBUTE(2,3);
         In non-blocking mode (HTTP_NON_BLOCK), the call may return having written fewer bytes than requested.
         \n\n
         In buffering mode (HTTP_BUFFER), the data is always absorbed without blocking and queue size limits are ignored.
+        In buffering mode, this routine may invoke mprYield if required to consent for the garbage collector to run.
+        Callers must ensure they have retained all required temporary memory before invoking this routine.
         \n\n
         Data written after calling #httpFinalize, #httpFinalizeOutput or #httpError will be discarded.
     @param q Queue reference
@@ -2484,7 +2486,7 @@ PUBLIC ssize httpWrite(HttpQueue *q, cchar *fmt, ...) PRINTF_ATTRIBUTE(2,3);
         buffer the data if required and never block. Set to zero will default to HTTP_BUFFER.
     @return The size value if successful or a negative MPR error code.
     @ingroup HttpQueue
-    @stability Stable
+    @stability Evolving
  */
 PUBLIC ssize httpWriteBlock(HttpQueue *q, cchar *buf, ssize size, int flags);
 
@@ -2908,8 +2910,8 @@ PUBLIC int httpOpenTailFilter(void);
 /*
     Do not change these defaults. They are defined by the spec.
  */
-#define HTTP2_DEFAULT_WINDOW        65535                   /**< Initial default window size by spec */
-#define HTTP2_DEFAULT_FRAME_SIZE    (16 * 1024)             /**< Default and minimum frame size - modified by config */
+#define HTTP2_MIN_WINDOW            65535                   /**< Initial default window size by spec */
+#define HTTP2_MIN_FRAME_SIZE        (16 * 1024)             /**< Default and minimum frame size - modified by config */
 #define HTTP2_DEFAULT_WEIGHT        16                      /**< Unused */
 
 /*
@@ -3088,6 +3090,7 @@ typedef struct HttpNet {
     int             delay;                  /**< Delay servicing requests due to defense strategy */
     int             nextStream;             /**< Next stream ID */
     int             lastStream;             /**< Last stream ID */
+    int             ownStreams;             /**< Number of peer created streams */
     int             seqno;                  /**< Unique network sequence number */
     int             session;                /**< Currently parsing frame for this session */
     int             timeout;                /**< Connection timeout indication */
@@ -3098,6 +3101,7 @@ typedef struct HttpNet {
     bool            destroyed: 1;           /**< Net object has been destroyed */
     bool            eof: 1;                 /**< Socket has been closed */
     bool            error: 1;               /**< Hard network error - cannot continue */
+    uint            eventMask: 3;           /**< Last IO event mask */
     bool            goaway: 1;              /**< Closing network connection (sent or received a goAway frame) */
     bool            init: 1;                /**< Settings frame has been sent and network is ready to use */
     uint            protocol: 2;            /**< HTTP protocol: 0 for HTTP/1.0, 1 for HTTP/1.1 or 2+ */
@@ -3140,8 +3144,8 @@ PUBLIC void httpDestroyNet(HttpNet *net);
 /**
     Respond to a HTTP I/O event
     @description This routine responds to I/O described by the supplied eventMask.
-    If any readable data is present, it allocates a standard sized packet and reads data into this and then invokes
-    the #httpProcess engine.
+    If any readable data is present, it allocates a standard sized packet and reads data into this packet and passes to the input
+    queue pipeline.
     @param net HttpNet object created via #httpCreateNet
     @param event Event structure
     @ingroup HttpNet
@@ -3487,6 +3491,7 @@ typedef struct HttpConn {
     bool            error;                  /**< An error has occurred and the request cannot be completed */
     bool            errorDoc: 1;            /**< Processing an error document */
     bool            followRedirects: 1;     /**< Follow redirects for client requests */
+    bool            peerCreated: 1;         /**< Stream created by peer */
     bool            ownDispatcher: 1;       /**< Own the dispatcher and should destroy when closing connection */
     bool            secure: 1;              /**< Using https */
     bool            seenHeader:1;           /**< Already seen at least one header packet in the output queue */
@@ -3559,7 +3564,7 @@ PUBLIC void httpBorrowConn(HttpConn *conn);
     @ingroup HttpConn
     @stability Internal
 */
-PUBLIC HttpConn *httpCreateConn(HttpNet *net);
+PUBLIC HttpConn *httpCreateConn(HttpNet *net, bool peerCreated);
 
 /**
     Create the receive request pipeline
@@ -6984,8 +6989,8 @@ PUBLIC void httpTrimExtraPath(HttpConn *conn);
     @description the httpProcess function drives the HTTP request and response state machine. Once a request is received from the peer and the HTTP headers have been parsed into HttpConn and HttpTx, the httpProcess() function should be called to drive the request pipeline to process the request.
     \n\n
     The HTTP state machine drives the HttpConn.state through the states from
-    HTTP_STATE_BEGIN, HTTP_STATE_CONNECTED, HTTP_STATE_FIRST, HTTP_STATE_PARSED, HTTP_STATE_CONTENT, HTTP_STATE_READY, HTTP_STATE_RUNNING, HTTP_STATE_FINALIZED to HTTP_STATE_COMPLETE. For each state, the notifier defined by
-    #httpSetConnNotifier will be invoked.
+    HTTP_STATE_BEGIN, HTTP_STATE_CONNECTED, HTTP_STATE_FIRST, HTTP_STATE_PARSED, HTTP_STATE_CONTENT, HTTP_STATE_READY, HTTP_STATE_RUNNING, HTTP_STATE_FINALIZED to HTTP_STATE_COMPLETE. For each state, the notifier defined by #httpSetConnNotifier will be invoked.
+    The state should be in HTTP_STATE_PARSED via #httpProcessHeaders before calling this routine.
     \n\n
     httpProcess is invoked by the HTTP/1 and HTTP/2 filters after they have decoded input packets and whenever the network socket becomes newly writable and can absorb more output data.
     @param q HttpQueue queue object
@@ -6993,6 +6998,20 @@ PUBLIC void httpTrimExtraPath(HttpConn *conn);
     @stability Evolving
  */
 PUBLIC void httpProcess(HttpQueue *q);
+
+/**
+    Process Http headers
+    @description the httpProcessHeaders function drives the HTTP request and response state machine. Once a request is received from the peer and the HTTP headers have been parsed into HttpConn and HttpTx, the httpProcessHeaders() function should be called to drive parse the headers fields.
+    \n\n
+    The HTTP state machine should be in the HTTP_STATE_FIRST state. This routine will advance the state to HTTP_STATE_PARSED.
+    \n\n
+    httpProcessHeaders is invoked by the HTTP/1 and HTTP/2 filters after they have decoded input packets and whenever the network socket becomes newly writable and can absorb more output data.
+    @param q HttpQueue queue object
+    @ingroup HttpRx
+    @stability Prototype
+ */
+PUBLIC bool httpProcessHeaders(HttpQueue *q);
+
 
 /* Internal */
 PUBLIC void httpCloseRx(struct HttpConn *conn);

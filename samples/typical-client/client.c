@@ -3,9 +3,6 @@
 
     This sample demonstrates retrieving content using the HTTP GET method.
 
-    MOB - should be renamed simple-client
-        typical-client should be event based with notifier and http2
-
     Copyright (c) All Rights Reserved. See copyright notice at the bottom of the file.
  */
 /***************************** Includes *******************************/

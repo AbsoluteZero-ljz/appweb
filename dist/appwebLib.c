@@ -1243,7 +1243,7 @@ static int limitBufferDirective(MaState *state, cchar *key, cchar *value)
     if (size > (1024 * 1024)) {
         size = (1024 * 1024);
     }
-    state->route->limits->bufferSize = size;
+    state->route->limits->packetSize = size;
     return 0;
 }
 
@@ -1490,7 +1490,7 @@ static int limitWindowDirective(MaState *state, cchar *key, cchar *value)
     if (size > (1024 * 1024)) {
         size = (1024 * 1024);
     }
-    state->route->limits->windowSize = size;
+    state->route->limits->window = size;
     return 0;
 }
 

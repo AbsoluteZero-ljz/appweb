@@ -4037,35 +4037,23 @@ PUBLIC MprLogHandler mprGetLogHandler(void);
 /**
     Write a message to the error log file.
     @description Send a message to the MPR error logging subsystem.
-        The purpose of the error log is to record essential configuration and error conditions. Per-request trace
-        typically is sent to a separate trace log.
+        The purpose of the error log is to record essential configuration and error conditions. Per-request trace typically is sent to a separate trace log.
         \n\n
-        By default, error log messages are sent to the standard error output.
-        Applications may redirect output by installing a log handler using #mprSetLogHandler.
+        By default, error log messages are sent to the standard error output. Applications may redirect output by installing a log handler using #mprSetLogHandler.
         \n\n
-        Log messages should be a single text line to facilitate machine processing of log files. Descriptive tag words
-        may be provided to indicate a severity level and to classifiy messages.
-        By convention, tags may include one of the severity levels defined in RFC 5424: "debug",
-        "info", "notice", "warn", "error", "critical". Messages using the "error", "critical" tags should use
-        a level of zero.  Tags should be space separated.
+        Log messages should be a single text line to facilitate machine processing of log files. Descriptive tag words may be provided to indicate a severity level and to classifiy messages. By convention, tags may include one of the severity levels defined in RFC 5424: "debug", "info", "notice", "warn", "error", "critical". Messages using the "error", "critical" tags should use a level of zero.  Tags should be space separated. By convention, specify the RFC tag name first in a list of tags.
         \n\n
-        Logging typically is enabled in both debug and release builds and may be controlled via the build define
-        ME_MPR_LOGGING which is typically set via the MakeMe setting "logging: true".
+        The default log handler emits messages in three formats depending on whether MPR_LOG_DETAILED is provided to #mprStartLogging and the value of the tags parameter. If MPR_LOG_DETAILED and tags are supplied, the format is: "MM/DD/YY HH:MM:SS LEVEL TAGS, Message". Otherwise a a simplified output format is used: "Name: severity: message", where severity is set to "error" for level 0 messages. This is useful for utility programs. If tags are null, the message is output raw, without any any prefixes.
+        \n\n
+        Logging typically is enabled in both debug and release builds and may be controlled via the build define ME_MPR_LOGGING which is typically set via the MakeMe setting "logging: true".
         \n\n
         The #mprDebug API may be used to emit log messages only in debug builds.
         \n\n
-        If level zero is used, the message is also sent to any relevant operating system logging facility such as
-        syslog or the Windows event database.
+        If level zero is used, the message is also sent to any relevant operating system logging facility such as syslog or the Windows event database.
         \n\n
-        It is good practice to only include debug trace at levels above level 2 so that essential error messages are clearly
-        visible in the error log and are not swamped by debug messages.
-    @param tags Descriptive space separated tag words to classify this message.
-        The default log handler emits messages in three formats depending on whether MPR_LOG_DETAILED is provided to
-        #mprStartLogging and the value of the tags parameter.
-        If MPR_LOG_DETAILED and tags are supplied, the format is: "MM/DD/YY HH:MM:SS LEVEL TAGS, Message". Otherwise a
-        a simplified output format is used: "Name: severity: message", where severity is set to "error" for level 0
-        messages. This is useful for utility programs.
-        If tags are null, the message is output raw, without any any prefixes.
+        It is good practice to only include debug trace at levels above level 2 so that essential error messages are clearly visible in the error log and are not swamped by debug messages.
+
+    @param tags Descriptive space separated tag words to classify this message. Tag words may be provided to indicate a severity level and to classifiy messages. By convention, tags may include one of the severity levels defined in RFC 5424: "debug", "info", "notice", "warn", "error", "critical". Messages using the "error", "critical" tags should use a level of zero.  Tags should be space separated. By convention, specify the RFC tag name first in a list of tags.
     @param level Logging level for this message. The level is 0-5 with five being the most verbose.
     @param fmt Printf style format string. Variable number of arguments to print
     @param ... Variable number of arguments for printf data

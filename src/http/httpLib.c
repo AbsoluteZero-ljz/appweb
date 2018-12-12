@@ -491,9 +491,10 @@ PUBLIC void httpInitLimits(HttpLimits *limits, bool serverSide)
         HTTP/2 parameters. Default and minimum frameSize must be 16K and window size 65535 by spec. Do not change.
      */
     limits->hpackMax = ME_MAX_HPACK_SIZE;
-    limits->packetSize = HTTP2_DEFAULT_FRAME_SIZE;
+    limits->packetSize = HTTP2_MIN_FRAME_SIZE;
     limits->streamsMax = ME_MAX_STREAMS;
-    limits->window = HTTP2_DEFAULT_WINDOW;
+    limits->txStreamsMax = ME_MAX_STREAMS;
+    limits->window = HTTP2_MIN_WINDOW;
 #endif
 
     if (serverSide) {
@@ -3449,7 +3450,9 @@ PUBLIC HttpConn *httpRequest(cchar *method, cchar *uri, cchar *data, int protoco
     mprStartDispatcher(dispatcher);
 
     net = httpCreateNet(dispatcher, NULL, protocol, 0);
-    conn = httpCreateConn(net);
+    if ((conn = httpCreateConn(net, 0)) == 0) {
+        return 0;
+    }
     mprAddRoot(conn);
 
     if (clientRequest(conn, method, uri, data, protocol, err) < 0) {
@@ -4508,9 +4511,8 @@ static void parseLimitsPacket(HttpRoute *route, cchar *key, MprJson *prop)
     if (size > ME_SANITY_PACKET) {
         size = ME_SANITY_PACKET;
 #if ME_HTTP_HTTP2
-//  MOB - packet size probably can be less than the min frame size?
-    } else if (size < HTTP2_DEFAULT_FRAME_SIZE) {
-        size = HTTP2_DEFAULT_FRAME_SIZE;
+    } else if (size < HTTP2_MIN_FRAME_SIZE) {
+        size = HTTP2_MIN_FRAME_SIZE;
 #endif
     }
     route->limits->packetSize = size;
@@ -4548,6 +4550,9 @@ static void parseLimitsRxHeader(HttpRoute *route, cchar *key, MprJson *prop)
 
 
 #if ME_HTTP_HTTP2
+/*
+    Set the total maximum number of streams per network connection
+ */
 static void parseLimitsStreams(HttpRoute *route, cchar *key, MprJson *prop)
 {
     int     size;
@@ -4629,8 +4634,8 @@ static void parseLimitsWindow(HttpRoute *route, cchar *key, MprJson *prop)
     int     size;
 
     size = httpGetInt(prop->value);
-    if (size < HTTP2_DEFAULT_WINDOW) {
-        size = HTTP2_DEFAULT_WINDOW;
+    if (size < HTTP2_MIN_WINDOW) {
+        size = HTTP2_MIN_WINDOW;
     }
     route->limits->window = size;
 }
@@ -5723,7 +5728,7 @@ static void manageConn(HttpConn *conn, int flags);
     Use httpCreateNet() to create a network object.
  */
 
-PUBLIC HttpConn *httpCreateConn(HttpNet *net)
+PUBLIC HttpConn *httpCreateConn(HttpNet *net, bool peerCreated)
 {
     Http        *http;
     HttpQueue   *q;
@@ -5733,7 +5738,6 @@ PUBLIC HttpConn *httpCreateConn(HttpNet *net)
     HttpRoute   *route;
 
     assert(net);
-
     http = HTTP;
     if ((conn = mprAllocObj(HttpConn, manageConn)) == 0) {
         return 0;
@@ -5749,6 +5753,7 @@ PUBLIC HttpConn *httpCreateConn(HttpNet *net)
     conn->port = net->port;
     conn->ip = net->ip;
     conn->secure = net->secure;
+    conn->peerCreated = peerCreated;
     pickStreamNumber(conn);
 
     if (net->endpoint) {
@@ -5765,6 +5770,13 @@ PUBLIC HttpConn *httpCreateConn(HttpNet *net)
         conn->trace = http->trace;
     }
     limits = conn->limits;
+
+    if (!peerCreated && ((net->ownStreams >= limits->txStreamsMax) || (net->ownStreams >= limits->streamsMax))) {
+        httpNetError(net, "Attempting to create too many streams for network connection: %d/%d/%d", net->ownStreams,
+            limits->txStreamsMax, limits->streamsMax);
+        return 0;
+    }
+
     conn->keepAliveCount = (net->protocol >= 2) ? 0 : conn->limits->keepAliveMax;
     conn->dispatcher = net->dispatcher;
 
@@ -5805,6 +5817,9 @@ PUBLIC HttpConn *httpCreateConn(HttpNet *net)
 #endif
     httpSetState(conn, HTTP_STATE_BEGIN);
     httpAddConn(net, conn);
+    if (!peerCreated) {
+        net->ownStreams++;
+    }
     return conn;
 }
 
@@ -5824,8 +5839,11 @@ PUBLIC void httpDestroyConn(HttpConn *conn)
             conn->activeRequest = 0;
         }
         httpDisconnectConn(conn);
-        httpRemoveConn(conn->net, conn);
+        if (!conn->peerCreated) {
+            conn->net->ownStreams--;
+        }
         conn->destroyed = 1;
+        httpRemoveConn(conn->net, conn);
     }
 }
 
@@ -7856,7 +7874,7 @@ PUBLIC void httpNetError(HttpNet *net, cchar *fmt, ...)
         net->errorMsg = msg = sfmtv(fmt, args);
 #if ME_HTTP_HTTP2
         if (net->protocol >= 2 && !net->eof) {
-            httpSendGoAway(net, HTTP2_INTERNAL_ERROR, "5s", msg);
+            httpSendGoAway(net, HTTP2_INTERNAL_ERROR, "%s", msg);
         }
 #endif
         if (httpIsServer(net)) {
@@ -9421,7 +9439,7 @@ static void incomingHttp1(HttpQueue *q, HttpPacket *packet)
         There will typically be no packets on the queue, so this will be fast
      */
     httpJoinPacketForService(q, packet, HTTP_DELAY_SERVICE);
-
+    
     for (packet = httpGetPacket(q); packet && !conn->error; packet = httpGetPacket(q)) {
         if (httpTracing(q->net)) {
             httpTracePacket(q->net->trace, "http1.rx", "packet", 0, packet, NULL);
@@ -9432,14 +9450,14 @@ static void incomingHttp1(HttpQueue *q, HttpPacket *packet)
                     httpJoinPacketForService(q, packet, HTTP_DELAY_SERVICE);
                     break;
                 }
+                httpProcessHeaders(conn->inputq);
             }
-            httpProcess(conn->inputq);
         }
         if (packet) {
             httpPutPacket(conn->inputq, packet);
         }
-        httpProcess(conn->inputq);
     }
+    httpProcess(conn->inputq);
 }
 
 
@@ -9451,11 +9469,20 @@ static void outgoingHttp1(HttpQueue *q, HttpPacket *packet)
 
 static void outgoingHttp1Service(HttpQueue *q)
 {
+    HttpConn    *conn;
     HttpPacket  *packet;
 
+    conn = q->conn;
     for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
+        if (!httpWillQueueAcceptPacket(q, q->net->socketq, packet)) {
+            httpPutBackPacket(q, packet);
+            return;
+        }
         tracePacket(q, packet);
         httpPutPacket(q->net->socketq, packet);
+        if (conn && q->count <= q->low && (conn->outputq->flags & HTTP_QUEUE_SUSPENDED)) {
+            httpResumeQueue(conn->outputq);
+        }
     }
 }
 
@@ -9469,9 +9496,6 @@ static void tracePacket(HttpQueue *q, HttpPacket *packet)
     net = q->net;
     type = (packet->type & HTTP_PACKET_HEADER) ? "headers" : "data";
     len = httpGetPacketLength(packet) + mprGetBufLength(packet->prefix);
-    if (packet->prefix) {
-        print("HERE");
-    }
     if (httpTracing(net) && !net->skipTrace) {
         if (net->bytesWritten >= net->trace->maxContent) {
             httpTrace(net->trace, "http1.tx", "packet", "msg: 'Abbreviating packet trace'");
@@ -9876,11 +9900,12 @@ static HttpConn *findConn(HttpQueue *q)
     HttpConn    *conn;
 
     if (!q->conn) {
-        if ((conn = httpCreateConn(q->net)) == 0) {
+        if ((conn = httpCreateConn(q->net, 1)) == 0) {
             /* Memory error - centrally reported */
             return 0;
         }
         q->conn = conn;
+        q->pair->conn = conn;
     } else {
         conn = q->conn;
     }
@@ -9955,7 +9980,7 @@ static void parseSettingsFrame(HttpQueue *q, HttpPacket *packet);
 static void parseWindowFrame(HttpQueue *q, HttpPacket *packet);
 static void processDataFrame(HttpQueue *q, HttpPacket *packet);
 static void resetConn(HttpConn *conn, cchar *msg, int error);
-static ssize resizePacket(HttpQueue *q, ssize max, HttpPacket *packet, bool *done);
+static ssize resizePacket(HttpQueue *q, ssize max, HttpPacket *packet);
 static void sendFrame(HttpQueue *q, HttpPacket *packet);
 static void sendGoAway(HttpQueue *q, int status, cchar *fmt, ...);
 static void sendPreface(HttpQueue *q);
@@ -10101,12 +10126,10 @@ static void outgoingHttp2Service(HttpQueue *q)
     HttpPacket  *packet;
     HttpTx      *tx;
     ssize       len;
-    bool        done;
 
     net = q->net;
-    done = 0;
 
-    for (packet = httpGetPacket(q); packet && !net->error && !done; packet = httpGetPacket(q)) {
+    for (packet = httpGetPacket(q); packet && !net->error; packet = httpGetPacket(q)) {
         net->lastActivity = net->http->now;
         if (net->outputq->window <= 0) {
             /*
@@ -10114,6 +10137,7 @@ static void outgoingHttp2Service(HttpQueue *q)
                 a window update message from the peer.
              */
             httpSuspendQueue(q);
+            httpPutBackPacket(q, packet);
             break;
         }
         conn = packet->conn;
@@ -10122,8 +10146,9 @@ static void outgoingHttp2Service(HttpQueue *q)
             Resize data packets to not exceed the remaining HTTP/2 window flow control credits.
          */
         len = httpGetPacketLength(packet);
+
         if (packet->flags & HTTP_PACKET_DATA) {
-            len = resizePacket(net->outputq, net->outputq->window, packet, &done);
+            len = resizePacket(net->outputq, net->outputq->window, packet);
             net->outputq->window -= len;
             assert(net->outputq->window >= 0);
         }
@@ -10163,6 +10188,10 @@ static void outgoingHttp2Service(HttpQueue *q)
             if (q->count <= q->low && (conn->outputq->flags & HTTP_QUEUE_SUSPENDED)) {
                 httpResumeQueue(conn->outputq);
             }
+        }
+        if (net->outputq->window == 0) {
+            httpSuspendQueue(q);
+            break;
         }
     }
     closeNetworkWhenDone(q);
@@ -10213,7 +10242,7 @@ static int getFrameFlags(HttpQueue *q, HttpPacket *packet)
 /*
     Resize a packet to utilize the remaining HTTP/2 window credits. Must not exceed the remaining window size.
  */
-static ssize resizePacket(HttpQueue *q, ssize max, HttpPacket *packet, bool *done)
+static ssize resizePacket(HttpQueue *q, ssize max, HttpPacket *packet)
 {
     HttpPacket  *tail;
     ssize       len;
@@ -10226,7 +10255,6 @@ static ssize resizePacket(HttpQueue *q, ssize max, HttpPacket *packet, bool *don
         }
         httpPutBackPacket(q, tail);
         len = httpGetPacketLength(packet);
-        *done = 1;
     }
     return len;
 }
@@ -10359,10 +10387,12 @@ static void parseSettingsFrame(HttpQueue *q, HttpPacket *packet)
 {
     HttpNet     *net;
     HttpFrame   *frame;
+    HttpLimits  *limits;
     MprBuf      *buf;
     uint        field, value;
 
     net = q->net;
+    limits = net->limits;
     buf = packet->content;
     frame = packet->data;
 
@@ -10376,7 +10406,7 @@ static void parseSettingsFrame(HttpQueue *q, HttpPacket *packet)
 
         switch (field) {
         case HTTP2_HEADER_TABLE_SIZE_SETTING:
-            value = min((int) value, net->limits->hpackMax);
+            value = min((int) value, limits->hpackMax);
             httpSetPackedHeadersMax(net->txHeaders, value);
             break;
 
@@ -10390,22 +10420,30 @@ static void parseSettingsFrame(HttpQueue *q, HttpPacket *packet)
             break;
 
         case HTTP2_MAX_STREAMS_SETTING:
-            //  MOB - validate range
-            net->limits->streamsMax = min((int) value, net->limits->streamsMax);
+            /* Permit peer supporting more streams, but don't ever create more than streamsMax limit */
+            if (value <= 0) {
+                sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Too many streams setting %d max %d", value, ME_MAX_STREAMS);
+                return;
+            }
+            limits->txStreamsMax = min((int) value, limits->streamsMax);
             break;
 
         case HTTP2_INIT_WINDOW_SIZE_SETTING:
-            if (value < HTTP2_DEFAULT_WINDOW || value > HTTP2_MAX_WINDOW) {
-                sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Invalid window size setting %x max %x", value, HTTP2_MAX_WINDOW);
+            if (value < HTTP2_MIN_WINDOW || value > HTTP2_MAX_WINDOW) {
+                sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Invalid window size setting %d max %d", value, HTTP2_MAX_WINDOW);
                 return;
             }
             net->outputq->window = value;
             break;
 
         case HTTP2_MAX_FRAME_SIZE_SETTING:
-            //  MOB - validate range
-            if (value > 0 && value < net->outputq->packetSize) {
-                net->outputq->packetSize = value;
+            /* Permit peer supporting bigger frame sizes, but don't ever create packets larger than the packetSize limit */
+            if (value <= 0) {
+                sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Invalid frame size setting %d max %d", value, ME_PACKET_SIZE);
+                return;
+            }
+            if (value < net->outputq->packetSize) {
+                net->outputq->packetSize = min(value, ME_PACKET_SIZE);
                 #if TODO && TBD
                 httpResizePackets(net->outputq);
                 #endif
@@ -10413,9 +10451,12 @@ static void parseSettingsFrame(HttpQueue *q, HttpPacket *packet)
             break;
 
         case HTTP2_MAX_HEADER_SIZE_SETTING:
-            //  MOB - validate range
-            if ((int) value < net->limits->headerSize) {
-                net->limits->headerSize = value;
+            if (value <= 0 || value > ME_MAX_HEADERS) {
+                sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Invalid header size setting %d max %d", value, ME_MAX_HEADERS);
+                return;
+            }
+            if ((int) value < limits->headerSize) {
+                limits->headerSize = value;
             }
             break;
 
@@ -10527,12 +10568,12 @@ static HttpConn *getStream(HttpQueue *q, HttpPacket *packet)
              */
             return 0;
         }
-        if ((conn = httpCreateConn(net)) == 0) {
+        if ((conn = httpCreateConn(net, 0)) == 0) {
             /* Memory error - centrally reported */
             return 0;
         }
-        frame->conn = conn;
         conn->stream = frame->stream;
+        frame->conn = conn;
 
         /*
             Servers create a new connection stream. Note: HttpConn is used for HTTP/2 streams (legacy).
@@ -10736,6 +10777,7 @@ static void parseHeaderFrames(HttpQueue *q, HttpConn *conn)
         if (!conn->error) {
             conn->state = HTTP_STATE_PARSED;
         }
+        httpProcessHeaders(conn->inputq);
         httpProcess(conn->inputq);
     }
 }
@@ -11212,6 +11254,7 @@ static void sendSettings(HttpQueue *q)
 {
     HttpNet     *net;
     HttpPacket  *packet;
+    ssize       size;
 
     net = q->net;
     if (!net->init && httpIsClient(net)) {
@@ -11222,13 +11265,14 @@ static void sendSettings(HttpQueue *q)
         return;
     }
     mprPutUint16ToBuf(packet->content, HTTP2_MAX_STREAMS_SETTING);
-    mprPutUint32ToBuf(packet->content, net->limits->streamsMax);
+    mprPutUint32ToBuf(packet->content, net->limits->streamsMax - net->ownStreams);
 
     mprPutUint16ToBuf(packet->content, HTTP2_INIT_WINDOW_SIZE_SETTING);
     mprPutUint32ToBuf(packet->content, (uint32) net->inputq->window);
 
     mprPutUint16ToBuf(packet->content, HTTP2_MAX_FRAME_SIZE_SETTING);
-    mprPutUint32ToBuf(packet->content, (uint32) net->inputq->packetSize);
+    size = max(net->inputq->packetSize, HTTP2_MIN_FRAME_SIZE);
+    mprPutUint32ToBuf(packet->content, (uint32) size);
 
 #if FUTURE
     mprPutUint16ToBuf(packet->content, HTTP2_HEADER_TABLE_SIZE_SETTING);
@@ -11612,6 +11656,7 @@ static void manageFrame(HttpFrame *frame, int flags)
         mprMark(frame->conn);
     }
 }
+
 
 #endif /* ME_HTTP_HTTP2 */
 /*
@@ -14028,11 +14073,11 @@ PUBLIC HttpNet *httpCreateNet(MprDispatcher *dispatcher, HttpEndpoint *endpoint,
 #if ME_HTTP_HTTP2
 {
     /*
-        The socket queue will typically send and accept packets of HTTP2_DEFAULT_FRAME_SIZE plus the frame size overhead.
+        The socket queue will typically send and accept packets of HTTP2_MIN_FRAME_SIZE plus the frame size overhead.
         Set the max to fit four packets. Note that HTTP/2 flow control happens on the http filters and not on the socketq.
         Other queues created in netConnector after the protocol is known.
      */
-    ssize packetSize = max(HTTP2_DEFAULT_FRAME_SIZE + HTTP2_FRAME_OVERHEAD, net->limits->packetSize);
+    ssize packetSize = max(HTTP2_MIN_FRAME_SIZE + HTTP2_FRAME_OVERHEAD, net->limits->packetSize);
     httpSetQueueLimits(net->socketq, net->limits, packetSize, -1, -1, -1);
     net->rxHeaders = createHeaderTable(HTTP2_TABLE_SIZE);
     net->txHeaders = createHeaderTable(HTTP2_TABLE_SIZE);
@@ -14213,7 +14258,7 @@ PUBLIC void httpSetNetProtocol(HttpNet *net, int protocol)
         Create queues connected to the appropriate protocol filter. Supply conn for HTTP/1.
         For HTTP/2:
             The Q packetSize defines frame size and the Q max defines the window size.
-            The outputq->max must be set to HTTP2_DEFAULT_WINDOW by spec. The packetSize must be set to 16K minimum.
+            The outputq->max must be set to HTTP2_MIN_WINDOW by spec. The packetSize must be set to 16K minimum.
      */
 #if ME_HTTP_HTTP2
     stage = protocol == 1 ? http->http1Filter : http->http2Filter;
@@ -14227,13 +14272,13 @@ PUBLIC void httpSetNetProtocol(HttpNet *net, int protocol)
 
 #if ME_HTTP_HTTP2
     /*
-        The input queue window is defined by the network limits value. Default of HTTP2_DEFAULT_WINDOW but revised by config.
+        The input queue window is defined by the network limits value. Default of HTTP2_MIN_WINDOW but revised by config.
      */
     httpSetQueueLimits(net->inputq, net->limits, -1, -1, -1, -1);
     /*
         The packetSize and window size will always be revised in Http2:parseSettingsFrame
      */
-    httpSetQueueLimits(net->outputq, net->limits, HTTP2_DEFAULT_FRAME_SIZE, -1, -1, -1);
+    httpSetQueueLimits(net->outputq, net->limits, HTTP2_MIN_FRAME_SIZE, -1, -1, -1);
 #endif
 }
 
@@ -14698,7 +14743,7 @@ static HttpPacket *getPacket(HttpNet *net, ssize *lenp)
     if (net->protocol < 2) {
         size = net->inputq ? net->inputq->packetSize : ME_PACKET_SIZE;
     } else {
-        size = (net->inputq ? net->inputq->packetSize : HTTP2_DEFAULT_FRAME_SIZE) + HTTP2_FRAME_OVERHEAD;
+        size = (net->inputq ? net->inputq->packetSize : HTTP2_MIN_FRAME_SIZE) + HTTP2_FRAME_OVERHEAD;
     }
 #else
     size = net->inputq ? net->inputq->packetSize : ME_PACKET_SIZE;
@@ -14738,9 +14783,10 @@ PUBLIC int httpGetNetEventMask(HttpNet *net)
     }
     if (mprSocketHasBufferedRead(sock) || !net->inputq || (net->inputq->count < net->inputq->max)) {
         /*
-            Don't read if writeBlocked to mitigate DOS attack via ping flood
+            TODO - how to mitigate against a ping flood?
+            Was testing if !writeBlocked before adding MPR_READABLE, but this is always required for HTTP/2 to read window frames.
          */
-        if (mprSocketHandshaking(sock) || (!net->eof && !net->writeBlocked)) {
+        if (mprSocketHandshaking(sock) || !net->eof) {
             eventMask |= MPR_READABLE;
         }
     }
@@ -14817,6 +14863,7 @@ PUBLIC void httpSetupWaitHandler(HttpNet *net, int eventMask)
     } else if (sp->handler) {
         mprWaitOn(sp->handler, eventMask);
     }
+    net->eventMask = eventMask;
 }
 
 
@@ -14834,7 +14881,7 @@ static void checkLen(HttpQueue *q)
     if (count > maxCount) {
         maxCount = count;
         if (maxCount > 50) {
-            print("Count %d, blocked %d, goaway %d, received goaway %d, eof %d", count, net->writeBlocked, net->goaway, net->receivedGoaway, net->eof);
+            // print("XX Qcount %ld, count %d, blocked %d, goaway %d, received goaway %d, eof %d", q->count, count, net->writeBlocked, net->goaway, net->receivedGoaway, net->eof);
         }
     }
 }
@@ -14862,7 +14909,7 @@ static void netOutgoingService(HttpQueue *q)
 
     while (q->first || q->ioIndex) {
         if (q->ioIndex == 0 && buildNetVec(q) <= 0) {
-            freeNetPackets(q, written);
+            freeNetPackets(q, 0);
             break;
         }
         written = mprWriteSocketVector(net->sock, q->iovec, q->ioIndex);
@@ -14959,35 +15006,36 @@ static void freeNetPackets(HttpQueue *q, ssize bytes)
     ssize       len;
 
     assert(q->count >= 0);
-    assert(bytes > 0);
+    assert(bytes >= 0);
 
-    while ((packet = q->first) != 0 && bytes > 0) {
-        if (packet->prefix) {
-            len = mprGetBufLength(packet->prefix);
-            len = min(len, bytes);
-            mprAdjustBufStart(packet->prefix, len);
-            bytes -= len;
-            /* Prefixes don't count in the q->count. No need to adjust */
-            if (mprGetBufLength(packet->prefix) == 0) {
-                /* Ensure the prefix is not resent if all the content is not sent */
-                packet->prefix = 0;
-            }
-        }
-        if (packet->content) {
-            len = mprGetBufLength(packet->content);
-            len = min(len, bytes);
-            mprAdjustBufStart(packet->content, len);
-            bytes -= len;
-            q->count -= len;
-            assert(q->count >= 0);
-        }
+    while ((packet = q->first) != 0) {
         if (packet->flags & HTTP_PACKET_END) {
             if ((conn = packet->conn) != 0) {
                 httpFinalizeConnector(conn);
                 mprCreateEvent(q->net->dispatcher, "endRequest", 0, httpProcess, conn->inputq, 0);
             }
+        } else if (bytes > 0) {
+            if (packet->prefix) {
+                len = mprGetBufLength(packet->prefix);
+                len = min(len, bytes);
+                mprAdjustBufStart(packet->prefix, len);
+                bytes -= len;
+                /* Prefixes don't count in the q->count. No need to adjust */
+                if (mprGetBufLength(packet->prefix) == 0) {
+                    /* Ensure the prefix is not resent if all the content is not sent */
+                    packet->prefix = 0;
+                }
+            }
+            if (packet->content) {
+                len = mprGetBufLength(packet->content);
+                len = min(len, bytes);
+                mprAdjustBufStart(packet->content, len);
+                bytes -= len;
+                q->count -= len;
+                assert(q->count >= 0);
+            }
         }
-        if (httpGetPacketLength(packet) == 0) {
+        if (httpGetPacketLength(packet) == 0 && !packet->prefix) {
             /* Done with this packet - consume it. Important for flow control. */
             httpGetPacket(q);
         } else {
@@ -16292,6 +16340,7 @@ static bool processContent(HttpQueue *q);
 static void processFinalized(HttpQueue *q);
 static void processFirst(HttpQueue *q);
 static void processHeaders(HttpQueue *q);
+static void processHttp(HttpQueue *q);
 static void processParsed(HttpQueue *q);
 static void processReady(HttpQueue *q);
 static bool processRunning(HttpQueue *q);
@@ -16300,13 +16349,33 @@ static void routeRequest(HttpConn *conn);
 static int sendContinue(HttpQueue *q);
 
 /*********************************** Code *************************************/
+
+PUBLIC bool httpProcessHeaders(HttpQueue *q)
+{
+    if (q->conn->state != HTTP_STATE_PARSED) {
+        return 0;
+    }
+    processFirst(q);
+    processHeaders(q);
+    processParsed(q);
+    return 1;
+}
+
+
+PUBLIC void httpProcess(HttpQueue *q)
+{
+    //  TODO - should have flag if already scheduled?
+    mprCreateEvent(q->conn->dispatcher, "http2", 0, processHttp, q->conn->inputq, 0);
+}
+
+
 /*
     HTTP Protocol state machine for HTTP/1 server requests and client responses.
     Process an incoming request/response and drive the state machine.
     This will process only one request/response.
     All socket I/O is non-blocking, and this routine must not block.
  */
-PUBLIC void httpProcess(HttpQueue *q)
+static void processHttp(HttpQueue *q)
 {
     HttpConn    *conn;
     bool        more;
@@ -16320,9 +16389,7 @@ PUBLIC void httpProcess(HttpQueue *q)
     for (count = 0, more = 1; more && count < 10; count++) {
         switch (conn->state) {
         case HTTP_STATE_PARSED:
-            processFirst(q);
-            processHeaders(q);
-            processParsed(q);
+            httpProcessHeaders(q);
             break;
 
         case HTTP_STATE_CONTENT:
@@ -16868,6 +16935,8 @@ static bool processContent(HttpQueue *q)
             }
         }
         httpSetState(conn, HTTP_STATE_READY);
+    }
+    if (rx->eof || !httpServerConn(conn)) {
         if (conn->readq->first) {
             HTTP_NOTIFY(conn, HTTP_EVENT_READABLE, 0);
         }
@@ -17488,39 +17557,47 @@ PUBLIC void httpDiscardQueueData(HttpQueue *q, bool removePackets)
 /*
     Flush queue data toward the connector by scheduling the queue and servicing all scheduled queues.
     Return true if there is room for more data. If blocking is requested, the call will block until
-    the queue count falls below the queue max. WARNING: Be very careful when using blocking == true.
-    Should only be used by end applications and not by middleware.
-    NOTE: may return early if the inactivityTimeout expires.
+    the queue count falls below the queue max. NOTE: may return early if the inactivityTimeout expires.
     WARNING: may yield.
  */
 PUBLIC bool httpFlushQueue(HttpQueue *q, int flags)
 {
     HttpNet     *net;
+    HttpConn    *conn;
+    MprTicks    timeout;
+    int         events;
 
     net = q->net;
+    conn = q->conn;
 
     /*
-        Initiate flushing
+        Initiate flushing. For HTTP/2 we must process incoming window update frames, so run any pending IO events.
      */
     httpScheduleQueue(q);
     httpServiceQueues(net, flags);
+    mprWaitForEvent(conn->dispatcher, 0, mprGetEventMark(conn->dispatcher));
 
-    if (flags & HTTP_BLOCK) {
-        /*
-            Blocking mode: Fully drain the pipeline. This blocks until the connector has written all the data
-            to the O/S socket.
-         */
-        while (net->socketq->count > 0 || net->socketq->ioCount) {
-            if (net->error) {
-                break;
+    if (net->error) {
+        return 1;
+    }
+
+    while (q->count > 0 && !conn->error && !net->error) {
+        timeout = (flags & HTTP_BLOCK) ? conn->limits->inactivityTimeout : 0;
+        if ((events = mprWaitForSingleIO((int) net->sock->fd, MPR_READABLE | MPR_WRITABLE, timeout)) != 0) {
+            conn->lastActivity = net->lastActivity = net->http->now;
+            if (events & MPR_WRITABLE) {
+                net->lastActivity = net->http->now;
+                httpResumeQueue(net->socketq);
+                httpScheduleQueue(net->socketq);
+                httpServiceQueues(net, flags);
             }
-            if (!mprWaitForSingleIO((int) net->sock->fd, MPR_WRITABLE, net->limits->inactivityTimeout)) {
-                break;
-            }
-            net->lastActivity = net->http->now;
-            httpResumeQueue(net->socketq);
-            httpScheduleQueue(net->socketq);
-            httpServiceQueues(net, flags);
+            /*
+                Process HTTP/2 window update messages for flow control
+             */
+            mprWaitForEvent(conn->dispatcher, 0, mprGetEventMark(conn->dispatcher));
+        }
+        if (!(flags & HTTP_BLOCK)) {
+            break;
         }
     }
     return (q->count < q->max) ? 1 : 0;
@@ -22770,7 +22847,7 @@ static bool streamCanAbsorb(HttpQueue *q, HttpPacket *packet)
     conn = q->conn;
     nextQ = conn->net->outputq;
     size = httpGetPacketLength(packet);
-    
+
     /*
         Get the maximum the output stream can absorb that is less than the downstream queue packet size.
      */
@@ -22810,6 +22887,10 @@ static void outgoingTailService(HttpQueue *q)
 
     for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
         if (!streamCanAbsorb(q, packet)) {
+            httpPutBackPacket(q, packet);
+            return;
+        }
+        if (!httpWillQueueAcceptPacket(q, q->net->outputq, packet)) {
             httpPutBackPacket(q, packet);
             return;
         }
@@ -24394,8 +24475,7 @@ PUBLIC bool httpFileExists(HttpConn *conn)
 
 /*
     Write a block of data. This is the lowest level write routine for data. This will buffer the data and flush if
-    the queue buffer is full. Flushing is done by calling httpFlushQueue which will service queues as required. This
-    may call the queue outgoing service routine and disable downstream queues if they are full.
+    the queue buffer is full. Flushing is done by calling httpFlushQueue which will service queues as required.
  */
 PUBLIC ssize httpWriteBlock(HttpQueue *q, cchar *buf, ssize len, int flags)
 {
@@ -24420,7 +24500,7 @@ PUBLIC ssize httpWriteBlock(HttpQueue *q, cchar *buf, ssize len, int flags)
         if (conn->state >= HTTP_STATE_FINALIZED || conn->net->error) {
             return MPR_ERR_CANT_WRITE;
         }
-        if (q->last && q->last != q->first && q->last->flags & HTTP_PACKET_DATA && mprGetBufSpace(q->last->content) > 0) {
+        if (q->last && (q->last != q->first) && (q->last->flags & HTTP_PACKET_DATA) && mprGetBufSpace(q->last->content) > 0) {
             packet = q->last;
         } else {
             packetSize = (tx->chunkSize > 0) ? tx->chunkSize : q->packetSize;
@@ -25316,7 +25396,7 @@ PUBLIC HttpUri *httpCreateUri(cchar *uri, int flags)
         /*
             Supported forms:
                 scheme://hostname
-                hostname:port
+                hostname:port/
          */
         if ((next = spbrk(tok, ":/")) == 0) {
             next = &tok[slen(tok)];
@@ -25331,6 +25411,9 @@ PUBLIC HttpUri *httpCreateUri(cchar *uri, int flags)
         up->port = atoi(++tok);
         if ((tok = schr(tok, '/')) == 0) {
             tok = "";
+        }
+        if (up->port == 4443 || up->port == 443) {
+            up->secure = 1;
         }
     }
     assert(tok);
@@ -25356,8 +25439,10 @@ PUBLIC HttpUri *httpCreateUri(cchar *uri, int flags)
             up->path = sclone("/");
         }
     }
+#if UNUSED
     up->secure = smatch(up->scheme, "https") || smatch(up->scheme, "wss");
     up->webSockets = (smatch(up->scheme, "ws") || smatch(up->scheme, "wss"));
+#endif
 
     if (flags & HTTP_COMPLETE_URI) {
         if (!up->scheme) {

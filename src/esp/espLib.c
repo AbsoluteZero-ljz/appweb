@@ -6351,9 +6351,7 @@ PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *sourc
         /*
             Windows leaves intermediate object in the current directory
          */
-        cchar   *path;
-//  MOB - csource may be freed here
-        path = mprReplacePathExt(mprGetPathBase(csource), "obj");
+        cchar *path = mprReplacePathExt(mprGetPathBase(csource), "obj");
         if (mprPathExists(path, F_OK)) {
             mprDeletePath(path);
         }
