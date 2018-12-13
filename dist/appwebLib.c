@@ -11,6 +11,7 @@
 
 /**
     config.c - Parse the configuration file.
+    
     Copyright (c) All Rights Reserved. See details at the end of the file.
  */
 

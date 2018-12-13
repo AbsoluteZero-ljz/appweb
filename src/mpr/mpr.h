@@ -99,7 +99,6 @@ struct  MprXml;
 #ifndef ME_MPR_TEST
     #define ME_MPR_TEST 1
 #endif
-
 #ifndef ME_MPR_MAX_PASSWORD
     #define ME_MPR_MAX_PASSWORD 256    /**< Max password length */
 #endif
@@ -1189,10 +1188,12 @@ PUBLIC struct Mpr *mprCreateMemService(MprManager manager, int flags);
     To protect an active memory block memory block from being reclaimed, it must have a reference to it. Memory blocks
     can specify a manager routine via #mprAllocObj. The manager is is invoked by the garbage collector to "mark"
     dependant active blocks. Marked blocks will not be reclaimed by the garbage collector.
+    \n\n
     This function can be called by foreign (non Mpr) threads provided you use the MPR_ALLOC_HOLD flag so that the memory
-    will be preserved until you call mprRelease on the memory block. This is important as without the MPR_ALLOC_HOLD flag,
-    the garbage collector could run immediately after calling mprAlloc and collect the memory. When used in an Mpr thread,
-    the garbage collector cannot run unless you call mprYield and so the memory is safe from immediate collection.
+    will be preserved until you call mprRelease on the memory block. This is important, as without the MPR_ALLOC_HOLD flag,
+    the garbage collector could run immediately after calling mprAlloc and collect the memory.
+    When used in an Mpr thread, the garbage collector cannot run until your thread calls #mprYield and so the memory is
+    safe from immediate collection.
     @param size Size of the memory block to allocate.
     @param flags Allocation flags. Supported flags include: MPR_ALLOC_MANAGER to reserve room for a manager callback and
         MPR_ALLOC_ZERO to zero allocated memory. Use MPR_ALLOC_HOLD to return memory immune from GC. Must use this flag if
@@ -2382,7 +2383,7 @@ PUBLIC char    *awtom(wchar *src, ssize *len);
 PUBLIC ssize   wtom(char *dest, ssize count, wchar *src, ssize len);
 PUBLIC ssize   mtow(wchar *dest, ssize count, cchar *src, ssize len);
 
-#if KEEP
+#if FUTURE
 PUBLIC wchar    *wfmt(wchar *fmt, ...);
 PUBLIC wchar    *itow(wchar *buf, ssize bufCount, int64 value, int radix);
 PUBLIC wchar    *wchr(wchar *s, int c);
@@ -2464,7 +2465,7 @@ PUBLIC wchar    *wupper(wchar *s);
     This API is not yet public
  */
 #if ME_CHAR_LEN > 1
-#if KEEP
+#if FUTURE
 PUBLIC int      mcaselesscmp(wchar *s1, cchar *s2);
 PUBLIC int      mcmp(wchar *s1, cchar *s2);
 PUBLIC wchar    *mcontains(wchar *str, cchar *pattern);
@@ -3032,7 +3033,7 @@ PUBLIC void mprSetBufRefillProc(MprBuf *buf, MprBufProc fn, void *arg);
 PUBLIC int mprSetBufSize(MprBuf *buf, ssize size, ssize maxSize);
 
 #if DOXYGEN || ME_CHAR_LEN > 1
-#if KEEP
+#if FUTURE
 /**
     Add a wide null character to the buffer contents.
     @description Add a null character but do not change the buffer content lengths. The null is added outside the
@@ -3078,7 +3079,7 @@ PUBLIC ssize mprPutStringToWideBuf(MprBuf *buf, cchar *str);
  */
 PUBLIC ssize mprPutFmtToWideBuf(MprBuf *buf, cchar *fmt, ...) PRINTF_ATTRIBUTE(2,3);
 
-#endif /* KEEP */
+#endif /* FUTURE */
 #else /* ME_CHAR_LEN == 1 */
 
 #define mprAddNullToWideBuf     mprAddNullToBuf
@@ -6022,12 +6023,12 @@ PUBLIC void mprWakeEventService(void);
 PUBLIC void mprSignalDispatcher(MprDispatcher *dispatcher);
 
 /**
-    Queue an new event for service on a dispatcher.
+    Queue an new event on a dispatcher.
     @description Create an event to run a callback on an event dispatcher queue.
         The MPR serializes work in a thread-safe manner on dispatcher queues. Resources such as connections will typically
         own a dispatcher that is used to serialize their work.
         \n\n
-        This API may be also called by foreign (non-mpr) threads and is the only safe way to invoke MPR services from
+        This API may be called by foreign (non-mpr) threads and is the only safe way to invoke MPR services from
         a foreign-thread. The reason for this is that the MPR uses a cooperative garbage collector and a foreign thread
         may call into the MPR at an inopportune time when the MPR is running the garbage collector which requires sole
         access to application memory.
@@ -6035,9 +6036,9 @@ PUBLIC void mprSignalDispatcher(MprDispatcher *dispatcher);
         Set to NULL for the MPR dispatcher. Use MPR_EVENT_QUICK in the flags to run the event on the events nonBlock
         dispatcher. This should only be used for quick, non-block event callbacks. If using another dispatcher,
         it is essential that the dispatcher not be destroyed while this event is queued or running.
-    @param name Static string name of the event
+    @param name Static string name of the event used for debugging.
     @param period Time in milliseconds used by continuous events between firing of the event.
-    @param proc Function to invoke when the event is run
+    @param proc Function to invoke when the event is run.
     @param data Data to associate with the event and stored in event->data. The data must be either an allocated memory
         object or MPR_EVENT_STATIC_DATA must be specified in flags.
     @param flags Flags to modify the behavior of the event. Valid values are: MPR_EVENT_CONTINUOUS to create an event
