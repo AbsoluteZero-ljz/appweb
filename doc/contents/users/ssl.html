@@ -11,14 +11,14 @@
             with SSL, please read the <a href="sslOverview.html">SSL Overview</a> first.</p><a id="sslQuickStart"></a>
             <h2>SSL Quick Start</h2>
             <p>The default binary installation of Appweb will support SSL for all network interfaces. You
-            can immediately test SSL access to documents by using the <b>https://</b> scheme. 
+            can immediately test SSL access to documents by using the <b>https://</b> scheme.
             For example, to access the home page using SSL, use this URL in your browser:</p>
             <pre class="ui code segment">
 https://localhost/
 </pre>
             <h3>Self-Signed Certificate</h3>
             <p>Appweb is shipped with a self-signed certificate to identify the web server.</p>
-            <p><b>SECURITY WARNING</b>: This certificate is suitable for testing purposes only and 
+            <p><b>SECURITY WARNING</b>: This certificate is suitable for testing purposes only and
             your browser will issue a warning when you access the server. For
             production use, you should obtain your own service certificate from signing authorities such as <a href="http://www.verisign.com">Verisign</a>.</p><a id="sslConfigurationDirectives"></a>
             <h2>SSL Configuration Directives</h2>
@@ -81,9 +81,11 @@ openssl req -new -key server.key -out server.csr
             provider for their needs.</p>
             <p>Appweb provides multiple SSL implementations:</p>
             <ul>
-                <li>MbedTLS -- designed for embedded use. This is the default SSL stack and is pre-integrated with Appweb. 
+                <li>MbedTLS -- designed for embedded use. This is the default SSL stack and is pre-integrated with Appweb.
                     It is configured and enabled by default.</li>
                 <li>OpenSSL -- designed for enterprise use. See <a href=
                     "http://www.openssl.org">http://www.openssl.org</a>.</li>
             </ul>
+
             <p>The binary installation will use the MbedTLS provider by default.</p>
+            <p>To build with OpenSSL, please consult the projects/README.md file included with the source code.</p>

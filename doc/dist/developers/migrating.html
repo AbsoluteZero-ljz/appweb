@@ -184,14 +184,14 @@
     </div>
     <div class="content">
 
-            <h1>Migrating to Appweb 8</h1>
-            <p>Appweb 4 to 8 are highly compatible. Code written for Appweb 4 to 7 should migrate to Appweb 8 with a relatively few changes.</p>
+            <h1>Migrating from Earlier Versions</h1>
+            <p>Appweb 4 to 8 are highly compatible. Code written for Appweb 4 to 6 should migrate to Appweb 8 with few changes required.</p>
 
             <p>If you are migrating from Appweb 1-3, you should regard Appweb latest as a next generation web server. You can migrate code from Appweb 1-3 to Appweb latest, however, you should anticipate significant refactoring work in the transition, especially with regard to memory allocations.</p>
 
             <a id="changes"></a>
-            <h2>Changes in Appweb 8</h2>
-            <p>Appweb 8 adds support for the HTTP/2 protocol. HTTP/2 is a higher performance binary protocol that supports multiplexing multiple request streams over a single network connection. This necessitates some minor API changes and so applications, handlers and filters may need some refactoring to work with Appweb 8. See the separate document <a href="migrating-8.html">Migrating to Appweb 8</a> for details.</p>
+            <h2>Migrating to Appweb 8</h2>
+            <p>Appweb 8 adds support for the HTTP/2 protocol. HTTP/2 is a higher performance binary protocol that supports multiplexing multiple request streams over a single network connection. This necessitates some API changes and so applications, handlers and filters may need some minor refactoring to work with Appweb 8. See the separate document <a href="migrating-8.html">Migrating to Appweb 8</a> for details.</p>
 
             <h2>Changes in Appweb 7</h2>
             <p>Appweb 7 removes deprecated APIs and contains bug fixes. There are no major new features.</p>
@@ -242,9 +242,10 @@
             </ul>
 
             <h3>Memory Allocator</h3>
-            <p>Appweb 4-7 includes a high performance memory allocator and generational garbage collector. The allocator is a fast and immediate coalescing allocator. It is optimized for frequent allocations of small blocks and uses a background collector to free unused memory. If you are upgrading from Appweb 1-3, you may need to change how you are doing memory allocations.</p>
+            <p>Appweb version 4 to 8 include a high performance memory allocator and generational garbage collector. The allocator is a fast and immediate coalescing allocator. It is optimized for frequent allocations of small blocks and uses a background collector to free unused memory. If you are upgrading from Appweb 1-3, you will need to change how you are doing memory allocations.</p>
 
             <p>The garbage collector is somewhat unusual in a C program. However, garbage collection is especially well suited to long running applications like a web server since it virtually eliminates memory leaks. Unlike traditional memory allocation where <em>free</em> must be called, Appweb 4 uses the opposite approach: memory that must be retained needs to be actively managed to prevent garbage collection. This means that a <em>managed reference</em> must be held for all active memory. See <a href="../ref/memory.html">Memory Allocation</a> for more details.</p>
+            
 
     </div>
     <div class="terms ui basic center aligned segment">

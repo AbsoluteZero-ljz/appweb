@@ -347,21 +347,21 @@
                 <a href="../ref/api/http.html#group___http_tx_1gadc3a395967972fb839f0639f8cd66c61">httpSetHeader</a>.
                 For example:</p>
             <pre class="ui code segment">
-HttpConn *conn = q-&gt;conn;
-httpSetStatus(conn, 200);
-httpSetHeader(conn, "NowIs", "The time is %s", mprGetDate(NULL));
+HttpStream *stream = q-&gt;stream;
+httpSetStatus(stream, 200);
+httpSetHeader(stream, "NowIs", "The time is %s", mprGetDate(NULL));
 </pre>
             <a id="errors"></a>
             <h3>Generating an Error Response</h3>
             <p>If the request has an error, the status and a response message may be set via:
                 <a href="../ref/api/http.html#group___http_conn_1ga9f730354501b53a97b7678a91273a3be">httpError</a>.
                 When httpError is called to indicate a request error, the supplied response text is used instead of
-                any partially generated response body and the the connection field <em>conn-&gt;error</em> is set. Once
+                any partially generated response body and the the connection field <em>stream-&gt;error</em> is set. Once
                 set, pipeline processing is abbreviated and handler callbacks will not be called anymore. Consequently, if
                 you need to continue handler processing, but want to set a non-zero status return code, do <i>not</i>
                 use httpError. Rather, use httpSetStatus.</p>
 <pre class="ui code segment">
-httpError(conn, 200, HTTP_CODE_GONE, "Can't find %s", path);
+httpError(stream, 200, HTTP_CODE_GONE, "Can't find %s", path);
 </pre>
                 <h4>Aborting Requests</h4>
                 <p>The status argument to httpError can also accept flags to control how the socket connection is
@@ -373,14 +373,14 @@ httpError(conn, 200, HTTP_CODE_GONE, "Can't find %s", path);
                 orderly completion of the request. Normally the connection is kept-open for subsequent requests on the
                 same socket.</p>
 <pre class="ui code segment">
-httpError(conn, 504, HTTP_ABOR, "Can't continue with the request");
+httpError(stream, 504, HTTP_ABOR, "Can't continue with the request");
 </pre>
             <a id="redirecting"></a>
             <h3>Redirecting</h3>
             <p>Sometimes a handler will want to generate a response that will redirect the client to a new URI.
             Use the <a href="../ref/api/http.html#group___http_tx_1ga616290c9e8fe95419d3a31f6fbb870b5">httpRedirect</a> call
             to redirect the client. For example:
-            <pre class="ui code segment">httpRedirect(conn, HTTP_CODE_MOVED_PERMANENTLY, uri);</pre>
+            <pre class="ui code segment">httpRedirect(stream, HTTP_CODE_MOVED_PERMANENTLY, uri);</pre>
 
             <h3>Generating Response Body</h3>
             <p>The simplest way to generate a response is to use
@@ -392,8 +392,8 @@ httpError(conn, 504, HTTP_ABOR, "Can't continue with the request");
             finalizes the output response data by sending an empty packet to the network connector which signifies
             the completion of the request.</p>
         <pre class="ui code segment">
-httpWrite(conn, "Hello World\n");
-httpFinalizeOutput(conn);
+httpWrite(stream, "Hello World\n");
+httpFinalizeOutput(stream);
 </pre>
             <p>You can call httpFinalize if you have generated all the response output and completed all processing.
             This implies httpFinalizeOutput and may then discard any remaining input.</p>
@@ -426,7 +426,7 @@ static ssize doOutput(HttpQueue *q, cchar *data, ssize len)
 static void writable(HttpQueue *q)
 {
     if (finished) {
-        httpFinalize(q-&gt;conn);
+        httpFinalize(q-&gt;stream);
     } else {
         httpWriteString(q, getMoreData(q));
     }
@@ -439,7 +439,7 @@ static void writable(HttpQueue *q)
             <p>Calling httpWrite will not automatically send the data to the client. Appweb buffers such output data to aggregate data into more efficient larger packets. If you wish to send buffered data to the client immediately, call
             <a href="../ref/api/http.html#group___http_tx_1ga23c2dd9ef6d1b76a146bb93731fa7b7d">httpFlush</a>.
             To ensure output data has been fully written to the network, use
-            <a href="../ref/api/http.html#group___http_queue_1gac9d6922973cb9cbb0debd5c20e14577b">httpFlushQueue</a>(conn-&gt;writeq, HTTP_BLOCK).</p>
+            <a href="../ref/api/http.html#group___http_queue_1gac9d6922973cb9cbb0debd5c20e14577b">httpFlushQueue</a>(stream-&gt;writeq, HTTP_BLOCK).</p>
 
         <a id="paradigms"></a>
         <h2>Response Paradigms</h2>
@@ -472,7 +472,7 @@ static void writable(HttpQueue *q)
         be done from Appweb events via Appweb dispatchers. To run code on the connection's dispatcher event loop, use:
         <a href="../ref/api/mpr.html#group___mpr_event_1ga6154e34c582e39cd64b4505a6afb39c4">mprCreateEvent</a>.
         <pre class="ui code segment">
-mprCreateEvent(q-&gt;conn-&gt;dispatcher, "deviceEvent", 0, doMoreOutput, q, 0);
+mprCreateEvent(q-&gt;stream-&gt;dispatcher, "deviceEvent", 0, doMoreOutput, q, 0);
 </pre>
         <p>This will schedule the function <em>doMoreOutput</em> to run from the connection dispatcher.
         <p>You may call mprCreateEvent from any Appweb thread and the scheduled function will run serialized
@@ -493,13 +493,13 @@ mprCreateEvent(q-&gt;conn-&gt;dispatcher, "deviceEvent", 0, doMoreOutput, q, 0);
             <a href="../ref/api/http.html#group___http_conn_1ga1eea2fb67ffdc13f9ae78bde57b01d4d">httpReturnConn</a> in
             your event callback to resume normal processing of the connection.</p>
             <pre class="ui code segment">
-httpBorrowConn(conn);
-httpCreateEventOutside(conn-&gt;dispatcher, 0, 0, myEvent, conn, HTTP_EVENT_BLOCK);
-void myEvent(HttpConn *conn, MprEvent *event) {
+httpBorrowConn(stream);
+httpCreateEventOutside(stream-&gt;dispatcher, 0, 0, myEvent, stream, HTTP_EVENT_BLOCK);
+void myEvent(HttpStream *stream, MprEvent *event) {
     /* Running serialized on an Appweb thread */
-    httpWrite(conn, "Login Successful");
-    httpFinalize(conn);
-    httpReturnConn(conn);
+    httpWrite(stream, "Login Successful");
+    httpFinalize(stream);
+    httpReturnConn(stream);
 }
 </pre>
         <h4>Owning a Connection</h4>
@@ -508,7 +508,7 @@ void myEvent(HttpConn *conn, MprEvent *event) {
         time a request can perform no input or output before being terminated. If either of these timeouts are violated,
         the request will be terminated and the connection will be closed by Appweb.
 
-        <p>A handler can modify these timeouts via the <a href="../ref/api/http.html#group___http_conn_1ga62a6f4aec1892bd682d7a661d1aae4ee">httpSetTimeout</a>
+        <p>A handler can modify these timeouts via the <a href="../ref/api/http.html#group___http_stream_1ga99922c1f07023f4ed5bcf39d37a86791">httpSetTimeout</a>
         API. Alternatively, the handler can <em>steal</em> the socket handle from Appweb and assume responsibility for
         the connection via: <a href="../ref/api/http.html#group___http_conn_1ga2dabae1fcd13e8f482399d43133f4a69">httpStealSocketHandle</a>.
             This terminates the request and connection, but preserves the open socket handle. This is useful for
@@ -525,10 +525,10 @@ void myEvent(HttpConn *conn, MprEvent *event) {
         Appweb defines several fields that can be used by handlers to refer to state memory blocks.
         These fields must refer to managed memory &mdash; i.e. memory that has been allocated by the MPR APIs.
         During a garbage collection cycle, these fields will be automatically "marked" as being in-use.</p>
-        <p>The HttpConn.data field is available for use by handlers or applications.
-        The HttpConn.reqData is available for use by web frameworks and the HttpQueue.queueData field is available
+        <p>The HttpStream.data field is available for use by handlers or applications.
+        The HttpStream.reqData is available for use by web frameworks and the HttpQueue.queueData field is available
         for use by handlers or stages. </p>
-        <p>Appweb defines two fields that can be used to store un-managed memory references: HttpConn.staticData and
+        <p>Appweb defines two fields that can be used to store un-managed memory references: HttpStream.staticData and
             HttpQueue.staticData. Use these to store references to memory allocated by malloc.</p>
         <p>See:
             <a href="../ref/memory.html">Appweb Memory</a> for details about memory allocation. </p>
@@ -566,12 +566,9 @@ int maMyModuleInit(Http *http, MprModule *mp)
                     <tr><th>Field<th>Purpose</tr>
                 </thead>
                 <tbody>
-                    <tr><td>HttpConn.error<td>is set whenever there is an error with the request. i.e. httpError is
+                    <tr><td>HttpStream.error<td>is set whenever there is an error with the request. i.e. httpError is
                             called.</tr>
-                    <tr><td>HttpConn.connError<td>is set whenever HTTP_ABORT is supplied to httpError. This is
-                        used when the HTTP/1.1 protocol is compromised, corrupted or otherwise unlikely to be
-                        able to handle a subsequent keep-alive request.</tr>
-                    <tr><td>HttpConn.state<td> defines the connection state and is often the best thing to
+                    <tr><td>HttpStream.state<td> defines the connection state and is often the best thing to
                         test. States are: HTTP_STATE_BEGIN, HTTP_STATE_CONNECTED, HTTP_STATE_FIRST,
                         HTTP_STATE_CONTENT, HTTP_STATE_READY, HTTP_STATE_RUNNING, HTTP_STATE_FINALIZED and
                         HTTP_STATE_COMPLETE.</tr>

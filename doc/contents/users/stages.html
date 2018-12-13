@@ -34,9 +34,6 @@
 
 LoadModule phpHandler libmod_php
 <a href="dir/route.html#addHandler">AddHandler</a> phpHandler php
-
-LoadModule file mod_file
-<a href="dir/route.html#addHandler">AddHandler</a> fileHandler
 </pre>
             <p>The order of the directives is important. When a request is received from a client, the handlers specified in the configuration file will be matched against the request. If a handler does not specify an extension, then it will always match. If the request URL extension matches the extension for a handler, then that handler will be added to the list of handlers for this request.</p>
 

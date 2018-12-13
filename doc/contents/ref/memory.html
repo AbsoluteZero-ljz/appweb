@@ -183,14 +183,14 @@ void manageBlock(MyBlock *blk, int flags)
             are released.</p>
             <h2>Convenient References</h2>
             <p>Appweb defines two empty fields that can be used by request handlers to hold managed references. The
-            <em>HttpConn.data</em> field is marked by the HttpConn manager. A handler can store a managed-memory reference
-            in this field. The HttpConn manager will then call mprMark(conn-&gt;data) to mark the reference as active and 
+            <em>HttpStream.data</em> field is marked by the HttpStream manager. A handler can store a managed-memory reference
+            in this field. The HttpStream manager will then call mprMark(conn-&gt;data) to mark the reference as active and 
             required.</p>
             <p>Similarly, <em>HttpQueue.queueData</em> field is marked by the HttpQueue manager. A queue stage 
             (filter or handler) can store a managed-memory reference
             in this field. The HttpQueue manager will then call mprMark(q-&gt;queueData) to mark the reference as active and 
             required.</p>
-            <p>Appweb defines two fields that can be used to store un-managed memory references: HttpConn.staticData and HttpQueue.staticData. Use these to store references to memory allocated by malloc.</p>
+            <p>Appweb defines two fields that can be used to store un-managed memory references: HttpStream.staticData and HttpQueue.staticData. Use these to store references to memory allocated by malloc.</p>
             <p>Another common technique it to define a top level application structure which will be the root memory block
             for the entire application. Store top level managed references in this block and call mprAddRoot to define
             it as a root block.</p>

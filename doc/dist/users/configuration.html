@@ -219,9 +219,10 @@ ErrorLog error.log
 ServerName http://localhost:7777
 Documents "/var/web"
 Listen 7777
-LoadModule fileHandler mod_file
-AddHandler fileHandler html
-</pre><a id="blocks"></a>
+LoadModule espHandler mod_esp
+AddHandler espHandler esp
+</pre>
+            <a id="blocks"></a>
             <h2>Configuration Blocks</h2>
             <p>The configuration file is comprised of several directive groups or blocks:</p>
             <ul>
@@ -242,7 +243,7 @@ AddHandler fileHandler html
     SetHandler esp
 &lt;/Route&gt;
 </pre>
-            <p>This will configure Appweb to pass requests that begin with the URL "/myapp" to the 
+            <p>This will configure Appweb to pass requests that begin with the URL "/myapp" to the
                 <em>esp</em> handler.</p>
             <h2>Virtual Host Blocks</h2>
             <p>A Virtual host block defines a group of directives that apply to a virtual sub-server. A virtual server
@@ -277,8 +278,8 @@ Include conf/applications/*.conf
             <b>if</b> directive tests a symbolic value and if true, it enables parsing the nested directives. If the
             value is false, the nested directives are ignored.</p>
             <pre class="ui code segment">
-&lt;if FILE_MODULE&gt;
-    LoadModule fileHandler mod_file
+&lt;if ESP_MODULE&gt;
+    LoadModule espHandler mod_esp
 &lt;/if&gt;
 </pre>
             <p>This will load the file handler if it has been enabled via the <b>configure</b> command.</p>
@@ -304,12 +305,12 @@ Include conf/applications/*.conf
             <h2>Order of Processing</h2>
             <p>The configuration file is parsed in a single top-to-bottom pass. The order of directives is important
             as certain directives depend on others. For example, you must define the Home before using the
-            LoadModule directive. Also, block level directives inherit their configuration from the outer block. 
+            LoadModule directive. Also, block level directives inherit their configuration from the outer block.
             For example: a Route block will inherit the outer configuration and may modify that inside the Route block.</p>
-            
+
             <a id="directives"></a>
             <h2>Configuration File Directives</h2>
-            <p>Consult the <a href="directives.html">Configuration Directives</a> for a full list of the 
+            <p>Consult the <a href="directives.html">Configuration Directives</a> for a full list of the
             supported appweb.conf directives.</p>
 
     </div>

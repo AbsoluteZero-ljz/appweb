@@ -189,7 +189,7 @@
             <p>Several build environments are supported:</p>
             <ul>
                 <li><b>Linux</b> &mdash; Linux 3 with GNU C/C++</li>
-                <li><b>Windows</b> &mdash; Microsoft Windows 8 with Visual Studio 2017 or later</li>
+                <li><b>Windows</b> &mdash; Microsoft Windows 8 with Visual Studio 2017 or later (Professional or Community Edition)</li>
                 <li><b>Mac OS X</b> &mdash; Mac OS X 10.11 (Yosemite) or later</li>
             </ul>
             <p>For other environments, you will need to cross-compile. The source code has been designed to run on FreeBSD, Linux, Mac OS X, VxWorks and other operating systems. It has been tested under Fedora and Ubuntu Linux based on the Linux 3 Kernel, Microsoft Windows 8 (32 and 64-bit), VxWorks 6.X and MAC OS X 10.11. </p>
@@ -205,8 +205,8 @@
             </a>
 
             <h2>Installing Packages</h2>
-            <p>Appweb can be extended via third-party packages that are published in the online
-            <a href="https://embedthis.com/catalog/">Pak Catalog</a>. There are many packages including:</p>
+            <p>Appweb can be extended via third-party packages that can be installed using the
+            <a href="https://embedthis.com/pak/">Pak</a> package manager. Including:</p>
             <ul>
                 <li>OpenSSL SSL Stack</li>
                 <li>PHP Support</li>
@@ -226,9 +226,10 @@ pak install npm:angular
             <p>The Appweb source distribution contains all the required source files, headers, and test framework to reconfigure, build, and verify Appweb. The software supports three methods for building from source.</p>
             <ul>
                 <li><a href="http://www.gnu.org/software/make/">Make</a></li>
-                <li><a href="https://embedthis.com/makeme/">MakeMe</a></li>
                 <li>Visual Studio or Xcode</li>
+                <li><a href="https://embedthis.com/makeme/">MakeMe</a></li>
             </ul>
+
             <p>Building via <em>make</em> is the simplest way to build. Use <em>make</em> if you want a default build or if you need to integrate Appweb with an existing make-based build system. Build with <a href="https://embedthis.com/makeme/">MakeMe</a> if you want to customize or configure the software for your system, or if you need to cross-compile for another operating system or architecture. Use the Visual Studio or Xcode if you are most comfortable with these tools and want a default build.</p>
 
             <h2>Building</h2>
@@ -240,6 +241,7 @@ pak install npm:angular
 
             <h2>Upgrading</h2>
             <p>If upgrading from a previous version, please save your appweb.conf and other configuration files, custom modules and other data. Then remove the previous version of Appweb. Next, install the new release and apply your configuration.</p>
+            
 
     </div>
     <div class="terms ui basic center aligned segment">

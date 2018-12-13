@@ -183,60 +183,49 @@
 
     </div>
     <div class="content">
+<h1 id="migrating-to-appweb-8">Migrating to Appweb 8</h1>
+<h2 id="architectural-changes">Architectural Changes</h2>
+<p>Appweb 8 includes some major architectural changes to support the <a href="https://en.wikipedia.org/wiki/HTTP/2">HTTP/2</a> protocol.</p>
+<p>HTTP/2 is a higher performance binary protocol that supports multiplexing multiple request streams over a single network connection and offers decreased latency and improved efficiency. This necessitates some API changes and so applications, handlers and filters may need some minor refactoring to work with Appweb 8.</p>
+<p>The architectural changes in Appweb 8 are:</p>
+<ul>
+<li>HTTP/2 protocol support and filter</li>
+<li>Improved pipeline handling to support HTTP/2 multiplexing</li>
+<li>New HttpNet structure defines the network socket.</li>
+<li>The existing HttpConn structure is renamed HttpStream.</li>
+<li>The Upload filter is enabled by default and always part of pipeline</li>
+<li>Upload directory now not per route — needs to be defined before routing</li>
+<li>New Auth Type &quot;app&quot;</li>
+<li>Removed the Send Connector as all I/O must now go through the Net Connector</li>
+<li>Improved OpenSSL support for either 1.0 or 1.2</li>
+<li>ESP improvements to make compiling more flexible</li>
+</ul>
+<h2 id="changed-apis">Changed APIs</h2>
+<h3 id="networks-and-connections">Networks and Connections</h3>
+<p>The previous HttpConn structure contained information regarding the network connection and the current request. With HTTP/2 a single network connection must support multiple simultaneous requests. To support this, the HttpNet structure is introduced and it assumes the management of the network connection. The HttpConn structure is renamed HttpStream and it retains responsibility for a single request and response.</p>
+<p>Some HttpConn APIs have been migrated to HttpNet and consequently now take a HttpNet* parameter as their argument.</p>
+<p>For compatibility, a CPP define is provided for HttpConn which maps to HttpStream. Similarly, defines are provided which map legacy HttpConn APIs to their HttpStream equivalents. However, you should refactor your applications and rename all HttpConn references to HttpStream. You should also change your &quot;conn&quot; variable declarations to be &quot;stream&quot; for clarity.</p>
+<p>Here is a list of the API changes:</p>
+<ul>
+<li>Added HttpNet structure and httpCreateNet, httpDestroyNet APIs.</li>
+<li>httpRequest - gains a protocol argument to nominate HTTP/1 or HTTP/2 for client requests.</li>
+<li>httpTrace -- the first argument is changed from HttpConn to HttpTrace so that this API can be used for both HttpNet and HttpStream related trace.</li>
+<li>The httpCreateConn API is renamed to httpCreateStream and its arguments are changed to a single HttpNet argument. An HttpNet instance must be created prior to creating a HttpStream.</li>
+<li>The httpSteal APIs are changed to work with HttpNet instances.</li>
+<li>Several httpGetConn<em>, httpSetConn</em>, http..Conn... APIs are replaced with &quot;Stream&quot; equivalents.</li>
+<li>These APIs which previously operated on HttpConn/HttpStream objects now operating on HttpNet instances: httpSetAsync, httpServiceQueues, httpEnableConnEvents, httpIOEvent</li>
+<li>Web sockets ESP callbacks must now be prepared to handle multiple packets on their READABLE events.</li>
+<li>The &quot;AddConnector&quot; configuration directive is now a NOP as the net connector is the only supported connector.</li>
+<li>New httpSetAuthStoreVerify API for globally setting the auth verify callback</li>
+</ul>
+<h2 id="esp-changes">ESP Changes</h2>
+<p>Here is a list of ESP changes:</p>
+<ul>
+<li>The esp.json &quot;esp.app.source&quot; configuration directive can specify a list of source files to build. Previously, ESP would only compile app.c.</li>
+<li>Support &quot;esp.app.tokens&quot; to specify CFLAGS, DFLAGS, LDFLAGS for compiler definitions and libraries.</li>
+<li>Handle source file names with &quot;-&quot; in the filename. </li>
+</ul>
 
-            <h1>Migrating to Appweb 8</h1>
-
-Architectural Changes
-    -HTTP/2
-    - Improved pipeline
-    - Do this for memory allocator and GC
-    - Pipeline
-	- timing of end packet
-    - New auth type "app"
-    - Upload filter is always part of pipeline
-        - Upload directory now not per route — needs to be defined before routing
-
-Removed
-    - removed send connector
-
-Changed APIs
-    - httpRequest - gains a protocol argument
-    - httpTrace - first arg changed from conn to HttpTrace
-    - httpCreateConn arguments changed to take a HttpNet argument
-        - httpCreateConn(endpoint, dispatcher) -> - httpCreateConn(net)
-    - httpSteal APIs changed to work with HttpNet httpStealSocket(conn) ->
-	- httpStealSocket(net)
-    - Handlers must call httpFinalizeOutput / httpFinalize
-    - Rename httpPrepClientConn -> httpResetClientConn
-    - APIs operating on HttpNet instead of HttpConn
-        - httpSetAsync(conn -> httpSetAsync(net
-        - httpServiceQueues(conn) -> (net)
-        - httpEnableConnEvents -> httpEnableNetEvents
-        - tx->writeBlocked -> net->writeBlocked
-        - HttpTx.writeBlocked -> HttpNet.writeBlocked
-        - httpIOEvent(conn) -> takes net
-    - httpNeedRetry(, url -> url changed from char* to cchar*
-    - HttpConn.retries removed and httpSetRetries
-    - httpFinalize* takes queue. Default to use conn->writer (why)
-    - ME_MAX_BUFFER -> ME_BUFSIZE
-    - Web sockets esp callbacks must be prepared to handle multiple packets on the conn->reads
-    - TracePacket type of "body" is now changed to "packet"
-    - Upload filter always defined — to remove, do Reset pipeline and define route configuration
-    - AddConnector is a NOP
-    - mpr-openssl support 1.0 and 1.1
-
-New Capabilities
-	- mprCreateEvent blocking option
-	- httpSetAuthStoreVerify for setting the auth verify globally
-
-- ESP Improvements
-	- esp.app.source for list of source files
-	- Easier to specify cflags, …
-	- Compile fixes
-		- Names with ‘-‘
-    - Config
-    	- esp.app.source to specify list of source files
-    	- esp.app.tokens to specify compiler tokens (CFLAGS, …)
 
     </div>
     <div class="terms ui basic center aligned segment">

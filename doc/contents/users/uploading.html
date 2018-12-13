@@ -16,24 +16,9 @@
             <p>Because uploaded files can be very large, Appweb uses specialized handling for the receipt, storage and
             processing of uploaded files. When an upload request is received, Appweb will accept and store the
             uploaded file before starting the request handler to respond to the request. The request handler does not
-            directly receive the uploaded file. Rather, Appweb passes the name of the temporary file holding the uploaded
-            file.
+            directly receive the uploaded file. Rather, Appweb passes the name of the temporary file holding the uploaded file.
             Appweb expects that the handler will process, copy or move the temporary file before completing the request.
             Once the handler has completed, Appweb will remove any remaining upload temporary files.</p>
-
-            <a id="enabling"></a>
-            <h2>Enabling File Upload</h2>
-            <p>To enable the upload filter, you need to add it to the request pipeline via the
-            <a href="dir/route.html#addInputFilter">AddInputFiler</a> directive. For example:
-            <pre class="ui code segment">
-&lt;Route /upload-uri&gt;
-    <b>AddInputFilter uploadFilter</b>
-    UploadDir /tmp
-    UploadAutoDelete on
-&lt;/Route&gt;
-</pre>
-            <p>It is good practice to define the uploadFilter within a qualifying route. This minimizes the
-            security attack surface.</p>
 
             <a id="directives"></a>
             <h2>Appweb Upload Directives</h2>
@@ -70,11 +55,11 @@ typedef HttpUploadFile {
 </pre>
             <p>You can access uploaded files via:</p>
 <pre class="ui code segment">
-HttpConn        *conn;
+HttpStream      *stream;
 HttpUploadFile  *file;
 MprKey          *kp;
-conn = getConn();
-for (ITERATE_KEY_DATA(conn-&gt;rx-&gt;files, kp, file)) {
+stream = getStream();
+for (ITERATE_KEY_DATA(stream-&gt;rx-&gt;files, kp, file)) {
     render("FILENAME %s\n", file-&gt;filename);
     render("CLIENT_NAME %s\n", file-&gt;clientFilename);
     render("TYPE %s\n", file-&gt;contentType);
@@ -89,7 +74,7 @@ for (ITERATE_KEY_DATA(conn-&gt;rx-&gt;files, kp, file)) {
             be used to delete files from the server.</p>
 
             <h3>CGI Upload</h3>
-            <p>CGI provides them to applications via environment variables that start with <em>FILE_</em>. The variables
+            <p>CGI provides access to the uploaded files via environment variables that start with <em>FILE_</em>. The variables
             end with an <em>ID</em> which is a sequential index for the file beginning at <em>0</em> for the first file.</p>
             <ul>
                 <li>FILE_CLIENT_FILENAME_ID &mdash; the client specified filename </li>

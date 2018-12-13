@@ -224,6 +224,15 @@ appweb [options]
                         <td>Disable timeouts to make it easier to debug.</td>
                     </tr>
                     <tr>
+                        <td>--exe path</td>
+                        <td>Set the path to Appweb executable for VxWorks.</td>
+                    </tr>
+                    <tr>
+                        <td>--home directory</td>
+                        <td>Specify the starting directory for the root of the server. This directory contains the Appweb
+                        configuration file.</td>
+                    </tr>
+                    <tr>
                         <td>--log logSpec</td>
                         <td>Specify a file to log messages. This will override the ErrorLog directive in the
                         configuration file. The logSpec syntax is logName[:logLevel][.maxSize]. When the maximum size
@@ -232,14 +241,13 @@ appweb [options]
                         alias for --log.</td>
                     </tr>
                     <tr>
-                        <td>--home directory</td>
-                        <td>Specify the starting directory for the root of the server. This directory contains the Appweb
-                        configuration file.</td>
-                    </tr>
-                    <tr>
                         <td class="nowrap">--name uniqueName</td>
                         <td>Set the program name. Useful to have unique command line names for multiple appweb
                             instances.</td>
+                    </tr>
+                    <tr>
+                        <td>--show</td>
+                        <td>Show the request route table.</td>
                     </tr>
                     <tr>
                         <td>--threads</td>
@@ -248,7 +256,7 @@ appweb [options]
                     </tr>
                     <tr>
                         <td>--verbose</td>
-                        <td>Shorthand for --log stderr:2. The -v option is an alias for --verbose.</td>
+                        <td>Shorthand for --log stdout:2. The -v option is an alias for --verbose.</td>
                     </tr>
                     <tr>
                         <td>--version</td>
@@ -261,24 +269,21 @@ appweb [options]
             with an IP address or port number on the command line, Appweb will not read the configuration file. Rather,
             it will listen for requests on the specified IP:PORT address. Usage:</p>
             <pre class="ui code segment">
-appweb [IP]:[PORT] [documents]
+appweb [documents] [IP]:[PORT]
 </pre>For example:
             <pre class="ui code segment">
-appweb localhost
-</pre>If the PORT component is omitted, Appweb will listen on port 80. If the IP address is omitted and a port is
+appweb ./web localhost
+</pre>
+            <p>If the PORT component is omitted, Appweb will listen on port 80. If the IP address is omitted and a port is
 supplied, Appweb will listen on all network interfaces. An optional document root directory can be supplied for the location
-of the web pages.
+of the web pages.</p>
             <p>When Appweb is run without a configuration file, it performs minimal configuration.
              This configuration cannot be altered. If you need a different setup, use a configuration file.</p>
-            <ul>
-                <li>Load the auth filter and the cgi and file handlers.</li>
-                <li>Load and configure the net connector.</li>
-                <li>Create a /cgi-bin/ location block set to the cgi-bin directory in the server root.</li>
-            </ul>
+
             <a name="signals"></a>
             <h2>Signals</h2>
             <p>Appweb responds to the SIGUSR2 signal to toggle the trace level from 2 to 4 and vice-versa. Appweb responds
-            to the SIGINFO on Mac OSX and SIGPWR on Unix to emit some operational stats to the trace log.</p>
+            to the SIGINFO on Mac OS and SIGPWR on Unix to emit some operational stats to the trace log.</p>
 
     </div>
     <div class="terms ui basic center aligned segment">

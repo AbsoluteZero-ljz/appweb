@@ -195,14 +195,14 @@
             compares the alternatives and suggests where each option is best deployed.</p>
             <a id="comparison"></a>
             <h2>Comparison</h2>
-            
+
             <a id="esp"></a>
             <h3>Embedded Server Pages</h3>
-            <p>ESP is a new web framework that provides templates, caching, Model-View-Controller paradigm, 
+            <p>ESP is a fast, efficient web framework that provides HTML templates, caching, Model-View-Controller paradigm, 
             and an application and scaffold generator. ESP uses the "C" language code
             embedded in web pages for native-speed execution. It is very fast and compact.</p>
-            <p>To prevent name clashes on Linux and MacOSX, when Appweb is installed, the "<em>esp</em>" program built 
-            by Appweb will be named "<em>appweb-esp</em>". This prevents clashing with the "<em>esp</em>" program 
+            <p>To prevent name clashes on Linux and MacOSX, when Appweb is installed, the "<em>esp</em>" program built
+            by Appweb will be named "<em>appweb-esp</em>". This prevents clashing with the "<em>esp</em>" program
             installed by the stand-alone ESP installation.</p>
             <p>For more information about ESP, please see the <a href="https://embedthis.com/esp/">ESP Web Site</a>.</p>
 
@@ -211,7 +211,7 @@
             <p>The action handler is a simple Appweb request handler that maps URIs to C functions. It does not provide
             any other infrastructure or capabilities other than those offered by the Appweb APIs. Action routines
             are very fast, as there is very little code run before invoking the action. The action handler is ideal
-            for simple bindings from URI to C code. Read more in the Developer's Guide under 
+            for simple bindings from URI to C code. Read more in the Developer's Guide under
             <a href="../developers/action.html">Action Handler</a>.</p>
 
             <h3>PHP Framework</h3>
@@ -220,19 +220,19 @@
             object-oriented programming language, numerous extensions and a broad developer community. The power of PHP
             comes at a price, it typically has a memory footprint of more than 5 MB for the PHP code alone. For embedded
             systems, this is often too big and so we recommend using ESP instead.</p>
-            
+
             <a id="cgi"></a>
             <h3>Common Gateway Interface (CGI)</h3>
             <p>CGI stands for the Common Gateway Interface and it is the legacy extension interface for running
             external programs to generate dynamic data. It is standard but slow. Unless you have legacy CGI programs or
-            need to run a scripting language via CGI, you are better served by using either ESP. 
+            need to run a scripting language via CGI, you are better served by using either ESP.
             For more information, please read <a href="cgi.html">Using CGI</a>.</p>
-            
+
             <a id="summary"></a>
             <h2>Summary</h2>
             <p>For embedded devices and applications: we recommend using <b>ESP</b>. It provides the fastest, most
             compact web framework without compromising on functionality.</p>
-            
+
             <p>The following table may help summarize the differences:</p>
             <table title="summary" class="ui celled table segment">
                 <thead>
