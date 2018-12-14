@@ -338,11 +338,17 @@ build\$(CONFIG)\inc\appwebMonitor.h: $(DEPS_6)
 	copy /Y /B src\server\windows\appwebMonitor.h+modified build\$(CONFIG)\inc\appwebMonitor.h $(LOG)
 
 #
+#   server.c
+#
+
+build\$(CONFIG)\inc\cache\server.c: $(DEPS_7)
+
+#
 #   customize.h
 #
-DEPS_7 = $(DEPS_7) src\customize.h
+DEPS_8 = $(DEPS_8) src\customize.h
 
-build\$(CONFIG)\inc\customize.h: $(DEPS_7)
+build\$(CONFIG)\inc\customize.h: $(DEPS_8)
 	@echo ..... [Copy] build\$(CONFIG)\inc\customize.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\customize.h+modified build\$(CONFIG)\inc\customize.h $(LOG)
@@ -350,9 +356,9 @@ build\$(CONFIG)\inc\customize.h: $(DEPS_7)
 #
 #   embedtls.h
 #
-DEPS_8 = $(DEPS_8) src\mbedtls\embedtls.h
+DEPS_9 = $(DEPS_9) src\mbedtls\embedtls.h
 
-build\$(CONFIG)\inc\embedtls.h: $(DEPS_8)
+build\$(CONFIG)\inc\embedtls.h: $(DEPS_9)
 	@echo ..... [Copy] build\$(CONFIG)\inc\embedtls.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\mbedtls\embedtls.h+modified build\$(CONFIG)\inc\embedtls.h $(LOG)
@@ -360,12 +366,12 @@ build\$(CONFIG)\inc\embedtls.h: $(DEPS_8)
 #
 #   esp.h
 #
-DEPS_9 = $(DEPS_9) src\esp\esp.h
-DEPS_9 = $(DEPS_9) build\$(CONFIG)\inc\me.h
-DEPS_9 = $(DEPS_9) build\$(CONFIG)\inc\osdep.h
-DEPS_9 = $(DEPS_9) build\$(CONFIG)\inc\http.h
+DEPS_10 = $(DEPS_10) src\esp\esp.h
+DEPS_10 = $(DEPS_10) build\$(CONFIG)\inc\me.h
+DEPS_10 = $(DEPS_10) build\$(CONFIG)\inc\osdep.h
+DEPS_10 = $(DEPS_10) build\$(CONFIG)\inc\http.h
 
-build\$(CONFIG)\inc\esp.h: $(DEPS_9)
+build\$(CONFIG)\inc\esp.h: $(DEPS_10)
 	@echo ..... [Copy] build\$(CONFIG)\inc\esp.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\esp\esp.h+modified build\$(CONFIG)\inc\esp.h $(LOG)
@@ -373,9 +379,9 @@ build\$(CONFIG)\inc\esp.h: $(DEPS_9)
 #
 #   mbedtls.h
 #
-DEPS_10 = $(DEPS_10) src\mbedtls\mbedtls.h
+DEPS_11 = $(DEPS_11) src\mbedtls\mbedtls.h
 
-build\$(CONFIG)\inc\mbedtls.h: $(DEPS_10)
+build\$(CONFIG)\inc\mbedtls.h: $(DEPS_11)
 	@echo ..... [Copy] build\$(CONFIG)\inc\mbedtls.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\mbedtls\mbedtls.h+modified build\$(CONFIG)\inc\mbedtls.h $(LOG)
@@ -383,9 +389,9 @@ build\$(CONFIG)\inc\mbedtls.h: $(DEPS_10)
 #
 #   monitorResources.h
 #
-DEPS_11 = $(DEPS_11) src\server\windows\monitorResources.h
+DEPS_12 = $(DEPS_12) src\server\windows\monitorResources.h
 
-build\$(CONFIG)\inc\monitorResources.h: $(DEPS_11)
+build\$(CONFIG)\inc\monitorResources.h: $(DEPS_12)
 	@echo ..... [Copy] build\$(CONFIG)\inc\monitorResources.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\server\windows\monitorResources.h+modified build\$(CONFIG)\inc\monitorResources.h $(LOG)
@@ -393,10 +399,10 @@ build\$(CONFIG)\inc\monitorResources.h: $(DEPS_11)
 #
 #   mpr-version.h
 #
-DEPS_12 = $(DEPS_12) src\mpr-version\mpr-version.h
-DEPS_12 = $(DEPS_12) build\$(CONFIG)\inc\mpr.h
+DEPS_13 = $(DEPS_13) src\mpr-version\mpr-version.h
+DEPS_13 = $(DEPS_13) build\$(CONFIG)\inc\mpr.h
 
-build\$(CONFIG)\inc\mpr-version.h: $(DEPS_12)
+build\$(CONFIG)\inc\mpr-version.h: $(DEPS_13)
 	@echo ..... [Copy] build\$(CONFIG)\inc\mpr-version.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\mpr-version\mpr-version.h+modified build\$(CONFIG)\inc\mpr-version.h $(LOG)
@@ -404,24 +410,18 @@ build\$(CONFIG)\inc\mpr-version.h: $(DEPS_12)
 #
 #   pcre.h
 #
-DEPS_13 = $(DEPS_13) src\pcre\pcre.h
+DEPS_14 = $(DEPS_14) src\pcre\pcre.h
 
-build\$(CONFIG)\inc\pcre.h: $(DEPS_13)
+build\$(CONFIG)\inc\pcre.h: $(DEPS_14)
 	@echo ..... [Copy] build\$(CONFIG)\inc\pcre.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\pcre\pcre.h+modified build\$(CONFIG)\inc\pcre.h $(LOG)
 
 #
-#   server.c
-#
-
-src\server\cache\server.c: $(DEPS_14)
-
-#
 #   appweb.obj
 #
 DEPS_15 = $(DEPS_15) build\$(CONFIG)\inc\appweb.h
-DEPS_15 = $(DEPS_15) src\server\cache\server.c
+DEPS_15 = $(DEPS_15) build\$(CONFIG)\inc\cache\server.c
 
 build\$(CONFIG)\obj\appweb.obj: \
     src\server\appweb.c $(DEPS_15)
