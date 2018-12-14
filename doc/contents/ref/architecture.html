@@ -5,24 +5,13 @@
     ],
 }
 
-            <h1>Appweb Architecture</h1><!--
-    Diagrams:
-        - Process diagram
-        - Request pipeline
-        - Module Block diagram
-        - Key objects
--->
-            <p>The Appweb HTTP web server is the fastest little web server. It is a high-performance yet compact
-            embeddable webserver that has a modular, secure core.  It supports an extensive feature set including:
-            HTTP/1.1, TLS/SSL, CGI, PHP, ESP, Virtual Hosts, Digest
-            Authentication, Apache style configuration, and logging and security sandboxing. Yet Appweb remains very
-            small (from 1MB) and exceptionally fast (&gt; 7,000 requests per second).</p>
-            <p>Appweb supports dynamic web application frameworks like ESP, and PHP. It also supports older
-            web creation strategies like CGI.</p>
-            <p>Appweb is an event-driven, multi-threaded web server and is able to support many
-            thousands of requests per second but it does not try to scale out like an enterprise class server for
-            top-tier web sites.
-            Rather, it aims to be robust, secure and blazing fast with low and predictable memory utilization.</p>
+            <h1>Appweb Architecture</h1>
+            <p>The Appweb HTTP web server is the fastest little web server. It is a high-performance yet compact embeddable webserver that has a modular, secure core.  It supports an extensive feature set including: HTTP/1, HTTP/1.1, HTTP/2, WebSockets, TLS/SSL, CGI, PHP, ESP, Virtual Hosts, Digest Authentication, Apache style configuration, and logging and security sandboxing. Yet Appweb remains very small (from 1MB) and exceptionally fast (&gt; 7,000 requests per second).</p>
+
+            <p>Appweb supports dynamic web application frameworks like ESP, and PHP. It also supports older web creation strategies like CGI.</p>
+
+            <p>Appweb is an event-driven, multi-threaded web server and is able to support many thousands of requests per second but it does not try to scale out like an enterprise class server for top-tier web sites. Rather, it aims to be robust, secure and blazing fast with low and predictable memory utilization.</p>
+
             <a id="deployment"></a>
             <h2>Deployment Models</h2>
             <p>Appweb can be deployed in several ways:</p>
@@ -31,6 +20,7 @@
                 <li>Embedded in applications and devices</li>
                 <li>Proxied behind front-end web servers</li>
             </ul>
+
             <h3>Stand-Alone Web Server</h3>
             <p>The Appweb distribution contains a robust, secure, stand-alone web server. The binary installation will
             install this web server to be automatically started as a system daemon/service. It is supervised by a
@@ -192,7 +182,7 @@ HeaderName: value
             <table title="Headers" class="ui celled table segment">
                 <thead>
                     <tr>
-                        <th>Header</th>
+                        <th nowrap>Header</th>
                         <th>Description</th>
                     </tr>
                 </thead>
@@ -224,7 +214,7 @@ HeaderName: value
                     hosting.</td>
                 </tr>
                 <tr>
-                    <td>If-Modified-Since</td>
+                    <td nowrap="nowrap">If-Modified-Since</td>
                     <td>Only return the content if it has been modified since the date specified. Clients who have
                     cached copies of a document (or graphics) use this header to allow the server to skip copying the
                     document if it has not changed.</td>
@@ -368,12 +358,13 @@ AddHandler espHandler myDoc
                 <li>MPR &mdash; secure portable runtime</li>
                 <li>Manager monitoring process</li>
             </ul>
-            <h4>Secure Sockets</h4>
+            <h3>Secure Sockets</h3>
             <p>Appweb supports the MbedTLS and OpenSSL stacks. You can configure server and/or client
             certificate-based authentication. SSL and TLS are supported.</p>
-            <h4>Authentication</h4>Appweb provides the Digest authentication mechanism and supports both file and
-            PAM-based authentication backends.
-            <h4>Sandboxing</h4>
+            <h3>Authentication</h3>
+            <p>Appweb provides the Digest authentication mechanism and supports both file and
+            PAM-based authentication backends.</p>
+            <h3>Sandboxing</h3>
             <p>Sandboxing is the term applied to running Appweb in a confined environment. Appweb has a set of
             configuration file directives that allow you to define a sandbox which limits the resources that Appweb may
             used for a given request. By using well defined sandbox directives, you can help ensure that your

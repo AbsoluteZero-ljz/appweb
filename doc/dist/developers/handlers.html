@@ -464,44 +464,10 @@ static void writable(HttpQueue *q)
         <a href="../ref/api/http.html#group___http_tx_1ga49edf0602dd2143b518c247f9cee8720">httpFinalizeOutput</a>
         routine should be called when the output is fully generated.</p>
 
-        <h3>Async Generation</h3>
-        <p>A handler can asynchronously generate response data outside of the typical handler callbacks. This may be in
-        response to an application or device vent. Consequently, care must be taken to ensure thread safety. Appweb
-        serializes request activity on a <em>connection dispatcher</em> and does not use thread locking for handlers or
-        pipeline processing. This is highly efficient but requires that all interaction with Appweb data structures
-        be done from Appweb events via Appweb dispatchers. To run code on the connection's dispatcher event loop, use:
-        <a href="../ref/api/mpr.html#group___mpr_event_1ga6154e34c582e39cd64b4505a6afb39c4">mprCreateEvent</a>.
-        <pre class="ui code segment">
-mprCreateEvent(q-&gt;stream-&gt;dispatcher, "deviceEvent", 0, doMoreOutput, q, 0);
-</pre>
-        <p>This will schedule the function <em>doMoreOutput</em> to run from the connection dispatcher.
-        <p>You may call mprCreateEvent from any Appweb thread and the scheduled function will run serialized
-        within the event loop for the connection.</p>
-        <h4>Interacting with External Services</h4>
-        <p>If you need to interact with external services or libraries, you may have the need to asynchronously
-            resume processing of the Appweb connection from a non-Appweb thread or library callback.
-            However, you must not interact with an Appweb connection from a non-appweb thread otherwise you may clash
-            with Appweb simultaneously using the connection object. To run code from a non-Appweb thread, use
-            <a href="../ref/api/mpr.html#group___mpr_event_1ga6a994158ec8edfe48a47a243ea09c4b8">mprCreateEventOutside</a>.
-            This call arranges for your code to be safely run serialized from the connection's dispatcher. This call is
-            thread-safe to invoke from non-Appweb threads. </p>
-            <p>Before you call mprCreateEventOutside, first call
-            <a href="../ref/api/http.html#group___http_conn_1ga11e1e52cca2138f7aec8f66b8b8e08ca">httpBorrowConn</a> to
-            temporarily get an exclusive loan of the connection. This is required to ensure the connection is not destroyed
-            before your event can run. This can happen if the client disconnects or if the connection timeout expires.
-            Then call
-            <a href="../ref/api/http.html#group___http_conn_1ga1eea2fb67ffdc13f9ae78bde57b01d4d">httpReturnConn</a> in
-            your event callback to resume normal processing of the connection.</p>
-            <pre class="ui code segment">
-httpBorrowConn(stream);
-httpCreateEventOutside(stream-&gt;dispatcher, 0, 0, myEvent, stream, HTTP_EVENT_BLOCK);
-void myEvent(HttpStream *stream, MprEvent *event) {
-    /* Running serialized on an Appweb thread */
-    httpWrite(stream, "Login Successful");
-    httpFinalize(stream);
-    httpReturnConn(stream);
-}
-</pre>
+        <h3>Thread Safety</h3>
+        <p>Most Appweb APIs are not thread-safe. To utilize multiple threads, Appweb serializes request activity on an <em>event dispatcher</em> that is used per request or connection. Appweb generally does not use thread locking for handlers or pipeline processing. This is highly efficient, but requires that all interaction with Appweb data structures be done from Appweb threads via Appweb dispatchers. </p>
+        <p>Please read <a href="../ref/multithread.html#safety">Thread Safety</a> for details about how to communicate from foreign threads.
+
         <h4>Owning a Connection</h4>
         <p>Appweb monitors requests and imposes timeout limits. The <em>RequestTimeout</em> directive in the appweb.conf file
         specifies the maximum time a request can take to complete. The <em>InactivityTimeout</em> directive specifies the maximum
@@ -584,20 +550,12 @@ int maMyModuleInit(Http *http, MprModule *mp)
             </table>
 
             <h3>Blocking</h3>
-            <p>Handlers may only block in their <em>open</em>, <em>close</em>, <em>ready</em>, <em>start</em> and
-            <em>writable</em> callbacks. Handlers may never block in any other callback.
-            Filters and connectors must never block in any of their callbacks.</p>
-            <p>If a handler blocks by calling httpWrite, or any other blocking API, it will consume a worker thread.
-            More importantly, when a thread blocks, it must yield to the garbage collector. Appweb uses a cooperative
-            garbage collector where worker thread yield to the collector at designated control points. This provides
-            workers with a guarantee that temporary memory will not be prematurely collected.
-            All MPR functions that wait implicitly also yield to the garbage collector.</p>
-            <p>Handlers
-            should call
-            <a href="../ref/api/mpr.html#mpr_8h_1af140a2fda18b2e8461236cc44c0a2cc4">mprYield</a>(MPR_YIELD_STICK)
-            whenever they block and are not calling an MPR function that blocks. This ensures that the garbage collector
-            can work and collect memory while the worker thread is asleep. When the sleeping API returns, they should
-            call mprResetYield.</p>
+            <p>Handlers may only block in their <em>open</em>, <em>close</em>, <em>ready</em>, <em>start</em> and <em>writable</em> callbacks. Handlers may never block in any other callback. Filters and connectors must never block in any of their callbacks.</p>
+
+            <p>If a handler blocks by calling httpWrite, or any other blocking API, it will consume a worker thread. More importantly, when a thread blocks, it must yield to the garbage collector. Appweb uses a cooperative garbage collector where worker thread yield to the collector at designated control points. This provides workers with a guarantee that temporary memory will not be prematurely collected. All MPR functions that wait implicitly also yield to the garbage collector.</p>
+
+            <p>Handlers should call <a href="../ref/api/mpr.html#mpr_8h_1af140a2fda18b2e8461236cc44c0a2cc4">mprYield</a>(MPR_YIELD_STICK) whenever they block and are not calling an MPR function that blocks. This ensures that the garbage collector can work and collect memory while the worker thread is asleep. When the sleeping API returns, they should call mprResetYield.</p>
+
             <a name="rules"></a>
             <h4>Blocking Rules</h4>
             <ul>
@@ -630,7 +588,6 @@ int maMyModuleInit(Http *http, MprModule *mp)
             <p>Here are links to some of the Appweb supplied handlers: </p>
             <ul>
                 <li><a href="https://github.com/embedthis/http/blob/master/src/dirHandler.c">Dir Handler</a></li>
-                <li><a href="https://github.com/embedthis/http/blob/master/src/fileHandler.c">File Handler</a></li>
                 <li><a href="https://github.com/embedthis/http/blob/master/src/passHandler.c">Pass through Handler</a></li>
                 <li><a href="https://github.com/embedthis/appweb/blob/master/src/modules/cgiHandler.c">CGI Handler</a></li>
             </ul>
