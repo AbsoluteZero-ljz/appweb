@@ -9541,7 +9541,7 @@ static void manageEventService(MprEventService *es, int flags)
         mprMark(es->mutex);
 
         /*
-            Special case: must lock because mprCreateEventOutside may queue events while marking
+            Special case: must lock because mprCreateEvent may queue events while marking
          */
         lock(es);
         for (dp = es->runQ->next; dp != es->runQ; dp = dp->next) {
@@ -12860,7 +12860,10 @@ static MprJson *jsonParse(MprJsonParser *parser, MprJson *obj)
                 if (name && parser->callback.checkBlock(parser, name, 0) < 0) {
                     return 0;
                 }
-                child = jsonParse(parser, parser->callback.createObj(parser, MPR_JSON_OBJ));
+                child = parser->callback.createObj(parser, MPR_JSON_OBJ);
+                if (peektok(parser) != JTOK_RBRACE) {
+                    child = jsonParse(parser, child);
+                }
                 if (gettok(parser) != JTOK_RBRACE) {
                     mprSetJsonError(parser, "Missing closing brace");
                     return 0;
@@ -12939,9 +12942,7 @@ static MprJson *jsonParse(MprJsonParser *parser, MprJson *obj)
                         return obj;
                     }
                 }
-                if (obj->type & MPR_JSON_OBJ) {
-                    parser->state = MPR_JSON_STATE_NAME;
-                }
+                parser->state = (obj->type & MPR_JSON_OBJ) ? MPR_JSON_STATE_NAME : MPR_JSON_STATE_VALUE;
             } else if (tokid == JTOK_RBRACE || parser->tokid == JTOK_RBRACKET || tokid == JTOK_EOF) {
                 return obj;
             } else {
