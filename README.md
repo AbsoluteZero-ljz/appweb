@@ -1,4 +1,4 @@
-Embedthis Appweb
+Embedthis Appweb Community Edition
 ===
 
 The compact, fast and secure web server for embedded applications.

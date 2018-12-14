@@ -40,7 +40,7 @@ SQLite - [Public Domain](http://www.sqlite.org/copyright.html)
 
 ### Nginx License
 
-Portions of hpack.c used for HTTTP/2 support.
+Portions of hpack.c used for HTTP/2 support.
 
 Copyright (C) 2002-2018 Igor Sysoev
 Copyright (C) 2011-2018 Nginx, Inc.
