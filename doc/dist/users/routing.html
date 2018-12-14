@@ -433,7 +433,7 @@
             has been read from the client. This enables the routing directives to take action based on the received form
             data. If a request has no form data, it is routed immediately after the HTTP headers have been read and
             parsed.</p>
-            
+
             <p>A request with form data has a <em>Content-Type</em> header of
             <em>application/x-www-form-urlencoded</em>. Requests with a <em>Content-Type</em> set to
             <em>multipart/form-data</em> which indicates form based file upload, will also delay routing until the uploaded
@@ -503,23 +503,18 @@ will match any of the URIs:
             By default a route supports all methods</p>
             <a id="step-header"></a>
             <h3>Header Matching</h3>
-            <p>Header matching is an optional step. Routes can be configured to require that the request has HTTP
-            headers with or without defined values. For example: a route may wish to only be relevant for a
-            particular browser:</p>
+            <p>Header matching is an optional step. Routes can be configured to require that the request has HTTP headers with or without defined values. For example: a route may wish to only be relevant for a particular browser:</p>
 <pre class="ui code segment">
 &lt;Route /info/ &gt;
-    Header User-Agent /Chrome/
+    RequestHeader User-Agent /Chrome/
 &lt;/Route&gt;
 </pre>
             <a id="step-form"></a>
             <h3>Form Value Matching</h3>
-            <p>Form value matching is an optional step. Routes can be configured to require that the request has
-            form data with or without defined values. Form data is sourced from the request URI query string and from
-            form body (POST) data. Form data must have a Content-Type of "application/x-www-form-urlencoded" &mdash;
-            normal HTML forms are encoded this way.</p>
+            <p>Form value matching is an optional step. Routes can be configured to require that the request has form data with or without defined values. Form data is sourced from the request URI query string and from form body (POST) data. Form data must have a Content-Type of "application/x-www-form-urlencoded" &mdash; normal HTML forms are encoded this way.</p>
 <pre class="ui code segment">
 &lt;Route ^/info/ &gt;
-    Query name /(Mary)|(John)/
+    Param name /(Mary)|(John)/
 &lt;/Route&gt;
 </pre>
             <p>This route will match the URIs: </p>

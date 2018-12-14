@@ -834,6 +834,35 @@
                 </tbody>
             </table>
 
+            <a id="limitStreams"></a>
+            <h2>LimitStreams</h2>
+            <table class="directive" title="directive">
+                <tbody>
+                    <tr>
+                        <td class="pivot">Description</td>
+                        <td>Sets the maximum number of HTTP/2 streams per client connection. </td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Synopsis</td>
+                        <td>LimitStreams count</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Context</td>
+                        <td>Default server, VirtualHost, Route</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Example</td>
+                        <td>LimitStreams 20</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Notes</td>
+                        <td>
+                            <p>The LimitStreams directive defines the maximum number of simultaneous HTTP/2 streams per client connection for HTTP/2. The default limit is 20.</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
             <a id="limitUri"></a>
             <h2>LimitUri</h2>
             <table class="directive" title="directive">
@@ -990,15 +1019,9 @@
                     <tr>
                         <td class="pivot">Notes</td>
                         <td>
-                            <p>The MinWorkers directive will pre-allocate the specified number of worker threads on startup
-                            and then ensure that the worker pool always has at least this minimum number of workers.</p>
-                            <p>Appweb will automatically adjust the number of workers between the minimum specified
-                            by this directive and the maximum specified by the WorkerLimit directive or via the Appweb
-                            command line. Every ten minutes, Appweb will prune workers that have been idle for five
-                            minutes to reduce resource consumption.</p>
-                            <p>Appweb 4 has two non-worker threads: one for the master event loop and one for the
-                            garbage collector. So the total number of Appweb threads will be two plus the number of
-                            active workers.</p>
+                            <p>The MinWorkers directive will pre-allocate the specified number of worker threads on startup and then ensure that the worker pool always has at least this minimum number of workers.</p>
+                            <p>Appweb will automatically adjust the number of workers between the minimum specified by this directive and the maximum specified by the WorkerLimit directive or via the Appweb command line. Every ten minutes, Appweb will prune workers that have been idle for five minutes to reduce resource consumption.</p>
+                            <p>Appweb has two non-worker threads: one for the master event loop and one for the garbage collector. So the total number of Appweb threads will be two plus the number of active workers.</p>
                         </td>
                     </tr>
                 </tbody>

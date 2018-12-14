@@ -172,7 +172,7 @@
     #define ME_TUNE "size"
 #endif
 #ifndef ME_VERSION
-    #define ME_VERSION "8.0.0-beta.1"
+    #define ME_VERSION "8.0.0-beta.2"
 #endif
 #ifndef ME_WATCHDOG_NAME
     #define ME_WATCHDOG_NAME "appman"
@@ -201,7 +201,7 @@
     #define ME_APP_PREFIX "/usr/local/lib/appweb"
 #endif
 #ifndef ME_VAPP_PREFIX
-    #define ME_VAPP_PREFIX "/usr/local/lib/appweb/8.0.0-beta.1"
+    #define ME_VAPP_PREFIX "/usr/local/lib/appweb/8.0.0-beta.2"
 #endif
 #ifndef ME_BIN_PREFIX
     #define ME_BIN_PREFIX "/usr/local/bin"
@@ -234,7 +234,7 @@
     #define ME_CACHE_PREFIX "/var/spool/appweb/cache"
 #endif
 #ifndef ME_SRC_PREFIX
-    #define ME_SRC_PREFIX "appweb-8.0.0-beta.1"
+    #define ME_SRC_PREFIX "appweb-8.0.0-beta.2"
 #endif
 
 /* Suffixes */
