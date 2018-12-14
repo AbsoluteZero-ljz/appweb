@@ -1,5 +1,5 @@
 #
-#   appweb-macosx-static.mk -- Makefile to build Embedthis Appweb for macosx
+#   appweb-macosx-static.mk -- Makefile to build Embedthis Appweb Community Edition for macosx
 #
 
 NAME                  := appweb

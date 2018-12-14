@@ -1,5 +1,5 @@
 #
-#   appweb-freebsd-static.mk -- Makefile to build Embedthis Appweb for freebsd
+#   appweb-freebsd-static.mk -- Makefile to build Embedthis Appweb Community Edition for freebsd
 #
 
 NAME                  := appweb

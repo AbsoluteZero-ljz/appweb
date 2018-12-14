@@ -148,7 +148,7 @@
     #define ME_STATIC 1
 #endif
 #ifndef ME_TITLE
-    #define ME_TITLE "Embedthis Appweb"
+    #define ME_TITLE "Embedthis Appweb Community Edition"
 #endif
 #ifndef ME_TUNE
     #define ME_TUNE "size"
@@ -180,46 +180,46 @@
     #define ME_BASE_PREFIX "C:/Program Files"
 #endif
 #ifndef ME_APP_PREFIX
-    #define ME_APP_PREFIX "C:/Program Files/Embedthis Appweb"
+    #define ME_APP_PREFIX "C:/Program Files/Embedthis Appweb Community Edition"
 #endif
 #ifndef ME_VAPP_PREFIX
-    #define ME_VAPP_PREFIX "C:/Program Files/Embedthis Appweb"
+    #define ME_VAPP_PREFIX "C:/Program Files/Embedthis Appweb Community Edition"
 #endif
 #ifndef ME_DATA_PREFIX
-    #define ME_DATA_PREFIX "C:/Program Files/Embedthis Appweb"
+    #define ME_DATA_PREFIX "C:/Program Files/Embedthis Appweb Community Edition"
 #endif
 #ifndef ME_STATE_PREFIX
-    #define ME_STATE_PREFIX "C:/Program Files/Embedthis Appweb"
+    #define ME_STATE_PREFIX "C:/Program Files/Embedthis Appweb Community Edition"
 #endif
 #ifndef ME_BIN_PREFIX
-    #define ME_BIN_PREFIX "C:/Program Files/Embedthis Appweb/bin"
+    #define ME_BIN_PREFIX "C:/Program Files/Embedthis Appweb Community Edition/bin"
 #endif
 #ifndef ME_INC_PREFIX
-    #define ME_INC_PREFIX "C:/Program Files/Embedthis Appweb/inc"
+    #define ME_INC_PREFIX "C:/Program Files/Embedthis Appweb Community Edition/inc"
 #endif
 #ifndef ME_LIB_PREFIX
-    #define ME_LIB_PREFIX "C:/Program Files/Embedthis Appweb/lib"
+    #define ME_LIB_PREFIX "C:/Program Files/Embedthis Appweb Community Edition/lib"
 #endif
 #ifndef ME_MAN_PREFIX
-    #define ME_MAN_PREFIX "C:/Program Files/Embedthis Appweb/man"
+    #define ME_MAN_PREFIX "C:/Program Files/Embedthis Appweb Community Edition/man"
 #endif
 #ifndef ME_ETC_PREFIX
-    #define ME_ETC_PREFIX "C:/Program Files/Embedthis Appweb"
+    #define ME_ETC_PREFIX "C:/Program Files/Embedthis Appweb Community Edition"
 #endif
 #ifndef ME_WEB_PREFIX
-    #define ME_WEB_PREFIX "C:/Program Files/Embedthis Appweb/web"
+    #define ME_WEB_PREFIX "C:/Program Files/Embedthis Appweb Community Edition/web"
 #endif
 #ifndef ME_LOG_PREFIX
-    #define ME_LOG_PREFIX "C:/Program Files/Embedthis Appweb/log"
+    #define ME_LOG_PREFIX "C:/Program Files/Embedthis Appweb Community Edition/log"
 #endif
 #ifndef ME_SPOOL_PREFIX
-    #define ME_SPOOL_PREFIX "C:/Program Files/Embedthis Appweb/tmp"
+    #define ME_SPOOL_PREFIX "C:/Program Files/Embedthis Appweb Community Edition/tmp"
 #endif
 #ifndef ME_CACHE_PREFIX
-    #define ME_CACHE_PREFIX "C:/Program Files/Embedthis Appweb/cache"
+    #define ME_CACHE_PREFIX "C:/Program Files/Embedthis Appweb Community Edition/cache"
 #endif
 #ifndef ME_SRC_PREFIX
-    #define ME_SRC_PREFIX "C:/Program Files/Embedthis Appweb/src"
+    #define ME_SRC_PREFIX "C:/Program Files/Embedthis Appweb Community Edition/src"
 #endif
 
 /* Suffixes */
