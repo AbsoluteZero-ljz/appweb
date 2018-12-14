@@ -13664,7 +13664,7 @@ PUBLIC char *getNextTerm(MprJson *obj, char *str, char **rest, int *termType)
     ssize   i;
 
     assert(rest);
-    
+
     if (!obj || !rest) {
         return 0;
     }
@@ -13677,7 +13677,7 @@ PUBLIC char *getNextTerm(MprJson *obj, char *str, char **rest, int *termType)
     }
     *termType = 0;
     seps = ".[]";
-    
+
     while (isspace((int) *start)) start++;
     if (termType && *start == '.') {
         *termType |= JSON_PROP_ELIPSIS;
@@ -16173,18 +16173,18 @@ PUBLIC void mprDefaultLogHandler(cchar *tags, int level, cchar *msg)
 {
     MprFile     *file;
     char        tbuf[128];
-    static int  check = 0;
+    static int  length = 0;
 
     if ((file = MPR->logFile) == 0 || msg == 0 || *msg == '\0') {
         return;
     }
-    if (MPR->logBackup && MPR->logSize && (check++ % 1000) == 0) {
+    if (MPR->logBackup && MPR->logSize && length >= MPR->logSize) {
         backupLog();
     }
     if (tags && *tags) {
         if (MPR->flags & MPR_LOG_DETAILED) {
             fmt(tbuf, sizeof(tbuf), "%s %d %s, ", mprGetDate(MPR_LOG_DATE), level, tags);
-            mprWriteFileString(file, tbuf);
+            length += mprWriteFileString(file, tbuf);
         } else if (MPR->flags & MPR_LOG_TAGGED) {
             if (schr(tags, ' ')) {
                 tags = ssplit(sclone(tags), " ", NULL);
@@ -16192,12 +16192,12 @@ PUBLIC void mprDefaultLogHandler(cchar *tags, int level, cchar *msg)
             if (!isupper((uchar) *tags)) {
                 tags = stitle(tags);
             }
-            mprWriteFileFmt(file, "%12s ", sfmt("[%s]", tags));
+            length += mprWriteFileFmt(file, "%12s ", sfmt("[%s]", tags));
         }
     }
-    mprWriteFileString(file, msg);
+    length += mprWriteFileString(file, msg);
     if (*msg && msg[slen(msg) - 1] != '\n') {
-        mprWriteFileString(file, "\n");
+        length += mprWriteFileString(file, "\n");
     }
 #if ME_MPR_OSLOG
     if (level == 0) {
