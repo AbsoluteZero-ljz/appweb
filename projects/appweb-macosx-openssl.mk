@@ -1,5 +1,5 @@
 #
-#   appweb-macosx-openssl.mk -- Makefile to build Embedthis Appweb for macosx
+#   appweb-macosx-openssl.mk -- Makefile to build Embedthis Appweb Community Edition for macosx
 #
 
 NAME                  := appweb

@@ -160,7 +160,7 @@
     #define ME_SERVER_ROOT "."
 #endif
 #ifndef ME_TITLE
-    #define ME_TITLE "Embedthis Appweb"
+    #define ME_TITLE "Embedthis Appweb Community Edition"
 #endif
 #ifndef ME_TUNE
     #define ME_TUNE "size"

@@ -1,5 +1,5 @@
 #
-#   appweb-vxworks-static.mk -- Makefile to build Embedthis Appweb for vxworks
+#   appweb-vxworks-static.mk -- Makefile to build Embedthis Appweb Community Edition for vxworks
 #
 
 NAME                  := appweb

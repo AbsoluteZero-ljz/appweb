@@ -1,5 +1,5 @@
 #
-#   appweb-linux-static.mk -- Makefile to build Embedthis Appweb for linux
+#   appweb-linux-static.mk -- Makefile to build Embedthis Appweb Community Edition for linux
 #
 
 NAME                  := appweb
