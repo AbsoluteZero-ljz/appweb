@@ -29,14 +29,13 @@ static char *getpass(char *prompt);
 
 PUBLIC int main(int argc, char *argv[])
 {
-    Mpr         *mpr;
     MprBuf      *buf;
     HttpRoute   *route;
     HttpAuth    *auth;
     char        *password, *authFile, *username, *encodedPassword, *realm, *cp, *roles, *cipher;
     int         i, errflg, nextArg;
 
-    mpr = mprCreate(argc, argv, 0);
+    mprCreate(argc, argv, 0);
     programName = mprGetAppName();
 
     authFile = 0;
