@@ -7,12 +7,12 @@
             <h1>Building Appweb from Source</h1>
             <p>Appweb releases are available as source code distributions. Several build environments are supported:</p>
             <ul>
-                <li><b>Linux</b> &mdash; Linux 2.6 with GNU C/C++</li>
-                <li><b>Windows</b> &mdash; Microsoft Windows 7 with Visual Studio 2010 or later</li>
-                <li><b>Mac OS X</b> &mdash; Mac OS X 10.8 (Mountain Lion) or later</li>
+                <li><b>Linux</b> &mdash; Linux 3 with GNU C/C++ or later</li>
+                <li><b>Windows</b> &mdash; Microsoft Windows 7 with Visual Studio 2017 or later</li>
+                <li><b>Mac OS X</b> &mdash; Mac OS X 10.11 (Yosemite) or later</li>
             </ul>
-            
-            <p>The source code has been designed to run on FreeBSD, Linux, Mac OS X, VxWorks and other operating systems. It has been tested under Fedora and Ubuntu Linux based on the Linux 2.6 Kernel, Microsoft Windows 7, 8 (32 and 64-bit), VxWorks 6.X and MAC OS X 10.8. </p>
+
+            <p>The source code has been designed to run on FreeBSD, Linux, Mac OS X, VxWorks and other operating systems. It has been tested under Fedora and Ubuntu Linux based on the Linux 3 Kernel, Microsoft Windows 7, 8 (32 and 64-bit), VxWorks 6.X and MAC OS X 10.11. </p>
 
             <h2>Accessing the Source Code</h2>
             <p>With each Appweb release, a complete source code snapshot is provided. You can download a source package from the Appweb web site or you can retrieve it from the Appweb GitHub repository. If you download from the repository, please use the <em>master</em> branch for the most recent stable snapshot. For less stable daily builds, use the <em>dev</em> branch.</p>
@@ -27,15 +27,9 @@
             </a>
 
             <h2>Installing Packages</h2>
-            <p>Appweb can be extended via third-party packages that are published in the online
-            <a href="https://embedthis.com/catalog/">Pak Catalog</a>. There are many packages including:</p>
-            <ul>
-                <li><a href="https://embedthis.com/catalog/#/?keywords=mpr-openssl">OpenSSL SSL Stack</a></li>
-                <li><a href="https://embedthis.com/catalog/#/?keywords=php">PHP Support</a></li>
-                <li><a href="https://embedthis.com/catalog/#/?keywords=angular">Angular</a></li>
-                <li><a href="https://embedthis.com/catalog/#/?keywords=esp-angular-skeleton">ESP Angular Skeleton</a></li>
-            </ul>
-            <p>These can be installed via simple Pak commands. For example:</p>
+            <p>Appweb can be extended via extension third-party packages using the <a href="https://www.embedthis.com/pak/">Pak</a> utility. There are many packages including support for PHP, Angular and ESP skeletons.</p>
+
+            <p>Packages can be installed via simple Pak commands. For example:</p>
             <pre class="ui code segment">pak install esp-angular-skeleton</pre>
             <p>See the <a href="https://embedthis.com/pak/">Pak Web Site</a> to read about Pak and to
             <a href="https://embedthis.com/pak/download.html">Download Pak</a>.</p>
