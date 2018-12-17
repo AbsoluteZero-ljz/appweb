@@ -14,7 +14,7 @@
 MAIN(simpleClient, int argc, char **argv, char **envp)
 {
     Http        *http;
-    HttpConn    *conn;
+    HttpStream  *conn;
     char        *err;
     int         status;
 

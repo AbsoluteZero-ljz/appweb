@@ -12,7 +12,7 @@ static MprList  *clients;
     Hold a message destined for clients
  */
 typedef struct Msg {
-    HttpConn    *conn;
+    HttpStream  *conn;
     HttpPacket  *packet;
 } Msg;
 
@@ -33,7 +33,7 @@ static void manageMsg(Msg *msg, int flags)
  */
 static void chat(Msg *msg)
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
     HttpPacket  *packet;
 
     conn = msg->conn;
@@ -48,7 +48,7 @@ static void chat(Msg *msg)
 static void chat_callback(HttpConn *conn, int event, int arg)
 {
     HttpPacket  *packet;
-    HttpConn    *client;
+    HttpStream  *client;
     Msg         *msg;
     int         flags, next;
 
@@ -90,7 +90,7 @@ static void chat_callback(HttpConn *conn, int event, int arg)
  */
 static void chat_action()
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
 
     /*
         Add the client connect to the list of clients. This API is thread-safe.
