@@ -166,7 +166,7 @@
     #define ME_TUNE "size"
 #endif
 #ifndef ME_VERSION
-    #define ME_VERSION "7.1.0"
+    #define ME_VERSION "7.1.1"
 #endif
 #ifndef ME_WATCHDOG_NAME
     #define ME_WATCHDOG_NAME "appman"
@@ -228,7 +228,7 @@
     #define ME_VAPP_PREFIX "deploy"
 #endif
 #ifndef ME_SRC_PREFIX
-    #define ME_SRC_PREFIX "/usr/src/appweb-7.1.0"
+    #define ME_SRC_PREFIX "/usr/src/appweb-7.1.1"
 #endif
 
 /* Suffixes */
@@ -270,10 +270,10 @@
     #define ME_MINOR_VERSION 1
 #endif
 #ifndef ME_PATCH_VERSION
-    #define ME_PATCH_VERSION 0
+    #define ME_PATCH_VERSION 1
 #endif
 #ifndef ME_VNUM
-    #define ME_VNUM 700010000
+    #define ME_VNUM 700010001
 #endif
 
 /* Components */
