@@ -18,11 +18,6 @@ Two profiles are generated for all operating systems:
 * static - for a statically linked build
 * default - for a dynamically linked build
 
-Windows and Xcode include projects for OpenSSL 1.0 and 1.X SSL stacks. See
-<a href="openssl">building with SSL</a> below for details about using the OpenSSL projects.
-
-<a name="openssl"></a>
-
 ## Building Projects with Make
 
 The default Makefile will invoke the projects/appweb-OS-default.mk project and pass all arguments to that project. In this manner, you can invoke the default project via:
@@ -64,7 +59,7 @@ Then build the solution. Set "appweb" as the default startup project and the "./
 
 ### Building with Xcode and OpenSSL
 
-To set the path to your OpenSSL source directory, click on "appweb-macosx-default" on the left to display the project settings. Select under "PROJECT" the "appweb-macosx-openssl_10" project and click on "Build Settings" in the panel in the center. Scroll down to define the path to your OpenSSL source code dirctory in the ME_COM_OPENSSL_PATH property.
+To set the path to your OpenSSL source directory, click on "appweb-macosx-default" on the left to display the project settings. Select under "PROJECT" the "appweb-macosx-openssl_10" project and click on "Build Settings" in the panel in the center. Scroll down to define the path to your OpenSSL source code directory in the ME_COM_OPENSSL_PATH property.
 
 [Working with Project Properties | Microsoft Docs](https://docs.microsoft.com/en-us/previous-versions/669zx6zc(v=vs.140)#user-defined-macros)
 
