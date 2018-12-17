@@ -20,6 +20,9 @@
                     <a class="item" href="@~/start/service.html">Running as a Service</a>
                     <a class="item" href="@~/start/releaseNotes.html">Release Notes</a>
                     <a class="item" href="@~/start/source.html">Building from Source</a>
+                    <a class="item" href="@~/start/cgi.html">Building with CGI</a>
+                    <a class="item" href="@~/start/openssl.html">Building with OpenSSL</a>
+                    <a class="item" href="@~/start/php.html">Building with PHP</a>
                 </div>
             </div>
             <div class="item">
