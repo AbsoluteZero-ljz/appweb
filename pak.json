@@ -42,7 +42,7 @@
         "watchdog": "~0.3"
     },
     "optionalDependencies": {
-        "appweb-php": "~0.1",
+        "appweb-php": "~0.2",
         "certs": "~0.1",
         "esp": "~8",
         "mpr-matrixssl": "~0.3",
