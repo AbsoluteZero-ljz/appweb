@@ -25,7 +25,14 @@ Me.load({
                 }
                 if (me.platform.os == 'windows') {
                     let search = getComponentSearch(target, 'php-src')
-                    let major = search[0].parent.match(/\d/)[0]
+                    if (!search || !search[0]) {
+                        throw 'Cannot find php-src'
+                    }
+                    let ver = search[0].parent.match(/\d/)
+                    if (!ver) {
+                        throw 'Cannot find php-src'
+                    }
+                    let major = ver[0]
                     let name = 'php' +major
                     let path = probe(name + '.spec.in', {search: search, nopath: true})
                     search = [
@@ -50,7 +57,14 @@ Me.load({
 
                 } else {
                     let search = getComponentSearch(target, 'php-src', 'libs')
-                    let major = search[0].parent.match(/\d/)[0]
+                    if (!search || !search[0]) {
+                        throw 'Cannot find php-src'
+                    }
+                    let ver = search[0].parent.match(/\d/)
+                    if (!ver) {
+                        throw 'Cannot find php-src'
+                    }
+                    let major = ver[0]
                     let name = 'php' + major
                     let lib = probe('lib' + name + '.' + me.ext.shobj, {fullpath: true, search: search}).absolute
                     let path = lib.dirname.parent
