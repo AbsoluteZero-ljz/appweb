@@ -51,6 +51,18 @@ Here is a list of the API changes. Please let us know at [dev@embedthis.com](mai
 - Added the httpSetAuthStoreVerify API for globally setting the auth verify callback. See [httpSetAuthStoreVerify](http://127.0.0.1:4000/ref/api/http.html#group___http_auth_1gaceb42561636cf7ff37c67b167c8df128).
 - Removed HttpTx.queues[]. These were aliases to HttpStream.readq and HttpStream.writeq which should be used instead.
 - HttpQueue.conn is renamed HttpQueue.stream. User code that references q->conn should be changed to q->stream.
+- The httpWriteBlock API when called with HTTP_BUFFER may yield. This is required to support HTTP/2 which uses flow control packets that must be received to permit output to flow.
+- The espRender, espRenderString, espRenderBlock APIs may yield.
+- The httpFinalize* APIs takes queue instead of HttpStream. Applications should use the queue HttpStream.writeq when calling httpFinalize APIs.
+- All handlers must call httpFinalizeOutput / httpFinalize to finalize output.
+- The httpNeedRetry API changed the URL argument to cchar* from char*.
+- The httpSetRetries API and HttpConn.retries field are removed.
+- The HttpTx.writeBlocked is migrated to HttpNet.writeBlocked.
+- The define ME_MAX_BUFFER should be migrated to use ME_BUFSIZE instead.
+- The httpIOEvent(stream) API now takes a HttpNet argument.
+- The httpTracePacket API "body" argument is changed to be a HttpPacket reference.
+- The Upload filter directory now not per route, as it must be defined before routing can proceed.
+- The Upload filter always defined — to remove, do Reset pipeline and define route configuration. The PHP handler will do this automatically as PHP implements its own file upload.
 
 ## ESP Changes
 
@@ -58,7 +70,7 @@ Here is a list of ESP changes:
 
 - The esp.json "esp.app.source" configuration directive can specify a list of source files to build. Previously, ESP would only compile app.c.
 - Support "esp.app.tokens" collection to specify CFLAGS, DFLAGS, LDFLAGS for compiler definitions and libraries.
-- Handle source file names with "-" in the filename. These are mapped to "_".
+- Handle source file names with "-" in the filename. These are mapped to underscore.
 
 ## ME_COMPAT Definitions
 

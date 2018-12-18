@@ -34,3 +34,4 @@ test/test.dat
 cache/
 /build
 /projects/setenv.bat
+samples/chroot-server/server

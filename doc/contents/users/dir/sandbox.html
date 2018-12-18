@@ -40,40 +40,6 @@
                 </tbody>
             </table>
 
-            <a id="limitBuffer"></a>
-            <h2>LimitBuffer</h2>
-            <table class="directive" title="directive">
-                <tbody>
-                    <tr>
-                        <td class="pivot">Description</td>
-                        <td>Defines the pipeline stage buffer size</td>
-                    </tr>
-                    <tr>
-                        <td class="pivot">Synopsis</td>
-                        <td>LimitBuffer size</td>
-                    </tr>
-                    <tr>
-                        <td class="pivot">Context</td>
-                        <td>Default server, VirtualHost</td>
-                    </tr>
-                    <tr>
-                        <td class="pivot">Example</td>
-                        <td>LimitBuffer 8192</td>
-                    </tr>
-                    <tr>
-                        <td class="pivot">Notes</td>
-                        <td>
-                            <p>This directive defines the maximum buffer size in bytes for each stage in the request
-                            pipeline. This directive places a limit on the amount of memory consumed by pipeline stages.
-                            <p>NOTE: this does not imply a maximum response size (See LimitResponseBody for that
-                            functionality). It merely limits the memory consumed when trying to buffer the response data.
-                            Appweb handlers will flush the buffers and use HTTP/1.1 chunked output if the amount of
-                            response data exceeds the output buffer size.</p>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-
             <a id="limitCache"></a>
             <h2>LimitCache</h2>
             <table class="directive" title="directive">
@@ -334,6 +300,38 @@
                             the MPR memory allocation primitives.
                             If the memory limit is exceeded, Appweb will invoke the policy specified by the
                             MemoryPolicy directive.</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <a id="limitPacket"></a>
+            <h2>LimitPacket</h2>
+            <table class="directive" title="directive">
+                <tbody>
+                    <tr>
+                        <td class="pivot">Description</td>
+                        <td>Defines the pipeline stage buffer size</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Synopsis</td>
+                        <td>LimitPacket size</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Context</td>
+                        <td>Default server, VirtualHost</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Example</td>
+                        <td>LimitPacket 16K</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Notes</td>
+                        <td>
+                            <p>This directive defines the maximum packet size in bytes for each stage in the request pipeline. This directive places a limit on the amount of memory consumed by pipeline stages.
+                            <p>NOTE: this does not imply a maximum response size (See LimitResponseBody for that functionality). It merely limits the memory consumed when trying to process the response data. Appweb handlers will flush the packets and use HTTP/1.1 chunked output if the amount of response data exceeds the output packet size.</p>
+                            <p>If using HTTP/2, the packet size will never be less than 16K which is the minimum frame size supported by HTTP/2.</p>
+                            <p>This directive was called "LimitBuffer" in earlier versions.</p>
                         </td>
                     </tr>
                 </tbody>

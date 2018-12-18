@@ -1336,22 +1336,15 @@ Monitor "RequestsPerClient &gt; 200" 5sec deny</td>
                     </tr>
                     <tr>
                         <td class="pivot">Example</td>
-                        <td>SessionCookie name=myapp visible=true persist=false</td>
+                        <td>SessionCookie name=myapp visible=true persist=false same=lax|strict</td>
                     </tr>
                     <tr>
                         <td class="pivot">Notes</td>
                         <td>
-                            <p>This directive controls the Session cookie. It can disable generation of a session cookie via
-                            <em>Session disable</em>. If enabled, it can define a unique prefix to use for the
-                            session cookie used by the route. The default session cookie prefix is: "-http-session-".</p>
-                            <p>It is possible to set if the cookie is readable by Javascript in the browser via
-                                <em>visible=false|true</em>.
-                            By default, the session cookie is not visible to Javascript. It is desirable to keep the session
-                            cookie invisible to minimize XSS security vulnerabilities. Appweb implements this by adding
-                            the <em>httpOnly</em> option on the <em>Set-Cookie</em> response header.</p>
-                            <p>The <em>persist</em> option defines if the cookie is persisted to disk in the browser.
-                            If false, the browser discards the cookie when the browser exits. Otherwise the cookie is
-                            retained until the session timeout limit expires.</p>
+                            <p>This directive controls the Session cookie. It can disable generation of a session cookie via <em>Session disable</em>. If enabled, it can define a unique prefix to use for the session cookie used by the route. The default session cookie prefix is: "-http-session-".</p>
+                            <p>It is possible to set if the cookie is readable by Javascript in the browser via <em>visible=false|true</em>. By default, the session cookie is not visible to Javascript. It is desirable to keep the session cookie invisible to minimize XSS security vulnerabilities. Appweb implements this by adding the <em>httpOnly</em> option on the <em>Set-Cookie</em> response header.</p>
+                            <p>The <em>persist</em> option defines if the cookie is persisted to disk in the browser. If false, the browser discards the cookie when the browser exits. Otherwise the cookie is retained until the session timeout limit expires.</p>
+                            <p>The <em>same</em> option defines if the cookie is emitted with SameSite=lax or SameSite=strict.</p>
                         </td>
                     </tr>
                 </tbody>
