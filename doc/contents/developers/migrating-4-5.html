@@ -59,6 +59,8 @@
 
             <p>The garbage collector is somewhat unusual in a C program. However, garbage collection is especially well suited to long running applications like a web server since it virtually eliminates memory leaks. Unlike traditional memory allocation where <em>free</em> must be called, Appweb 4 uses the opposite approach: memory that must be retained needs to be actively managed to prevent garbage collection. This means that a <em>managed reference</em> must be held for all active memory. See <a href="../ref/memory.html">Memory Allocation</a> for more details.</p>
 
+            <p>The Appweb 3 memory API required a memory context argument for all memory allocations. This required many APIs to have a memory context as the first parameter. Appweb 4 does not require this and these APIs have removed the memory context parameter.</p>
+
             <a id="config"></a>
             <h2>Migrating Appweb Configuration Files</h2>
             <p>The Appweb 4 configuration file is substantially the same as the Appweb 3. 'Include' directives can now contain wild cards and there are several new directives supporting Routing, Multi-language support and the Embedded Server Pages web framework. The big change is that Route directives replace the Directory and Location directives. </p>

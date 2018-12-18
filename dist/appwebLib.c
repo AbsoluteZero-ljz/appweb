@@ -3511,7 +3511,7 @@ PUBLIC int romDummy;
 /************************************ Locals ***********************************/
 
 typedef struct Cgi {
-    HttpConn    *conn;                  /**< Client connection object */
+    HttpStream  *conn;                  /**< Client connection object */
     MprCmd      *cmd;                   /**< CGI command object */
     HttpQueue   *writeq;                /**< Queue to write to the CGI */
     HttpQueue   *readq;                 /**< Queue to read from the CGI */
@@ -3556,7 +3556,7 @@ static void readFromCgi(Cgi *cgi, int channel);
  */
 static int openCgi(HttpQueue *q)
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
     Cgi         *cgi;
     int         nproc;
 
@@ -3627,7 +3627,7 @@ static void startCgi(HttpQueue *q)
     HttpRx          *rx;
     HttpTx          *tx;
     HttpRoute       *route;
-    HttpConn        *conn;
+    HttpStream      *conn;
     MprCmd          *cmd;
     Cgi             *cgi;
     cchar           *baseName, **argv, *fileName, **envv;
@@ -3699,7 +3699,7 @@ static void startCgi(HttpQueue *q)
 #if ME_WIN_LIKE
 static void waitForCgi(Cgi *cgi, MprEvent *event)
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
     MprCmd      *cmd;
 
     conn = cgi->conn;
@@ -3722,7 +3722,7 @@ static void waitForCgi(Cgi *cgi, MprEvent *event)
  */
 static void browserToCgiData(HttpQueue *q, HttpPacket *packet)
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
     Cgi         *cgi;
 
     assert(q);
@@ -3749,7 +3749,7 @@ static void browserToCgiData(HttpQueue *q, HttpPacket *packet)
 
 static void browserToCgiService(HttpQueue *q)
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
     HttpPacket  *packet;
     Cgi         *cgi;
     MprCmd      *cmd;
@@ -3817,7 +3817,7 @@ static void cgiToBrowserData(HttpQueue *q, HttpPacket *packet)
 
 static void cgiToBrowserService(HttpQueue *q)
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
     MprCmd      *cmd;
     Cgi         *cgi;
 
@@ -3851,7 +3851,7 @@ static void cgiToBrowserService(HttpQueue *q)
  */
 static void cgiCallback(MprCmd *cmd, int channel, void *data)
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
     Cgi         *cgi;
     int         suspended;
 
@@ -3899,7 +3899,7 @@ static void cgiCallback(MprCmd *cmd, int channel, void *data)
 
 static void readFromCgi(Cgi *cgi, int channel)
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
     HttpPacket  *packet;
     HttpTx      *tx;
     HttpQueue   *q, *writeq;
@@ -3974,7 +3974,7 @@ static void readFromCgi(Cgi *cgi, int channel)
  */
 static bool parseCgiHeaders(Cgi *cgi, HttpPacket *packet)
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
     MprBuf      *buf;
     char        *endHeaders, *headers, *key, *value;
     ssize       blen;

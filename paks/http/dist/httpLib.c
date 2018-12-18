@@ -9397,7 +9397,7 @@ static void incomingHttp2(HttpQueue *q, HttpPacket *packet)
         /*
             Try to push out any pending responses here. This keeps the socketq packet count down.
          */
-        httpServiceQueues(net, 0);
+        httpServiceNetQueues(net, 0);
     }
     closeNetworkWhenDone(q);
 }
@@ -13692,8 +13692,6 @@ static void netTimeout(HttpNet *net, MprEvent *mprEvent)
 }
 
 
-
-//  TODO - review all these
 /*
     Used by ejs
  */
@@ -13709,7 +13707,6 @@ PUBLIC void httpUseWorker(HttpNet *net, MprDispatcher *dispatcher, MprEvent *eve
 }
 
 
-//  TODO comment?
 PUBLIC void httpUsePrimary(HttpNet *net)
 {
     lock(net->http);
@@ -13752,12 +13749,18 @@ PUBLIC void httpReturnNet(HttpNet *net)
 PUBLIC MprSocket *httpStealSocket(HttpNet *net)
 {
     MprSocket   *sock;
+    HttpStream  *stream;
+    int         next;
 
     assert(net->sock);
     assert(!net->destroyed);
 
     if (!net->destroyed && !net->borrowed) {
         lock(net->http);
+        for (ITERATE_ITEMS(net->streams, stream, next)) {
+            httpDestroyStream(stream);
+            next--;
+        }
         sock = mprCloneSocket(net->sock);
         (void) mprStealSocketHandle(net->sock);
         mprRemoveSocketHandler(net->sock);
@@ -13955,7 +13958,7 @@ PUBLIC void httpIOEvent(HttpNet *net, MprEvent *event)
             httpPutPacket(net->inputq, packet);
         }
     }
-    httpServiceQueues(net, 0);
+    httpServiceNetQueues(net, 0);
 
     if (httpIsServer(net) && (net->error || net->eof)) {
         httpDestroyNet(net);
@@ -15719,7 +15722,7 @@ static void processHttp(HttpQueue *q)
             }
             break;
         }
-        httpServiceQueues(stream->net, HTTP_BLOCK);
+        httpServiceNetQueues(stream->net, HTTP_BLOCK);
     }
     if (stream->complete && httpServerStream(stream)) {
         if (stream->keepAliveCount <= 0 || stream->net->protocol >= 2) {
@@ -16864,7 +16867,7 @@ PUBLIC bool httpFlushQueue(HttpQueue *q, int flags)
         Initiate flushing. For HTTP/2 we must process incoming window update frames, so run any pending IO events.
      */
     httpScheduleQueue(q);
-    httpServiceQueues(net, flags);
+    httpServiceNetQueues(net, flags);
     mprWaitForEvent(stream->dispatcher, 0, mprGetEventMark(stream->dispatcher));
 
     if (net->error) {
@@ -16879,7 +16882,7 @@ PUBLIC bool httpFlushQueue(HttpQueue *q, int flags)
                 net->lastActivity = net->http->now;
                 httpResumeQueue(net->socketq);
                 httpScheduleQueue(net->socketq);
-                httpServiceQueues(net, flags);
+                httpServiceNetQueues(net, flags);
             }
             /*
                 Process HTTP/2 window update messages for flow control
@@ -17043,11 +17046,17 @@ static void serviceQueue(HttpQueue *q)
 }
 
 
+PUBLIC bool httpServiceQueues(HttpStream *stream, int flags)
+{
+    return httpServiceNetQueues(stream->net, flags);
+}
+
+
 /*
     Run the queue service routines until there is no more work to be done.
     If flags & HTTP_BLOCK, this routine may block while yielding.  Return true if actual work was done.
  */
-PUBLIC bool httpServiceQueues(HttpNet *net, int flags)
+PUBLIC bool httpServiceNetQueues(HttpNet *net, int flags)
 {
     HttpQueue   *q;
     bool        workDone;
@@ -23960,7 +23969,7 @@ PUBLIC void *httpGetQueueData(HttpStream *stream)
     HttpQueue     *q;
 
     q = stream->writeq;
-    return q->nextQ->queueData;
+    return q->queueData;
 }
 
 

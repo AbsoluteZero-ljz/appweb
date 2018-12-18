@@ -191,7 +191,7 @@
             <h1>Multithreaded Programming</h1>
             <a id="overview"></a>
             <h2>Overview</h2>
-            <p>Programming in a multithreaded environment can be difficult. Sometimes programming errors are timing related as multiple threads interact. Multithread locks can become tangled and bugs can be difficult to reproduce. To alleviate these problems and enable the benefits of a multi-threaded core, Appweb provides a suite of facilities to make multithreaded programming easier, more reliable, and more efficient.</p>
+            <p>Programming in a multithreaded environment can be difficult. Sometimes programming errors surface due to timing related issues as multiple threads interact. Multithread locks can become tangled and bugs can be difficult to reproduce. To alleviate these problems and enable the benefits of a multi-threaded core, Appweb provides a suite of facilities to make multithreaded programming easier, more reliable, and more efficient.</p>
 
             <h3>The Problem of Multithreaded I/O Events</h3>
             <p>A particularly thorny issue in multithreaded servers is how to handle I/O without consuming a thread for each request. It is not practical to dedicate a thread to each HTTP request. A single browser will often send 6-10 simultaneous requests. If each request consumed a thread for the duration, the web server would quickly consume too many threads and system performance would greatly suffer. </p>
@@ -220,19 +220,14 @@
             <pre class="ui code segment">
 mprCreateEvent(q-&gt;stream-&gt;dispatcher, "deviceEvent", 0, doMoreOutput, q, 0);
 </pre>
-            <p>This call will schedule the function <em>doMoreOutput</em> to run from the connection dispatcher.
+            <p>This call will schedule the function <em>doMoreOutput</em> to run from the connection dispatcher.</p>
+            <p>Application code is typically invoked by the Http state notifier or a similar web framework callback which provides a reference to the HttpStream object. Use HttpStream.dispacher (stream-&gt;dispatcher) to reference the dispatcher queue.</p>
 
             <h4>Interacting with External Libraries or Services</h4>
-            <p>You can pass messages (memorY) from external libraries into Appweb via mprCreateEvent by using the MPR_EVENT_STATIC_DATA flag to indicate the message is not Appweb managed memory. When the event invokes your callback and you have finished with the memory, you can call free() if the memory was originally allocated directly or indirectly from malloc().</p>
+            <p>You can pass memory/messages from external libraries into Appweb via mprCreateEvent by using the MPR_EVENT_STATIC_DATA flag to indicate the message is not Appweb managed memory. When the event invokes your callback and you have finished with the memory, you can call free() if the memory was originally allocated directly or indirectly from malloc().</p>
             <a id="locking"></a>
             <h3>Locking</h3>
-            <p>If you have a requirement for a data structure that will be accessed and manipulated simultaneously by multiple threads, the MPR provides a suite of locking primitives. See <a href="api/mpr.html#group___mpr_synch">MprSynch</a> for the MPR Multithreaded Synchronization Services.</p>
-
-            <a id="modules"></a>
-            <h3>Modules</h3>
-            <p>Appweb can be extended by writing loadable modules. Modules can add request handlers, pipeline filters, or network connectors. All module code can rely on the fact that request activity will be serialized and no locking is required to serialize I/O activity. Consequently, most module code can be effectively single-threaded.</p>
-
-            <p>Appweb can also be extended via Embedded Server Pages applications. These are loadable ESP web pages, and ESP Model-View-Controller applications. These too can rely on the fact that request activity is serialized and locking primitives are typically not required. ESP code can thus be simple, single-threaded application code.</p>
+            <p>If you have a requirement for a data structure that will be accessed and manipulated simultaneously by multiple threads, the MPR provides a suite of locking primitives. See <a href="../ref/api/mpr.html#group___mpr_sync">MprSynch</a> for the MPR Multithreaded Synchronization Services.</p>
 
     </div>
     <div class="terms ui basic center aligned segment">

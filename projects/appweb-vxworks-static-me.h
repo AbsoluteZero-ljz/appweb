@@ -172,7 +172,7 @@
     #define ME_TUNE "size"
 #endif
 #ifndef ME_VERSION
-    #define ME_VERSION "8.0.0-beta.2"
+    #define ME_VERSION "8.0.0-beta.3"
 #endif
 #ifndef ME_WATCHDOG_NAME
     #define ME_WATCHDOG_NAME "appman"
@@ -234,7 +234,7 @@
     #define ME_VAPP_PREFIX "deploy"
 #endif
 #ifndef ME_SRC_PREFIX
-    #define ME_SRC_PREFIX "/usr/src/appweb-8.0.0-beta.2"
+    #define ME_SRC_PREFIX "/usr/src/appweb-8.0.0-beta.3"
 #endif
 
 /* Suffixes */

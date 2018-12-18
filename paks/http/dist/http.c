@@ -998,7 +998,7 @@ static void startRequest(Request *request)
         return;
     }
     httpEnableNetEvents(net);
-    httpServiceQueues(net, 0);
+    httpServiceNetQueues(net, 0);
 }
 
 

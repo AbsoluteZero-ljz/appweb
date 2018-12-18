@@ -67,38 +67,45 @@
     #include <main/php_globals.h>
     #include <main/php_main.h>
 
+#if PHP_MAJOR_VERSION >= 7
 /********************************** Defines ***********************************/
 
+#if ME_MAJOR_VERSION < 8
+    /*
+        Support legacy appweb (4-7) by converting back from HttpStream to HttpConn
+     */
+    #undef HttpConn
+    #undef conn
+    #define stream conn
+    #define HttpStream HttpConn
+#endif
 typedef struct MaPhp {
     zval    *var_array;             /* Track var array */
 } MaPhp;
 
+#if UNUSED
 static void                    ***tsrm_ls;
 static php_core_globals        *core_globals;
 static sapi_globals_struct     *sapi_globals;
 static zend_llist              global_vars;
 static zend_compiler_globals   *compiler_globals;
 static zend_executor_globals   *executor_globals;
+#endif
 
 /****************************** Forward Declarations **********************/
 
 static void flushOutput(void *context);
 static int initializePhp(Http *http);
-static void logMessage(char *message TSRMLS_DC);
+static void logMessage(char *message, int flags);
 static char *mapHyphen(char *str);
-static char *readCookies(TSRMLS_D);
-static int  readBodyData(char *buffer, uint len TSRMLS_DC);
-static void registerServerVars(zval *varArray TSRMLS_DC);
-static int  startup(sapi_module_struct *sapiModule);
-static int  sendHeaders(sapi_headers_struct *sapiHeaders TSRMLS_DC);
-static int  writeBlock(cchar *str, uint len TSRMLS_DC);
+static size_t readBodyData(char *buffer, size_t len);
+static char *readCookies();
+static void registerServerVars(zval *varArray);
+static int startup(sapi_module_struct *sapiModule);
+static int sendHeaders(sapi_headers_struct *sapiHeaders);
+static size_t writeBlock(cchar *str, size_t len);
 
-#if PHP_MAJOR_VERSION >=5 && PHP_MINOR_VERSION >= 3
-    static int writeHeader(sapi_header_struct *sapiHeader, sapi_header_op_enum op,
-        sapi_headers_struct *sapiHeaders TSRMLS_DC);
-#else
-    static int  writeHeader(sapi_header_struct *sapiHeader, sapi_headers_struct *sapiHeaders TSRMLS_DC);
-#endif
+static int writeHeader(sapi_header_struct *sapiHeader, sapi_header_op_enum op, sapi_headers_struct *sapiHeaders);
 
 /************************************ Locals **********************************/
 /*
@@ -113,7 +120,7 @@ static sapi_module_struct phpSapiBlock = {
     0,                              /* Deactivate */
     writeBlock,                     /* Write */
     flushOutput,                    /* Flush */
-    0,                              /* Getuid */
+    0,                              /* Getstat */
     0,                              /* Getenv */
     php_error,                      /* Errors */
     writeHeader,                    /* Write headers */
@@ -123,9 +130,8 @@ static sapi_module_struct phpSapiBlock = {
     readCookies,                    /* Read session cookies */
     registerServerVars,             /* Define request variables */
     logMessage,                     /* Emit a log message */
-    NULL,                           /* Override for the php.ini */
-    0,                              /* Block */
-    0,                              /* Unblock */
+    NULL,                           /* Get time */
+    0,                              /* Terminate process */
     STANDARD_SAPI_MODULE_PROPERTIES
 };
 
@@ -148,6 +154,62 @@ static int openPhp(HttpQueue *q)
         q->stage->stageData = mprAlloc(1);
     }
     q->queueData = mprAllocObj(MaPhp, NULL);
+    q->pair->queueData = q->queueData;
+    return 0;
+}
+
+
+static int initializePhp(Http *http)
+{
+    tsrm_startup(1, 1, 0, NULL);
+    ts_resource(0);
+    ZEND_TSRMLS_CACHE_UPDATE();
+    zend_signal_startup();
+
+#if 0
+    compiler_globals = (zend_compiler_globals*)  ts_resource(compiler_globals_id);
+    executor_globals = (zend_executor_globals*)  ts_resource(executor_globals_id);
+    core_globals = (php_core_globals*) ts_resource(core_globals_id);
+    sapi_globals = (sapi_globals_struct*) ts_resource(sapi_globals_id);
+    tsrm_ls = (void***) ts_resource(0);
+#endif
+
+#if defined(ME_COM_PHP_INI)
+    phpSapiBlock.php_ini_path_override = (char*) ME_COM_PHP_INI;
+#else
+    phpSapiBlock.php_ini_path_override = (char*) httpGetDefaultRoute(NULL)->home;
+#endif
+    if (phpSapiBlock.php_ini_path_override) {
+        mprLog("info php", 2, "Look for php.ini at %s", phpSapiBlock.php_ini_path_override);
+    }
+    sapi_startup(&phpSapiBlock);
+    if (php_module_startup(&phpSapiBlock, 0, 0) == FAILURE) {
+        mprLog("error php", 0, "Cannot initialize");
+        return MPR_ERR_CANT_INITIALIZE;
+    }
+#if UNUSED
+    zend_llist_init(&global_vars, sizeof(char *), 0, 0);
+#endif
+    return 0;
+}
+
+
+static int finalizePhp(MprModule *mp)
+{
+    HttpStage   *stage;
+
+    if ((stage = httpLookupStage("phpHandler")) == 0) {
+        return 0;
+    }
+    if (stage->stageData) {
+        phpSapiBlock.shutdown(&phpSapiBlock);
+        sapi_shutdown();
+#if KEEP
+        /* PHP crashes by destroying the EG(persistent_list) twice. Once in zend_shutdown and once in tsrm_shutdown */
+        tsrm_shutdown();
+#endif
+        stage->stageData = 0;
+    }
     return 0;
 }
 
@@ -166,8 +228,6 @@ static void readyPhp(HttpQueue *q)
     cchar               *value;
     char                shebang[ME_MAX_PATH];
     zend_file_handle    file_handle;
-
-    TSRMLS_FETCH();
 
     stream = q->stream;
     rx = stream->rx;
@@ -205,7 +265,7 @@ static void readyPhp(HttpQueue *q)
         EG(timeout_seconds) = 0;
 
         /* The readBodyData callback may be invoked during startup */
-        php_request_startup(TSRMLS_C);
+        php_request_startup();
         CG(zend_lineno) = 0;
 
     } zend_catch {
@@ -247,9 +307,9 @@ static void readyPhp(HttpQueue *q)
     }
 #endif
     zend_try {
-        php_execute_script(&file_handle TSRMLS_CC);
+        php_execute_script(&file_handle);
         if (!SG(headers_sent)) {
-            sapi_send_headers(TSRMLS_C);
+            sapi_send_headers();
         }
     } zend_catch {
         php_request_shutdown(NULL);
@@ -277,12 +337,12 @@ static void flushOutput(void *server_context)
 
     stream = (HttpStream*) server_context;
     if (stream) {
-        httpServiceQueues(stream->net, HTTP_NON_BLOCK);
+        httpServiceQueues(stream, HTTP_NON_BLOCK);
     }
 }
 
 
-static int writeBlock(cchar *str, uint len TSRMLS_DC)
+static size_t writeBlock(cchar *str, size_t len)
 {
     HttpStream  *stream;
     ssize       written;
@@ -295,11 +355,11 @@ static int writeBlock(cchar *str, uint len TSRMLS_DC)
     if (written <= 0) {
         php_handle_aborted_connection();
     }
-    return (int) written;
+    return written;
 }
 
 
-static void registerServerVars(zval *track_vars_array TSRMLS_DC)
+static void registerServerVars(zval *track_vars_array)
 {
     HttpStream  *stream;
     HttpRx      *rx;
@@ -314,7 +374,7 @@ static void registerServerVars(zval *track_vars_array TSRMLS_DC)
         return;
     }
     rx = stream->rx;
-    php_import_environment_variables(track_vars_array TSRMLS_CC);
+    php_import_environment_variables(track_vars_array);
 
     php = httpGetQueueData(stream);
     assert(php);
@@ -329,36 +389,36 @@ static void registerServerVars(zval *track_vars_array TSRMLS_DC)
         for (ITERATE_KEYS(rx->headers, kp)) {
             if (kp->data) {
                 key = mapHyphen(sjoin("HTTP_", supper(kp->key), NULL));
-                php_register_variable(key, (char*) kp->data, php->var_array TSRMLS_CC);
+                php_register_variable(key, (char*) kp->data, php->var_array);
             }
         }
     }
     if (rx->svars) {
         for (ITERATE_KEYS(rx->svars, kp)) {
             if (kp->data) {
-                php_register_variable(kp->key, (char*) kp->data, php->var_array TSRMLS_CC);
+                php_register_variable(kp->key, (char*) kp->data, php->var_array);
             }
         }
     }
     if (rx->params) {
         for (ITERATE_JSON(rx->params, param, index)) {
-            php_register_variable(supper(param->name), (char*) param->value, php->var_array TSRMLS_CC);
+            php_register_variable(supper(param->name), (char*) param->value, php->var_array);
         }
     }
     if (SG(request_info).request_uri) {
-        php_register_variable("PHP_SELF", SG(request_info).request_uri,  track_vars_array TSRMLS_CC);
+        php_register_variable("PHP_SELF", SG(request_info).request_uri,  track_vars_array);
     }
-    php_register_variable("HTTPS", (stream->secure) ? "on" : "",  track_vars_array TSRMLS_CC);
+    php_register_variable("HTTPS", (stream->secure) ? "on" : "",  track_vars_array);
 }
 
 
-static void logMessage(char *message TSRMLS_DC)
+static void logMessage(char *message, int flags)
 {
     mprLog("info php", 3, "%s", message);
 }
 
 
-static char *readCookies(TSRMLS_D)
+static char *readCookies()
 {
     HttpStream    *stream;
 
@@ -367,7 +427,7 @@ static char *readCookies(TSRMLS_D)
 }
 
 
-static int sendHeaders(sapi_headers_struct *phpHeaders TSRMLS_DC)
+static int sendHeaders(sapi_headers_struct *phpHeaders)
 {
     HttpStream    *stream;
 
@@ -381,11 +441,7 @@ static int sendHeaders(sapi_headers_struct *phpHeaders TSRMLS_DC)
 }
 
 
-#if PHP_MAJOR_VERSION >=5 && PHP_MINOR_VERSION >= 3
-static int writeHeader(sapi_header_struct *sapiHeader, sapi_header_op_enum op, sapi_headers_struct *sapiHeaders TSRMLS_DC)
-#else
-static int writeHeader(sapi_header_struct *sapiHeader, sapi_headers_struct *sapi_headers TSRMLS_DC)
-#endif
+static int writeHeader(sapi_header_struct *sapiHeader, sapi_header_op_enum op, sapi_headers_struct *sapiHeaders)
 {
     HttpStream  *stream;
     char        *key, *value;
@@ -400,41 +456,31 @@ static int writeHeader(sapi_header_struct *sapiHeader, sapi_headers_struct *sapi
     while (!isalnum((uchar) *value) && *value) {
         value++;
     }
-#if PHP_MAJOR_VERSION >=5 && PHP_MINOR_VERSION >= 3
     switch(op) {
-        case SAPI_HEADER_DELETE_ALL:
-            //  FUTURE - not supported
-            return 0;
+    case SAPI_HEADER_DELETE_ALL:
+        //  FUTURE - not supported
+        return 0;
 
-        case SAPI_HEADER_DELETE:
-            //  FUTURE - not supported
-            return 0;
+    case SAPI_HEADER_DELETE:
+        //  FUTURE - not supported
+        return 0;
 
-        case SAPI_HEADER_REPLACE:
-            httpSetHeaderString(stream, key, value);
-            return SAPI_HEADER_ADD;
-
-        case SAPI_HEADER_ADD:
-            httpAppendHeaderString(stream, key, value);
-            return SAPI_HEADER_ADD;
-
-        default:
-            return 0;
-    }
-#else
-    bool allowMultiple;
-    allowMultiple = !sapiHeader->replace;
-    if (allowMultiple) {
-        httpAppendHeaderString(stream, key, value);
-    } else {
+    case SAPI_HEADER_REPLACE:
         httpSetHeaderString(stream, key, value);
+        return SAPI_HEADER_ADD;
+
+    case SAPI_HEADER_ADD:
+        httpAppendHeaderString(stream, key, value);
+        return SAPI_HEADER_ADD;
+
+    default:
+        return 0;
     }
-    return SAPI_HEADER_ADD;
-#endif
+    return 0;
 }
 
 
-static int readBodyData(char *buffer, uint bufsize TSRMLS_DC)
+static size_t readBodyData(char *buffer, size_t bufsize)
 {
     HttpStream  *stream;
     HttpQueue   *q;
@@ -454,64 +500,13 @@ static int readBodyData(char *buffer, uint bufsize TSRMLS_DC)
         mprMemcpy(buffer, len, mprGetBufStart(content), len);
         mprAdjustBufStart(content, len);
     }
-    return (int) len;
+    return len;
 }
 
 
 static int startup(sapi_module_struct *sapi_module)
 {
     return php_module_startup(sapi_module, 0, 0);
-}
-
-
-static int initializePhp(Http *http)
-{
-    tsrm_startup(128, 1, 0, NULL);
-    compiler_globals = (zend_compiler_globals*)  ts_resource(compiler_globals_id);
-    executor_globals = (zend_executor_globals*)  ts_resource(executor_globals_id);
-    core_globals = (php_core_globals*) ts_resource(core_globals_id);
-    sapi_globals = (sapi_globals_struct*) ts_resource(sapi_globals_id);
-    tsrm_ls = (void***) ts_resource(0);
-
-#if defined(ME_COM_PHP_INI)
-    phpSapiBlock.php_ini_path_override = (char*) ME_COM_PHP_INI;
-#else
-    phpSapiBlock.php_ini_path_override = (char*) httpGetDefaultRoute(NULL)->home;
-#endif
-    if (phpSapiBlock.php_ini_path_override) {
-        mprLog("info php", 2, "Look for php.ini at %s", phpSapiBlock.php_ini_path_override);
-    }
-    sapi_startup(&phpSapiBlock);
-    if (php_module_startup(&phpSapiBlock, 0, 0) == FAILURE) {
-        mprLog("error php", 0, "Cannot initialize");
-        return MPR_ERR_CANT_INITIALIZE;
-    }
-    zend_llist_init(&global_vars, sizeof(char *), 0, 0);
-
-    zend_alter_ini_entry("register_argc_argv", 19, "0", 1, PHP_INI_SYSTEM, PHP_INI_STAGE_ACTIVATE);
-    zend_alter_ini_entry("html_errors", 12, "0", 1, PHP_INI_SYSTEM, PHP_INI_STAGE_ACTIVATE);
-    zend_alter_ini_entry("implicit_flush", 15, "0", 1, PHP_INI_SYSTEM, PHP_INI_STAGE_ACTIVATE);
-    return 0;
-}
-
-
-static int finalizePhp(MprModule *mp)
-{
-    HttpStage   *stage;
-
-    if ((stage = httpLookupStage("phpHandler")) == 0) {
-        return 0;
-    }
-    if (stage->stageData) {
-        phpSapiBlock.shutdown(&phpSapiBlock);
-        sapi_shutdown();
-#if KEEP
-        /* PHP crashes by destroying the EG(persistent_list) twice. Once in zend_shutdown and once in tsrm_shutdown */
-        tsrm_shutdown();
-#endif
-        stage->stageData = 0;
-    }
-    return 0;
 }
 
 
@@ -547,31 +542,14 @@ PUBLIC int httpPhpInit(Http *http, MprModule *module)
     return 0;
 }
 
-#else /* ME_COM_PHP */
-
-PUBLIC int httpPhpInit(Http *http, MprModule *module)
-{
-    mprNop(0);
-    return 0;
-}
+#endif /* PHP_MAJOR_VERSION >= 7 */
 #endif /* ME_COM_PHP */
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */

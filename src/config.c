@@ -3353,6 +3353,9 @@ PUBLIC int maLoadModule(cchar *name, cchar *libname)
     MprModule   *module;
     cchar       *entry, *path;
 
+    if (smatch(name, "phpHandler")) {
+        name = "php";
+    }
     if ((module = mprLookupModule(name)) != 0) {
         return 0;
     }
