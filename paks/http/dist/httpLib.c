@@ -4073,6 +4073,12 @@ static void parseAuthSessionCookiePersist(HttpRoute *route, cchar *key, MprJson 
 }
 
 
+static void parseAuthSessionCookieSame(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    httpSetRouteCookieSame(route, prop->value);
+}
+
+
 static void parseAuthSessionEnable(HttpRoute *route, cchar *key, MprJson *prop)
 {
     httpSetAuthSession(route->auth, 0);
@@ -5557,6 +5563,7 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.auth.session", httpParseAll);
     httpAddConfig("http.auth.session.cookie", parseAuthSessionCookie);
     httpAddConfig("http.auth.session.persist", parseAuthSessionCookiePersist);
+    httpAddConfig("http.auth.session.same", parseAuthSessionCookieSame);
     httpAddConfig("http.auth.session.enable", parseAuthSessionEnable);
     httpAddConfig("http.auth.session.visible", parseAuthSessionVisible);
     httpAddConfig("http.auth.store", parseAuthStore);
@@ -18902,6 +18909,17 @@ PUBLIC void httpSetRouteCookiePersist(HttpRoute *route, int enable)
 }
 
 
+PUBLIC void httpSetRouteCookieSame(HttpRoute *route, cchar *value)
+{
+    route->flags &= ~(HTTP_ROUTE_LAX_COOKIE | HTTP_ROUTE_STRICT_COOKIE);
+    if (smatch(value, "lax")) {
+        route->flags |= HTTP_ROUTE_LAX_COOKIE;
+    } else if (smatch(value, "strict")) {
+        route->flags |= HTTP_ROUTE_STRICT_COOKIE;
+    }
+}
+
+
 PUBLIC void httpSetRoutePattern(HttpRoute *route, cchar *pattern, int flags)
 {
     assert(route);
@@ -21609,7 +21627,11 @@ PUBLIC HttpSession *httpGetSession(HttpStream *stream, int create)
             if (stream->secure) {
                 flags |= HTTP_COOKIE_SECURE;
             }
-            flags |= HTTP_COOKIE_SAME_LAX;
+            if (route->flags & HTTP_ROUTE_LAX_COOKIE) {
+                flags |= HTTP_COOKIE_SAME_LAX;
+            } else if (route->flags & HTTP_ROUTE_STRICT_COOKIE) {
+                flags |= HTTP_COOKIE_SAME_STRICT;
+            }
             cookie = route->cookie ? route->cookie : HTTP_SESSION_COOKIE;
             lifespan = (route->flags & HTTP_ROUTE_PERSIST_COOKIE) ? rx->session->lifespan : 0;
             url = (route->prefix && *route->prefix) ? route->prefix : "/";

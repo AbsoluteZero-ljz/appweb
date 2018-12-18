@@ -4829,6 +4829,8 @@ PUBLIC void httpSetStreaming(struct HttpHost *host, cchar *mime, cchar *uri, boo
 #define HTTP_ROUTE_PERSIST_COOKIE       0x40000     /**< Persist session cookie to disk */
 #define HTTP_ROUTE_OWN_LISTEN           0x80000     /**< Override listening endpoints */
 #define HTTP_ROUTE_UTILITY              0x100000    /**< Route hosted by a utility */
+#define HTTP_ROUTE_LAX_COOKIE           0x200000    /**< Session cookie is SameSite=lax */
+#define HTTP_ROUTE_STRICT_COOKIE        0x400000    /**< Session cookie is SameSite=strict */
 
 /**
     Route Control
@@ -5892,6 +5894,15 @@ PUBLIC void httpSetRouteCookie(HttpRoute *route, cchar *cookie);
     @stability Evolving
  */
 PUBLIC void httpSetRouteCookiePersist(HttpRoute *route, int enable);
+
+/**
+    Set the session cookie SameSite property.
+    @param route Route to modify
+    @param value Set to "lax", "strict" or NULL/empty.
+    @ingroup HttpRoute
+    @stability Prototype
+ */
+PUBLIC void httpSetRouteCookieSame(HttpRoute *route, cchar *value);
 
 /**
     Set the route pattern
@@ -7348,7 +7359,7 @@ PUBLIC ssize httpFormatResponseBody(HttpStream *stream, cchar *title, cchar *fmt
 PUBLIC cchar *httpGetTxHeader(HttpStream *stream, cchar *key);
 
 /**
-    Get the queue data for the connection. 
+    Get the queue data for the connection.
     @description The queue data is stored on the stream->writeq.
     @param stream HttpStream stream object created via #httpCreateStream
     @return the private queue data object
