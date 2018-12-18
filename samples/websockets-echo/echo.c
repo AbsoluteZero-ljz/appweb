@@ -6,7 +6,7 @@
 /*
     Event callback. Invoked for incoming web socket messages and other events of interest.
  */
-static void echo_callback(HttpConn *conn, int event, int arg)
+static void echo_callback(HttpStream *stream, int event, int arg)
 {
     HttpPacket      *packet;
 
@@ -14,16 +14,16 @@ static void echo_callback(HttpConn *conn, int event, int arg)
         /*
             Grab the packet off the read queue.
          */
-        packet = httpGetPacket(conn->readq);
+        packet = httpGetPacket(stream->readq);
         if (packet->type == WS_MSG_TEXT || packet->type == WS_MSG_BINARY) {
             /*
                 Echo back the contents
              */
-            httpSendBlock(conn, packet->type, httpGetPacketStart(packet), httpGetPacketLength(packet), 0);
+            httpSendBlock(stream, packet->type, httpGetPacketStart(packet), httpGetPacketLength(packet), 0);
         }
     } else if (event == HTTP_EVENT_APP_CLOSE) {
         mprLog("info echo", 0, "close event. Status status %d, orderly closed %d, reason %s", arg,
-        httpWebSocketOrderlyClosed(conn), httpGetWebSocketCloseReason(conn));
+        httpWebSocketOrderlyClosed(stream), httpGetWebSocketCloseReason(stream));
 
     } else if (event == HTTP_EVENT_ERROR) {
         mprLog("info echo", 0, "error event");
