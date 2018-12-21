@@ -4440,7 +4440,7 @@ static void parseLimitsClients(HttpRoute *route, cchar *key, MprJson *prop)
 
 static void parseLimitsConnections(HttpRoute *route, cchar *key, MprJson *prop)
 {
-    route->limits->streamsMax = httpGetInt(prop->value);
+    route->limits->connectionsMax = httpGetInt(prop->value);
 }
 
 
@@ -9806,7 +9806,7 @@ static void parseHeaderFrame(HttpQueue *q, HttpPacket *packet)
     MprBuf      *buf;
     bool        padded, priority;
     ssize       size, frameLen;
-    int         padLen;
+    int         padLen, depend, dword, excl, weight;
 
     net = q->net;
     buf = packet->content;
@@ -9835,8 +9835,6 @@ static void parseHeaderFrame(HttpQueue *q, HttpPacket *packet)
         }
         mprAdjustBufEnd(buf, -padLen);
     }
-#if FUTURE
-    int depend, dword, excl;
     depend = 0;
     weight = HTTP2_DEFAULT_WEIGHT;
     if (priority) {
@@ -9845,7 +9843,6 @@ static void parseHeaderFrame(HttpQueue *q, HttpPacket *packet)
         excl = dword >> 31;
         weight = mprGetCharFromBuf(buf) + 1;
     }
-#endif
     if ((frame->streamID % 2) != 1 || (net->lastStreamID && frame->streamID <= net->lastStreamID)) {
         sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Bad sesssion");
         return;
@@ -9878,7 +9875,6 @@ static HttpStream *getStream(HttpQueue *q, HttpPacket *packet)
     frame = packet->data;
     stream = frame->stream;
     frame = packet->data;
-    assert(frame->stream);
 
     if (!stream && httpIsServer(net)) {
         if (net->goaway) {
@@ -13842,10 +13838,7 @@ static void netOutgoing(HttpQueue *q, HttpPacket *packet);
 static void netOutgoingService(HttpQueue *q);
 static HttpPacket *readPacket(HttpNet *net);
 static void resumeEvents(HttpNet *net, MprEvent *event);
-
-#if ME_HTTP_HTTP2
 static int sleuthProtocol(HttpNet *net, HttpPacket *packet);
-#endif
 
 /*********************************** Code *************************************/
 /*
@@ -13955,12 +13948,10 @@ PUBLIC void httpIOEvent(HttpNet *net, MprEvent *event)
         packet = readPacket(net);
     }
     if (packet) {
-#if ME_HTTP_HTTP2
         if (!net->protocol) {
             int protocol = sleuthProtocol(net, packet);
             httpSetNetProtocol(net, protocol);
         }
-#endif
         if (net->protocol) {
             httpPutPacket(net->inputq, packet);
         }
@@ -13977,9 +13968,9 @@ PUBLIC void httpIOEvent(HttpNet *net, MprEvent *event)
 }
 
 
-#if ME_HTTP_HTTP2
 static int sleuthProtocol(HttpNet *net, HttpPacket *packet)
 {
+#if ME_HTTP_HTTP2
     MprBuf      *buf;
     ssize       len;
     int         protocol;
@@ -13998,8 +13989,10 @@ static int sleuthProtocol(HttpNet *net, HttpPacket *packet)
         httpTrace(net->trace, "net.rx", "context", "msg:'Detected HTTP/2 preface'");
     }
     return protocol;
-}
+#else
+    return 1;
 #endif
+}
 
 
 /*
@@ -16773,13 +16766,16 @@ PUBLIC void httpSetQueueLimits(HttpQueue *q, HttpLimits *limits, ssize packetSiz
     if (low < 0) {
         low = q->packetSize;
     }
-    if (window < 0) {
-        window = limits->window;
-    }
     q->packetSize = packetSize;
     q->max = max;
     q->low = low;
+    
+#if ME_HTTP_HTTP2
+    if (window < 0) {
+        window = limits->window;
+    }
     q->window = window;
+#endif
 }
 
 
@@ -22136,11 +22132,13 @@ PUBLIC HttpStream *httpCreateStream(HttpNet *net, bool peerCreated)
     }
     limits = stream->limits;
 
+#if ME_HTTP_HTTP2
     if (!peerCreated && ((net->ownStreams >= limits->txStreamsMax) || (net->ownStreams >= limits->streamsMax))) {
         httpNetError(net, "Attempting to create too many streams for network connection: %d/%d/%d", net->ownStreams,
             limits->txStreamsMax, limits->streamsMax);
         return 0;
     }
+#endif
 
     stream->keepAliveCount = (net->protocol >= 2) ? 0 : stream->limits->keepAliveMax;
     stream->dispatcher = net->dispatcher;
@@ -22829,7 +22827,11 @@ static bool streamCanAbsorb(HttpQueue *q, HttpPacket *packet)
     /*
         Get the maximum the output stream can absorb that is less than the downstream queue packet size.
      */
+#if ME_HTTP_HTTP2
     room = min(nextQ->packetSize, stream->outputq->window);
+#else
+    room = min(nextQ->packetSize, stream->outputq->max);
+#endif
     if (size <= room) {
         return 1;
     }

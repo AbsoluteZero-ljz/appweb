@@ -1408,7 +1408,7 @@ typedef struct HttpLimits {
     int      frameSize;                 /**< HTTP/2 maximum frame size */
     int      hpackMax;                  /**< HTTP/2 maximum size of the hpack header table */
     int      streamsMax;                /**< HTTP/2 maximum number of streams per connection (both peer and self initiated) */
-    int      txStreamsMax;                 /**< HTTP/2 maximum number of streams the peer will permit per connection */
+    int      txStreamsMax;              /**< HTTP/2 maximum number of streams the peer will permit per connection */
     int      window;                    /**< HTTP/2 Initial rx window size (size willing to receive) */
 #endif
 } HttpLimits;
@@ -2107,12 +2107,15 @@ typedef struct HttpQueue {
     void                *queueData;             /**< Stage instance data - must be a managed reference */
     void                *staticData;            /**< Stage instance data - must be an unmanaged reference */
 
-    ssize               window;                 /**< HTTP/2 flow control window size */
     ssize               max;                    /**< Advisory maxiumum queue size */
     ssize               low;                    /**< Low water mark for flow control */
     ssize               packetSize;             /**< Maximum acceptable packet size */
     int                 servicing;              /**< Currently being serviced */
     int                 direction;              /**< Flow direction */
+
+#if ME_HTTP_HTTP2 || DOXYGEN
+    ssize               window;                 /**< HTTP/2 flow control window size */
+#endif
 
     /*
         Connector instance data

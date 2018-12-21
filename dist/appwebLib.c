@@ -1233,9 +1233,9 @@ static int inactivityTimeoutDirective(MaState *state, cchar *key, cchar *value)
 
 
 /*
-    LimitBuffer bytes
+    LimitPacket bytes
  */
-static int limitBufferDirective(MaState *state, cchar *key, cchar *value)
+static int limitPacketDirective(MaState *state, cchar *key, cchar *value)
 {
     int     size;
 
@@ -2237,6 +2237,9 @@ static int sessionCookieDirective(MaState *state, cchar *key, cchar *value)
 
         } else if (smatch(option, "persist")) {
             httpSetRouteCookiePersist(state->route, smatch(ovalue, "true"));
+
+        } else if (smatch(option, "same")) {
+            httpSetRouteCookieSame(state->route, ovalue);
 
         } else {
             mprLog("error appweb config", 0, "Unknown SessionCookie option %s", option);
@@ -3254,7 +3257,6 @@ static int parseInit()
     maAddDirective("Include", includeDirective);
     maAddDirective("IndexOrder", indexOrderDirective);
     maAddDirective("IndexOptions", indexOptionsDirective);
-    maAddDirective("LimitBuffer", limitBufferDirective);
     maAddDirective("LimitCache", limitCacheDirective);
     maAddDirective("LimitCacheItem", limitCacheItemDirective);
     maAddDirective("LimitChunk", limitChunkDirective);
@@ -3264,6 +3266,7 @@ static int parseInit()
     maAddDirective("LimitFrame", limitFrameDirective);
     maAddDirective("LimitKeepAlive", limitKeepAliveDirective);
     maAddDirective("LimitMemory", limitMemoryDirective);
+    maAddDirective("LimitPacket", limitPacketDirective);
     maAddDirective("LimitProcesses", limitProcessesDirective);
     maAddDirective("LimitRequestsPerClient", limitRequestsPerClientDirective);
     maAddDirective("LimitRequestBody", limitRequestBodyDirective);
@@ -3352,6 +3355,10 @@ static int parseInit()
         Fixes
      */
     maAddDirective("FixDotNetDigestAuth", fixDotNetDigestAuth);
+
+#if DEPRECATE || 1
+    maAddDirective("LimitBuffer", limitPacketDirective);
+#endif
     return 0;
 }
 
@@ -3364,6 +3371,9 @@ PUBLIC int maLoadModule(cchar *name, cchar *libname)
     MprModule   *module;
     cchar       *entry, *path;
 
+    if (smatch(name, "phpHandler")) {
+        name = "php";
+    }
     if ((module = mprLookupModule(name)) != 0) {
         return 0;
     }
