@@ -1,0 +1,71 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="struct_ma_group" kind="struct" prot="public">
+    <compoundname>MaGroup</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_ma_group_1afd341ff93d88beee9e8f462cd49ae6db" prot="public" static="no" mutable="no">
+        <type>MaAcl</type>
+        <definition>MaAcl MaGroup::acl</definition>
+        <argsstring></argsstring>
+        <name>acl</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="770" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="770" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_group_1a1a48a48f4264dc24b6c178014c4582c2" prot="public" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool MaGroup::enabled</definition>
+        <argsstring></argsstring>
+        <name>enabled</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="771" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="771" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_group_1a7a303cf3aa5fa95996b85fc92ff93b0f" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaGroup::name</definition>
+        <argsstring></argsstring>
+        <name>name</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="772" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="772" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_group_1ad6ccc5d6a0019fd7b40314e21c8a3973" prot="public" static="no" mutable="no">
+        <type>MprList *</type>
+        <definition>MprList* MaGroup::users</definition>
+        <argsstring></argsstring>
+        <name>users</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="773" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="773" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/Users/mob/git/appweb-3/all/appweb.h" line="769" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="769" bodyend="774"/>
+    <listofallmembers>
+      <member refid="struct_ma_group_1afd341ff93d88beee9e8f462cd49ae6db" prot="public" virt="non-virtual"><scope>MaGroup</scope><name>acl</name></member>
+      <member refid="struct_ma_group_1a1a48a48f4264dc24b6c178014c4582c2" prot="public" virt="non-virtual"><scope>MaGroup</scope><name>enabled</name></member>
+      <member refid="struct_ma_group_1a7a303cf3aa5fa95996b85fc92ff93b0f" prot="public" virt="non-virtual"><scope>MaGroup</scope><name>name</name></member>
+      <member refid="struct_ma_group_1ad6ccc5d6a0019fd7b40314e21c8a3973" prot="public" virt="non-virtual"><scope>MaGroup</scope><name>users</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

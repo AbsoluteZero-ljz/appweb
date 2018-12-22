@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="group___ma_auth" kind="group">
+    <compoundname>MaAuth</compoundname>
+    <title>MaAuth</title>
+    <briefdescription>
+<para>Authorization The MaAuth struct is the foundation authorization object and is used as base class by MaDirectory and MaLocation. </para>    </briefdescription>
+    <detaileddescription>
+<para>It stores the authorization configuration information required to determine if a client request should be permitted to the resource controlled by this object. <simplesect kind="par"><title><bold>API</bold> Stability:</title><para>Evolving</para></simplesect>
+<simplesect kind="see"><para><ref refid="group___ma_auth" kindref="compound">MaAuth</ref> </para></simplesect>
+</para>    </detaileddescription>
+  </compounddef>
+</doxygen>

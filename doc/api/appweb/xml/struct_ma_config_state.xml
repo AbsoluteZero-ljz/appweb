@@ -1,0 +1,141 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="struct_ma_config_state" kind="struct" prot="public">
+    <compoundname>MaConfigState</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_ma_config_state_1a763e229dfa854f3ffe78270badbed08e" prot="public" static="no" mutable="no">
+        <type>MaAuth *</type>
+        <definition>MaAuth* MaConfigState::auth</definition>
+        <argsstring></argsstring>
+        <name>auth</name>
+        <briefdescription>
+<para>Current auth object. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1068" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1068" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_config_state_1a2cb2512c1b73de356e9ff905672d2ede" prot="public" static="no" mutable="no">
+        <type>MaDir *</type>
+        <definition>MaDir* MaConfigState::dir</definition>
+        <argsstring></argsstring>
+        <name>dir</name>
+        <briefdescription>
+<para>Current directory block. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1066" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1066" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_config_state_1a641149937370960cb511993b806fd2e0" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaConfigState::enabled</definition>
+        <argsstring></argsstring>
+        <name>enabled</name>
+        <briefdescription>
+<para>True if the current block is enabled. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1072" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1072" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_config_state_1a24005090e643fba4532afea1da50d386" prot="public" static="no" mutable="no">
+        <type>MprFile *</type>
+        <definition>MprFile* MaConfigState::file</definition>
+        <argsstring></argsstring>
+        <name>file</name>
+        <briefdescription>
+<para>Config file handle. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1069" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1069" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_config_state_1ab8f8a413196b98203ddcde47879fda1a" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaConfigState::filename</definition>
+        <argsstring></argsstring>
+        <name>filename</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1070" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1070" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_config_state_1ad5317333d57c8d48667656727468bea5" prot="public" static="no" mutable="no">
+        <type>MaHost *</type>
+        <definition>MaHost* MaConfigState::host</definition>
+        <argsstring></argsstring>
+        <name>host</name>
+        <briefdescription>
+<para>Current host. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1065" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1065" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_config_state_1aee1cd0906a5f18b041bcac7c7fdf4fdc" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaConfigState::lineNumber</definition>
+        <argsstring></argsstring>
+        <name>lineNumber</name>
+        <briefdescription>
+<para>Config file name. </para>        </briefdescription>
+        <detaileddescription>
+<para>Current line number </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1071" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1071" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_config_state_1a263cbc86f75ac24c78715aaf84c177de" prot="public" static="no" mutable="no">
+        <type>MaLocation *</type>
+        <definition>MaLocation* MaConfigState::location</definition>
+        <argsstring></argsstring>
+        <name>location</name>
+        <briefdescription>
+<para>Current location. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1067" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1067" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_config_state_1a045505faa47eb71b3eb082503ee97a71" prot="public" static="no" mutable="no">
+        <type>MaServer *</type>
+        <definition>MaServer* MaConfigState::server</definition>
+        <argsstring></argsstring>
+        <name>server</name>
+        <briefdescription>
+<para>Current server. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1064" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1064" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1063" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1063" bodyend="1073"/>
+    <listofallmembers>
+      <member refid="struct_ma_config_state_1a763e229dfa854f3ffe78270badbed08e" prot="public" virt="non-virtual"><scope>MaConfigState</scope><name>auth</name></member>
+      <member refid="struct_ma_config_state_1a2cb2512c1b73de356e9ff905672d2ede" prot="public" virt="non-virtual"><scope>MaConfigState</scope><name>dir</name></member>
+      <member refid="struct_ma_config_state_1a641149937370960cb511993b806fd2e0" prot="public" virt="non-virtual"><scope>MaConfigState</scope><name>enabled</name></member>
+      <member refid="struct_ma_config_state_1a24005090e643fba4532afea1da50d386" prot="public" virt="non-virtual"><scope>MaConfigState</scope><name>file</name></member>
+      <member refid="struct_ma_config_state_1ab8f8a413196b98203ddcde47879fda1a" prot="public" virt="non-virtual"><scope>MaConfigState</scope><name>filename</name></member>
+      <member refid="struct_ma_config_state_1ad5317333d57c8d48667656727468bea5" prot="public" virt="non-virtual"><scope>MaConfigState</scope><name>host</name></member>
+      <member refid="struct_ma_config_state_1aee1cd0906a5f18b041bcac7c7fdf4fdc" prot="public" virt="non-virtual"><scope>MaConfigState</scope><name>lineNumber</name></member>
+      <member refid="struct_ma_config_state_1a263cbc86f75ac24c78715aaf84c177de" prot="public" virt="non-virtual"><scope>MaConfigState</scope><name>location</name></member>
+      <member refid="struct_ma_config_state_1a045505faa47eb71b3eb082503ee97a71" prot="public" virt="non-virtual"><scope>MaConfigState</scope><name>server</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

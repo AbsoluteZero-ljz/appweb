@@ -1,0 +1,113 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="struct_ma_packet" kind="struct" prot="public">
+    <compoundname>MaPacket</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_ma_packet_1afd3e2053b41c10450897fa8b2c502c14" prot="public" static="no" mutable="no">
+        <type>MprBuf *</type>
+        <definition>MprBuf* MaPacket::content</definition>
+        <argsstring></argsstring>
+        <name>content</name>
+        <briefdescription>
+<para>Chunk content. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1123" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1123" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_packet_1adbb40e127f9536ff09e69de1bf386446" prot="public" static="no" mutable="no">
+        <type>MprOff</type>
+        <definition>MprOff MaPacket::epos</definition>
+        <argsstring></argsstring>
+        <name>epos</name>
+        <briefdescription>
+<para>Data position in entity. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1126" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1126" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_packet_1a2c37fcaca330bb6115be15c6a9613e7a" prot="public" static="no" mutable="no">
+        <type>MprOff</type>
+        <definition>MprOff MaPacket::esize</definition>
+        <argsstring></argsstring>
+        <name>esize</name>
+        <briefdescription>
+<para>Data size in entity. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1125" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1125" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_packet_1a1213df74ad9723aa0f3d56f621c27a8b" prot="public" static="no" mutable="no">
+        <type>MaFillProc</type>
+        <definition>MaFillProc MaPacket::fill</definition>
+        <argsstring></argsstring>
+        <name>fill</name>
+        <briefdescription>
+<para>Callback to fill packet with data. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1127" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1127" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_packet_1aaf2127371c60d73605160761c6940e97" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaPacket::flags</definition>
+        <argsstring></argsstring>
+        <name>flags</name>
+        <briefdescription>
+<para>Packet flags. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1124" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1124" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_packet_1a5d0ed547793c7845895b34cbd7c28f48" prot="public" static="no" mutable="no">
+        <type>struct MaPacket *</type>
+        <definition>struct MaPacket* MaPacket::next</definition>
+        <argsstring></argsstring>
+        <name>next</name>
+        <briefdescription>
+<para>Next packet in chain. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1128" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1128" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_packet_1a95e4d60ecbac91db5b16d75d6db496bb" prot="public" static="no" mutable="no">
+        <type>MprBuf *</type>
+        <definition>MprBuf* MaPacket::prefix</definition>
+        <argsstring></argsstring>
+        <name>prefix</name>
+        <briefdescription>
+<para>Prefix message to be emitted before the content. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1122" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1122" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1121" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1121" bodyend="1129"/>
+    <listofallmembers>
+      <member refid="struct_ma_packet_1afd3e2053b41c10450897fa8b2c502c14" prot="public" virt="non-virtual"><scope>MaPacket</scope><name>content</name></member>
+      <member refid="struct_ma_packet_1adbb40e127f9536ff09e69de1bf386446" prot="public" virt="non-virtual"><scope>MaPacket</scope><name>epos</name></member>
+      <member refid="struct_ma_packet_1a2c37fcaca330bb6115be15c6a9613e7a" prot="public" virt="non-virtual"><scope>MaPacket</scope><name>esize</name></member>
+      <member refid="struct_ma_packet_1a1213df74ad9723aa0f3d56f621c27a8b" prot="public" virt="non-virtual"><scope>MaPacket</scope><name>fill</name></member>
+      <member refid="struct_ma_packet_1aaf2127371c60d73605160761c6940e97" prot="public" virt="non-virtual"><scope>MaPacket</scope><name>flags</name></member>
+      <member refid="struct_ma_packet_1a5d0ed547793c7845895b34cbd7c28f48" prot="public" virt="non-virtual"><scope>MaPacket</scope><name>next</name></member>
+      <member refid="struct_ma_packet_1a95e4d60ecbac91db5b16d75d6db496bb" prot="public" virt="non-virtual"><scope>MaPacket</scope><name>prefix</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

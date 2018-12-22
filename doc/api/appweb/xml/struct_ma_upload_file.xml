@@ -1,0 +1,71 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="struct_ma_upload_file" kind="struct" prot="public">
+    <compoundname>MaUploadFile</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_ma_upload_file_1ad961eaf0f506ff51fa3efce95d18d67c" prot="public" static="no" mutable="no">
+        <type>cchar *</type>
+        <definition>cchar* MaUploadFile::clientFilename</definition>
+        <argsstring></argsstring>
+        <name>clientFilename</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="843" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="843" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_upload_file_1a69f5258099bd7060843b32850100e0cb" prot="public" static="no" mutable="no">
+        <type>cchar *</type>
+        <definition>cchar* MaUploadFile::contentType</definition>
+        <argsstring></argsstring>
+        <name>contentType</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="844" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="844" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_upload_file_1ae688ab6e4c438accbfb1ce10a9658d1c" prot="public" static="no" mutable="no">
+        <type>cchar *</type>
+        <definition>cchar* MaUploadFile::filename</definition>
+        <argsstring></argsstring>
+        <name>filename</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="842" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="842" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_upload_file_1ae5bb4f1e388ba6bf17dd3a490c9e0a92" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaUploadFile::size</definition>
+        <argsstring></argsstring>
+        <name>size</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="845" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="845" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/Users/mob/git/appweb-3/all/appweb.h" line="841" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="841" bodyend="846"/>
+    <listofallmembers>
+      <member refid="struct_ma_upload_file_1ad961eaf0f506ff51fa3efce95d18d67c" prot="public" virt="non-virtual"><scope>MaUploadFile</scope><name>clientFilename</name></member>
+      <member refid="struct_ma_upload_file_1a69f5258099bd7060843b32850100e0cb" prot="public" virt="non-virtual"><scope>MaUploadFile</scope><name>contentType</name></member>
+      <member refid="struct_ma_upload_file_1ae688ab6e4c438accbfb1ce10a9658d1c" prot="public" virt="non-virtual"><scope>MaUploadFile</scope><name>filename</name></member>
+      <member refid="struct_ma_upload_file_1ae5bb4f1e388ba6bf17dd3a490c9e0a92" prot="public" virt="non-virtual"><scope>MaUploadFile</scope><name>size</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

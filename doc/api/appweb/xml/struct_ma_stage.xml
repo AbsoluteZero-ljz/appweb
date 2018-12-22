@@ -1,0 +1,409 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="struct_ma_stage" kind="struct" prot="public">
+    <compoundname>MaStage</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="group___ma_stage_1gad702552f9506bb420c202dd81dc3b21c" prot="public" static="no" mutable="no">
+        <type>void(*</type>
+        <definition>void(* MaStage::close)(MaQueue *q)</definition>
+        <argsstring>)(MaQueue *q)</argsstring>
+        <name>close</name>
+        <briefdescription>
+<para>Close the queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Close the queue instance </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue instance object </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1642" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1642" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_stage_1ab291b87949b073afa8716bb43b875973" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaStage::flags</definition>
+        <argsstring></argsstring>
+        <name>flags</name>
+        <briefdescription>
+<para>Stage flags. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1591" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1591" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="group___ma_stage_1ga2c7ba8333f1485fe380682bdf3a578d2" prot="public" static="no" mutable="no">
+        <type>void(*</type>
+        <definition>void(* MaStage::incomingData)(MaQueue *q, MaPacket *packet)</definition>
+        <argsstring>)(MaQueue *q, MaPacket *packet)</argsstring>
+        <name>incomingData</name>
+        <briefdescription>
+<para>Process incoming data. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Accept an incoming packet of data </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue instance object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>packet</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Packet of data </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1683" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1683" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="group___ma_stage_1ga15bede8b165a60da561b322ddc9c7fc3" prot="public" static="no" mutable="no">
+        <type>void(*</type>
+        <definition>void(* MaStage::incomingService)(MaQueue *q)</definition>
+        <argsstring>)(MaQueue *q)</argsstring>
+        <name>incomingService</name>
+        <briefdescription>
+<para>Service the incoming data queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue instance object </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1690" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1690" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="group___ma_stage_1ga70739fe70816239d28953f2e0d81c0bd" prot="public" static="no" mutable="no">
+        <type>bool(*</type>
+        <definition>bool(* MaStage::match)(struct MaConn *conn, struct MaStage *stage, cchar *uri)</definition>
+        <argsstring>)(struct MaConn *conn, struct MaStage *stage, cchar *uri)</argsstring>
+        <name>match</name>
+        <briefdescription>
+<para>Match a request. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>This method is invoked to see if the stage wishes to handle the request. If a stage denies to handle a request, it will be removed from the pipeline. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>conn</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaConn connection object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>stage</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Stage object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>uri</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Current request URI </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>True if the stage wishes to process this request. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1626" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1626" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="group___ma_stage_1ga4af947948b9930b105f5f775665edd54" prot="public" static="no" mutable="no">
+        <type>bool(*</type>
+        <definition>bool(* MaStage::modify)(struct MaConn *conn, struct MaStage *stage)</definition>
+        <argsstring>)(struct MaConn *conn, struct MaStage *stage)</argsstring>
+        <name>modify</name>
+        <briefdescription>
+<para>Modify a request. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>This method is invoked to potentially modify a request. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>conn</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaConn connection object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>stage</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Stage object </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>True if the stage wishes to process this request. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1614" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1614" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_stage_1aee22b380fbb5bc213b165236a61a148e" prot="public" static="no" mutable="no">
+        <type>MprModule *</type>
+        <definition>MprModule* MaStage::module</definition>
+        <argsstring></argsstring>
+        <name>module</name>
+        <briefdescription>
+<para>Backing module. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1692" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1692" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_stage_1a6af5a19d284dde2a9fa27aa9fb49f165" prot="public" static="no" mutable="no">
+        <type>MprMutex *</type>
+        <definition>MprMutex* MaStage::mutex</definition>
+        <argsstring></argsstring>
+        <name>mutex</name>
+        <briefdescription>
+<para>Multi-thread sync. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1697" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1697" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_stage_1a9da51f3e951222b88b6fbc0c4c5159f8" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaStage::name</definition>
+        <argsstring></argsstring>
+        <name>name</name>
+        <briefdescription>
+<para>Stage name. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1590" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1590" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="group___ma_stage_1gab1a75e1f4465a9b13cdd6ca5c463d4b8" prot="public" static="no" mutable="no">
+        <type>void(*</type>
+        <definition>void(* MaStage::open)(MaQueue *q)</definition>
+        <argsstring>)(MaQueue *q)</argsstring>
+        <name>open</name>
+        <briefdescription>
+<para>Open the queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Open the queue instance and initialize for this request. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue instance object </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1634" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1634" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="group___ma_stage_1ga0f26f5457102abb215f07d773c5cfbbb" prot="public" static="no" mutable="no">
+        <type>void(*</type>
+        <definition>void(* MaStage::outgoingData)(MaQueue *q, MaPacket *packet)</definition>
+        <argsstring>)(MaQueue *q, MaPacket *packet)</argsstring>
+        <name>outgoingData</name>
+        <briefdescription>
+<para>Process outgoing data. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Accept a packet as outgoing data </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue instance object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>packet</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Packet of data </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1667" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1667" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="group___ma_stage_1ga5f7c3ae939f5a88549af0d7838486742" prot="public" static="no" mutable="no">
+        <type>void(*</type>
+        <definition>void(* MaStage::outgoingService)(MaQueue *q)</definition>
+        <argsstring>)(MaQueue *q)</argsstring>
+        <name>outgoingService</name>
+        <briefdescription>
+<para>Service the outgoing data queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue instance object </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1674" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1674" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="group___ma_stage_1gaee769fe7585d7ae13d27fbb3ee17e310" prot="public" static="no" mutable="no">
+        <type>int(*</type>
+        <definition>int(* MaStage::parse)(MaHttp *http, cchar *key, char *value, MaConfigState *state)</definition>
+        <argsstring>)(MaHttp *http, cchar *key, char *value, MaConfigState *state)</argsstring>
+        <name>parse</name>
+        <briefdescription>
+<para>Parse configuration data. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>This is invoked when parsing appweb configuration files </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>http</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaHttp object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>key</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Configuration directive name </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>value</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Configuration directive value </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>state</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Current configuration parsing state </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Zero if the key was not relevant to this stage. Return 1 if the directive applies to this stage and was accepted. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1604" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1604" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_stage_1a131ea5b31d8dd8fa74a1d26e2309b81d" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaStage::path</definition>
+        <argsstring></argsstring>
+        <name>path</name>
+        <briefdescription>
+<para>Backing module path (from LoadModule) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1693" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1693" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="group___ma_stage_1ga35a3b4b201b2b8e2b9500b5eb8fd3630" prot="public" static="no" mutable="no">
+        <type>void(*</type>
+        <definition>void(* MaStage::run)(MaQueue *q)</definition>
+        <argsstring>)(MaQueue *q)</argsstring>
+        <name>run</name>
+        <briefdescription>
+<para>Run the queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>The queue is run after all incoming data has been received. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue instance object </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1658" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1658" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_stage_1a79ea39052f18d107d5f0e719711fbe27" prot="public" static="no" mutable="no">
+        <type>void *</type>
+        <definition>void* MaStage::stageData</definition>
+        <argsstring></argsstring>
+        <name>stageData</name>
+        <briefdescription>
+<para>Per-stage data. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1694" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1694" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="group___ma_stage_1ga4cdab1a79d7000ef2ff9cce5f582c231" prot="public" static="no" mutable="no">
+        <type>void(*</type>
+        <definition>void(* MaStage::start)(MaQueue *q)</definition>
+        <argsstring>)(MaQueue *q)</argsstring>
+        <name>start</name>
+        <briefdescription>
+<para>Start the queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>The queue is started after all the pipline open entry points have been run. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue instance object </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1650" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1650" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1589" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1589" bodyend="1699"/>
+    <listofallmembers>
+      <member refid="group___ma_stage_1gad702552f9506bb420c202dd81dc3b21c" prot="public" virt="non-virtual"><scope>MaStage</scope><name>close</name></member>
+      <member refid="struct_ma_stage_1ab291b87949b073afa8716bb43b875973" prot="public" virt="non-virtual"><scope>MaStage</scope><name>flags</name></member>
+      <member refid="group___ma_stage_1ga2c7ba8333f1485fe380682bdf3a578d2" prot="public" virt="non-virtual"><scope>MaStage</scope><name>incomingData</name></member>
+      <member refid="group___ma_stage_1ga15bede8b165a60da561b322ddc9c7fc3" prot="public" virt="non-virtual"><scope>MaStage</scope><name>incomingService</name></member>
+      <member refid="group___ma_stage_1ga70739fe70816239d28953f2e0d81c0bd" prot="public" virt="non-virtual"><scope>MaStage</scope><name>match</name></member>
+      <member refid="group___ma_stage_1ga4af947948b9930b105f5f775665edd54" prot="public" virt="non-virtual"><scope>MaStage</scope><name>modify</name></member>
+      <member refid="struct_ma_stage_1aee22b380fbb5bc213b165236a61a148e" prot="public" virt="non-virtual"><scope>MaStage</scope><name>module</name></member>
+      <member refid="struct_ma_stage_1a6af5a19d284dde2a9fa27aa9fb49f165" prot="public" virt="non-virtual"><scope>MaStage</scope><name>mutex</name></member>
+      <member refid="struct_ma_stage_1a9da51f3e951222b88b6fbc0c4c5159f8" prot="public" virt="non-virtual"><scope>MaStage</scope><name>name</name></member>
+      <member refid="group___ma_stage_1gab1a75e1f4465a9b13cdd6ca5c463d4b8" prot="public" virt="non-virtual"><scope>MaStage</scope><name>open</name></member>
+      <member refid="group___ma_stage_1ga0f26f5457102abb215f07d773c5cfbbb" prot="public" virt="non-virtual"><scope>MaStage</scope><name>outgoingData</name></member>
+      <member refid="group___ma_stage_1ga5f7c3ae939f5a88549af0d7838486742" prot="public" virt="non-virtual"><scope>MaStage</scope><name>outgoingService</name></member>
+      <member refid="group___ma_stage_1gaee769fe7585d7ae13d27fbb3ee17e310" prot="public" virt="non-virtual"><scope>MaStage</scope><name>parse</name></member>
+      <member refid="struct_ma_stage_1a131ea5b31d8dd8fa74a1d26e2309b81d" prot="public" virt="non-virtual"><scope>MaStage</scope><name>path</name></member>
+      <member refid="group___ma_stage_1ga35a3b4b201b2b8e2b9500b5eb8fd3630" prot="public" virt="non-virtual"><scope>MaStage</scope><name>run</name></member>
+      <member refid="struct_ma_stage_1a79ea39052f18d107d5f0e719711fbe27" prot="public" virt="non-virtual"><scope>MaStage</scope><name>stageData</name></member>
+      <member refid="group___ma_stage_1ga4cdab1a79d7000ef2ff9cce5f582c231" prot="public" virt="non-virtual"><scope>MaStage</scope><name>start</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

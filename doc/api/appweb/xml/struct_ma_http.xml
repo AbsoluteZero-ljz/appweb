@@ -1,0 +1,351 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="struct_ma_http" kind="struct" prot="public">
+    <compoundname>MaHttp</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_ma_http_1a7e8aff5f40a27bcd8e3c1ebc59bb53d6" prot="public" static="no" mutable="no">
+        <type>struct MaStage *</type>
+        <definition>struct MaStage* MaHttp::authFilter</definition>
+        <argsstring></argsstring>
+        <name>authFilter</name>
+        <briefdescription>
+<para>Authorization filter (digest and basic) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="382" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="382" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_http_1a1ebbedab129ac7b4c8b0864d1dec6e1e" prot="public" static="no" mutable="no">
+        <type>struct MaStage *</type>
+        <definition>struct MaStage* MaHttp::cgiHandler</definition>
+        <argsstring></argsstring>
+        <name>cgiHandler</name>
+        <briefdescription>
+<para>CGI handler. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="384" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="384" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_http_1a54a44694646c78a211ec5ea5fd71976c" prot="public" static="no" mutable="no">
+        <type>struct MaStage *</type>
+        <definition>struct MaStage* MaHttp::chunkFilter</definition>
+        <argsstring></argsstring>
+        <name>chunkFilter</name>
+        <briefdescription>
+<para>Chunked transfer encoding filter. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="385" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="385" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_http_1af79e5b3105d60c7863701f1e9dc2d379" prot="public" static="no" mutable="no">
+        <type>struct MaServer *</type>
+        <definition>struct MaServer* MaHttp::defaultServer</definition>
+        <argsstring></argsstring>
+        <name>defaultServer</name>
+        <briefdescription>
+<para>Default web server object. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="373" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="373" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_http_1abb06a139b49f70cef082ed18d417b423" prot="public" static="no" mutable="no">
+        <type>struct MaStage *</type>
+        <definition>struct MaStage* MaHttp::dirHandler</definition>
+        <argsstring></argsstring>
+        <name>dirHandler</name>
+        <briefdescription>
+<para>Directory listing handler. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="386" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="386" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_http_1a7cfa4dceba326a1793376de64d7ecccc" prot="public" static="no" mutable="no">
+        <type>struct MaStage *</type>
+        <definition>struct MaStage* MaHttp::egiHandler</definition>
+        <argsstring></argsstring>
+        <name>egiHandler</name>
+        <briefdescription>
+<para>Embedded Gateway Interface (EGI) handler. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="387" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="387" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_http_1a6302d71a0ac1d9d63baee763018c01ea" prot="public" static="no" mutable="no">
+        <type>struct MaStage *</type>
+        <definition>struct MaStage* MaHttp::ejsHandler</definition>
+        <argsstring></argsstring>
+        <name>ejsHandler</name>
+        <briefdescription>
+<para>Ejscript Web Framework handler. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="388" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="388" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_http_1a85eb2ece07dbaf12e8efa95d75888d83" prot="public" static="no" mutable="no">
+        <type>struct MaStage *</type>
+        <definition>struct MaStage* MaHttp::fileHandler</definition>
+        <argsstring></argsstring>
+        <name>fileHandler</name>
+        <briefdescription>
+<para>Static file handler. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="389" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="389" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_http_1ab94660568517ec35d884c5fd2d2c0d38" prot="public" static="no" mutable="no">
+        <type>MprForkCallback</type>
+        <definition>MprForkCallback MaHttp::forkCallback</definition>
+        <argsstring></argsstring>
+        <name>forkCallback</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="395" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="395" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_http_1a44f7f8970c262eebc46253721240a06d" prot="public" static="no" mutable="no">
+        <type>void *</type>
+        <definition>void* MaHttp::forkData</definition>
+        <argsstring></argsstring>
+        <name>forkData</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="397" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="397" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_http_1a25068ded0db9831402ba9382b343144b" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaHttp::gid</definition>
+        <argsstring></argsstring>
+        <name>gid</name>
+        <briefdescription>
+<para>Group Id. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="402" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="402" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_http_1af45ca97e98c8e58a1817919f300cea53" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaHttp::groupname</definition>
+        <argsstring></argsstring>
+        <name>groupname</name>
+        <briefdescription>
+<para>Http server group name. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="400" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="400" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_http_1a36b0f11359dc4231cdbbc672753575a7" prot="public" static="no" mutable="no">
+        <type>MaLimits</type>
+        <definition>MaLimits MaHttp::limits</definition>
+        <argsstring></argsstring>
+        <name>limits</name>
+        <briefdescription>
+<para>Security and resource limits. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="375" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="375" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_http_1a320295823bc99681cb2a33952b5c3c57" prot="public" static="no" mutable="no">
+        <type>MaListenCallback</type>
+        <definition>MaListenCallback MaHttp::listenCallback</definition>
+        <argsstring></argsstring>
+        <name>listenCallback</name>
+        <briefdescription>
+<para>Invoked when creating listeners. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="393" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="393" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_http_1a9b3c31c55ca8774abf84843b329ac8f0" prot="public" static="no" mutable="no">
+        <type>MprMutex *</type>
+        <definition>MprMutex* MaHttp::mutex</definition>
+        <argsstring></argsstring>
+        <name>mutex</name>
+        <briefdescription>
+<para>Multi-thread sync. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="405" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="405" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_http_1a7379c9f3d1a015b33527e2fa886e327c" prot="public" static="no" mutable="no">
+        <type>struct MaStage *</type>
+        <definition>struct MaStage* MaHttp::netConnector</definition>
+        <argsstring></argsstring>
+        <name>netConnector</name>
+        <briefdescription>
+<para>Network connector. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="380" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="380" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_http_1a11c63d476fc23e4d5d90041b7f9f61bf" prot="public" static="no" mutable="no">
+        <type>struct MaStage *</type>
+        <definition>struct MaStage* MaHttp::passHandler</definition>
+        <argsstring></argsstring>
+        <name>passHandler</name>
+        <briefdescription>
+<para>Pass through handler. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="390" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="390" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_http_1a6dd8a623a963b8cd17cfcf527f783ba1" prot="public" static="no" mutable="no">
+        <type>struct MaStage *</type>
+        <definition>struct MaStage* MaHttp::phpHandler</definition>
+        <argsstring></argsstring>
+        <name>phpHandler</name>
+        <briefdescription>
+<para>PHP handler. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="391" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="391" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_http_1a215c015df7e76c89441233562b8a31f8" prot="public" static="no" mutable="no">
+        <type>struct MaStage *</type>
+        <definition>struct MaStage* MaHttp::rangeFilter</definition>
+        <argsstring></argsstring>
+        <name>rangeFilter</name>
+        <briefdescription>
+<para>Ranged requests filter. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="383" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="383" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_http_1a505c0ea346cd916664377a1e87cf9c4e" prot="public" static="no" mutable="no">
+        <type>struct MaStage *</type>
+        <definition>struct MaStage* MaHttp::sendConnector</definition>
+        <argsstring></argsstring>
+        <name>sendConnector</name>
+        <briefdescription>
+<para>Send file connector. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="381" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="381" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_http_1ae85f13681fda3231b8f6c1c000fbd3fe" prot="public" static="no" mutable="no">
+        <type>MprList *</type>
+        <definition>MprList* MaHttp::servers</definition>
+        <argsstring></argsstring>
+        <name>servers</name>
+        <briefdescription>
+<para>List of web servers objects. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="374" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="374" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_http_1af0e63db026046e2dc7ed63359faba80b" prot="public" static="no" mutable="no">
+        <type>MprHashTable *</type>
+        <definition>MprHashTable* MaHttp::stages</definition>
+        <argsstring></argsstring>
+        <name>stages</name>
+        <briefdescription>
+<para>Hash table of stages. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="372" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="372" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_http_1ad8e07f53f23d5fb149cb8f50ae5eb35f" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaHttp::uid</definition>
+        <argsstring></argsstring>
+        <name>uid</name>
+        <briefdescription>
+<para>User Id. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="401" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="401" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_http_1a2c2dc89c237d87af1d47e01efddaf119" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaHttp::username</definition>
+        <argsstring></argsstring>
+        <name>username</name>
+        <briefdescription>
+<para>Http server user name. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="399" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="399" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/Users/mob/git/appweb-3/all/appweb.h" line="371" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="371" bodyend="407"/>
+    <listofallmembers>
+      <member refid="struct_ma_http_1a7e8aff5f40a27bcd8e3c1ebc59bb53d6" prot="public" virt="non-virtual"><scope>MaHttp</scope><name>authFilter</name></member>
+      <member refid="struct_ma_http_1a1ebbedab129ac7b4c8b0864d1dec6e1e" prot="public" virt="non-virtual"><scope>MaHttp</scope><name>cgiHandler</name></member>
+      <member refid="struct_ma_http_1a54a44694646c78a211ec5ea5fd71976c" prot="public" virt="non-virtual"><scope>MaHttp</scope><name>chunkFilter</name></member>
+      <member refid="struct_ma_http_1af79e5b3105d60c7863701f1e9dc2d379" prot="public" virt="non-virtual"><scope>MaHttp</scope><name>defaultServer</name></member>
+      <member refid="struct_ma_http_1abb06a139b49f70cef082ed18d417b423" prot="public" virt="non-virtual"><scope>MaHttp</scope><name>dirHandler</name></member>
+      <member refid="struct_ma_http_1a7cfa4dceba326a1793376de64d7ecccc" prot="public" virt="non-virtual"><scope>MaHttp</scope><name>egiHandler</name></member>
+      <member refid="struct_ma_http_1a6302d71a0ac1d9d63baee763018c01ea" prot="public" virt="non-virtual"><scope>MaHttp</scope><name>ejsHandler</name></member>
+      <member refid="struct_ma_http_1a85eb2ece07dbaf12e8efa95d75888d83" prot="public" virt="non-virtual"><scope>MaHttp</scope><name>fileHandler</name></member>
+      <member refid="struct_ma_http_1ab94660568517ec35d884c5fd2d2c0d38" prot="public" virt="non-virtual"><scope>MaHttp</scope><name>forkCallback</name></member>
+      <member refid="struct_ma_http_1a44f7f8970c262eebc46253721240a06d" prot="public" virt="non-virtual"><scope>MaHttp</scope><name>forkData</name></member>
+      <member refid="struct_ma_http_1a25068ded0db9831402ba9382b343144b" prot="public" virt="non-virtual"><scope>MaHttp</scope><name>gid</name></member>
+      <member refid="struct_ma_http_1af45ca97e98c8e58a1817919f300cea53" prot="public" virt="non-virtual"><scope>MaHttp</scope><name>groupname</name></member>
+      <member refid="struct_ma_http_1a36b0f11359dc4231cdbbc672753575a7" prot="public" virt="non-virtual"><scope>MaHttp</scope><name>limits</name></member>
+      <member refid="struct_ma_http_1a320295823bc99681cb2a33952b5c3c57" prot="public" virt="non-virtual"><scope>MaHttp</scope><name>listenCallback</name></member>
+      <member refid="struct_ma_http_1a9b3c31c55ca8774abf84843b329ac8f0" prot="public" virt="non-virtual"><scope>MaHttp</scope><name>mutex</name></member>
+      <member refid="struct_ma_http_1a7379c9f3d1a015b33527e2fa886e327c" prot="public" virt="non-virtual"><scope>MaHttp</scope><name>netConnector</name></member>
+      <member refid="struct_ma_http_1a11c63d476fc23e4d5d90041b7f9f61bf" prot="public" virt="non-virtual"><scope>MaHttp</scope><name>passHandler</name></member>
+      <member refid="struct_ma_http_1a6dd8a623a963b8cd17cfcf527f783ba1" prot="public" virt="non-virtual"><scope>MaHttp</scope><name>phpHandler</name></member>
+      <member refid="struct_ma_http_1a215c015df7e76c89441233562b8a31f8" prot="public" virt="non-virtual"><scope>MaHttp</scope><name>rangeFilter</name></member>
+      <member refid="struct_ma_http_1a505c0ea346cd916664377a1e87cf9c4e" prot="public" virt="non-virtual"><scope>MaHttp</scope><name>sendConnector</name></member>
+      <member refid="struct_ma_http_1ae85f13681fda3231b8f6c1c000fbd3fe" prot="public" virt="non-virtual"><scope>MaHttp</scope><name>servers</name></member>
+      <member refid="struct_ma_http_1af0e63db026046e2dc7ed63359faba80b" prot="public" virt="non-virtual"><scope>MaHttp</scope><name>stages</name></member>
+      <member refid="struct_ma_http_1ad8e07f53f23d5fb149cb8f50ae5eb35f" prot="public" virt="non-virtual"><scope>MaHttp</scope><name>uid</name></member>
+      <member refid="struct_ma_http_1a2c2dc89c237d87af1d47e01efddaf119" prot="public" virt="non-virtual"><scope>MaHttp</scope><name>username</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

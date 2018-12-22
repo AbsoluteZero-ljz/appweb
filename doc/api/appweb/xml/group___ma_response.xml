@@ -1,0 +1,479 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="group___ma_response" kind="group">
+    <compoundname>MaResponse</compoundname>
+    <title>MaResponse</title>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="group___ma_response_1ga0fc2e324e7bc07b0cbbfe41e6f8bd32e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maDontCacheResponse</definition>
+        <argsstring>(MaConn *conn)</argsstring>
+        <name>maDontCacheResponse</name>
+        <param>
+          <type>MaConn *</type>
+          <declname>conn</declname>
+        </param>
+        <briefdescription>
+<para>Dont cache the response. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Instruct the client not to cache the response body. This is done by setting the Cache-control Http header. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>conn</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaConn connection object </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2247"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_response_1ga830c559dddc9e24c5e9ef7ab6d9c8a15" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maFailRequest</definition>
+        <argsstring>(MaConn *conn, int code, cchar *fmt,...)</argsstring>
+        <name>maFailRequest</name>
+        <param>
+          <type>MaConn *</type>
+          <declname>conn</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>code</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>fmt</declname>
+        </param>
+        <param>
+          <type>...</type>
+        </param>
+        <briefdescription>
+<para>Fail a request. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Fail a request with the specified http status code. The formatted message is logged to the appweb error log. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>conn</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaConn connection object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>code</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Http status code </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>fmt</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Printf style formatted string </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>...</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Arguments for fmt </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2223"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_response_1ga36d93becc818990d715d265f48bb427a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maFillHeaders</definition>
+        <argsstring>(MaConn *conn, MaPacket *packet)</argsstring>
+        <name>maFillHeaders</name>
+        <param>
+          <type>MaConn *</type>
+          <declname>conn</declname>
+        </param>
+        <param>
+          <type>MaPacket *</type>
+          <declname>packet</declname>
+        </param>
+        <briefdescription>
+<para>Create the response headers. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Fill the given empty packet with the Http response headers. This should only be called by connectors just prior to sending output to the client. It should be delayed as long as possible if the content length is not yet known to give the pipeline a chance to determine the response length. This way, a non-chunked response can be sent with a content-length header. This is the fastest HTTP response. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>conn</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaConn connection object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>packet</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Packet into which to place the headers </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2259"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_response_1ga57da0308eae17e287c9cc1dbfaed24c3" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int maFormatBody</definition>
+        <argsstring>(MaConn *conn, cchar *title, cchar *fmt,...)</argsstring>
+        <name>maFormatBody</name>
+        <param>
+          <type>MaConn *</type>
+          <declname>conn</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>title</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>fmt</declname>
+        </param>
+        <param>
+          <type>...</type>
+        </param>
+        <briefdescription>
+<para>Format an alternate response body. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Format a response body to use instead of data generated by the request processing pipeline. This is typically used to send error responses and redirections. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>conn</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaConn connection object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>title</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Title string to format into the HTML response body. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>fmt</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Printf style formatted string. This string may contain HTML tags and is not HTML encoded before sending to the user. NOTE: Do not send user input back to the client using this method. Otherwise you open large security holes. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>...</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Arguments for fmt </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>A count of the number of bytes in the response body. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2238"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_response_1ga1f571cb3b688c6e44d4107b77fceac67" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maRedirect</definition>
+        <argsstring>(MaConn *conn, int code, cchar *uri)</argsstring>
+        <name>maRedirect</name>
+        <param>
+          <type>MaConn *</type>
+          <declname>conn</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>code</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>uri</declname>
+        </param>
+        <briefdescription>
+<para>Redirect the client. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Redirect the client to a new uri. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>conn</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaConn connection object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>code</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Http status code to send with the response </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>uri</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>New uri for the client </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2269"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_response_1ga56dd2599b39e1252d66057444f75841b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maSetCookie</definition>
+        <argsstring>(MaConn *conn, cchar *name, cchar *value, cchar *path, cchar *domain, int lifetime, bool secure)</argsstring>
+        <name>maSetCookie</name>
+        <param>
+          <type>MaConn *</type>
+          <declname>conn</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>name</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>value</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>path</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>domain</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>lifetime</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>secure</declname>
+        </param>
+        <briefdescription>
+<para>Set a response cookie. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Define a cookie to send in the response Http header </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>conn</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaConn connection object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>name</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Cookie name </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>value</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Cookie value </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>path</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>URI path to which the cookie applies </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>domain</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Domain in which the cookie applies. Must have 2-3 dots. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>lifetime</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Duration for the cookie to persist in seconds </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>secure</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Set to true if the cookie only applies for SSL based connections </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2211"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_response_1gaa27b43bad295e5f928fe2f8e5878cf42" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maSetHeader</definition>
+        <argsstring>(MaConn *conn, bool allowMultiple, cchar *key, cchar *fmt,...)</argsstring>
+        <name>maSetHeader</name>
+        <param>
+          <type>MaConn *</type>
+          <declname>conn</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>allowMultiple</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>key</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>fmt</declname>
+        </param>
+        <param>
+          <type>...</type>
+        </param>
+        <briefdescription>
+<para>Set a response header. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Set the response header. If allowMultiple is true, then duplicate keys can be defined. Otherwise, prior key headers are overwritten. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>conn</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaConn connection object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>allowMultiple</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>If true, allow duplicate keys of the same value </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>key</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Http response header key </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>fmt</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Printf style formatted string to use as the header key value </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>...</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Arguments for fmt </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2300"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_response_1gab822baf3fa6b7b3d8f68ec858a3fd65c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maSetResponseCode</definition>
+        <argsstring>(MaConn *conn, int code)</argsstring>
+        <name>maSetResponseCode</name>
+        <param>
+          <type>MaConn *</type>
+          <declname>conn</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>code</declname>
+        </param>
+        <briefdescription>
+<para>Set a Http response code. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Set the Http response code for the request. This defaults to 200 (OK). </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>conn</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaConn connection object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>code</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Http status code. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2278"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_response_1ga63f6f2038aca9e41d71e99a00f880f6d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maSetResponseMimeType</definition>
+        <argsstring>(MaConn *conn, cchar *mimeType)</argsstring>
+        <name>maSetResponseMimeType</name>
+        <param>
+          <type>MaConn *</type>
+          <declname>conn</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>mimeType</declname>
+        </param>
+        <briefdescription>
+<para>Set the response mime type. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Set the response mime type Http header. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>conn</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaConn connection object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>mimeType</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Mime type string </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2287"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Http Response. </para>    </briefdescription>
+    <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Most of the APIs in the Response group still take a MaConn object as their first parameter. This is to make the API easier to remember - APIs take a connection object rather than a request or response object. </para></simplesect>
+<simplesect kind="par"><title><bold>API</bold> Stability:</title><para>Evolving</para></simplesect>
+<simplesect kind="see"><para><ref refid="group___ma_response" kindref="compound">MaResponse</ref> <ref refid="group___ma_request" kindref="compound">MaRequest</ref> <ref refid="group___ma_conn" kindref="compound">MaConn</ref> <ref refid="group___ma_response_1ga56dd2599b39e1252d66057444f75841b" kindref="member">maSetCookie</ref> <ref refid="group___ma_response_1ga830c559dddc9e24c5e9ef7ab6d9c8a15" kindref="member">maFailRequest</ref> <ref refid="group___ma_response_1ga57da0308eae17e287c9cc1dbfaed24c3" kindref="member">maFormatBody</ref> </para></simplesect>
+</para>    </detaileddescription>
+  </compounddef>
+</doxygen>

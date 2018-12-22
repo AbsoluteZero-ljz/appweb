@@ -1,0 +1,435 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="struct_ma_conn" kind="struct" prot="public">
+    <compoundname>MaConn</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_ma_conn_1a57432e575d47dcb6db3b19f49942920c" prot="public" static="no" mutable="no">
+        <type>MaHostAddress *</type>
+        <definition>MaHostAddress* MaConn::address</definition>
+        <argsstring></argsstring>
+        <name>address</name>
+        <briefdescription>
+<para>Host address structure for this connection. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1851" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1851" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1a5954477c57577cc1523c31516d624d40" prot="public" static="no" mutable="no">
+        <type>MprHeap *</type>
+        <definition>MprHeap* MaConn::arena</definition>
+        <argsstring></argsstring>
+        <name>arena</name>
+        <briefdescription>
+<para>Connection memory arena. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1837" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1837" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1aac4f23f8439334c7a63aa5e4ef1346b3" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaConn::canProceed</definition>
+        <argsstring></argsstring>
+        <name>canProceed</name>
+        <briefdescription>
+<para>State machine should continue to process the request. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1863" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1863" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1a8d544e50faeafa0617787d7fcc746437" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaConn::connectionFailed</definition>
+        <argsstring></argsstring>
+        <name>connectionFailed</name>
+        <briefdescription>
+<para>Request failed and connection protocol is compromised. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1841" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1841" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1a46a25fa37174e4f24cc211492b685cca" prot="public" static="no" mutable="no">
+        <type>void *</type>
+        <definition>void* MaConn::data</definition>
+        <argsstring></argsstring>
+        <name>data</name>
+        <briefdescription>
+<para>Connection data for stages. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1861" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1861" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1a03cd99a007ceb0568388de906be415cd" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaConn::dedicated</definition>
+        <argsstring></argsstring>
+        <name>dedicated</name>
+        <briefdescription>
+<para>Dedicate the current thread to the request. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1842" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1842" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1a190a737fca92711a7b6f2cd28a31e17e" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaConn::disconnected</definition>
+        <argsstring></argsstring>
+        <name>disconnected</name>
+        <briefdescription>
+<para>Connection is disconnected. </para>        </briefdescription>
+        <detaileddescription>
+<para>Abandon current request </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1843" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1843" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1a3682965d78db848a234f31552f0bb6bb" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaConn::eventMask</definition>
+        <argsstring></argsstring>
+        <name>eventMask</name>
+        <briefdescription>
+<para>Desired events anded with this mask. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1844" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1844" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1ab467fd62157c2e40b57abc029f85838b" prot="public" static="no" mutable="no">
+        <type>MprTime</type>
+        <definition>MprTime MaConn::expire</definition>
+        <argsstring></argsstring>
+        <name>expire</name>
+        <briefdescription>
+<para>When the connection should expire. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1859" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1859" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1a3b9e214d6cf04c60dbffb52387f0aeed" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaConn::flags</definition>
+        <argsstring></argsstring>
+        <name>flags</name>
+        <briefdescription>
+<para>Connection flags. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1840" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1840" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1a531d21ebc5f9f02a5790baf5fc13f0b7" prot="public" static="no" mutable="no">
+        <type>MaHost *</type>
+        <definition>MaHost* MaConn::host</definition>
+        <argsstring></argsstring>
+        <name>host</name>
+        <briefdescription>
+<para>Owning host for this request. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1853" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1853" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1a435a32356391bf4956bf6fb7b3cb7cb6" prot="public" static="no" mutable="no">
+        <type>MaHttp *</type>
+        <definition>MaHttp* MaConn::http</definition>
+        <argsstring></argsstring>
+        <name>http</name>
+        <briefdescription>
+<para>Http handle. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1852" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1852" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1abf3d67375e7d918ba8a10527dfbacca3" prot="public" static="no" mutable="no">
+        <type>MaPacket *</type>
+        <definition>MaPacket* MaConn::input</definition>
+        <argsstring></argsstring>
+        <name>input</name>
+        <briefdescription>
+<para>Header packet. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1856" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1856" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1a16ab90c30b8dfea8250671becdaced12" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaConn::keepAliveCount</definition>
+        <argsstring></argsstring>
+        <name>keepAliveCount</name>
+        <briefdescription>
+<para>Count of remaining keep alive requests for this connection. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1864" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1864" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1ac5d410f14a03485aa8e9219f65dba0f3" prot="public" static="no" mutable="no">
+        <type>MprMutex *</type>
+        <definition>MprMutex* MaConn::mutex</definition>
+        <argsstring></argsstring>
+        <name>mutex</name>
+        <briefdescription>
+<para>Optional multi-thread sync. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1871" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1871" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1a7a0a3d08d98c386f78533f1a23377dbc" prot="public" static="no" mutable="no">
+        <type>MaHost *</type>
+        <definition>MaHost* MaConn::originalHost</definition>
+        <argsstring></argsstring>
+        <name>originalHost</name>
+        <briefdescription>
+<para>Owning host for this connection. </para>        </briefdescription>
+        <detaileddescription>
+<para>May be changed by Host header </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1855" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1855" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1a6cbdea3b80c58f7984715029278426f9" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaConn::protocol</definition>
+        <argsstring></argsstring>
+        <name>protocol</name>
+        <briefdescription>
+<para>HTTP protocol version 0 == HTTP/1.0, 1 == HTTP/1.1. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1865" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1865" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1a285b378a8f417c50fcfee58f2308c330" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaConn::remoteIpAddr</definition>
+        <argsstring></argsstring>
+        <name>remoteIpAddr</name>
+        <briefdescription>
+<para>Remote client IP address (REMOTE_ADDR) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1857" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1857" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1a9e0c36827b259d4857619a8f29b19a06" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaConn::remotePort</definition>
+        <argsstring></argsstring>
+        <name>remotePort</name>
+        <briefdescription>
+<para>Remote client IP port number. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1866" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1866" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1a5a19c08646b269d90320edb591174857" prot="public" static="no" mutable="no">
+        <type>struct MaRequest *</type>
+        <definition>struct MaRequest* MaConn::request</definition>
+        <argsstring></argsstring>
+        <name>request</name>
+        <briefdescription>
+<para>Request object. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1847" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1847" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1aa6a4bfaf3e9e96a271dc29f2b4d4a995" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaConn::requestFailed</definition>
+        <argsstring></argsstring>
+        <name>requestFailed</name>
+        <briefdescription>
+<para>Request failed. </para>        </briefdescription>
+        <detaileddescription>
+<para>Abbreviate request processing </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1845" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1845" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1a9f71a7cc76a94bc7e3db1237a43b1f70" prot="public" static="no" mutable="no">
+        <type>struct MaResponse *</type>
+        <definition>struct MaResponse* MaConn::response</definition>
+        <argsstring></argsstring>
+        <name>response</name>
+        <briefdescription>
+<para>Response object. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1848" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1848" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1ae5a434953199b116c102ee33a8892fac" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaConn::seqno</definition>
+        <argsstring></argsstring>
+        <name>seqno</name>
+        <briefdescription>
+<para>Unique connection sequence number. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1867" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1867" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1abf914b9c1a7c17eb1cf66e8c043aee7c" prot="public" static="no" mutable="no">
+        <type>struct MaQueue</type>
+        <definition>struct MaQueue MaConn::serviceq</definition>
+        <argsstring></argsstring>
+        <name>serviceq</name>
+        <briefdescription>
+<para>List of queues that require service for request pipeline. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1849" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1849" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1afe72939b0570b24a5cbaafc70c40cde1" prot="public" static="no" mutable="no">
+        <type>MprSocket *</type>
+        <definition>MprSocket* MaConn::sock</definition>
+        <argsstring></argsstring>
+        <name>sock</name>
+        <briefdescription>
+<para>Underlying socket handle. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1854" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1854" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1a6bd67238f0b7bbf9c1c95826c2d839a7" prot="public" static="no" mutable="no">
+        <type>MprTime</type>
+        <definition>MprTime MaConn::started</definition>
+        <argsstring></argsstring>
+        <name>started</name>
+        <briefdescription>
+<para>When the connection started. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1858" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1858" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1a9ad5a1c290331399d723d6aa2c0905d0" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaConn::state</definition>
+        <argsstring></argsstring>
+        <name>state</name>
+        <briefdescription>
+<para>Connection state. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1839" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1839" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1ac23c9848e642eae8b15c81f82b8aeaac" prot="public" static="no" mutable="no">
+        <type>MprTime</type>
+        <definition>MprTime MaConn::time</definition>
+        <argsstring></argsstring>
+        <name>time</name>
+        <briefdescription>
+<para>Cached current time. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1860" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1860" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1aeb21a3d69bc6d949fae42b7bf5b91d29" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaConn::timeout</definition>
+        <argsstring></argsstring>
+        <name>timeout</name>
+        <briefdescription>
+<para>Timeout period in msec. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1868" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1868" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_conn_1a5c12ee418e199228316444cb86856d29" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaConn::trace</definition>
+        <argsstring></argsstring>
+        <name>trace</name>
+        <briefdescription>
+<para>Current request should be traced. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1869" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1869" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1836" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1836" bodyend="1873"/>
+    <listofallmembers>
+      <member refid="struct_ma_conn_1a57432e575d47dcb6db3b19f49942920c" prot="public" virt="non-virtual"><scope>MaConn</scope><name>address</name></member>
+      <member refid="struct_ma_conn_1a5954477c57577cc1523c31516d624d40" prot="public" virt="non-virtual"><scope>MaConn</scope><name>arena</name></member>
+      <member refid="struct_ma_conn_1aac4f23f8439334c7a63aa5e4ef1346b3" prot="public" virt="non-virtual"><scope>MaConn</scope><name>canProceed</name></member>
+      <member refid="struct_ma_conn_1a8d544e50faeafa0617787d7fcc746437" prot="public" virt="non-virtual"><scope>MaConn</scope><name>connectionFailed</name></member>
+      <member refid="struct_ma_conn_1a46a25fa37174e4f24cc211492b685cca" prot="public" virt="non-virtual"><scope>MaConn</scope><name>data</name></member>
+      <member refid="struct_ma_conn_1a03cd99a007ceb0568388de906be415cd" prot="public" virt="non-virtual"><scope>MaConn</scope><name>dedicated</name></member>
+      <member refid="struct_ma_conn_1a190a737fca92711a7b6f2cd28a31e17e" prot="public" virt="non-virtual"><scope>MaConn</scope><name>disconnected</name></member>
+      <member refid="struct_ma_conn_1a3682965d78db848a234f31552f0bb6bb" prot="public" virt="non-virtual"><scope>MaConn</scope><name>eventMask</name></member>
+      <member refid="struct_ma_conn_1ab467fd62157c2e40b57abc029f85838b" prot="public" virt="non-virtual"><scope>MaConn</scope><name>expire</name></member>
+      <member refid="struct_ma_conn_1a3b9e214d6cf04c60dbffb52387f0aeed" prot="public" virt="non-virtual"><scope>MaConn</scope><name>flags</name></member>
+      <member refid="struct_ma_conn_1a531d21ebc5f9f02a5790baf5fc13f0b7" prot="public" virt="non-virtual"><scope>MaConn</scope><name>host</name></member>
+      <member refid="struct_ma_conn_1a435a32356391bf4956bf6fb7b3cb7cb6" prot="public" virt="non-virtual"><scope>MaConn</scope><name>http</name></member>
+      <member refid="struct_ma_conn_1abf3d67375e7d918ba8a10527dfbacca3" prot="public" virt="non-virtual"><scope>MaConn</scope><name>input</name></member>
+      <member refid="struct_ma_conn_1a16ab90c30b8dfea8250671becdaced12" prot="public" virt="non-virtual"><scope>MaConn</scope><name>keepAliveCount</name></member>
+      <member refid="struct_ma_conn_1ac5d410f14a03485aa8e9219f65dba0f3" prot="public" virt="non-virtual"><scope>MaConn</scope><name>mutex</name></member>
+      <member refid="struct_ma_conn_1a7a0a3d08d98c386f78533f1a23377dbc" prot="public" virt="non-virtual"><scope>MaConn</scope><name>originalHost</name></member>
+      <member refid="struct_ma_conn_1a6cbdea3b80c58f7984715029278426f9" prot="public" virt="non-virtual"><scope>MaConn</scope><name>protocol</name></member>
+      <member refid="struct_ma_conn_1a285b378a8f417c50fcfee58f2308c330" prot="public" virt="non-virtual"><scope>MaConn</scope><name>remoteIpAddr</name></member>
+      <member refid="struct_ma_conn_1a9e0c36827b259d4857619a8f29b19a06" prot="public" virt="non-virtual"><scope>MaConn</scope><name>remotePort</name></member>
+      <member refid="struct_ma_conn_1a5a19c08646b269d90320edb591174857" prot="public" virt="non-virtual"><scope>MaConn</scope><name>request</name></member>
+      <member refid="struct_ma_conn_1aa6a4bfaf3e9e96a271dc29f2b4d4a995" prot="public" virt="non-virtual"><scope>MaConn</scope><name>requestFailed</name></member>
+      <member refid="struct_ma_conn_1a9f71a7cc76a94bc7e3db1237a43b1f70" prot="public" virt="non-virtual"><scope>MaConn</scope><name>response</name></member>
+      <member refid="struct_ma_conn_1ae5a434953199b116c102ee33a8892fac" prot="public" virt="non-virtual"><scope>MaConn</scope><name>seqno</name></member>
+      <member refid="struct_ma_conn_1abf914b9c1a7c17eb1cf66e8c043aee7c" prot="public" virt="non-virtual"><scope>MaConn</scope><name>serviceq</name></member>
+      <member refid="struct_ma_conn_1afe72939b0570b24a5cbaafc70c40cde1" prot="public" virt="non-virtual"><scope>MaConn</scope><name>sock</name></member>
+      <member refid="struct_ma_conn_1a6bd67238f0b7bbf9c1c95826c2d839a7" prot="public" virt="non-virtual"><scope>MaConn</scope><name>started</name></member>
+      <member refid="struct_ma_conn_1a9ad5a1c290331399d723d6aa2c0905d0" prot="public" virt="non-virtual"><scope>MaConn</scope><name>state</name></member>
+      <member refid="struct_ma_conn_1ac23c9848e642eae8b15c81f82b8aeaac" prot="public" virt="non-virtual"><scope>MaConn</scope><name>time</name></member>
+      <member refid="struct_ma_conn_1aeb21a3d69bc6d949fae42b7bf5b91d29" prot="public" virt="non-virtual"><scope>MaConn</scope><name>timeout</name></member>
+      <member refid="struct_ma_conn_1a5c12ee418e199228316444cb86856d29" prot="public" virt="non-virtual"><scope>MaConn</scope><name>trace</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="struct_ma_mime_type" kind="struct" prot="public">
+    <compoundname>MaMimeType</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_ma_mime_type_1a4067c9a0741039d280fc4116dbfa23bc" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaMimeType::actionProgram</definition>
+        <argsstring></argsstring>
+        <name>actionProgram</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="936" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="936" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_mime_type_1ad6bee3f597b6784ce14c95d74adfbbb0" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaMimeType::type</definition>
+        <argsstring></argsstring>
+        <name>type</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="935" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="935" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/Users/mob/git/appweb-3/all/appweb.h" line="934" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="934" bodyend="937"/>
+    <listofallmembers>
+      <member refid="struct_ma_mime_type_1a4067c9a0741039d280fc4116dbfa23bc" prot="public" virt="non-virtual"><scope>MaMimeType</scope><name>actionProgram</name></member>
+      <member refid="struct_ma_mime_type_1ad6bee3f597b6784ce14c95d74adfbbb0" prot="public" virt="non-virtual"><scope>MaMimeType</scope><name>type</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

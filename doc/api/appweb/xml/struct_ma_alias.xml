@@ -1,0 +1,85 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="struct_ma_alias" kind="struct" prot="public">
+    <compoundname>MaAlias</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_ma_alias_1a44e4a83e28e6f5a18f6658c9ab41930c" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaAlias::filename</definition>
+        <argsstring></argsstring>
+        <name>filename</name>
+        <briefdescription>
+<para>Alias to a physical path name. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="920" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="920" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_alias_1ad0acda8d8f08cc544d86612a821b9b51" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaAlias::prefix</definition>
+        <argsstring></argsstring>
+        <name>prefix</name>
+        <briefdescription>
+<para>Original URI prefix. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="918" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="918" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_alias_1a30c9855e7c0befe7b18b2ed806c357a3" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaAlias::prefixLen</definition>
+        <argsstring></argsstring>
+        <name>prefixLen</name>
+        <briefdescription>
+<para>Prefix length. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="919" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="919" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_alias_1ad2d249cc1a31a601afb659d7beb30a3a" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaAlias::redirectCode</definition>
+        <argsstring></argsstring>
+        <name>redirectCode</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="922" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="922" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_alias_1acd68739c827012dd3faff863143a9477" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaAlias::uri</definition>
+        <argsstring></argsstring>
+        <name>uri</name>
+        <briefdescription>
+<para>Redirect to a uri. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="921" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="921" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/Users/mob/git/appweb-3/all/appweb.h" line="917" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="917" bodyend="923"/>
+    <listofallmembers>
+      <member refid="struct_ma_alias_1a44e4a83e28e6f5a18f6658c9ab41930c" prot="public" virt="non-virtual"><scope>MaAlias</scope><name>filename</name></member>
+      <member refid="struct_ma_alias_1ad0acda8d8f08cc544d86612a821b9b51" prot="public" virt="non-virtual"><scope>MaAlias</scope><name>prefix</name></member>
+      <member refid="struct_ma_alias_1a30c9855e7c0befe7b18b2ed806c357a3" prot="public" virt="non-virtual"><scope>MaAlias</scope><name>prefixLen</name></member>
+      <member refid="struct_ma_alias_1ad2d249cc1a31a601afb659d7beb30a3a" prot="public" virt="non-virtual"><scope>MaAlias</scope><name>redirectCode</name></member>
+      <member refid="struct_ma_alias_1acd68739c827012dd3faff863143a9477" prot="public" virt="non-virtual"><scope>MaAlias</scope><name>uri</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,533 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="struct_ma_host" kind="struct" prot="public">
+    <compoundname>MaHost</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_ma_host_1ac9facda0f26c5a72fa6706c9ee58b29e" prot="public" static="no" mutable="no">
+        <type>MprFile *</type>
+        <definition>MprFile* MaHost::accessLog</definition>
+        <argsstring></argsstring>
+        <name>accessLog</name>
+        <briefdescription>
+<para>File object for access logging. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="966" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="966" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a031b736ca2586f8b1c0dbccc9ad4b9ef" prot="public" static="no" mutable="no">
+        <type>MprList *</type>
+        <definition>MprList* MaHost::aliases</definition>
+        <argsstring></argsstring>
+        <name>aliases</name>
+        <briefdescription>
+<para>List of Alias definitions. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="967" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="967" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a13f3e59a7449788c6e256bceffca3674" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaHost::connCount</definition>
+        <argsstring></argsstring>
+        <name>connCount</name>
+        <briefdescription>
+<para>Connect sequence number. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="994" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="994" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a3e5a4cf295c4bf2d9034d924f207b2e8" prot="public" static="no" mutable="no">
+        <type>MprList *</type>
+        <definition>MprList* MaHost::connections</definition>
+        <argsstring></argsstring>
+        <name>connections</name>
+        <briefdescription>
+<para>Currently open connection requests. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="964" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="964" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a433a8db5b24586ac08e685f61f07b212" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaHost::currentDate</definition>
+        <argsstring></argsstring>
+        <name>currentDate</name>
+        <briefdescription>
+<para>Date string for HTTP response headers. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1004" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1004" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a704cb39c79bdd4e02a660805b49a62f3" prot="public" static="no" mutable="no">
+        <type>MprTime</type>
+        <definition>MprTime MaHost::currentTime</definition>
+        <argsstring></argsstring>
+        <name>currentTime</name>
+        <briefdescription>
+<para>When currentDate was last calculated. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1003" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1003" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1ab8b3cae1de9a9625050a6dc984b16a7e" prot="public" static="no" mutable="no">
+        <type>MprList *</type>
+        <definition>MprList* MaHost::dirs</definition>
+        <argsstring></argsstring>
+        <name>dirs</name>
+        <briefdescription>
+<para>List of Directory definitions. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="968" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="968" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a3a86e548c7e2e481819b02db86df2d43" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaHost::documentRoot</definition>
+        <argsstring></argsstring>
+        <name>documentRoot</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="969" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="969" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a49e77d8f2c9aefaccdd048f41b0261aa" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaHost::flags</definition>
+        <argsstring></argsstring>
+        <name>flags</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="970" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="970" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a6564b35e813d29b91b496a58c0a7ceb4" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaHost::httpVersion</definition>
+        <argsstring></argsstring>
+        <name>httpVersion</name>
+        <briefdescription>
+<para>HTTP/1.X. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="971" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="971" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a5fbfae21ee569674d4e9b572054293a5" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaHost::ipAddrPort</definition>
+        <argsstring></argsstring>
+        <name>ipAddrPort</name>
+        <briefdescription>
+<para>IP:PORT address (with wildcards) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="972" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="972" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a8c43f0244457f52e287b08eb24683dfd" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaHost::keepAlive</definition>
+        <argsstring></argsstring>
+        <name>keepAlive</name>
+        <briefdescription>
+<para>Keep alive supported. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="990" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="990" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a602021cabd4df3d0da110d62a439c142" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaHost::keepAliveTimeout</definition>
+        <argsstring></argsstring>
+        <name>keepAliveTimeout</name>
+        <briefdescription>
+<para>Timeout for keep-alive. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="991" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="991" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a640f9e92674bca512b9b696fc05f318b" prot="public" static="no" mutable="no">
+        <type>MaLimits *</type>
+        <definition>MaLimits* MaHost::limits</definition>
+        <argsstring></argsstring>
+        <name>limits</name>
+        <briefdescription>
+<para>Pointer to http-&gt;limits. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="973" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="973" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a46e3bd01c665c89e564d9eb509e8b8af" prot="public" static="no" mutable="no">
+        <type>MaLocation *</type>
+        <definition>MaLocation* MaHost::location</definition>
+        <argsstring></argsstring>
+        <name>location</name>
+        <briefdescription>
+<para>Default location. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="974" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="974" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a2a467eded25b74da22f1186d30665a64" prot="public" static="no" mutable="no">
+        <type>MprList *</type>
+        <definition>MprList* MaHost::locations</definition>
+        <argsstring></argsstring>
+        <name>locations</name>
+        <briefdescription>
+<para>List of Location defintions. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="975" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="975" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a78448842788f48e93e627a3bbd04c5cb" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaHost::logFormat</definition>
+        <argsstring></argsstring>
+        <name>logFormat</name>
+        <briefdescription>
+<para>Access log format. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="986" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="986" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1abd72a164721d16d9ba754aacb42454ba" prot="public" static="no" mutable="no">
+        <type>struct MaHost *</type>
+        <definition>struct MaHost* MaHost::logHost</definition>
+        <argsstring></argsstring>
+        <name>logHost</name>
+        <briefdescription>
+<para>If set, use this hosts logs. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="976" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="976" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a556cc57bb3f2c537bffb5c816ef39797" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaHost::logPath</definition>
+        <argsstring></argsstring>
+        <name>logPath</name>
+        <briefdescription>
+<para>Access log filename. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="987" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="987" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a4fcaf87a04330fc01269d71957ad2c90" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaHost::maxKeepAlive</definition>
+        <argsstring></argsstring>
+        <name>maxKeepAlive</name>
+        <briefdescription>
+<para>Max keep-alive requests. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="992" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="992" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a9b5d409fecdffc8bcd990f682614d9de" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaHost::mimeFile</definition>
+        <argsstring></argsstring>
+        <name>mimeFile</name>
+        <briefdescription>
+<para>Name of the mime types file. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="977" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="977" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1af4e22d2f78bddd1bbe46c1daccb95ad7" prot="public" static="no" mutable="no">
+        <type>MprHashTable *</type>
+        <definition>MprHashTable* MaHost::mimeTypes</definition>
+        <argsstring></argsstring>
+        <name>mimeTypes</name>
+        <briefdescription>
+<para>Hash table of mime types (key is extension) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1001" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1001" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a257e0333fb8bc02047e4df63fdf43b8c" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaHost::moduleDirs</definition>
+        <argsstring></argsstring>
+        <name>moduleDirs</name>
+        <briefdescription>
+<para>Directories for modules. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="978" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="978" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1aff97f4db01c17ca5875dedf4cea22674" prot="public" static="no" mutable="no">
+        <type>MprMutex *</type>
+        <definition>MprMutex* MaHost::mutex</definition>
+        <argsstring></argsstring>
+        <name>mutex</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1007" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1007" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a22f30c9114cbf69cb61599cbd365019a" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaHost::name</definition>
+        <argsstring></argsstring>
+        <name>name</name>
+        <briefdescription>
+<para>ServerName directive. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="979" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="979" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a77d5eff6788ff97d5f72ed99590169bf" prot="public" static="no" mutable="no">
+        <type>MprTime</type>
+        <definition>MprTime MaHost::now</definition>
+        <argsstring></argsstring>
+        <name>now</name>
+        <briefdescription>
+<para>When was the current date last computed. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1002" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1002" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1aa6f5d6bb55e7e700c3069970f5ebd838" prot="public" static="no" mutable="no">
+        <type>struct MaHost *</type>
+        <definition>struct MaHost* MaHost::parent</definition>
+        <argsstring></argsstring>
+        <name>parent</name>
+        <briefdescription>
+<para>Parent host for virtual hosts. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="962" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="962" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1aac10c6c164a3e658af45ff14efcbb1e5" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaHost::secret</definition>
+        <argsstring></argsstring>
+        <name>secret</name>
+        <briefdescription>
+<para>Random bytes for authentication. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="980" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="980" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1aec5b6552ad00c8f7e68224908cdbc3e2" prot="public" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool MaHost::secure</definition>
+        <argsstring></argsstring>
+        <name>secure</name>
+        <briefdescription>
+<para>Host is a secure (SSL) host. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="982" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="982" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a2646cabc8a9d6eb3ab4f07afd2e815f2" prot="public" static="no" mutable="no">
+        <type>MaServer *</type>
+        <definition>MaServer* MaHost::server</definition>
+        <argsstring></argsstring>
+        <name>server</name>
+        <briefdescription>
+<para>Server owning this host. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="961" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="961" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a74b32bddddab2d57a3e1ed707d199ab4" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaHost::timeout</definition>
+        <argsstring></argsstring>
+        <name>timeout</name>
+        <briefdescription>
+<para>Max time a request can take. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="981" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="981" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a5f194c0c59660e9cc9fb59af26d43dfe" prot="public" static="no" mutable="no">
+        <type>MprEvent *</type>
+        <definition>MprEvent* MaHost::timer</definition>
+        <argsstring></argsstring>
+        <name>timer</name>
+        <briefdescription>
+<para>Admin service timer. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="983" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="983" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1aac2100ae9d8639cab5c8ee6e7d484bda" prot="public" static="no" mutable="no">
+        <type>MprHashTable *</type>
+        <definition>MprHashTable* MaHost::traceExclude</definition>
+        <argsstring></argsstring>
+        <name>traceExclude</name>
+        <briefdescription>
+<para>Extensions to exclude from trace. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="999" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="999" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1aefb495696260a76add4f2c758bca71a5" prot="public" static="no" mutable="no">
+        <type>MprHashTable *</type>
+        <definition>MprHashTable* MaHost::traceInclude</definition>
+        <argsstring></argsstring>
+        <name>traceInclude</name>
+        <briefdescription>
+<para>Extensions to include in trace. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="998" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="998" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a506021ffd22108daca45481e01bf932c" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaHost::traceLevel</definition>
+        <argsstring></argsstring>
+        <name>traceLevel</name>
+        <briefdescription>
+<para>Trace activation level. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="995" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="995" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a58f49ac5af35f4f45d845f8f1a4b2d45" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaHost::traceMask</definition>
+        <argsstring></argsstring>
+        <name>traceMask</name>
+        <briefdescription>
+<para>Request/response trace mask. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="997" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="997" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_1a5eddbbd474f5e9428dc1c01046975381" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaHost::traceMaxLength</definition>
+        <argsstring></argsstring>
+        <name>traceMaxLength</name>
+        <briefdescription>
+<para>Maximum trace file length (if known) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="996" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="996" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/Users/mob/git/appweb-3/all/appweb.h" line="960" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="960" bodyend="1010"/>
+    <listofallmembers>
+      <member refid="struct_ma_host_1ac9facda0f26c5a72fa6706c9ee58b29e" prot="public" virt="non-virtual"><scope>MaHost</scope><name>accessLog</name></member>
+      <member refid="struct_ma_host_1a031b736ca2586f8b1c0dbccc9ad4b9ef" prot="public" virt="non-virtual"><scope>MaHost</scope><name>aliases</name></member>
+      <member refid="struct_ma_host_1a13f3e59a7449788c6e256bceffca3674" prot="public" virt="non-virtual"><scope>MaHost</scope><name>connCount</name></member>
+      <member refid="struct_ma_host_1a3e5a4cf295c4bf2d9034d924f207b2e8" prot="public" virt="non-virtual"><scope>MaHost</scope><name>connections</name></member>
+      <member refid="struct_ma_host_1a433a8db5b24586ac08e685f61f07b212" prot="public" virt="non-virtual"><scope>MaHost</scope><name>currentDate</name></member>
+      <member refid="struct_ma_host_1a704cb39c79bdd4e02a660805b49a62f3" prot="public" virt="non-virtual"><scope>MaHost</scope><name>currentTime</name></member>
+      <member refid="struct_ma_host_1ab8b3cae1de9a9625050a6dc984b16a7e" prot="public" virt="non-virtual"><scope>MaHost</scope><name>dirs</name></member>
+      <member refid="struct_ma_host_1a3a86e548c7e2e481819b02db86df2d43" prot="public" virt="non-virtual"><scope>MaHost</scope><name>documentRoot</name></member>
+      <member refid="struct_ma_host_1a49e77d8f2c9aefaccdd048f41b0261aa" prot="public" virt="non-virtual"><scope>MaHost</scope><name>flags</name></member>
+      <member refid="struct_ma_host_1a6564b35e813d29b91b496a58c0a7ceb4" prot="public" virt="non-virtual"><scope>MaHost</scope><name>httpVersion</name></member>
+      <member refid="struct_ma_host_1a5fbfae21ee569674d4e9b572054293a5" prot="public" virt="non-virtual"><scope>MaHost</scope><name>ipAddrPort</name></member>
+      <member refid="struct_ma_host_1a8c43f0244457f52e287b08eb24683dfd" prot="public" virt="non-virtual"><scope>MaHost</scope><name>keepAlive</name></member>
+      <member refid="struct_ma_host_1a602021cabd4df3d0da110d62a439c142" prot="public" virt="non-virtual"><scope>MaHost</scope><name>keepAliveTimeout</name></member>
+      <member refid="struct_ma_host_1a640f9e92674bca512b9b696fc05f318b" prot="public" virt="non-virtual"><scope>MaHost</scope><name>limits</name></member>
+      <member refid="struct_ma_host_1a46e3bd01c665c89e564d9eb509e8b8af" prot="public" virt="non-virtual"><scope>MaHost</scope><name>location</name></member>
+      <member refid="struct_ma_host_1a2a467eded25b74da22f1186d30665a64" prot="public" virt="non-virtual"><scope>MaHost</scope><name>locations</name></member>
+      <member refid="struct_ma_host_1a78448842788f48e93e627a3bbd04c5cb" prot="public" virt="non-virtual"><scope>MaHost</scope><name>logFormat</name></member>
+      <member refid="struct_ma_host_1abd72a164721d16d9ba754aacb42454ba" prot="public" virt="non-virtual"><scope>MaHost</scope><name>logHost</name></member>
+      <member refid="struct_ma_host_1a556cc57bb3f2c537bffb5c816ef39797" prot="public" virt="non-virtual"><scope>MaHost</scope><name>logPath</name></member>
+      <member refid="struct_ma_host_1a4fcaf87a04330fc01269d71957ad2c90" prot="public" virt="non-virtual"><scope>MaHost</scope><name>maxKeepAlive</name></member>
+      <member refid="struct_ma_host_1a9b5d409fecdffc8bcd990f682614d9de" prot="public" virt="non-virtual"><scope>MaHost</scope><name>mimeFile</name></member>
+      <member refid="struct_ma_host_1af4e22d2f78bddd1bbe46c1daccb95ad7" prot="public" virt="non-virtual"><scope>MaHost</scope><name>mimeTypes</name></member>
+      <member refid="struct_ma_host_1a257e0333fb8bc02047e4df63fdf43b8c" prot="public" virt="non-virtual"><scope>MaHost</scope><name>moduleDirs</name></member>
+      <member refid="struct_ma_host_1aff97f4db01c17ca5875dedf4cea22674" prot="public" virt="non-virtual"><scope>MaHost</scope><name>mutex</name></member>
+      <member refid="struct_ma_host_1a22f30c9114cbf69cb61599cbd365019a" prot="public" virt="non-virtual"><scope>MaHost</scope><name>name</name></member>
+      <member refid="struct_ma_host_1a77d5eff6788ff97d5f72ed99590169bf" prot="public" virt="non-virtual"><scope>MaHost</scope><name>now</name></member>
+      <member refid="struct_ma_host_1aa6f5d6bb55e7e700c3069970f5ebd838" prot="public" virt="non-virtual"><scope>MaHost</scope><name>parent</name></member>
+      <member refid="struct_ma_host_1aac10c6c164a3e658af45ff14efcbb1e5" prot="public" virt="non-virtual"><scope>MaHost</scope><name>secret</name></member>
+      <member refid="struct_ma_host_1aec5b6552ad00c8f7e68224908cdbc3e2" prot="public" virt="non-virtual"><scope>MaHost</scope><name>secure</name></member>
+      <member refid="struct_ma_host_1a2646cabc8a9d6eb3ab4f07afd2e815f2" prot="public" virt="non-virtual"><scope>MaHost</scope><name>server</name></member>
+      <member refid="struct_ma_host_1a74b32bddddab2d57a3e1ed707d199ab4" prot="public" virt="non-virtual"><scope>MaHost</scope><name>timeout</name></member>
+      <member refid="struct_ma_host_1a5f194c0c59660e9cc9fb59af26d43dfe" prot="public" virt="non-virtual"><scope>MaHost</scope><name>timer</name></member>
+      <member refid="struct_ma_host_1aac2100ae9d8639cab5c8ee6e7d484bda" prot="public" virt="non-virtual"><scope>MaHost</scope><name>traceExclude</name></member>
+      <member refid="struct_ma_host_1aefb495696260a76add4f2c758bca71a5" prot="public" virt="non-virtual"><scope>MaHost</scope><name>traceInclude</name></member>
+      <member refid="struct_ma_host_1a506021ffd22108daca45481e01bf932c" prot="public" virt="non-virtual"><scope>MaHost</scope><name>traceLevel</name></member>
+      <member refid="struct_ma_host_1a58f49ac5af35f4f45d845f8f1a4b2d45" prot="public" virt="non-virtual"><scope>MaHost</scope><name>traceMask</name></member>
+      <member refid="struct_ma_host_1a5eddbbd474f5e9428dc1c01046975381" prot="public" virt="non-virtual"><scope>MaHost</scope><name>traceMaxLength</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

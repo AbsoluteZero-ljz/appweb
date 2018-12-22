@@ -1,0 +1,141 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="struct_ma_server" kind="struct" prot="public">
+    <compoundname>MaServer</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_ma_server_1aebc0981906e11076e3e28c87d00d9ffe" prot="public" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool MaServer::alreadyLogging</definition>
+        <argsstring></argsstring>
+        <name>alreadyLogging</name>
+        <briefdescription>
+<para>Already logging. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="561" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="561" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_server_1a5c29f75b03490931fc4475cb27dc5b0f" prot="public" static="no" mutable="no">
+        <type>struct MaHost *</type>
+        <definition>struct MaHost* MaServer::defaultHost</definition>
+        <argsstring></argsstring>
+        <name>defaultHost</name>
+        <briefdescription>
+<para>Primary host. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="554" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="554" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_server_1ade40d795e2c2e21cecbb3717c1fdb068" prot="public" static="no" mutable="no">
+        <type>MprList *</type>
+        <definition>MprList* MaServer::hostAddresses</definition>
+        <argsstring></argsstring>
+        <name>hostAddresses</name>
+        <briefdescription>
+<para>List of HostAddress objects. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="556" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="556" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_server_1ad72d9fd0b63e2c80088dc615e34d70e6" prot="public" static="no" mutable="no">
+        <type>MprList *</type>
+        <definition>MprList* MaServer::hosts</definition>
+        <argsstring></argsstring>
+        <name>hosts</name>
+        <briefdescription>
+<para>List of host objects. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="555" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="555" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_server_1a506fe4d449c676fdc30162ccf3622f31" prot="public" static="no" mutable="no">
+        <type>MaHttp *</type>
+        <definition>MaHttp* MaServer::http</definition>
+        <argsstring></argsstring>
+        <name>http</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="553" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="553" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_server_1ab5b7ab4c8a4f6236419c22fdad766e9e" prot="public" static="no" mutable="no">
+        <type>MprList *</type>
+        <definition>MprList* MaServer::listens</definition>
+        <argsstring></argsstring>
+        <name>listens</name>
+        <briefdescription>
+<para>List of listening sockets. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="557" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="557" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_server_1a99157eab68768a489714007b87542449" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaServer::maxConcurrentRequests</definition>
+        <argsstring></argsstring>
+        <name>maxConcurrentRequests</name>
+        <briefdescription>
+<para>Maximum number of clients. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="558" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="558" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_server_1aaf003660d751126f5fb83e31067c51dd" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaServer::name</definition>
+        <argsstring></argsstring>
+        <name>name</name>
+        <briefdescription>
+<para>Unique name for this server. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="559" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="559" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_server_1a7bc4194216f40e31fc9aaca6087e7eb0" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaServer::serverRoot</definition>
+        <argsstring></argsstring>
+        <name>serverRoot</name>
+        <briefdescription>
+<para>Server root. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="560" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="560" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/Users/mob/git/appweb-3/all/appweb.h" line="552" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="552" bodyend="562"/>
+    <listofallmembers>
+      <member refid="struct_ma_server_1aebc0981906e11076e3e28c87d00d9ffe" prot="public" virt="non-virtual"><scope>MaServer</scope><name>alreadyLogging</name></member>
+      <member refid="struct_ma_server_1a5c29f75b03490931fc4475cb27dc5b0f" prot="public" virt="non-virtual"><scope>MaServer</scope><name>defaultHost</name></member>
+      <member refid="struct_ma_server_1ade40d795e2c2e21cecbb3717c1fdb068" prot="public" virt="non-virtual"><scope>MaServer</scope><name>hostAddresses</name></member>
+      <member refid="struct_ma_server_1ad72d9fd0b63e2c80088dc615e34d70e6" prot="public" virt="non-virtual"><scope>MaServer</scope><name>hosts</name></member>
+      <member refid="struct_ma_server_1a506fe4d449c676fdc30162ccf3622f31" prot="public" virt="non-virtual"><scope>MaServer</scope><name>http</name></member>
+      <member refid="struct_ma_server_1ab5b7ab4c8a4f6236419c22fdad766e9e" prot="public" virt="non-virtual"><scope>MaServer</scope><name>listens</name></member>
+      <member refid="struct_ma_server_1a99157eab68768a489714007b87542449" prot="public" virt="non-virtual"><scope>MaServer</scope><name>maxConcurrentRequests</name></member>
+      <member refid="struct_ma_server_1aaf003660d751126f5fb83e31067c51dd" prot="public" virt="non-virtual"><scope>MaServer</scope><name>name</name></member>
+      <member refid="struct_ma_server_1a7bc4194216f40e31fc9aaca6087e7eb0" prot="public" virt="non-virtual"><scope>MaServer</scope><name>serverRoot</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

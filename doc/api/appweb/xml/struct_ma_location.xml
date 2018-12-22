@@ -1,0 +1,281 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="struct_ma_location" kind="struct" prot="public">
+    <compoundname>MaLocation</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_ma_location_1acf1fee8fc8b1a7776076888124a05e64" prot="public" static="no" mutable="no">
+        <type>MaAuth *</type>
+        <definition>MaAuth* MaLocation::auth</definition>
+        <argsstring></argsstring>
+        <name>auth</name>
+        <briefdescription>
+<para>Per location block authentication. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="869" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="869" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_location_1ad07ed6627f950e278e1a79db70d12aa0" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaLocation::autoDelete</definition>
+        <argsstring></argsstring>
+        <name>autoDelete</name>
+        <briefdescription>
+<para>Auto delete uploaded files. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="889" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="889" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_location_1adf1ff1444a739c280a739decff5618b9" prot="public" static="no" mutable="no">
+        <type>struct MaStage *</type>
+        <definition>struct MaStage* MaLocation::connector</definition>
+        <argsstring></argsstring>
+        <name>connector</name>
+        <briefdescription>
+<para>Network connector. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="882" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="882" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_location_1a583a007eb07b61ea6ea75bfb43a0394e" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaLocation::ejsPath</definition>
+        <argsstring></argsstring>
+        <name>ejsPath</name>
+        <briefdescription>
+<para>EjsPath search path. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="892" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="892" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_location_1af15992ada6f5f984d0e73d7792239f79" prot="public" static="no" mutable="no">
+        <type>MprHashTable *</type>
+        <definition>MprHashTable* MaLocation::errorDocuments</definition>
+        <argsstring></argsstring>
+        <name>errorDocuments</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="881" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="881" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_location_1a5c88e88a33fbb8fdd33eef66a3a92890" prot="public" static="no" mutable="no">
+        <type>MprHashTable *</type>
+        <definition>MprHashTable* MaLocation::expires</definition>
+        <argsstring></argsstring>
+        <name>expires</name>
+        <briefdescription>
+<para>Expiry of content by mime type. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="877" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="877" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_location_1a98dc4420b9d7f131b98a1cd273a74d2d" prot="public" static="no" mutable="no">
+        <type>MprHashTable *</type>
+        <definition>MprHashTable* MaLocation::extensions</definition>
+        <argsstring></argsstring>
+        <name>extensions</name>
+        <briefdescription>
+<para>Hash of handlers by extensions. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="876" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="876" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_location_1aa24b40f035cc46a25bee0ccbd197e4d7" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaLocation::flags</definition>
+        <argsstring></argsstring>
+        <name>flags</name>
+        <briefdescription>
+<para>Location flags. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="870" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="870" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_location_1a92d212060fb0e2480aaed96ff0e3fd31" prot="public" static="no" mutable="no">
+        <type>struct MaStage *</type>
+        <definition>struct MaStage* MaLocation::handler</definition>
+        <argsstring></argsstring>
+        <name>handler</name>
+        <briefdescription>
+<para>Set handler. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="874" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="874" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_location_1a606751139b1e009184977f762caa8dd2" prot="public" static="no" mutable="no">
+        <type>void *</type>
+        <definition>void* MaLocation::handlerData</definition>
+        <argsstring></argsstring>
+        <name>handlerData</name>
+        <briefdescription>
+<para>Data reserved for the handler. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="875" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="875" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_location_1ad1c38a6d459cc498f810184c770c7fec" prot="public" static="no" mutable="no">
+        <type>MprList *</type>
+        <definition>MprList* MaLocation::handlers</definition>
+        <argsstring></argsstring>
+        <name>handlers</name>
+        <briefdescription>
+<para>List of handlers for this location. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="878" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="878" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_location_1a4b10115bedd78911999fd38b69cb6145" prot="public" static="no" mutable="no">
+        <type>MprList *</type>
+        <definition>MprList* MaLocation::inputStages</definition>
+        <argsstring></argsstring>
+        <name>inputStages</name>
+        <briefdescription>
+<para>Input stages. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="879" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="879" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_location_1a435417b8ad834f79a612f41994431f96" prot="public" static="no" mutable="no">
+        <type>MprList *</type>
+        <definition>MprList* MaLocation::outputStages</definition>
+        <argsstring></argsstring>
+        <name>outputStages</name>
+        <briefdescription>
+<para>Output stages. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="880" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="880" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_location_1a9b898f12133400f60199f1327e9d6a94" prot="public" static="no" mutable="no">
+        <type>struct MaLocation *</type>
+        <definition>struct MaLocation* MaLocation::parent</definition>
+        <argsstring></argsstring>
+        <name>parent</name>
+        <briefdescription>
+<para>Parent location. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="883" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="883" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_location_1ae0f3a9bf2162fc3df215e11b6ca5bbca" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaLocation::prefix</definition>
+        <argsstring></argsstring>
+        <name>prefix</name>
+        <briefdescription>
+<para>Location prefix name. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="871" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="871" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_location_1a8501353958670384e797e4677b40ae64" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaLocation::prefixLen</definition>
+        <argsstring></argsstring>
+        <name>prefixLen</name>
+        <briefdescription>
+<para>Length of the prefix name. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="872" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="872" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_location_1afcbf1662b86e986b4a64daac0cb5137b" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaLocation::sessionTimeout</definition>
+        <argsstring></argsstring>
+        <name>sessionTimeout</name>
+        <briefdescription>
+<para>Session timeout for this location. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="873" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="873" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_location_1a0fc8c78c15a79969bb0060960bb4b1fd" prot="public" static="no" mutable="no">
+        <type>struct MprSsl *</type>
+        <definition>struct MprSsl* MaLocation::ssl</definition>
+        <argsstring></argsstring>
+        <name>ssl</name>
+        <briefdescription>
+<para>SSL configuration. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="885" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="885" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_location_1a55efd945576b21af82e1bae1b8770918" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaLocation::uploadDir</definition>
+        <argsstring></argsstring>
+        <name>uploadDir</name>
+        <briefdescription>
+<para>Upload directory. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="888" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="888" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/Users/mob/git/appweb-3/all/appweb.h" line="868" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="868" bodyend="894"/>
+    <listofallmembers>
+      <member refid="struct_ma_location_1acf1fee8fc8b1a7776076888124a05e64" prot="public" virt="non-virtual"><scope>MaLocation</scope><name>auth</name></member>
+      <member refid="struct_ma_location_1ad07ed6627f950e278e1a79db70d12aa0" prot="public" virt="non-virtual"><scope>MaLocation</scope><name>autoDelete</name></member>
+      <member refid="struct_ma_location_1adf1ff1444a739c280a739decff5618b9" prot="public" virt="non-virtual"><scope>MaLocation</scope><name>connector</name></member>
+      <member refid="struct_ma_location_1a583a007eb07b61ea6ea75bfb43a0394e" prot="public" virt="non-virtual"><scope>MaLocation</scope><name>ejsPath</name></member>
+      <member refid="struct_ma_location_1af15992ada6f5f984d0e73d7792239f79" prot="public" virt="non-virtual"><scope>MaLocation</scope><name>errorDocuments</name></member>
+      <member refid="struct_ma_location_1a5c88e88a33fbb8fdd33eef66a3a92890" prot="public" virt="non-virtual"><scope>MaLocation</scope><name>expires</name></member>
+      <member refid="struct_ma_location_1a98dc4420b9d7f131b98a1cd273a74d2d" prot="public" virt="non-virtual"><scope>MaLocation</scope><name>extensions</name></member>
+      <member refid="struct_ma_location_1aa24b40f035cc46a25bee0ccbd197e4d7" prot="public" virt="non-virtual"><scope>MaLocation</scope><name>flags</name></member>
+      <member refid="struct_ma_location_1a92d212060fb0e2480aaed96ff0e3fd31" prot="public" virt="non-virtual"><scope>MaLocation</scope><name>handler</name></member>
+      <member refid="struct_ma_location_1a606751139b1e009184977f762caa8dd2" prot="public" virt="non-virtual"><scope>MaLocation</scope><name>handlerData</name></member>
+      <member refid="struct_ma_location_1ad1c38a6d459cc498f810184c770c7fec" prot="public" virt="non-virtual"><scope>MaLocation</scope><name>handlers</name></member>
+      <member refid="struct_ma_location_1a4b10115bedd78911999fd38b69cb6145" prot="public" virt="non-virtual"><scope>MaLocation</scope><name>inputStages</name></member>
+      <member refid="struct_ma_location_1a435417b8ad834f79a612f41994431f96" prot="public" virt="non-virtual"><scope>MaLocation</scope><name>outputStages</name></member>
+      <member refid="struct_ma_location_1a9b898f12133400f60199f1327e9d6a94" prot="public" virt="non-virtual"><scope>MaLocation</scope><name>parent</name></member>
+      <member refid="struct_ma_location_1ae0f3a9bf2162fc3df215e11b6ca5bbca" prot="public" virt="non-virtual"><scope>MaLocation</scope><name>prefix</name></member>
+      <member refid="struct_ma_location_1a8501353958670384e797e4677b40ae64" prot="public" virt="non-virtual"><scope>MaLocation</scope><name>prefixLen</name></member>
+      <member refid="struct_ma_location_1afcbf1662b86e986b4a64daac0cb5137b" prot="public" virt="non-virtual"><scope>MaLocation</scope><name>sessionTimeout</name></member>
+      <member refid="struct_ma_location_1a0fc8c78c15a79969bb0060960bb4b1fd" prot="public" virt="non-virtual"><scope>MaLocation</scope><name>ssl</name></member>
+      <member refid="struct_ma_location_1a55efd945576b21af82e1bae1b8770918" prot="public" virt="non-virtual"><scope>MaLocation</scope><name>uploadDir</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

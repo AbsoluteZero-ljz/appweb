@@ -1,0 +1,183 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="struct_ma_limits" kind="struct" prot="public">
+    <compoundname>MaLimits</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_ma_limits_1a688b75670812c49b407932bb60886179" prot="public" static="no" mutable="no">
+        <type>MprOff</type>
+        <definition>MprOff MaLimits::maxBody</definition>
+        <argsstring></argsstring>
+        <name>maxBody</name>
+        <briefdescription>
+<para>Max size of an incoming request. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="345" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="345" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_limits_1a991841f70bac7d1cc820e22d0162bda1" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaLimits::maxChunkSize</definition>
+        <argsstring></argsstring>
+        <name>maxChunkSize</name>
+        <briefdescription>
+<para>Max chunk size for transfer encoding. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="348" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="348" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_limits_1aadbef5614e9fa5cf17243c318a298dbf" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaLimits::maxHeader</definition>
+        <argsstring></argsstring>
+        <name>maxHeader</name>
+        <briefdescription>
+<para>Max size of the total header. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="349" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="349" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_limits_1a799d382d37ce3b2c68f0bd79836cee93" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaLimits::maxNumHeaders</definition>
+        <argsstring></argsstring>
+        <name>maxNumHeaders</name>
+        <briefdescription>
+<para>Max number of lines of header. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="350" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="350" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_limits_1a3a9d90a7eb0cf736e97c7106bc57e06e" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaLimits::maxProcesses</definition>
+        <argsstring></argsstring>
+        <name>maxProcesses</name>
+        <briefdescription>
+<para>Max number of processes. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="351" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="351" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_limits_1ab9924c7e15539bd28bfdca790133a6e3" prot="public" static="no" mutable="no">
+        <type>MprOff</type>
+        <definition>MprOff MaLimits::maxResponseBody</definition>
+        <argsstring></argsstring>
+        <name>maxResponseBody</name>
+        <briefdescription>
+<para>Max size of generated response content. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="346" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="346" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_limits_1a8298e70c79b25cd87bc1a5bdebe03037" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaLimits::maxStageBuffer</definition>
+        <argsstring></argsstring>
+        <name>maxStageBuffer</name>
+        <briefdescription>
+<para>Max buffering by any pipeline stage. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="352" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="352" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_limits_1a8c3169a29e996722fa32c64104d8cecb" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaLimits::maxThreads</definition>
+        <argsstring></argsstring>
+        <name>maxThreads</name>
+        <briefdescription>
+<para>Max number of pool threads. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="353" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="353" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_limits_1a01b2b804feb28c1d23e9081df498c974" prot="public" static="no" mutable="no">
+        <type>MprOff</type>
+        <definition>MprOff MaLimits::maxUploadSize</definition>
+        <argsstring></argsstring>
+        <name>maxUploadSize</name>
+        <briefdescription>
+<para>Max size of an uploaded file. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="347" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="347" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_limits_1ad032260f27de53a1160afb27a0a04ad2" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaLimits::maxUrl</definition>
+        <argsstring></argsstring>
+        <name>maxUrl</name>
+        <briefdescription>
+<para>Max size of a URL. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="355" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="355" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_limits_1add63d4e3fabd5cd23a6074f4f5508db9" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaLimits::minThreads</definition>
+        <argsstring></argsstring>
+        <name>minThreads</name>
+        <briefdescription>
+<para>Min number of pool threads. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="354" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="354" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_limits_1a37fd76e8393a96570f288d9bab7f9e72" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaLimits::threadStackSize</definition>
+        <argsstring></argsstring>
+        <name>threadStackSize</name>
+        <briefdescription>
+<para>Stack size for each pool thread. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="356" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="356" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/Users/mob/git/appweb-3/all/appweb.h" line="344" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="344" bodyend="357"/>
+    <listofallmembers>
+      <member refid="struct_ma_limits_1a688b75670812c49b407932bb60886179" prot="public" virt="non-virtual"><scope>MaLimits</scope><name>maxBody</name></member>
+      <member refid="struct_ma_limits_1a991841f70bac7d1cc820e22d0162bda1" prot="public" virt="non-virtual"><scope>MaLimits</scope><name>maxChunkSize</name></member>
+      <member refid="struct_ma_limits_1aadbef5614e9fa5cf17243c318a298dbf" prot="public" virt="non-virtual"><scope>MaLimits</scope><name>maxHeader</name></member>
+      <member refid="struct_ma_limits_1a799d382d37ce3b2c68f0bd79836cee93" prot="public" virt="non-virtual"><scope>MaLimits</scope><name>maxNumHeaders</name></member>
+      <member refid="struct_ma_limits_1a3a9d90a7eb0cf736e97c7106bc57e06e" prot="public" virt="non-virtual"><scope>MaLimits</scope><name>maxProcesses</name></member>
+      <member refid="struct_ma_limits_1ab9924c7e15539bd28bfdca790133a6e3" prot="public" virt="non-virtual"><scope>MaLimits</scope><name>maxResponseBody</name></member>
+      <member refid="struct_ma_limits_1a8298e70c79b25cd87bc1a5bdebe03037" prot="public" virt="non-virtual"><scope>MaLimits</scope><name>maxStageBuffer</name></member>
+      <member refid="struct_ma_limits_1a8c3169a29e996722fa32c64104d8cecb" prot="public" virt="non-virtual"><scope>MaLimits</scope><name>maxThreads</name></member>
+      <member refid="struct_ma_limits_1a01b2b804feb28c1d23e9081df498c974" prot="public" virt="non-virtual"><scope>MaLimits</scope><name>maxUploadSize</name></member>
+      <member refid="struct_ma_limits_1ad032260f27de53a1160afb27a0a04ad2" prot="public" virt="non-virtual"><scope>MaLimits</scope><name>maxUrl</name></member>
+      <member refid="struct_ma_limits_1add63d4e3fabd5cd23a6074f4f5508db9" prot="public" virt="non-virtual"><scope>MaLimits</scope><name>minThreads</name></member>
+      <member refid="struct_ma_limits_1a37fd76e8393a96570f288d9bab7f9e72" prot="public" virt="non-virtual"><scope>MaLimits</scope><name>threadStackSize</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

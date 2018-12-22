@@ -1,0 +1,814 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="group___ma_queue" kind="group">
+    <compoundname>MaQueue</compoundname>
+    <title>MaQueue</title>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="group___ma_queue_1ga89df8a2c0754e9740cb982948227c080" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maDisableQueue</definition>
+        <argsstring>(MaQueue *q)</argsstring>
+        <name>maDisableQueue</name>
+        <param>
+          <type>MaQueue *</type>
+          <declname>q</declname>
+        </param>
+        <briefdescription>
+<para>Disable a queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Mark a queue as disabled so that it will not be scheduled for service. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue reference </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1354"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_queue_1ga1defdb2be244b8e7144c5f0b70eba4d4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maDiscardData</definition>
+        <argsstring>(MaQueue *q, bool removePackets)</argsstring>
+        <name>maDiscardData</name>
+        <param>
+          <type>MaQueue *</type>
+          <declname>q</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>removePackets</declname>
+        </param>
+        <briefdescription>
+<para>Discard all data from the queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Discard data from the queue. If removePackets (not yet implemented) is true, then remove the packets otherwise, just discard the data and preserve the packets. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue reference </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>removePackets</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>If true, the data packets will be removed from the queue </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1314"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_queue_1ga861e916c603c00b2e0cd41c20328f0d9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maEnableQueue</definition>
+        <argsstring>(MaQueue *q)</argsstring>
+        <name>maEnableQueue</name>
+        <param>
+          <type>MaQueue *</type>
+          <declname>q</declname>
+        </param>
+        <briefdescription>
+<para>Enable a queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Enable a queue for service and schedule it to run. This will cause the service routine to run as soon as possible. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue reference </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1363"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_queue_1gae4ae8e97415719af334f9ae2cf385f85" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>MaPacket *</type>
+        <definition>MaPacket* maGet</definition>
+        <argsstring>(MaQueue *q)</argsstring>
+        <name>maGet</name>
+        <param>
+          <type>MaQueue *</type>
+          <declname>q</declname>
+        </param>
+        <briefdescription>
+<para>Get the next packet from a queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Get the next packet. This will remove the packet from the queue and adjust the queue counts accordingly. If the queue was full and upstream queues were blocked, they will be enabled. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue reference </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>The packet removed from the queue. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1324"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_queue_1gaafeb4b4cdc2db5d4c637f9302da04586" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int maGetQueueRoom</definition>
+        <argsstring>(MaQueue *q)</argsstring>
+        <name>maGetQueueRoom</name>
+        <param>
+          <type>MaQueue *</type>
+          <declname>q</declname>
+        </param>
+        <briefdescription>
+<para>Get the room in the queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Get the amount of data the queue can accept before being full. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue reference </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>A count of bytes that can be written to the queue </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1372"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_queue_1ga31b1ed4d3426c7bab23f0362b9946cc8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool maIsQueueEmpty</definition>
+        <argsstring>(MaQueue *q)</argsstring>
+        <name>maIsQueueEmpty</name>
+        <param>
+          <type>MaQueue *</type>
+          <declname>q</declname>
+        </param>
+        <briefdescription>
+<para>Determine if the queue is empty. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Determine if the queue has no packets queued. This does not test if the queue has no data content. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue reference </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>True if there are no packets queued. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1381"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_queue_1ga008879575307745c34a0d3a3807522a2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maJoinForService</definition>
+        <argsstring>(MaQueue *q, MaPacket *packet, bool serviceQ)</argsstring>
+        <name>maJoinForService</name>
+        <param>
+          <type>MaQueue *</type>
+          <declname>q</declname>
+        </param>
+        <param>
+          <type>MaPacket *</type>
+          <declname>packet</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>serviceQ</declname>
+        </param>
+        <briefdescription>
+<para>Join a packet onto the service queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Add a packet to the service queue. If the queue already has data, then this packet will be joined (aggregated) into the existing packet. If serviceQ is true, the queue will be scheduled for service. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue reference </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>packet</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Packet to join to the queue </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>serviceQ</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>If true, schedule the queue for service </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1336"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_queue_1ga9f5803bd3fe541a182013dbc79270ae0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool maPacketTooBig</definition>
+        <argsstring>(MaQueue *q, MaPacket *packet)</argsstring>
+        <name>maPacketTooBig</name>
+        <param>
+          <type>MaQueue *</type>
+          <declname>q</declname>
+        </param>
+        <param>
+          <type>MaPacket *</type>
+          <declname>packet</declname>
+        </param>
+        <briefdescription>
+<para>Test if a packet is too big. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Test if a packet is too big to fit downstream. If the packet content exceeds the downstream queue&apos;s maximum or exceeds the downstream queue&apos;s requested packet size -- then this routine will return true. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue reference </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>packet</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Packet to test </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>True if the packet is too big for the downstream queue </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1392"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_queue_1gad565107ef6abf6c845724d05391580b8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maPut</definition>
+        <argsstring>(MaQueue *q, MaPacket *packet)</argsstring>
+        <name>maPut</name>
+        <param>
+          <type>MaQueue *</type>
+          <declname>q</declname>
+        </param>
+        <param>
+          <type>MaPacket *</type>
+          <declname>packet</declname>
+        </param>
+        <briefdescription>
+<para>Put a packet onto a queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Put the packet onto the end of queue by calling the queue&apos;s put() method. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue reference </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>packet</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Packet to put </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1401"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_queue_1ga122d3cbab1cab19d402841dacf367e71" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maPutBack</definition>
+        <argsstring>(MaQueue *q, MaPacket *packet)</argsstring>
+        <name>maPutBack</name>
+        <param>
+          <type>MaQueue *</type>
+          <declname>q</declname>
+        </param>
+        <param>
+          <type>MaPacket *</type>
+          <declname>packet</declname>
+        </param>
+        <briefdescription>
+<para>Put a packet back onto a queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Put the packet back onto the front of the queue. The queue&apos;s put() method is not called. This is typically used by the queue&apos;s service routine when a packet cannot complete processing. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue reference </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>packet</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Packet to put back </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1411"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_queue_1gacd68693bae6cf09dd5edbec8ffc38104" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maPutForService</definition>
+        <argsstring>(MaQueue *q, MaPacket *packet, bool serviceQ)</argsstring>
+        <name>maPutForService</name>
+        <param>
+          <type>MaQueue *</type>
+          <declname>q</declname>
+        </param>
+        <param>
+          <type>MaPacket *</type>
+          <declname>packet</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>serviceQ</declname>
+        </param>
+        <briefdescription>
+<para>Put a packet onto the service queue. </para>        </briefdescription>
+        <detaileddescription>
+<para>Put a packet onto a service queue.</para><para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Add a packet to the service queue. If serviceQ is true, the queue will be scheduled for service. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue reference </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>packet</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Packet to join to the queue </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>serviceQ</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>If true, schedule the queue for service</para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="par"><title><bold>Description</bold>:</title><para>Put the packet onto the service queue and optionally schedule the queue for service. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue reference </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>packet</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Packet to put </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1346"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_queue_1ga173a4c117118b3e3d49df64eae9a9db0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maPutNext</definition>
+        <argsstring>(MaQueue *q, MaPacket *packet)</argsstring>
+        <name>maPutNext</name>
+        <param>
+          <type>MaQueue *</type>
+          <declname>q</declname>
+        </param>
+        <param>
+          <type>MaPacket *</type>
+          <declname>packet</declname>
+        </param>
+        <briefdescription>
+<para>Put a packet onto the next queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Put a packet onto the next downstream queue by calling the downstreams queue&apos;s put() method. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue reference. The packet will not be queued on this queue, but rather on the queue downstream. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>packet</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Packet to put </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1429"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_queue_1gaccb9f17d52a0c12a6a1d8146ef3c6802" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maRemoveQueue</definition>
+        <argsstring>(MaQueue *q)</argsstring>
+        <name>maRemoveQueue</name>
+        <param>
+          <type>MaQueue *</type>
+          <declname>q</declname>
+        </param>
+        <briefdescription>
+<para>Remove a queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Remove a queue from the request/response pipeline. This will remove a queue so that it does not participate in the pipeline, effectively removing the processing stage from the pipeline. This is useful to remove unwanted filters and to speed up pipeline processing </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue reference </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1439"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_queue_1ga695e3a780fd92fb9bfed08cada3d4576" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int maResizePacket</definition>
+        <argsstring>(MaQueue *q, MaPacket *packet, int size)</argsstring>
+        <name>maResizePacket</name>
+        <param>
+          <type>MaQueue *</type>
+          <declname>q</declname>
+        </param>
+        <param>
+          <type>MaPacket *</type>
+          <declname>packet</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>size</declname>
+        </param>
+        <briefdescription>
+<para>Resize a packet. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Resize a packet if required so that it fits in the downstream queue. This may split the packet if it is too big to fit in the downstream queue. If it is split, the tail portion is put back on the queue. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue reference </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>packet</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Packet to put </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>size</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>If size is &gt; 0, then also ensure the packet is not larger than this size. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Zero if successful, otherwise a negative Mpr error code </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1451"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_queue_1ga5b0f2004a9feb4398d7080b935f8831c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maScheduleQueue</definition>
+        <argsstring>(MaQueue *q)</argsstring>
+        <name>maScheduleQueue</name>
+        <param>
+          <type>MaQueue *</type>
+          <declname>q</declname>
+        </param>
+        <briefdescription>
+<para>Schedule a queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Schedule a queue by adding it to the schedule queue. Queues are serviced FIFO. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue reference </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1459"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_queue_1ga995c657ec4d913bc4ecddc98e8d075c6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maSendEndPacket</definition>
+        <argsstring>(MaQueue *q)</argsstring>
+        <name>maSendEndPacket</name>
+        <param>
+          <type>MaQueue *</type>
+          <declname>q</declname>
+        </param>
+        <briefdescription>
+<para>Send an end packet. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Create and send an end-of-stream packet downstream </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue reference </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1475"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_queue_1ga30f58c7ab7a180a70bcbf7fe7b59c166" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maSendPackets</definition>
+        <argsstring>(MaQueue *q)</argsstring>
+        <name>maSendPackets</name>
+        <param>
+          <type>MaQueue *</type>
+          <declname>q</declname>
+        </param>
+        <briefdescription>
+<para>Send all queued packets. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Send all queued packets downstream </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue reference </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1467"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_queue_1gad25ce1252624d2dc0234d147cce253a2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maServiceQueue</definition>
+        <argsstring>(MaQueue *q)</argsstring>
+        <name>maServiceQueue</name>
+        <param>
+          <type>MaQueue *</type>
+          <declname>q</declname>
+        </param>
+        <briefdescription>
+<para>Service a queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Service a queue by invoking its service() routine. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue reference </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1483"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_queue_1gacc3dad29937612ebcbfc39491e0e3f27" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool maWillNextQueueAccept</definition>
+        <argsstring>(MaQueue *q, MaPacket *packet)</argsstring>
+        <name>maWillNextQueueAccept</name>
+        <param>
+          <type>MaQueue *</type>
+          <declname>q</declname>
+        </param>
+        <param>
+          <type>MaPacket *</type>
+          <declname>packet</declname>
+        </param>
+        <briefdescription>
+<para>Determine if the downstream queue will accept this packet. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Test if the downstream queue will accept a packet. The packet will be resized if required in an attempt to get the downstream queue to accept it. If the downstream queue is full, disable this queue and mark the downstream queue as full and service it immediately to try to relieve the congestion. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue reference </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>packet</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Packet to put </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>True if the downstream queue will accept the packet. Use <ref refid="group___ma_queue_1ga173a4c117118b3e3d49df64eae9a9db0" kindref="member">maPutNext</ref> to send the packet downstream </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1495"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_queue_1gac5d94b33984c18b05cc40e8a2e7c11af" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int maWrite</definition>
+        <argsstring>(MaQueue *q, cchar *fmt,...)</argsstring>
+        <name>maWrite</name>
+        <param>
+          <type>MaQueue *</type>
+          <declname>q</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>fmt</declname>
+        </param>
+        <param>
+          <type>...</type>
+        </param>
+        <briefdescription>
+<para>Write a formatted string. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Write a formatted string of data into packets onto the end of the queue. Data packets will be created as required to store the write data. This call may block waiting for the downstream queue to drain if it is or becomes full. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue reference </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>fmt</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Printf style formatted string </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>...</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Arguments for fmt </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>A count of the bytes actually written </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1509"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_queue_1gacc302b0d5ddb16163bdd48b575adcfb5" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int maWriteBlock</definition>
+        <argsstring>(MaQueue *q, cchar *buf, int size, bool block)</argsstring>
+        <name>maWriteBlock</name>
+        <param>
+          <type>MaQueue *</type>
+          <declname>q</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>buf</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>size</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>block</declname>
+        </param>
+        <briefdescription>
+<para>Write a block of data to the queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Write a block of data into packets onto the end of the queue. Data packets will be created as required to store the write data. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue reference </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>buf</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Buffer containing the write data </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>size</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>of the data in buf </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>block</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Set to true to block and wait for data to drain if the downstream queue is full. If false, the call may return not having written all the data. The return value indicates how many bytes were actually written. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>A count of the bytes actually written </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1523"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_queue_1gadabcf6082f3025c5d1602ef9c6fa89ac" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int maWriteString</definition>
+        <argsstring>(MaQueue *q, cchar *s)</argsstring>
+        <name>maWriteString</name>
+        <param>
+          <type>MaQueue *</type>
+          <declname>q</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>s</declname>
+        </param>
+        <briefdescription>
+<para>Write a string of data to the queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Write a string of data into packets onto the end of the queue. Data packets will be created as required to store the write data. This call may block waiting for the downstream queue to drain if it is or becomes full. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue reference </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>s</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>String containing the data to write </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>A count of the bytes actually written </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1535"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Queue Head. </para>    </briefdescription>
+    <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>The request pipeline consists of a full-duplex pipeline of stages. Each stage has two queues, one for outgoing data and one for incoming. A MaQueue object manages the data flow for a request stage and has the ability to queue and process data, manage flow control and schedule packets for service. <linebreak/>
+<linebreak/>
+ Queue&apos;s provide open, close, put and service methods. These methods manage and respond to incoming packets. A queue can respond immediately to an incoming packet by processing or dispatching a packet in its put() method. Alternatively, the queue can defer processing by queueing the packet on it&apos;s service queue and then waiting for it&apos;s service() method to be invoked. <linebreak/>
+<linebreak/>
+ If a queue does not define a put() method, the default put method will be used which queues data onto the service queue. The default incoming put() method joins incoming packets into a single packet on the service queue. </para></simplesect>
+<simplesect kind="par"><title><bold>API</bold> Stability:</title><para>Evolving</para></simplesect>
+<simplesect kind="see"><para><ref refid="group___ma_queue" kindref="compound">MaQueue</ref> <ref refid="group___ma_packet" kindref="compound">MaPacket</ref> <ref refid="group___ma_conn" kindref="compound">MaConn</ref> <ref refid="group___ma_queue_1ga1defdb2be244b8e7144c5f0b70eba4d4" kindref="member">maDiscardData</ref> <ref refid="group___ma_queue_1gae4ae8e97415719af334f9ae2cf385f85" kindref="member">maGet</ref> <ref refid="group___ma_queue_1ga008879575307745c34a0d3a3807522a2" kindref="member">maJoinForService</ref> <ref refid="group___ma_queue_1gacd68693bae6cf09dd5edbec8ffc38104" kindref="member">maPutForService</ref> maDefaultPut <ref refid="group___ma_queue_1ga89df8a2c0754e9740cb982948227c080" kindref="member">maDisableQueue</ref> <ref refid="group___ma_queue_1ga861e916c603c00b2e0cd41c20328f0d9" kindref="member">maEnableQueue</ref> <ref refid="group___ma_queue_1gaafeb4b4cdc2db5d4c637f9302da04586" kindref="member">maGetQueueRoom</ref> <ref refid="group___ma_queue_1ga31b1ed4d3426c7bab23f0362b9946cc8" kindref="member">maIsQueueEmpty</ref> <ref refid="group___ma_queue_1ga9f5803bd3fe541a182013dbc79270ae0" kindref="member">maPacketTooBig</ref> <ref refid="group___ma_queue_1gad565107ef6abf6c845724d05391580b8" kindref="member">maPut</ref> <ref refid="group___ma_queue_1ga122d3cbab1cab19d402841dacf367e71" kindref="member">maPutBack</ref> <ref refid="group___ma_queue_1gacd68693bae6cf09dd5edbec8ffc38104" kindref="member">maPutForService</ref> <ref refid="group___ma_queue_1ga173a4c117118b3e3d49df64eae9a9db0" kindref="member">maPutNext</ref> <ref refid="group___ma_queue_1gaccb9f17d52a0c12a6a1d8146ef3c6802" kindref="member">maRemoveQueue</ref> <ref refid="group___ma_queue_1ga695e3a780fd92fb9bfed08cada3d4576" kindref="member">maResizePacket</ref> <ref refid="group___ma_queue_1ga5b0f2004a9feb4398d7080b935f8831c" kindref="member">maScheduleQueue</ref> maSendPacket <ref refid="group___ma_queue_1ga30f58c7ab7a180a70bcbf7fe7b59c166" kindref="member">maSendPackets</ref> <ref refid="group___ma_queue_1ga995c657ec4d913bc4ecddc98e8d075c6" kindref="member">maSendEndPacket</ref> <ref refid="group___ma_queue_1gad25ce1252624d2dc0234d147cce253a2" kindref="member">maServiceQueue</ref> <ref refid="group___ma_queue_1gacc3dad29937612ebcbfc39491e0e3f27" kindref="member">maWillNextQueueAccept</ref> <ref refid="group___ma_queue_1gac5d94b33984c18b05cc40e8a2e7c11af" kindref="member">maWrite</ref> <ref refid="group___ma_queue_1gacc302b0d5ddb16163bdd48b575adcfb5" kindref="member">maWriteBlock</ref> maWriteBody <ref refid="group___ma_queue_1gadabcf6082f3025c5d1602ef9c6fa89ac" kindref="member">maWriteString</ref> </para></simplesect>
+</para>    </detaileddescription>
+  </compounddef>
+</doxygen>

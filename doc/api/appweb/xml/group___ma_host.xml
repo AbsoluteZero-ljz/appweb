@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="group___ma_host" kind="group">
+    <compoundname>MaHost</compoundname>
+    <title>MaHost</title>
+    <briefdescription>
+<para>Host Object A Host object represents a single listening HTTP connection endpoint. </para>    </briefdescription>
+    <detaileddescription>
+<para>This may be a default server or a virtual server. Multiple Hosts may be contained within a single Server. <simplesect kind="par"><title><bold>API</bold> Stability:</title><para>Evolving</para></simplesect>
+<simplesect kind="see"><para><ref refid="group___ma_host" kindref="compound">MaHost</ref> </para></simplesect>
+</para>    </detaileddescription>
+  </compounddef>
+</doxygen>

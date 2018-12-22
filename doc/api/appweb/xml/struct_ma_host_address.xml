@@ -1,0 +1,71 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="struct_ma_host_address" kind="struct" prot="public">
+    <compoundname>MaHostAddress</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_ma_host_address_1aaa8cd82977b41cd36c19f50e5be6a2f6" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaHostAddress::flags</definition>
+        <argsstring></argsstring>
+        <name>flags</name>
+        <briefdescription>
+<para>Mapping flags. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="528" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="528" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_address_1ac39300f1707e596041e23283a81617d5" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaHostAddress::ipAddr</definition>
+        <argsstring></argsstring>
+        <name>ipAddr</name>
+        <briefdescription>
+<para>IP Address for this endpoint. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="526" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="526" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_address_1a924b409c86e90620d4f39315f2f9c2f0" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaHostAddress::port</definition>
+        <argsstring></argsstring>
+        <name>port</name>
+        <briefdescription>
+<para>Port for this endpoint. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="527" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="527" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_host_address_1aa9919b08a3830340342b062022ea7c79" prot="public" static="no" mutable="no">
+        <type>MprList *</type>
+        <definition>MprList* MaHostAddress::vhosts</definition>
+        <argsstring></argsstring>
+        <name>vhosts</name>
+        <briefdescription>
+<para>Vhosts using this address. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="529" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="529" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/Users/mob/git/appweb-3/all/appweb.h" line="525" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="525" bodyend="530"/>
+    <listofallmembers>
+      <member refid="struct_ma_host_address_1aaa8cd82977b41cd36c19f50e5be6a2f6" prot="public" virt="non-virtual"><scope>MaHostAddress</scope><name>flags</name></member>
+      <member refid="struct_ma_host_address_1ac39300f1707e596041e23283a81617d5" prot="public" virt="non-virtual"><scope>MaHostAddress</scope><name>ipAddr</name></member>
+      <member refid="struct_ma_host_address_1a924b409c86e90620d4f39315f2f9c2f0" prot="public" virt="non-virtual"><scope>MaHostAddress</scope><name>port</name></member>
+      <member refid="struct_ma_host_address_1aa9919b08a3830340342b062022ea7c79" prot="public" virt="non-virtual"><scope>MaHostAddress</scope><name>vhosts</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

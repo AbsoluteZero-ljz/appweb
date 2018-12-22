@@ -1,0 +1,398 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="group___ma_request" kind="group">
+    <compoundname>MaRequest</compoundname>
+    <title>MaRequest</title>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="group___ma_request_1ga4ae3735629a6d020a2ec9916ccbcb10b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maAddVars</definition>
+        <argsstring>(MprHashTable *table, cchar *buf, int len)</argsstring>
+        <name>maAddVars</name>
+        <param>
+          <type>MprHashTable *</type>
+          <declname>table</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>buf</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>len</declname>
+        </param>
+        <briefdescription>
+<para>Add query and post form variables. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Add new variables encoded in the supplied buffer </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>table</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MprHashTable Hash table to modify </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>buf</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Buffer containing www-urlencoded data </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>len</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Length of buf </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2027"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_request_1ga37f287f2db074d1f53cd14c4d041f0b5" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int maCompareFormVar</definition>
+        <argsstring>(MaConn *conn, cchar *var, cchar *value)</argsstring>
+        <name>maCompareFormVar</name>
+        <param>
+          <type>MaConn *</type>
+          <declname>conn</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>var</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>value</declname>
+        </param>
+        <briefdescription>
+<para>Compare a form variable. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Compare a form variable and return true if it exists and its value matches. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>conn</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaConn connection object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>var</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Name of the form variable </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>value</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Value to compare </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>True if the value matches </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2039"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_request_1gafabbafae1edfe71c6961fb7b3517a555" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>cchar *</type>
+        <definition>cchar* maGetCookies</definition>
+        <argsstring>(MaConn *conn)</argsstring>
+        <name>maGetCookies</name>
+        <param>
+          <type>MaConn *</type>
+          <declname>conn</declname>
+        </param>
+        <briefdescription>
+<para>Get the cookies. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Get the cookies defined in the current requeset </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>conn</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaConn connection object </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Return a string containing the cookies sent in the Http header of the last request </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2048"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_request_1ga8ebdb53755a8a2af8b14b9739ed458f9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>cchar *</type>
+        <definition>cchar* maGetFormVar</definition>
+        <argsstring>(MaConn *conn, cchar *var, cchar *defaultValue)</argsstring>
+        <name>maGetFormVar</name>
+        <param>
+          <type>MaConn *</type>
+          <declname>conn</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>var</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>defaultValue</declname>
+        </param>
+        <briefdescription>
+<para>Get a form variable. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Get the value of a named form variable. Form variables are define via www-urlencoded query or post data contained in the request. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>conn</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaConn connection object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>var</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Name of the form variable to retrieve </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>defaultValue</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Default value to return if the variable is not defined. Can be null. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>String containing the form variable&apos;s value. Caller should not free. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2060"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_request_1ga47566765cffb453045d103b07a3ffdc6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int maGetIntFormVar</definition>
+        <argsstring>(MaConn *conn, cchar *var, int defaultValue)</argsstring>
+        <name>maGetIntFormVar</name>
+        <param>
+          <type>MaConn *</type>
+          <declname>conn</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>var</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>defaultValue</declname>
+        </param>
+        <briefdescription>
+<para>Get a form variable as an integer. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Get the value of a named form variable as an integer. Form variables are define via www-urlencoded query or post data contained in the request. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>conn</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaConn connection object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>var</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Name of the form variable to retrieve </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>defaultValue</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Default value to return if the variable is not defined. Can be null. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Integer containing the form variable&apos;s value </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2072"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_request_1gabc322b0f9a0cd9736e63fb5996966d55" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>cchar *</type>
+        <definition>cchar* maGetQueryString</definition>
+        <argsstring>(MaConn *conn)</argsstring>
+        <name>maGetQueryString</name>
+        <param>
+          <type>MaConn *</type>
+          <declname>conn</declname>
+        </param>
+        <briefdescription>
+<para>Get the request query string. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Get query string sent with the current request. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>conn</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaConn connection object </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>String containing the request query string. Caller should not free. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2081"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_request_1ga8ea727d5e958015dbeeffeeceb6e5be0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maSetFormVar</definition>
+        <argsstring>(MaConn *conn, cchar *var, cchar *value)</argsstring>
+        <name>maSetFormVar</name>
+        <param>
+          <type>MaConn *</type>
+          <declname>conn</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>var</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>value</declname>
+        </param>
+        <briefdescription>
+<para>Set a form variable value. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Set the value of a named form variable to a string value. Form variables are define via www-urlencoded query or post data contained in the request. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>conn</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaConn connection object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>var</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Name of the form variable to retrieve </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>value</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Default value to return if the variable is not defined. Can be null. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2103"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_request_1ga5de91ec793b3a728c142c017f89c8310" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maSetIntFormVar</definition>
+        <argsstring>(MaConn *conn, cchar *var, int value)</argsstring>
+        <name>maSetIntFormVar</name>
+        <param>
+          <type>MaConn *</type>
+          <declname>conn</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>var</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>value</declname>
+        </param>
+        <briefdescription>
+<para>Set a form variable value. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Set the value of a named form variable to an integer value. Form variables are define via www-urlencoded query or post data contained in the request. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>conn</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaConn connection object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>var</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Name of the form variable to retrieve </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>value</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Default value to return if the variable is not defined. Can be null. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2092"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_request_1gac0ca4ed4a140bb47717430c890c070d6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int maTestFormVar</definition>
+        <argsstring>(MaConn *conn, cchar *var)</argsstring>
+        <name>maTestFormVar</name>
+        <param>
+          <type>MaConn *</type>
+          <declname>conn</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>var</declname>
+        </param>
+        <briefdescription>
+<para>Test if a form variable is defined. </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>conn</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaConn connection object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>var</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Name of the form variable to retrieve </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>True if the form variable is defined </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2112"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Http Requests. </para>    </briefdescription>
+    <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Most of the APIs in the Request group still take a MaConn object as their first parameter. This is to make the API easier to remember - APIs take a connection object rather than a request or response object. </para></simplesect>
+<simplesect kind="par"><title><bold>API</bold> Stability:</title><para>Evolving</para></simplesect>
+<simplesect kind="see"><para><ref refid="group___ma_request" kindref="compound">MaRequest</ref> <ref refid="group___ma_conn" kindref="compound">MaConn</ref> <ref refid="group___ma_response" kindref="compound">MaResponse</ref> maMapUriToStorage maRequestWriteBlocked maSetNoKeepAlive maAddFormVars <ref refid="group___ma_request_1ga37f287f2db074d1f53cd14c4d041f0b5" kindref="member">maCompareFormVar</ref> <ref refid="group___ma_request_1gafabbafae1edfe71c6961fb7b3517a555" kindref="member">maGetCookies</ref> <ref refid="group___ma_request_1ga8ebdb53755a8a2af8b14b9739ed458f9" kindref="member">maGetFormVar</ref> <ref refid="group___ma_request_1ga47566765cffb453045d103b07a3ffdc6" kindref="member">maGetIntFormVar</ref> maGetNumEnvProperties <ref refid="group___ma_request_1gabc322b0f9a0cd9736e63fb5996966d55" kindref="member">maGetQueryString</ref> <ref refid="group___ma_request_1ga5de91ec793b3a728c142c017f89c8310" kindref="member">maSetIntFormVar</ref> <ref refid="group___ma_request_1ga8ea727d5e958015dbeeffeeceb6e5be0" kindref="member">maSetFormVar</ref> maUnsetFormVar <ref refid="group___ma_request_1gac0ca4ed4a140bb47717430c890c070d6" kindref="member">maTestFormVar</ref> </para></simplesect>
+</para>    </detaileddescription>
+  </compounddef>
+</doxygen>

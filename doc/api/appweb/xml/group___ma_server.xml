@@ -1,0 +1,335 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="group___ma_server" kind="group">
+    <compoundname>MaServer</compoundname>
+    <title>MaServer</title>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="group___ma_server_1gacf1e50889d272eb52266be2b5f0705b9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int maConfigureServer</definition>
+        <argsstring>(MprCtx ctx, MaHttp *http, MaServer *server, cchar *configFile, cchar *ipAddr, int port, cchar *documentRoot)</argsstring>
+        <name>maConfigureServer</name>
+        <param>
+          <type>MprCtx</type>
+          <declname>ctx</declname>
+        </param>
+        <param>
+          <type>MaHttp *</type>
+          <declname>http</declname>
+        </param>
+        <param>
+          <type>MaServer *</type>
+          <declname>server</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>configFile</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>ipAddr</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>port</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>documentRoot</declname>
+        </param>
+        <briefdescription>
+<para>Configure a web server. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>This will configure a web server based on either a configuration file or using the supplied IP address and port. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>ctx</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Any memory context object returned by mprAlloc </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>http</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaHttp object created via <ref refid="group___ma_http_1ga5469e3e74d12d36088d1e53b9affe53b" kindref="member">maCreateHttp</ref> </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>server</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaServer object created via <ref refid="group___ma_server_1ga0923ebd7f71a2f83ca9fa87509acd6b8" kindref="member">maCreateServer</ref> </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>configFile</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>File name of the Appweb configuration file (appweb.conf) that defines the web server configuration. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>ipAddr</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>If using a config file, set to null. Otherwise, set to a host name or IP address. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>port</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>If using a config file, set to -1. Otherwise, set to the port number to listen on. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>documentRoot</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>If not using a config file, set this to the directory containing the web documents to serve. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Zero if successful, otherwise a negative Mpr error code. See the Appweb log for diagnostics. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="642"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_server_1ga0923ebd7f71a2f83ca9fa87509acd6b8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>MaServer *</type>
+        <definition>MaServer* maCreateServer</definition>
+        <argsstring>(MaHttp *http, cchar *name, cchar *root, cchar *ipAddr, int port)</argsstring>
+        <name>maCreateServer</name>
+        <param>
+          <type>MaHttp *</type>
+          <declname>http</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>name</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>root</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>ipAddr</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>port</declname>
+        </param>
+        <briefdescription>
+<para>Create a MaServer object. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Create new MaServer object. This routine creates a bare MaServer object, loads any required static modules and performs minimal configuration. To use the server object created, more configuration will be required before starting Http services. If you want a one-line embedding of Appweb, use <ref refid="group___ma_server_1ga4994c273e87409b094418dd7bd370ee4" kindref="member">maRunWebServer</ref> or <ref refid="group___ma_server_1ga6c073bcc4ac2c9f8333a42d3ff4555b4" kindref="member">maRunSimpleWebServer</ref>. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>http</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Http object returned from <ref refid="group___ma_http_1ga5469e3e74d12d36088d1e53b9affe53b" kindref="member">maCreateHttp</ref> </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>name</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Name of the web server. This name is used as the initial server name. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>root</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Server root directory </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>ipAddr</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>If not-null, create and open a listening endpoint on this IP address. If you are configuring via a config file, use <ref refid="group___ma_server_1gacf1e50889d272eb52266be2b5f0705b9" kindref="member">maConfigureServer</ref> and set ipAddr to null. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>port</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Port number to listen on. Set to -1 if you do not want to open a listening endpoint on ipAddr:port </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>MaServer A newly created MaServer object. Use mprFree to free and release. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="625"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_server_1gaeedb92f8e2d67d6c9a4648bbd8b4eb37" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>MaHttp *</type>
+        <definition>MaHttp* maCreateWebServer</definition>
+        <argsstring>(cchar *configFile)</argsstring>
+        <name>maCreateWebServer</name>
+        <param>
+          <type>cchar *</type>
+          <declname>configFile</declname>
+        </param>
+        <briefdescription>
+<para>Create a web server. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Create a web server configuration based on the supplied config file. Once created, the web server should be run by calling <ref refid="group___ma_server_1ga8bdc0c3f12fd140a4483f44ef2280697" kindref="member">maServiceWebServer</ref>. Use this routine when you need access to the MaHttp object. If you want a one-line embedding of Appweb, use <ref refid="group___ma_server_1ga4994c273e87409b094418dd7bd370ee4" kindref="member">maRunWebServer</ref> or <ref refid="group___ma_server_1ga6c073bcc4ac2c9f8333a42d3ff4555b4" kindref="member">maRunSimpleWebServer</ref>. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>configFile</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>File name of the Appweb configuration file (appweb.conf) that defines the web server configuration. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>MaHttp object. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="573"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_server_1ga64ceb8a0ea7251a2a2bfdec72586d914" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maLoadStaticModules</definition>
+        <argsstring>(MaHttp *http)</argsstring>
+        <name>maLoadStaticModules</name>
+        <param>
+          <type>MaHttp *</type>
+          <declname>http</declname>
+        </param>
+        <briefdescription>
+<para>Load static modules. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Load the statically configured modules, handlers, filters and connectors. The configure program can specify a static or shared build of Appweb. The <ref refid="group___ma_server_1ga0923ebd7f71a2f83ca9fa87509acd6b8" kindref="member">maCreateServer</ref> routine will call maLoadStaticModules automatically. It should not be called by in user programs. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>http</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaHttp object created via <ref refid="group___ma_http_1ga5469e3e74d12d36088d1e53b9affe53b" kindref="member">maCreateHttp</ref> </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="652"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_server_1ga6c073bcc4ac2c9f8333a42d3ff4555b4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int maRunSimpleWebServer</definition>
+        <argsstring>(cchar *ipAddress, int port, cchar *docRoot)</argsstring>
+        <name>maRunSimpleWebServer</name>
+        <param>
+          <type>cchar *</type>
+          <declname>ipAddress</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>port</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>docRoot</declname>
+        </param>
+        <briefdescription>
+<para>Create and run a simple web server listening on a single IP address. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Create a simple web server without using a configuration file. The server is created to listen on the specified IP addresss and port. This routine provides is a one-line embedding of Appweb. If you want to use a config file, try the <ref refid="group___ma_server_1ga4994c273e87409b094418dd7bd370ee4" kindref="member">maRunWebServer</ref> instead. If you need more control, try <ref refid="group___ma_server_1gaeedb92f8e2d67d6c9a4648bbd8b4eb37" kindref="member">maCreateWebServer</ref> which exposes the MaHttp object. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>ipAddress</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>IP address on which to listen. Set to &quot;0.0.0.0&quot; to listen on all interfaces. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>port</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Port number to listen to </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>docRoot</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Directory containing the documents to serve. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Zero if successful, otherwise a negative Mpr error code. See the Appweb log for diagnostics. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="608"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_server_1ga4994c273e87409b094418dd7bd370ee4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int maRunWebServer</definition>
+        <argsstring>(cchar *configFile)</argsstring>
+        <name>maRunWebServer</name>
+        <param>
+          <type>cchar *</type>
+          <declname>configFile</declname>
+        </param>
+        <briefdescription>
+<para>Create and run a web server based on a configuration file. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Create a web server configuration based on the supplied config file. This routine provides is a one-line embedding of Appweb. If you don&apos;t want to use a config file, try the <ref refid="group___ma_server_1ga6c073bcc4ac2c9f8333a42d3ff4555b4" kindref="member">maRunSimpleWebServer</ref> instead. If you need more control, try <ref refid="group___ma_server_1gaeedb92f8e2d67d6c9a4648bbd8b4eb37" kindref="member">maCreateWebServer</ref> which exposes the MaHttp object. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>configFile</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>File name of the Appweb configuration file (appweb.conf) that defines the web server configuration. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Zero if successful, otherwise a negative Mpr error code. See the Appweb log for diagnostics. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="594"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_server_1ga8bdc0c3f12fd140a4483f44ef2280697" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int maServiceWebServer</definition>
+        <argsstring>(MaHttp *http)</argsstring>
+        <name>maServiceWebServer</name>
+        <param>
+          <type>MaHttp *</type>
+          <declname>http</declname>
+        </param>
+        <briefdescription>
+<para>Service a web server. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Run a web server configuration. This is will start http services via <ref refid="group___ma_http_1ga99ce78ac41ef6ff1d91a89ff832e0e09" kindref="member">maStartHttp</ref> and will service incoming Http requests until instructed to exit. This is often used in conjunction with <ref refid="group___ma_server_1gaeedb92f8e2d67d6c9a4648bbd8b4eb37" kindref="member">maCreateWebServer</ref>. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>http</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Http object created via <ref refid="group___ma_server_1gaeedb92f8e2d67d6c9a4648bbd8b4eb37" kindref="member">maCreateWebServer</ref> or <ref refid="group___ma_http_1ga5469e3e74d12d36088d1e53b9affe53b" kindref="member">maCreateHttp</ref>. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Zero if successful, otherwise a negative Mpr error code. See the Appweb log for diagnostics. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="583"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Http Server Control An application may have any number of HTTP servers, each managed by an instance of the Server class. </para>    </briefdescription>
+    <detaileddescription>
+<para>Typically there will be only one server in an application. There may be multiple virtual hosts and one default host for each server class. A server will typically be configured by calling the configure method for each server which parses a file to define the server and virtual host configuration. <simplesect kind="par"><title><bold>API</bold> Stability:</title><para>Evolving</para></simplesect>
+<simplesect kind="see"><para><ref refid="group___ma_server" kindref="compound">MaServer</ref> <ref refid="group___ma_server_1gaeedb92f8e2d67d6c9a4648bbd8b4eb37" kindref="member">maCreateWebServer</ref> <ref refid="group___ma_server_1ga8bdc0c3f12fd140a4483f44ef2280697" kindref="member">maServiceWebServer</ref> <ref refid="group___ma_server_1ga4994c273e87409b094418dd7bd370ee4" kindref="member">maRunWebServer</ref> <ref refid="group___ma_server_1ga6c073bcc4ac2c9f8333a42d3ff4555b4" kindref="member">maRunSimpleWebServer</ref> <ref refid="group___ma_server_1ga0923ebd7f71a2f83ca9fa87509acd6b8" kindref="member">maCreateServer</ref> <ref refid="group___ma_server_1gacf1e50889d272eb52266be2b5f0705b9" kindref="member">maConfigureServer</ref> <ref refid="group___ma_server_1ga64ceb8a0ea7251a2a2bfdec72586d914" kindref="member">maLoadStaticModules</ref> maUnloadStaticModules maSplitConfigValue </para></simplesect>
+</para>    </detaileddescription>
+  </compounddef>
+</doxygen>

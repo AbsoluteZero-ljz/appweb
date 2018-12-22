@@ -1,0 +1,173 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="group___ma_http" kind="group">
+    <compoundname>MaHttp</compoundname>
+    <title>MaHttp</title>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="group___ma_http_1ga5469e3e74d12d36088d1e53b9affe53b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>MaHttp *</type>
+        <definition>MaHttp* maCreateHttp</definition>
+        <argsstring>(MprCtx ctx)</argsstring>
+        <name>maCreateHttp</name>
+        <param>
+          <type>MprCtx</type>
+          <declname>ctx</declname>
+        </param>
+        <briefdescription>
+<para>Create the MaHttp object. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>The Appweb library uses a singleton MaHttp object to manage multiple embedded web servers </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>ctx</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Any memory context object returned by mprAlloc </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>A MaHttp object. Use mprFree to close and release. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="417"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_http_1gad322e4287ec638e3869ac192335402c1" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int maSetHttpGroup</definition>
+        <argsstring>(MaHttp *http, cchar *group)</argsstring>
+        <name>maSetHttpGroup</name>
+        <param>
+          <type>MaHttp *</type>
+          <declname>http</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>group</declname>
+        </param>
+        <briefdescription>
+<para>Set the Http Group. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Define the group name under which to run the Appweb service </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>http</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaHttp object created via <ref refid="group___ma_http_1ga5469e3e74d12d36088d1e53b9affe53b" kindref="member">maCreateHttp</ref> </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>group</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Group name. Must be defined in the system group file. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Zero if successful, otherwise a negative Mpr error code. See the Appweb log for diagnostics. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="455"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_http_1gad7b13f28a9c589585154397837fa2580" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int maSetHttpUser</definition>
+        <argsstring>(MaHttp *http, cchar *user)</argsstring>
+        <name>maSetHttpUser</name>
+        <param>
+          <type>MaHttp *</type>
+          <declname>http</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>user</declname>
+        </param>
+        <briefdescription>
+<para>Set the Http User. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Define the user name under which to run the Appweb service </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>http</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaHttp object created via <ref refid="group___ma_http_1ga5469e3e74d12d36088d1e53b9affe53b" kindref="member">maCreateHttp</ref> </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>user</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>User name. Must be defined in the system password file. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Zero if successful, otherwise a negative Mpr error code. See the Appweb log for diagnostics. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="445"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_http_1ga99ce78ac41ef6ff1d91a89ff832e0e09" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int maStartHttp</definition>
+        <argsstring>(MaHttp *http)</argsstring>
+        <name>maStartHttp</name>
+        <param>
+          <type>MaHttp *</type>
+          <declname>http</declname>
+        </param>
+        <briefdescription>
+<para>Start Http services. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>This starts listening for requests on all configured servers. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>http</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaHttp object created via <ref refid="group___ma_http_1ga5469e3e74d12d36088d1e53b9affe53b" kindref="member">maCreateHttp</ref> </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Zero if successful, otherwise a negative Mpr error code. See the Appweb log for diagnostics. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="426"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_http_1gacf91964d3b2b00dc63e2a4daffc0c723" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int maStopHttp</definition>
+        <argsstring>(MaHttp *http)</argsstring>
+        <name>maStopHttp</name>
+        <param>
+          <type>MaHttp *</type>
+          <declname>http</declname>
+        </param>
+        <briefdescription>
+<para>Stop Http services. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>This stops listening for requests on all configured servers. Shutdown is somewhat graceful. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>http</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaHttp object created via <ref refid="group___ma_http_1ga5469e3e74d12d36088d1e53b9affe53b" kindref="member">maCreateHttp</ref> </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Zero if successful, otherwise a negative Mpr error code. See the Appweb log for diagnostics. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="435"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Http Service. </para>    </briefdescription>
+    <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>There is one instance of MaHttp per application. It manages a list of HTTP servers running in the application. </para></simplesect>
+<simplesect kind="par"><title><bold>API</bold> Stability:</title><para>Evolving</para></simplesect>
+<simplesect kind="see"><para><ref refid="group___ma_http" kindref="compound">MaHttp</ref> <ref refid="group___ma_http_1ga5469e3e74d12d36088d1e53b9affe53b" kindref="member">maCreateHttp</ref> <ref refid="group___ma_http_1ga99ce78ac41ef6ff1d91a89ff832e0e09" kindref="member">maStartHttp</ref> <ref refid="group___ma_http_1gacf91964d3b2b00dc63e2a4daffc0c723" kindref="member">maStopHttp</ref> </para></simplesect>
+</para>    </detaileddescription>
+  </compounddef>
+</doxygen>

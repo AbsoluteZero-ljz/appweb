@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="group___ma_range" kind="group">
+    <compoundname>MaRange</compoundname>
+    <title>MaRange</title>
+    <briefdescription>
+<para>Content range structure. </para>    </briefdescription>
+    <detaileddescription>
+<para><simplesect kind="pre"><para>Range: 0, 49 First 50 bytes Range: -1, -50 Last 50 bytes Range: 1, -1 Skip first byte then select content to the end </para></simplesect>
+<simplesect kind="par"><title><bold>API</bold> Stability:</title><para>Evolving</para></simplesect>
+<simplesect kind="see"><para><ref refid="group___ma_range" kindref="compound">MaRange</ref> </para></simplesect>
+</para>    </detaileddescription>
+  </compounddef>
+</doxygen>

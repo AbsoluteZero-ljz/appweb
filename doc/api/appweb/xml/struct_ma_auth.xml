@@ -1,0 +1,239 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="struct_ma_auth" kind="struct" prot="public">
+    <compoundname>MaAuth</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_ma_auth_1aa0589dc13bee8e5cb9cd0b0ac05f1cc4" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaAuth::allow</definition>
+        <argsstring></argsstring>
+        <name>allow</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="708" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="708" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_auth_1a13e460892dd538d6f3a9e3db597b8249" prot="public" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool MaAuth::anyValidUser</definition>
+        <argsstring></argsstring>
+        <name>anyValidUser</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="709" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="709" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_auth_1a837a9111a424010b3011eb97fb24b22e" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaAuth::deny</definition>
+        <argsstring></argsstring>
+        <name>deny</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="711" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="711" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_auth_1a2bf45c02b55374dd57f1f819149b72f9" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaAuth::flags</definition>
+        <argsstring></argsstring>
+        <name>flags</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="713" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="713" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_auth_1a7de8707992d1719afefbadf383937fdb" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaAuth::groupFile</definition>
+        <argsstring></argsstring>
+        <name>groupFile</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="728" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="728" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_auth_1a8d4ade9e525a9bc6d0f7ecf4fce34f7a" prot="public" static="no" mutable="no">
+        <type>MprHashTable *</type>
+        <definition>MprHashTable* MaAuth::groups</definition>
+        <argsstring></argsstring>
+        <name>groups</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="730" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="730" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_auth_1a8955b072f7fb63098d7660e07fc74068" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaAuth::method</definition>
+        <argsstring></argsstring>
+        <name>method</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="712" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="712" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_auth_1af2f8a6d92f657edc740ce07e721c487b" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaAuth::order</definition>
+        <argsstring></argsstring>
+        <name>order</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="714" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="714" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_auth_1a162a12930cb5fb32575cb850bc918611" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaAuth::qop</definition>
+        <argsstring></argsstring>
+        <name>qop</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="715" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="715" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_auth_1ac5d1f065185c6aaffc79b67aa9aabf9d" prot="public" static="no" mutable="no">
+        <type>MaAcl</type>
+        <definition>MaAcl MaAuth::requiredAcl</definition>
+        <argsstring></argsstring>
+        <name>requiredAcl</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="721" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="721" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_auth_1a05b04cd5f5696b51241d5969d30ccc48" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaAuth::requiredGroups</definition>
+        <argsstring></argsstring>
+        <name>requiredGroups</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="718" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="718" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_auth_1acd48fbb96d920b51d259d0b1e87659f2" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaAuth::requiredRealm</definition>
+        <argsstring></argsstring>
+        <name>requiredRealm</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="717" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="717" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_auth_1ab62e942a37e8f1b0bfa403a7dac7fde9" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaAuth::requiredUsers</definition>
+        <argsstring></argsstring>
+        <name>requiredUsers</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="719" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="719" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_auth_1a14b45bc5f2bfe2432bbc6d1e403e8eb0" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaAuth::type</definition>
+        <argsstring></argsstring>
+        <name>type</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="710" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="710" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_auth_1a20f0503bbdcd6efe1c4bbd8879f38bd4" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaAuth::userFile</definition>
+        <argsstring></argsstring>
+        <name>userFile</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="727" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="727" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_auth_1a104e05035cf10ee991bda56c9429cc8d" prot="public" static="no" mutable="no">
+        <type>MprHashTable *</type>
+        <definition>MprHashTable* MaAuth::users</definition>
+        <argsstring></argsstring>
+        <name>users</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="729" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="729" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/Users/mob/git/appweb-3/all/appweb.h" line="707" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="707" bodyend="732"/>
+    <listofallmembers>
+      <member refid="struct_ma_auth_1aa0589dc13bee8e5cb9cd0b0ac05f1cc4" prot="public" virt="non-virtual"><scope>MaAuth</scope><name>allow</name></member>
+      <member refid="struct_ma_auth_1a13e460892dd538d6f3a9e3db597b8249" prot="public" virt="non-virtual"><scope>MaAuth</scope><name>anyValidUser</name></member>
+      <member refid="struct_ma_auth_1a837a9111a424010b3011eb97fb24b22e" prot="public" virt="non-virtual"><scope>MaAuth</scope><name>deny</name></member>
+      <member refid="struct_ma_auth_1a2bf45c02b55374dd57f1f819149b72f9" prot="public" virt="non-virtual"><scope>MaAuth</scope><name>flags</name></member>
+      <member refid="struct_ma_auth_1a7de8707992d1719afefbadf383937fdb" prot="public" virt="non-virtual"><scope>MaAuth</scope><name>groupFile</name></member>
+      <member refid="struct_ma_auth_1a8d4ade9e525a9bc6d0f7ecf4fce34f7a" prot="public" virt="non-virtual"><scope>MaAuth</scope><name>groups</name></member>
+      <member refid="struct_ma_auth_1a8955b072f7fb63098d7660e07fc74068" prot="public" virt="non-virtual"><scope>MaAuth</scope><name>method</name></member>
+      <member refid="struct_ma_auth_1af2f8a6d92f657edc740ce07e721c487b" prot="public" virt="non-virtual"><scope>MaAuth</scope><name>order</name></member>
+      <member refid="struct_ma_auth_1a162a12930cb5fb32575cb850bc918611" prot="public" virt="non-virtual"><scope>MaAuth</scope><name>qop</name></member>
+      <member refid="struct_ma_auth_1ac5d1f065185c6aaffc79b67aa9aabf9d" prot="public" virt="non-virtual"><scope>MaAuth</scope><name>requiredAcl</name></member>
+      <member refid="struct_ma_auth_1a05b04cd5f5696b51241d5969d30ccc48" prot="public" virt="non-virtual"><scope>MaAuth</scope><name>requiredGroups</name></member>
+      <member refid="struct_ma_auth_1acd48fbb96d920b51d259d0b1e87659f2" prot="public" virt="non-virtual"><scope>MaAuth</scope><name>requiredRealm</name></member>
+      <member refid="struct_ma_auth_1ab62e942a37e8f1b0bfa403a7dac7fde9" prot="public" virt="non-virtual"><scope>MaAuth</scope><name>requiredUsers</name></member>
+      <member refid="struct_ma_auth_1a14b45bc5f2bfe2432bbc6d1e403e8eb0" prot="public" virt="non-virtual"><scope>MaAuth</scope><name>type</name></member>
+      <member refid="struct_ma_auth_1a20f0503bbdcd6efe1c4bbd8879f38bd4" prot="public" virt="non-virtual"><scope>MaAuth</scope><name>userFile</name></member>
+      <member refid="struct_ma_auth_1a104e05035cf10ee991bda56c9429cc8d" prot="public" virt="non-virtual"><scope>MaAuth</scope><name>users</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

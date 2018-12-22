@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="struct_ma_egi" kind="struct" prot="public">
+    <compoundname>MaEgi</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_ma_egi_1ac44d5b298e3a69b7b9bd641149e6dd23" prot="public" static="no" mutable="no">
+        <type>MprHashTable *</type>
+        <definition>MprHashTable* MaEgi::forms</definition>
+        <argsstring></argsstring>
+        <name>forms</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2336" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2336" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2335" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2335" bodyend="2337"/>
+    <listofallmembers>
+      <member refid="struct_ma_egi_1ac44d5b298e3a69b7b9bd641149e6dd23" prot="public" virt="non-virtual"><scope>MaEgi</scope><name>forms</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

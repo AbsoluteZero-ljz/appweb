@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="group___ma_user" kind="group">
+    <compoundname>MaUser</compoundname>
+    <title>MaUser</title>
+    <briefdescription>
+<para>User Authorization File based authorization backend. </para>    </briefdescription>
+    <detaileddescription>
+<para><simplesect kind="par"><title><bold>API</bold> Stability:</title><para>Evolving</para></simplesect>
+<simplesect kind="see"><para><ref refid="group___ma_user" kindref="compound">MaUser</ref> </para></simplesect>
+</para>    </detaileddescription>
+  </compounddef>
+</doxygen>

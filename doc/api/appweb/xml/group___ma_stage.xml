@@ -1,0 +1,560 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="group___ma_stage" kind="group">
+    <compoundname>MaStage</compoundname>
+    <title>MaStage</title>
+      <sectiondef kind="var">
+      <memberdef kind="variable" id="group___ma_stage_1gad702552f9506bb420c202dd81dc3b21c" prot="public" static="no" mutable="no">
+        <type>void(*</type>
+        <definition>void(* MaStage::close)(MaQueue *q)</definition>
+        <argsstring>)(MaQueue *q)</argsstring>
+        <name>close</name>
+        <briefdescription>
+<para>Close the queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Close the queue instance </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue instance object </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1642" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1642" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="group___ma_stage_1ga2c7ba8333f1485fe380682bdf3a578d2" prot="public" static="no" mutable="no">
+        <type>void(*</type>
+        <definition>void(* MaStage::incomingData)(MaQueue *q, MaPacket *packet)</definition>
+        <argsstring>)(MaQueue *q, MaPacket *packet)</argsstring>
+        <name>incomingData</name>
+        <briefdescription>
+<para>Process incoming data. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Accept an incoming packet of data </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue instance object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>packet</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Packet of data </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1683" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1683" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="group___ma_stage_1ga15bede8b165a60da561b322ddc9c7fc3" prot="public" static="no" mutable="no">
+        <type>void(*</type>
+        <definition>void(* MaStage::incomingService)(MaQueue *q)</definition>
+        <argsstring>)(MaQueue *q)</argsstring>
+        <name>incomingService</name>
+        <briefdescription>
+<para>Service the incoming data queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue instance object </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1690" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1690" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="group___ma_stage_1ga70739fe70816239d28953f2e0d81c0bd" prot="public" static="no" mutable="no">
+        <type>bool(*</type>
+        <definition>bool(* MaStage::match)(struct MaConn *conn, struct MaStage *stage, cchar *uri)</definition>
+        <argsstring>)(struct MaConn *conn, struct MaStage *stage, cchar *uri)</argsstring>
+        <name>match</name>
+        <briefdescription>
+<para>Match a request. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>This method is invoked to see if the stage wishes to handle the request. If a stage denies to handle a request, it will be removed from the pipeline. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>conn</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaConn connection object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>stage</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Stage object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>uri</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Current request URI </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>True if the stage wishes to process this request. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1626" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1626" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="group___ma_stage_1ga4af947948b9930b105f5f775665edd54" prot="public" static="no" mutable="no">
+        <type>bool(*</type>
+        <definition>bool(* MaStage::modify)(struct MaConn *conn, struct MaStage *stage)</definition>
+        <argsstring>)(struct MaConn *conn, struct MaStage *stage)</argsstring>
+        <name>modify</name>
+        <briefdescription>
+<para>Modify a request. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>This method is invoked to potentially modify a request. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>conn</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaConn connection object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>stage</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Stage object </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>True if the stage wishes to process this request. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1614" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1614" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="group___ma_stage_1gab1a75e1f4465a9b13cdd6ca5c463d4b8" prot="public" static="no" mutable="no">
+        <type>void(*</type>
+        <definition>void(* MaStage::open)(MaQueue *q)</definition>
+        <argsstring>)(MaQueue *q)</argsstring>
+        <name>open</name>
+        <briefdescription>
+<para>Open the queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Open the queue instance and initialize for this request. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue instance object </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1634" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1634" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="group___ma_stage_1ga0f26f5457102abb215f07d773c5cfbbb" prot="public" static="no" mutable="no">
+        <type>void(*</type>
+        <definition>void(* MaStage::outgoingData)(MaQueue *q, MaPacket *packet)</definition>
+        <argsstring>)(MaQueue *q, MaPacket *packet)</argsstring>
+        <name>outgoingData</name>
+        <briefdescription>
+<para>Process outgoing data. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Accept a packet as outgoing data </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue instance object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>packet</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Packet of data </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1667" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1667" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="group___ma_stage_1ga5f7c3ae939f5a88549af0d7838486742" prot="public" static="no" mutable="no">
+        <type>void(*</type>
+        <definition>void(* MaStage::outgoingService)(MaQueue *q)</definition>
+        <argsstring>)(MaQueue *q)</argsstring>
+        <name>outgoingService</name>
+        <briefdescription>
+<para>Service the outgoing data queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue instance object </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1674" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1674" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="group___ma_stage_1gaee769fe7585d7ae13d27fbb3ee17e310" prot="public" static="no" mutable="no">
+        <type>int(*</type>
+        <definition>int(* MaStage::parse)(MaHttp *http, cchar *key, char *value, MaConfigState *state)</definition>
+        <argsstring>)(MaHttp *http, cchar *key, char *value, MaConfigState *state)</argsstring>
+        <name>parse</name>
+        <briefdescription>
+<para>Parse configuration data. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>This is invoked when parsing appweb configuration files </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>http</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaHttp object </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>key</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Configuration directive name </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>value</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Configuration directive value </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>state</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Current configuration parsing state </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Zero if the key was not relevant to this stage. Return 1 if the directive applies to this stage and was accepted. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1604" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1604" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="group___ma_stage_1ga35a3b4b201b2b8e2b9500b5eb8fd3630" prot="public" static="no" mutable="no">
+        <type>void(*</type>
+        <definition>void(* MaStage::run)(MaQueue *q)</definition>
+        <argsstring>)(MaQueue *q)</argsstring>
+        <name>run</name>
+        <briefdescription>
+<para>Run the queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>The queue is run after all incoming data has been received. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue instance object </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1658" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1658" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="group___ma_stage_1ga4cdab1a79d7000ef2ff9cce5f582c231" prot="public" static="no" mutable="no">
+        <type>void(*</type>
+        <definition>void(* MaStage::start)(MaQueue *q)</definition>
+        <argsstring>)(MaQueue *q)</argsstring>
+        <name>start</name>
+        <briefdescription>
+<para>Start the queue. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>The queue is started after all the pipline open entry points have been run. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue instance object </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1650" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1650" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="group___ma_stage_1gaae8a1d46596ad3b2d5cab64cdb990bea" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>MaStage *</type>
+        <definition>MaStage* maCreateConnector</definition>
+        <argsstring>(MaHttp *http, cchar *name, int flags)</argsstring>
+        <name>maCreateConnector</name>
+        <param>
+          <type>MaHttp *</type>
+          <declname>http</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>name</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>flags</declname>
+        </param>
+        <briefdescription>
+<para>Create a connector stage. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Create a new connector. Connectors are the final stage for outgoing data. Their job is to transmit outgoing data to the client. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>http</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaHttp object returned from <ref refid="group___ma_http_1ga5469e3e74d12d36088d1e53b9affe53b" kindref="member">maCreateHttp</ref> </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>name</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Name of connector stage </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>flags</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Stage flags mask. These specify what Http request methods will be supported by this stage. Or together any of the following flags: <itemizedlist>
+<listitem><para>MA_STAGE_DELETE - Support DELETE requests </para></listitem>
+<listitem><para>MA_STAGE_GET - Support GET requests </para></listitem>
+<listitem><para>MA_STAGE_HEAD - Support HEAD requests </para></listitem>
+<listitem><para>MA_STAGE_OPTIONS - Support OPTIONS requests </para></listitem>
+<listitem><para>MA_STAGE_POST - Support POST requests </para></listitem>
+<listitem><para>MA_STAGE_PUT - Support PUT requests </para></listitem>
+<listitem><para>MA_STAGE_TRACE - Support TRACE requests </para></listitem>
+<listitem><para>MA_STAGE_ALL - Mask to support all methods </para></listitem>
+</itemizedlist>
+</para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>A new stage object </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1721"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_stage_1ga76649359285602dad41f06296ea202ee" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>MaStage *</type>
+        <definition>MaStage* maCreateFilter</definition>
+        <argsstring>(MaHttp *http, cchar *name, int flags)</argsstring>
+        <name>maCreateFilter</name>
+        <param>
+          <type>MaHttp *</type>
+          <declname>http</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>name</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>flags</declname>
+        </param>
+        <briefdescription>
+<para>Create a filter stage. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Create a new filter. Filters transform data generated by handlers and before connectors transmit to the client. Filters can apply transformations to incoming, outgoing or bi-directional data. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>http</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaHttp object returned from <ref refid="group___ma_http_1ga5469e3e74d12d36088d1e53b9affe53b" kindref="member">maCreateHttp</ref> </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>name</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Name of connector stage </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>flags</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Stage flags mask. These specify what Http request methods will be supported by this stage. Or together any of the following flags: <itemizedlist>
+<listitem><para>MA_STAGE_DELETE - Support DELETE requests </para></listitem>
+<listitem><para>MA_STAGE_GET - Support GET requests </para></listitem>
+<listitem><para>MA_STAGE_HEAD - Support HEAD requests </para></listitem>
+<listitem><para>MA_STAGE_OPTIONS - Support OPTIONS requests </para></listitem>
+<listitem><para>MA_STAGE_POST - Support POST requests </para></listitem>
+<listitem><para>MA_STAGE_PUT - Support PUT requests </para></listitem>
+<listitem><para>MA_STAGE_TRACE - Support TRACE requests </para></listitem>
+<listitem><para>MA_STAGE_ALL - Mask to support all methods </para></listitem>
+</itemizedlist>
+</para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>A new stage object </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1742"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_stage_1gaa36718a34d0b490721e8df7eb924bcda" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>MaStage *</type>
+        <definition>MaStage* maCreateHandler</definition>
+        <argsstring>(MaHttp *http, cchar *name, int flags)</argsstring>
+        <name>maCreateHandler</name>
+        <param>
+          <type>MaHttp *</type>
+          <declname>http</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>name</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>flags</declname>
+        </param>
+        <briefdescription>
+<para>Create a request handler stage. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Create a new handler. Handlers generate outgoing data and are the final stage for incoming data. Their job is to process requests and send outgoing data downstream toward the client consumer. There is ever only one handler for a request. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>http</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaHttp object returned from <ref refid="group___ma_http_1ga5469e3e74d12d36088d1e53b9affe53b" kindref="member">maCreateHttp</ref> </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>name</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Name of connector stage </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>flags</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Stage flags mask. These specify what Http request methods will be supported by this stage. Or together any of the following flags: <itemizedlist>
+<listitem><para>MA_STAGE_DELETE - Support DELETE requests </para></listitem>
+<listitem><para>MA_STAGE_GET - Support GET requests </para></listitem>
+<listitem><para>MA_STAGE_HEAD - Support HEAD requests </para></listitem>
+<listitem><para>MA_STAGE_OPTIONS - Support OPTIONS requests </para></listitem>
+<listitem><para>MA_STAGE_POST - Support POST requests </para></listitem>
+<listitem><para>MA_STAGE_PUT - Support PUT requests </para></listitem>
+<listitem><para>MA_STAGE_TRACE - Support TRACE requests </para></listitem>
+<listitem><para>MA_STAGE_ALL - Mask to support all methods </para></listitem>
+</itemizedlist>
+</para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>A new stage object </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1764"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_stage_1gaf1099e94d48dd7c2e28cf817ad154001" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void maDefaultOutgoingServiceStage</definition>
+        <argsstring>(MaQueue *q)</argsstring>
+        <name>maDefaultOutgoingServiceStage</name>
+        <param>
+          <type>MaQueue *</type>
+          <declname>q</declname>
+        </param>
+        <briefdescription>
+<para>Default outgoing data handling. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>This routine provides default handling of outgoing data for stages. It simply sends all packets downstream. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>q</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Queue object </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1773"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_stage_1ga8816a886d780811924ca6c1bb076a122" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void *</type>
+        <definition>void* maLookupStageData</definition>
+        <argsstring>(MaHttp *http, cchar *name)</argsstring>
+        <name>maLookupStageData</name>
+        <param>
+          <type>MaHttp *</type>
+          <declname>http</declname>
+        </param>
+        <param>
+          <type>cchar *</type>
+          <declname>name</declname>
+        </param>
+        <briefdescription>
+<para>Lookup stage data. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>This looks up the stage by name and returns the private stage data. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>http</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>MaHttp object returned from <ref refid="group___ma_http_1ga5469e3e74d12d36088d1e53b9affe53b" kindref="member">maCreateHttp</ref> </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>name</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Name of the stage concerned </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Reference to the stage data block. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1783"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Pipeline Stages. </para>    </briefdescription>
+    <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>The request pipeline consists of a full-duplex pipeline of stages. Stages are used to process client HTTP requests in a modular fashion. Each stage either creates, filters or consumes data packets. The MaStage structure describes the stage capabilities and callbacks. Each stage has two queues, one for outgoing data and one for incoming data. <linebreak/>
+<linebreak/>
+ Stages provide callback methods for parsing configuration, matching requests, open/close, run and the acceptance and service of incoming and outgoing data. </para></simplesect>
+<simplesect kind="par"><title><bold>API</bold> Stability:</title><para>Evolving</para></simplesect>
+<simplesect kind="see"><para><ref refid="group___ma_stage" kindref="compound">MaStage</ref> <ref refid="group___ma_queue" kindref="compound">MaQueue</ref> <ref refid="group___ma_conn" kindref="compound">MaConn</ref> <ref refid="group___ma_stage_1gaae8a1d46596ad3b2d5cab64cdb990bea" kindref="member">maCreateConnector</ref> <ref refid="group___ma_stage_1ga76649359285602dad41f06296ea202ee" kindref="member">maCreateFilter</ref> <ref refid="group___ma_stage_1gaa36718a34d0b490721e8df7eb924bcda" kindref="member">maCreateHandler</ref> <ref refid="group___ma_stage_1gaf1099e94d48dd7c2e28cf817ad154001" kindref="member">maDefaultOutgoingServiceStage</ref> <ref refid="group___ma_stage_1ga8816a886d780811924ca6c1bb076a122" kindref="member">maLookupStageData</ref> </para></simplesect>
+</para>    </detaileddescription>
+  </compounddef>
+</doxygen>

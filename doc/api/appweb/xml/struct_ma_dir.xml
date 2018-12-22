@@ -1,0 +1,85 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="struct_ma_dir" kind="struct" prot="public">
+    <compoundname>MaDir</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_ma_dir_1aa08737283730a66bb6a384752276ee48" prot="public" static="no" mutable="no">
+        <type>MaAuth *</type>
+        <definition>MaAuth* MaDir::auth</definition>
+        <argsstring></argsstring>
+        <name>auth</name>
+        <briefdescription>
+<para>Authorization control. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="821" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="821" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_dir_1a0192fa8c33c802c67e09cb6016bb88c0" prot="public" static="no" mutable="no">
+        <type>struct MaHost *</type>
+        <definition>struct MaHost* MaDir::host</definition>
+        <argsstring></argsstring>
+        <name>host</name>
+        <briefdescription>
+<para>Host owning this directory. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="822" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="822" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_dir_1aad894c87a2b91164d22d1295bb584d0e" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaDir::indexName</definition>
+        <argsstring></argsstring>
+        <name>indexName</name>
+        <briefdescription>
+<para>Default index document name. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="823" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="823" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_dir_1a640fcb775ec833488fa24af2ee56f66d" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaDir::path</definition>
+        <argsstring></argsstring>
+        <name>path</name>
+        <briefdescription>
+<para>Directory filename. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="824" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="824" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_dir_1a27b72ecd4f62c16e9515ae0bf881dfeb" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaDir::pathLen</definition>
+        <argsstring></argsstring>
+        <name>pathLen</name>
+        <briefdescription>
+<para>Length of the directory path. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="825" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="825" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/Users/mob/git/appweb-3/all/appweb.h" line="820" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="820" bodyend="826"/>
+    <listofallmembers>
+      <member refid="struct_ma_dir_1aa08737283730a66bb6a384752276ee48" prot="public" virt="non-virtual"><scope>MaDir</scope><name>auth</name></member>
+      <member refid="struct_ma_dir_1a0192fa8c33c802c67e09cb6016bb88c0" prot="public" virt="non-virtual"><scope>MaDir</scope><name>host</name></member>
+      <member refid="struct_ma_dir_1aad894c87a2b91164d22d1295bb584d0e" prot="public" virt="non-virtual"><scope>MaDir</scope><name>indexName</name></member>
+      <member refid="struct_ma_dir_1a640fcb775ec833488fa24af2ee56f66d" prot="public" virt="non-virtual"><scope>MaDir</scope><name>path</name></member>
+      <member refid="struct_ma_dir_1a27b72ecd4f62c16e9515ae0bf881dfeb" prot="public" virt="non-virtual"><scope>MaDir</scope><name>pathLen</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

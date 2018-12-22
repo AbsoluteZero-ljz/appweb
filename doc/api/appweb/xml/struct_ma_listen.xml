@@ -1,0 +1,99 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="struct_ma_listen" kind="struct" prot="public">
+    <compoundname>MaListen</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_ma_listen_1ac8338747c623f62a2887b697e374f0fb" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaListen::flags</definition>
+        <argsstring></argsstring>
+        <name>flags</name>
+        <briefdescription>
+<para>Listen flags. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="503" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="503" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_listen_1a0a634f02ced228b6ee311cff78187df8" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaListen::ipAddr</definition>
+        <argsstring></argsstring>
+        <name>ipAddr</name>
+        <briefdescription>
+<para>IP address on which to listen. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="501" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="501" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_listen_1a16aeae901f9434ac48e6c9fff4ec55ac" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaListen::port</definition>
+        <argsstring></argsstring>
+        <name>port</name>
+        <briefdescription>
+<para>Port number to listen on. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="502" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="502" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_listen_1aa4730781ff06b52c34d9cc4094c0e1f6" prot="public" static="no" mutable="no">
+        <type>struct MaServer *</type>
+        <definition>struct MaServer* MaListen::server</definition>
+        <argsstring></argsstring>
+        <name>server</name>
+        <briefdescription>
+<para>Server owning this listening endpoint. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="500" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="500" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_listen_1a177cc755d1b39621f727f524a9f79296" prot="public" static="no" mutable="no">
+        <type>MprSocket *</type>
+        <definition>MprSocket* MaListen::sock</definition>
+        <argsstring></argsstring>
+        <name>sock</name>
+        <briefdescription>
+<para>Underlying socket. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="504" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="504" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_listen_1a155a597f6f5bf2811f412e59b5ecea22" prot="public" static="no" mutable="no">
+        <type>struct MprSsl *</type>
+        <definition>struct MprSsl* MaListen::ssl</definition>
+        <argsstring></argsstring>
+        <name>ssl</name>
+        <briefdescription>
+<para>SSL configuration. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="505" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="505" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/Users/mob/git/appweb-3/all/appweb.h" line="499" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="499" bodyend="506"/>
+    <listofallmembers>
+      <member refid="struct_ma_listen_1ac8338747c623f62a2887b697e374f0fb" prot="public" virt="non-virtual"><scope>MaListen</scope><name>flags</name></member>
+      <member refid="struct_ma_listen_1a0a634f02ced228b6ee311cff78187df8" prot="public" virt="non-virtual"><scope>MaListen</scope><name>ipAddr</name></member>
+      <member refid="struct_ma_listen_1a16aeae901f9434ac48e6c9fff4ec55ac" prot="public" virt="non-virtual"><scope>MaListen</scope><name>port</name></member>
+      <member refid="struct_ma_listen_1aa4730781ff06b52c34d9cc4094c0e1f6" prot="public" virt="non-virtual"><scope>MaListen</scope><name>server</name></member>
+      <member refid="struct_ma_listen_1a177cc755d1b39621f727f524a9f79296" prot="public" virt="non-virtual"><scope>MaListen</scope><name>sock</name></member>
+      <member refid="struct_ma_listen_1a155a597f6f5bf2811f412e59b5ecea22" prot="public" virt="non-virtual"><scope>MaListen</scope><name>ssl</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

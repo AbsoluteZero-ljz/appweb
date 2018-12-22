@@ -1,0 +1,785 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="struct_ma_request" kind="struct" prot="public">
+    <compoundname>MaRequest</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_ma_request_1ad9f3c2da7df8ed0c866f3385018c3e18" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaRequest::accept</definition>
+        <argsstring></argsstring>
+        <name>accept</name>
+        <briefdescription>
+<para>Accept header. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1972" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1972" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a4aab05eda3cd6b33469059c850c24d80" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaRequest::acceptCharset</definition>
+        <argsstring></argsstring>
+        <name>acceptCharset</name>
+        <briefdescription>
+<para>Accept-Charset header. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1973" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1973" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a4aa5b300bba58f356524ca2608831f40" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaRequest::acceptEncoding</definition>
+        <argsstring></argsstring>
+        <name>acceptEncoding</name>
+        <briefdescription>
+<para>Accept-Encoding header. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1974" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1974" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1aa5b86637bc33adfd52f2be4f84a8447a" prot="public" static="no" mutable="no">
+        <type>MaAlias *</type>
+        <definition>MaAlias* MaRequest::alias</definition>
+        <argsstring></argsstring>
+        <name>alias</name>
+        <briefdescription>
+<para>Matching alias. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2004" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2004" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a0dcc1aaa0fa5b3c8ffafbb8226e18d7b" prot="public" static="no" mutable="no">
+        <type>MprHeap *</type>
+        <definition>MprHeap* MaRequest::arena</definition>
+        <argsstring></argsstring>
+        <name>arena</name>
+        <briefdescription>
+<para>Request memory arena. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1940" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1940" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a6aef8e5a0058b4348b0acf31e5b3b699" prot="public" static="no" mutable="no">
+        <type>MaAuth *</type>
+        <definition>MaAuth* MaRequest::auth</definition>
+        <argsstring></argsstring>
+        <name>auth</name>
+        <briefdescription>
+<para>Set to either dir or location auth information. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2005" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2005" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a5c4e6ca4ab05a78c516844625abe8fda" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaRequest::authDetails</definition>
+        <argsstring></argsstring>
+        <name>authDetails</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1992" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1992" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a994c0dc5671b56e7942a12b89dc553f6" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaRequest::authType</definition>
+        <argsstring></argsstring>
+        <name>authType</name>
+        <briefdescription>
+<para>Authorization type (basic|digest) (ENV: AUTH_TYPE) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1993" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1993" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1afacd91b55531df4b714643dcf493f54d" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaRequest::chunkRemainingData</definition>
+        <argsstring></argsstring>
+        <name>chunkRemainingData</name>
+        <briefdescription>
+<para>Remaining chunk data to read. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1945" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1945" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a75912f7c6b36c08bac1df47f207e5a58" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaRequest::chunkSize</definition>
+        <argsstring></argsstring>
+        <name>chunkSize</name>
+        <briefdescription>
+<para>Size of the next chunk. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1944" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1944" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1ab876a5762c91fb08c15451b70c66a3e4" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaRequest::chunkState</definition>
+        <argsstring></argsstring>
+        <name>chunkState</name>
+        <briefdescription>
+<para>Chunk encoding state. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1943" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1943" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1af80966b863456f79778f963c572bf760" prot="public" static="no" mutable="no">
+        <type>struct MaConn *</type>
+        <definition>struct MaConn* MaRequest::conn</definition>
+        <argsstring></argsstring>
+        <name>conn</name>
+        <briefdescription>
+<para>Connection object. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1941" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1941" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a46c8c6073e0b77aa42b95689deacae9f" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaRequest::connection</definition>
+        <argsstring></argsstring>
+        <name>connection</name>
+        <briefdescription>
+<para>Connection header. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1976" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1976" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a0327617392a0b48c362d467ad04efd41" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaRequest::contentLengthStr</definition>
+        <argsstring></argsstring>
+        <name>contentLengthStr</name>
+        <briefdescription>
+<para>Content length string value. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1977" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1977" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a9c522d2eb17773265ccdfffa9ef2468d" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaRequest::cookie</definition>
+        <argsstring></argsstring>
+        <name>cookie</name>
+        <briefdescription>
+<para>Request cookie header. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1975" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1975" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a116c6045495e9c7fbf5906e90d13bc69" prot="public" static="no" mutable="no">
+        <type>MaDir *</type>
+        <definition>MaDir* MaRequest::dir</definition>
+        <argsstring></argsstring>
+        <name>dir</name>
+        <briefdescription>
+<para>Best matching dir (PTR only) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2006" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2006" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a08d8d9a9f2892f1e79dc5ac51b6851c2" prot="public" static="no" mutable="no">
+        <type>MprList *</type>
+        <definition>MprList* MaRequest::etags</definition>
+        <argsstring></argsstring>
+        <name>etags</name>
+        <briefdescription>
+<para>Document etag to uniquely identify the document version. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2009" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2009" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a3a923d98fa8d87178a799af2c866eeb5" prot="public" static="no" mutable="no">
+        <type>MprHashTable *</type>
+        <definition>MprHashTable* MaRequest::files</definition>
+        <argsstring></argsstring>
+        <name>files</name>
+        <briefdescription>
+<para>Uploaded files. </para>        </briefdescription>
+        <detaileddescription>
+<para>Managed by the upload filter </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1999" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1999" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1accc4dc6ee8c51ad9a3ec870bcb88a6bd" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaRequest::flags</definition>
+        <argsstring></argsstring>
+        <name>flags</name>
+        <briefdescription>
+<para>Request modifiers. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1948" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1948" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a5fac8eaaf708dff0fb7afc3d0a0fee72" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaRequest::form</definition>
+        <argsstring></argsstring>
+        <name>form</name>
+        <briefdescription>
+<para>Form request. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1949" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1949" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1ad00bc4fef17290be3065e0c4546614ed" prot="public" static="no" mutable="no">
+        <type>MprHashTable *</type>
+        <definition>MprHashTable* MaRequest::formVars</definition>
+        <argsstring></argsstring>
+        <name>formVars</name>
+        <briefdescription>
+<para>Query and post data variables. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1998" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1998" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1acddc6fdaf7965103e0bdab5042fe8cec" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaRequest::forwarded</definition>
+        <argsstring></argsstring>
+        <name>forwarded</name>
+        <briefdescription>
+<para>Forwarded header. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1978" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1978" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a3464b43f96b07eb78c6f36b180fb5c1d" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaRequest::group</definition>
+        <argsstring></argsstring>
+        <name>group</name>
+        <briefdescription>
+<para>Supplied via basic / digest auth. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1994" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1994" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1af4bccce70e37ed4841aa7621b81107b5" prot="public" static="no" mutable="no">
+        <type>MaPacket *</type>
+        <definition>MaPacket* MaRequest::headerPacket</definition>
+        <argsstring></argsstring>
+        <name>headerPacket</name>
+        <briefdescription>
+<para>HTTP headers. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1942" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1942" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1ade7276c7adebddef50a1bda2ad99818d" prot="public" static="no" mutable="no">
+        <type>MaPacket *</type>
+        <definition>MaPacket* MaRequest::headerpacket</definition>
+        <argsstring></argsstring>
+        <name>headerpacket</name>
+        <briefdescription>
+<para>Packet containing all headers ( == conn-&gt;input) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2003" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2003" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1ae9deeab7d3883c172f3c0e9f6fdaf68a" prot="public" static="no" mutable="no">
+        <type>MprHashTable *</type>
+        <definition>MprHashTable* MaRequest::headers</definition>
+        <argsstring></argsstring>
+        <name>headers</name>
+        <briefdescription>
+<para>Header variables. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2002" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2002" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a8da78948b3b2a1f3dd6a363a7afdd02b" prot="public" static="no" mutable="no">
+        <type>MaHost *</type>
+        <definition>MaHost* MaRequest::host</definition>
+        <argsstring></argsstring>
+        <name>host</name>
+        <briefdescription>
+<para>Owning host for this request. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2000" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2000" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1aaaeb4d53be05bd72e81ccb454c40df19" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaRequest::hostName</definition>
+        <argsstring></argsstring>
+        <name>hostName</name>
+        <briefdescription>
+<para>Client supplied host name. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1979" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1979" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a35b86a5fe8cd7352169fcbe76b2228a9" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaRequest::httpProtocol</definition>
+        <argsstring></argsstring>
+        <name>httpProtocol</name>
+        <briefdescription>
+<para>HTTP/1.0 or HTTP/1.1. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1957" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1957" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a5241d46d64f3cc88307cdb0df2a4d582" prot="public" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool MaRequest::ifMatch</definition>
+        <argsstring></argsstring>
+        <name>ifMatch</name>
+        <briefdescription>
+<para>If-Match processing requested. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2012" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2012" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a631978553cc3ee6fd96214bb1cf4fb0a" prot="public" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool MaRequest::ifModified</definition>
+        <argsstring></argsstring>
+        <name>ifModified</name>
+        <briefdescription>
+<para>If-Modified processing requested. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2011" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2011" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a760f987778cd133075dbb82098b8fb92" prot="public" static="no" mutable="no">
+        <type>MprList *</type>
+        <definition>MprList* MaRequest::inputPipeline</definition>
+        <argsstring></argsstring>
+        <name>inputPipeline</name>
+        <briefdescription>
+<para>Input processing. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2001" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2001" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1aeff4de23e1b85d6ae37025c181457ab3" prot="public" static="no" mutable="no">
+        <type>MaRange *</type>
+        <definition>MaRange* MaRequest::inputRange</definition>
+        <argsstring></argsstring>
+        <name>inputRange</name>
+        <briefdescription>
+<para>Specified range for input (post) data. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1986" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1986" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a4df15d2047a2d41b5efe02dfd972c3a9" prot="public" static="no" mutable="no">
+        <type>MprOff</type>
+        <definition>MprOff MaRequest::length</definition>
+        <argsstring></argsstring>
+        <name>length</name>
+        <briefdescription>
+<para>Declared content length (ENV: CONTENT_LENGTH) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1952" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1952" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a7eae7f72ed30ff7a8b17df2744ad0d06" prot="public" static="no" mutable="no">
+        <type>MaLocation *</type>
+        <definition>MaLocation* MaRequest::location</definition>
+        <argsstring></argsstring>
+        <name>location</name>
+        <briefdescription>
+<para>Location block. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2007" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2007" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a5b29adbe8a57a378ad73aac39e9d8910" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaRequest::method</definition>
+        <argsstring></argsstring>
+        <name>method</name>
+        <briefdescription>
+<para>Request method. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1947" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1947" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a191faa5500fa6d79811521c3135a2230" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaRequest::methodName</definition>
+        <argsstring></argsstring>
+        <name>methodName</name>
+        <briefdescription>
+<para>Protocol method GET|PUT... </para>        </briefdescription>
+        <detaileddescription>
+<para>(ENV: REQUEST_METHOD) </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1956" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1956" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a6e9c64381bd152d4e6f771acade76584" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaRequest::mimeType</definition>
+        <argsstring></argsstring>
+        <name>mimeType</name>
+        <briefdescription>
+<para>Mime type of the request payload (ENV: CONTENT_TYPE) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1981" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1981" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a128ef2507b0904e873d314e2047fc59f" prot="public" static="no" mutable="no">
+        <type>MprUri *</type>
+        <definition>MprUri* MaRequest::parsedUri</definition>
+        <argsstring></argsstring>
+        <name>parsedUri</name>
+        <briefdescription>
+<para>Parsed query string. </para>        </briefdescription>
+        <detaileddescription>
+<para>parsedUri-&gt;query is the query string </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1987" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1987" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a3f3efe7431338a32d1ee259f30d7a3af" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaRequest::password</definition>
+        <argsstring></argsstring>
+        <name>password</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1995" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1995" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a716b9ca1b6c454a91ade3bfe733757bc" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaRequest::pathInfo</definition>
+        <argsstring></argsstring>
+        <name>pathInfo</name>
+        <briefdescription>
+<para>Extra path information (ENV: PATH_INFO) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1966" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1966" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1aeee4ed78091f9fa06947eed5338aa1c1" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaRequest::pathTranslated</definition>
+        <argsstring></argsstring>
+        <name>pathTranslated</name>
+        <briefdescription>
+<para>Mapped extraPath to storage (ENV: PATH_TRANSLATED) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1967" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1967" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a98f4b79bde6fd2381f9d4be0259c2438" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaRequest::pragma</definition>
+        <argsstring></argsstring>
+        <name>pragma</name>
+        <briefdescription>
+<para>Pragma header. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1980" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1980" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a46ee08e92a2c073900207f6d70999d52" prot="public" static="no" mutable="no">
+        <type>MaRange *</type>
+        <definition>MaRange* MaRequest::ranges</definition>
+        <argsstring></argsstring>
+        <name>ranges</name>
+        <briefdescription>
+<para>Requested ranges for response data. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1985" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1985" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1afba258b3f4c6ea86379c57db05bae302" prot="public" static="no" mutable="no">
+        <type>MprOff</type>
+        <definition>MprOff MaRequest::receivedContent</definition>
+        <argsstring></argsstring>
+        <name>receivedContent</name>
+        <briefdescription>
+<para>Length of content actually received. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1954" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1954" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1ad65bcb5ab89c880acd46a65dc5b0912e" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaRequest::referer</definition>
+        <argsstring></argsstring>
+        <name>referer</name>
+        <briefdescription>
+<para>Refering URL. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1982" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1982" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1ae32a72f10e6a1f3c99377bc60b0743bc" prot="public" static="no" mutable="no">
+        <type>MprOff</type>
+        <definition>MprOff MaRequest::remainingContent</definition>
+        <argsstring></argsstring>
+        <name>remainingContent</name>
+        <briefdescription>
+<para>Remaining content data to read. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1953" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1953" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a6c4006ac15fbb14973c3b0fda04c8c53" prot="public" static="no" mutable="no">
+        <type>MprHashTable *</type>
+        <definition>MprHashTable* MaRequest::requestData</definition>
+        <argsstring></argsstring>
+        <name>requestData</name>
+        <briefdescription>
+<para>General request data storage. </para>        </briefdescription>
+        <detaileddescription>
+<para>Users must create hash table if required </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2008" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2008" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a29e243ae16b6afd66cb933954a28be2d" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaRequest::rewrites</definition>
+        <argsstring></argsstring>
+        <name>rewrites</name>
+        <briefdescription>
+<para>Count of request rewrites. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1950" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1950" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1abf25528b3c7eb60fb31fcd6930b53d34" prot="public" static="no" mutable="no">
+        <type>MprTime</type>
+        <definition>MprTime MaRequest::since</definition>
+        <argsstring></argsstring>
+        <name>since</name>
+        <briefdescription>
+<para>If-Modified date. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2010" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2010" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a7ed0cf052fed02d051b1f6f8f360839a" prot="public" static="no" mutable="no">
+        <type>uint64</type>
+        <definition>uint64 MaRequest::startTicks</definition>
+        <argsstring></argsstring>
+        <name>startTicks</name>
+        <briefdescription>
+<para>Start tick time of request. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2015" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2015" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a8f4af5f2e8678806d23bb6597c333200" prot="public" static="no" mutable="no">
+        <type>MprTime</type>
+        <definition>MprTime MaRequest::startTime</definition>
+        <argsstring></argsstring>
+        <name>startTime</name>
+        <briefdescription>
+<para>Start time of request. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2014" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2014" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a57ce3abf9f742b096ee11ab1017401e8" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaRequest::url</definition>
+        <argsstring></argsstring>
+        <name>url</name>
+        <briefdescription>
+<para>Decoded URL. </para>        </briefdescription>
+        <detaileddescription>
+<para>Doesn&apos;t include scheme, host, extra path, query or fragments </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1965" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1965" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a2c1f6d19cc66b0f9bcbf85bee33819a9" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaRequest::user</definition>
+        <argsstring></argsstring>
+        <name>user</name>
+        <briefdescription>
+<para>Remote user (ENV: REMOTE_USER) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1996" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1996" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_request_1a48d7d4388458169da43d2930f727766d" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaRequest::userAgent</definition>
+        <argsstring></argsstring>
+        <name>userAgent</name>
+        <briefdescription>
+<para>User-Agent header. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1983" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1983" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1938" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1938" bodyend="2017"/>
+    <listofallmembers>
+      <member refid="struct_ma_request_1ad9f3c2da7df8ed0c866f3385018c3e18" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>accept</name></member>
+      <member refid="struct_ma_request_1a4aab05eda3cd6b33469059c850c24d80" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>acceptCharset</name></member>
+      <member refid="struct_ma_request_1a4aa5b300bba58f356524ca2608831f40" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>acceptEncoding</name></member>
+      <member refid="struct_ma_request_1aa5b86637bc33adfd52f2be4f84a8447a" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>alias</name></member>
+      <member refid="struct_ma_request_1a0dcc1aaa0fa5b3c8ffafbb8226e18d7b" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>arena</name></member>
+      <member refid="struct_ma_request_1a6aef8e5a0058b4348b0acf31e5b3b699" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>auth</name></member>
+      <member refid="struct_ma_request_1a5c4e6ca4ab05a78c516844625abe8fda" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>authDetails</name></member>
+      <member refid="struct_ma_request_1a994c0dc5671b56e7942a12b89dc553f6" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>authType</name></member>
+      <member refid="struct_ma_request_1afacd91b55531df4b714643dcf493f54d" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>chunkRemainingData</name></member>
+      <member refid="struct_ma_request_1a75912f7c6b36c08bac1df47f207e5a58" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>chunkSize</name></member>
+      <member refid="struct_ma_request_1ab876a5762c91fb08c15451b70c66a3e4" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>chunkState</name></member>
+      <member refid="struct_ma_request_1af80966b863456f79778f963c572bf760" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>conn</name></member>
+      <member refid="struct_ma_request_1a46c8c6073e0b77aa42b95689deacae9f" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>connection</name></member>
+      <member refid="struct_ma_request_1a0327617392a0b48c362d467ad04efd41" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>contentLengthStr</name></member>
+      <member refid="struct_ma_request_1a9c522d2eb17773265ccdfffa9ef2468d" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>cookie</name></member>
+      <member refid="struct_ma_request_1a116c6045495e9c7fbf5906e90d13bc69" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>dir</name></member>
+      <member refid="struct_ma_request_1a08d8d9a9f2892f1e79dc5ac51b6851c2" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>etags</name></member>
+      <member refid="struct_ma_request_1a3a923d98fa8d87178a799af2c866eeb5" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>files</name></member>
+      <member refid="struct_ma_request_1accc4dc6ee8c51ad9a3ec870bcb88a6bd" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>flags</name></member>
+      <member refid="struct_ma_request_1a5fac8eaaf708dff0fb7afc3d0a0fee72" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>form</name></member>
+      <member refid="struct_ma_request_1ad00bc4fef17290be3065e0c4546614ed" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>formVars</name></member>
+      <member refid="struct_ma_request_1acddc6fdaf7965103e0bdab5042fe8cec" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>forwarded</name></member>
+      <member refid="struct_ma_request_1a3464b43f96b07eb78c6f36b180fb5c1d" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>group</name></member>
+      <member refid="struct_ma_request_1af4bccce70e37ed4841aa7621b81107b5" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>headerPacket</name></member>
+      <member refid="struct_ma_request_1ade7276c7adebddef50a1bda2ad99818d" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>headerpacket</name></member>
+      <member refid="struct_ma_request_1ae9deeab7d3883c172f3c0e9f6fdaf68a" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>headers</name></member>
+      <member refid="struct_ma_request_1a8da78948b3b2a1f3dd6a363a7afdd02b" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>host</name></member>
+      <member refid="struct_ma_request_1aaaeb4d53be05bd72e81ccb454c40df19" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>hostName</name></member>
+      <member refid="struct_ma_request_1a35b86a5fe8cd7352169fcbe76b2228a9" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>httpProtocol</name></member>
+      <member refid="struct_ma_request_1a5241d46d64f3cc88307cdb0df2a4d582" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>ifMatch</name></member>
+      <member refid="struct_ma_request_1a631978553cc3ee6fd96214bb1cf4fb0a" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>ifModified</name></member>
+      <member refid="struct_ma_request_1a760f987778cd133075dbb82098b8fb92" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>inputPipeline</name></member>
+      <member refid="struct_ma_request_1aeff4de23e1b85d6ae37025c181457ab3" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>inputRange</name></member>
+      <member refid="struct_ma_request_1a4df15d2047a2d41b5efe02dfd972c3a9" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>length</name></member>
+      <member refid="struct_ma_request_1a7eae7f72ed30ff7a8b17df2744ad0d06" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>location</name></member>
+      <member refid="struct_ma_request_1a5b29adbe8a57a378ad73aac39e9d8910" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>method</name></member>
+      <member refid="struct_ma_request_1a191faa5500fa6d79811521c3135a2230" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>methodName</name></member>
+      <member refid="struct_ma_request_1a6e9c64381bd152d4e6f771acade76584" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>mimeType</name></member>
+      <member refid="struct_ma_request_1a128ef2507b0904e873d314e2047fc59f" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>parsedUri</name></member>
+      <member refid="struct_ma_request_1a3f3efe7431338a32d1ee259f30d7a3af" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>password</name></member>
+      <member refid="struct_ma_request_1a716b9ca1b6c454a91ade3bfe733757bc" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>pathInfo</name></member>
+      <member refid="struct_ma_request_1aeee4ed78091f9fa06947eed5338aa1c1" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>pathTranslated</name></member>
+      <member refid="struct_ma_request_1a98f4b79bde6fd2381f9d4be0259c2438" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>pragma</name></member>
+      <member refid="struct_ma_request_1a46ee08e92a2c073900207f6d70999d52" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>ranges</name></member>
+      <member refid="struct_ma_request_1afba258b3f4c6ea86379c57db05bae302" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>receivedContent</name></member>
+      <member refid="struct_ma_request_1ad65bcb5ab89c880acd46a65dc5b0912e" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>referer</name></member>
+      <member refid="struct_ma_request_1ae32a72f10e6a1f3c99377bc60b0743bc" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>remainingContent</name></member>
+      <member refid="struct_ma_request_1a6c4006ac15fbb14973c3b0fda04c8c53" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>requestData</name></member>
+      <member refid="struct_ma_request_1a29e243ae16b6afd66cb933954a28be2d" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>rewrites</name></member>
+      <member refid="struct_ma_request_1abf25528b3c7eb60fb31fcd6930b53d34" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>since</name></member>
+      <member refid="struct_ma_request_1a7ed0cf052fed02d051b1f6f8f360839a" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>startTicks</name></member>
+      <member refid="struct_ma_request_1a8f4af5f2e8678806d23bb6597c333200" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>startTime</name></member>
+      <member refid="struct_ma_request_1a57ce3abf9f742b096ee11ab1017401e8" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>url</name></member>
+      <member refid="struct_ma_request_1a2c1f6d19cc66b0f9bcbf85bee33819a9" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>user</name></member>
+      <member refid="struct_ma_request_1a48d7d4388458169da43d2930f727766d" prot="public" virt="non-virtual"><scope>MaRequest</scope><name>userAgent</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

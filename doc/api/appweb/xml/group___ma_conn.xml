@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="group___ma_conn" kind="group">
+    <compoundname>MaConn</compoundname>
+    <title>MaConn</title>
+    <briefdescription>
+<para>Http Connections. </para>    </briefdescription>
+    <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>The MaConn object represents a TCP/IP connection to the client. A connection object is created for each socket connection initiated by the client. One MaConn object may service many Http requests due to HTTP/1.1 keep-alive. </para></simplesect>
+<simplesect kind="par"><title><bold>API</bold> Stability:</title><para>Evolving</para></simplesect>
+<simplesect kind="see"><para><ref refid="group___ma_conn" kindref="compound">MaConn</ref> <ref refid="group___ma_request" kindref="compound">MaRequest</ref> <ref refid="group___ma_response" kindref="compound">MaResponse</ref> <ref refid="group___ma_queue" kindref="compound">MaQueue</ref> <ref refid="group___ma_stage" kindref="compound">MaStage</ref> </para></simplesect>
+</para>    </detaileddescription>
+  </compounddef>
+</doxygen>

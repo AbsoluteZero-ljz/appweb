@@ -1,0 +1,393 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="struct_ma_response" kind="struct" prot="public">
+    <compoundname>MaResponse</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_ma_response_1a6679a627207ad7b069665d9a82570d05" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaResponse::altBody</definition>
+        <argsstring></argsstring>
+        <name>altBody</name>
+        <briefdescription>
+<para>Alternate response for errors. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2172" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2172" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1a7ff60e1d0f624d778b11d67fe1b5c9af" prot="public" static="no" mutable="no">
+        <type>MprOff</type>
+        <definition>MprOff MaResponse::bytesWritten</definition>
+        <argsstring></argsstring>
+        <name>bytesWritten</name>
+        <briefdescription>
+<para>Bytes written including headers. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2186" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2186" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1aa1ed907887f2892d309edb4b9be7146c" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaResponse::chunkSize</definition>
+        <argsstring></argsstring>
+        <name>chunkSize</name>
+        <briefdescription>
+<para>Chunk size to use when using transfer encoding. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2168" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2168" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1aafc3b22b7f91f9907f9437480f7c78e1" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaResponse::code</definition>
+        <argsstring></argsstring>
+        <name>code</name>
+        <briefdescription>
+<para>HTTP response code. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2167" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2167" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1ae155b96f13342a78a6f8887565f36fd2" prot="public" static="no" mutable="no">
+        <type>struct MaConn *</type>
+        <definition>struct MaConn* MaResponse::conn</definition>
+        <argsstring></argsstring>
+        <name>conn</name>
+        <briefdescription>
+<para>Current connection object. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2160" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2160" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1af625e9806bb87b866a83f24e2f59ed58" prot="public" static="no" mutable="no">
+        <type>MaStage *</type>
+        <definition>MaStage* MaResponse::connector</definition>
+        <argsstring></argsstring>
+        <name>connector</name>
+        <briefdescription>
+<para>Response connector. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2162" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2162" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1a8551558392e406a439b7eb0360991e87" prot="public" static="no" mutable="no">
+        <type>MaRange *</type>
+        <definition>MaRange* MaResponse::currentRange</definition>
+        <argsstring></argsstring>
+        <name>currentRange</name>
+        <briefdescription>
+<para>Current range being fullfilled. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2189" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2189" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1a160f398b4fa6525ec2a5f4d34077fc8c" prot="public" static="no" mutable="no">
+        <type>MprOff</type>
+        <definition>MprOff MaResponse::entityLength</definition>
+        <argsstring></argsstring>
+        <name>entityLength</name>
+        <briefdescription>
+<para>Original content length before range subsetting. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2185" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2185" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1a94f8c818d2a435c0af289d48d1737d75" prot="public" static="no" mutable="no">
+        <type>MaEnvCallback</type>
+        <definition>MaEnvCallback MaResponse::envCallback</definition>
+        <argsstring></argsstring>
+        <name>envCallback</name>
+        <briefdescription>
+<para>SetEnv callback. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2194" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2194" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1a1b77b315d989ccadeff1bef482da41fa" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaResponse::etag</definition>
+        <argsstring></argsstring>
+        <name>etag</name>
+        <briefdescription>
+<para>Unique identifier tag. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2169" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2169" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1a1f39f0f2c38c1426f779408d7c00bdf3" prot="public" static="no" mutable="no">
+        <type>cchar *</type>
+        <definition>cchar* MaResponse::extension</definition>
+        <argsstring></argsstring>
+        <name>extension</name>
+        <briefdescription>
+<para>Filename extension. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2184" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2184" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1ade9bbf66e7d363b1789e967cf869e11f" prot="public" static="no" mutable="no">
+        <type>MprFile *</type>
+        <definition>MprFile* MaResponse::file</definition>
+        <argsstring></argsstring>
+        <name>file</name>
+        <briefdescription>
+<para>File to be served. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2181" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2181" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1a32116c3e1498a7495fcbd0f6c5515ae7" prot="public" static="no" mutable="no">
+        <type>MprPath</type>
+        <definition>MprPath MaResponse::fileInfo</definition>
+        <argsstring></argsstring>
+        <name>fileInfo</name>
+        <briefdescription>
+<para>File information if there is a real file to serve. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2182" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2182" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1aa0548b6bd87bf43818a94ae04946bcb7" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaResponse::filename</definition>
+        <argsstring></argsstring>
+        <name>filename</name>
+        <briefdescription>
+<para>Name of a real file being served. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2183" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2183" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1a7961a067814fd0ce74e40b95ec559c04" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaResponse::flags</definition>
+        <argsstring></argsstring>
+        <name>flags</name>
+        <briefdescription>
+<para>Response flags. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2166" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2166" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1a5d32ed9cada191b8bd631891421fb455" prot="public" static="no" mutable="no">
+        <type>MaStage *</type>
+        <definition>MaStage* MaResponse::handler</definition>
+        <argsstring></argsstring>
+        <name>handler</name>
+        <briefdescription>
+<para>Response handler. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2161" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2161" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1ae216e4a50f9f82fc5fe4648ef4fe2af0" prot="public" static="no" mutable="no">
+        <type>void *</type>
+        <definition>void* MaResponse::handlerData</definition>
+        <argsstring></argsstring>
+        <name>handlerData</name>
+        <briefdescription>
+<para>Data reserved for the handler. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2164" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2164" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1a4e05a7734e417ecf6cca7c2b48256783" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaResponse::header</definition>
+        <argsstring></argsstring>
+        <name>header</name>
+        <briefdescription>
+<para>HTTP response header. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2170" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2170" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1ae162e894871e7fea699f98643994b62b" prot="public" static="no" mutable="no">
+        <type>MprHashTable *</type>
+        <definition>MprHashTable* MaResponse::headers</definition>
+        <argsstring></argsstring>
+        <name>headers</name>
+        <briefdescription>
+<para>Custom response headers. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2174" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2174" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1a1a89f86eae1ba7221cabe6e231132329" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MaResponse::headerSize</definition>
+        <argsstring></argsstring>
+        <name>headerSize</name>
+        <briefdescription>
+<para>Size of the header written. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2187" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2187" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1a8cbaa01333fc6d26756477c61e160084" prot="public" static="no" mutable="no">
+        <type>MprOff</type>
+        <definition>MprOff MaResponse::length</definition>
+        <argsstring></argsstring>
+        <name>length</name>
+        <briefdescription>
+<para>Response content length. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2176" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2176" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1af0cb5569ec1b0324d2a9c4fecbcf87ec" prot="public" static="no" mutable="no">
+        <type>cchar *</type>
+        <definition>cchar* MaResponse::mimeType</definition>
+        <argsstring></argsstring>
+        <name>mimeType</name>
+        <briefdescription>
+<para>Mime type of the response document. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2171" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2171" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1a6a72c4defd25c726101067629600a08e" prot="public" static="no" mutable="no">
+        <type>MprList *</type>
+        <definition>MprList* MaResponse::outputPipeline</definition>
+        <argsstring></argsstring>
+        <name>outputPipeline</name>
+        <briefdescription>
+<para>Output processing. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2163" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2163" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1a2995297c35bd16772a67dd789e043b4b" prot="public" static="no" mutable="no">
+        <type>MaQueue</type>
+        <definition>MaQueue MaResponse::queue[2]</definition>
+        <argsstring>[2]</argsstring>
+        <name>queue</name>
+        <briefdescription>
+<para>Dummy head for the response queues. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2175" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2175" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1a904ff7156a590acaf79f6b0c1b2d30e8" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MaResponse::rangeBoundary</definition>
+        <argsstring></argsstring>
+        <name>rangeBoundary</name>
+        <briefdescription>
+<para>Inter-range boundary. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2190" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2190" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1a0e7ab160cb61030fdb4118e323ae6a41" prot="public" static="no" mutable="no">
+        <type>MprOff</type>
+        <definition>MprOff MaResponse::rangePos</definition>
+        <argsstring></argsstring>
+        <name>rangePos</name>
+        <briefdescription>
+<para>Current range I/O position. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2191" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2191" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_response_1ad5279cdb9fb66c2d5dccda2df43fb627" prot="public" static="no" mutable="no">
+        <type>MaRedirectCallback</type>
+        <definition>MaRedirectCallback MaResponse::redirectCallback</definition>
+        <argsstring></argsstring>
+        <name>redirectCallback</name>
+        <briefdescription>
+<para>Redirect callback. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2193" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2193" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/Users/mob/git/appweb-3/all/appweb.h" line="2158" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="2158" bodyend="2196"/>
+    <listofallmembers>
+      <member refid="struct_ma_response_1a6679a627207ad7b069665d9a82570d05" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>altBody</name></member>
+      <member refid="struct_ma_response_1a7ff60e1d0f624d778b11d67fe1b5c9af" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>bytesWritten</name></member>
+      <member refid="struct_ma_response_1aa1ed907887f2892d309edb4b9be7146c" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>chunkSize</name></member>
+      <member refid="struct_ma_response_1aafc3b22b7f91f9907f9437480f7c78e1" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>code</name></member>
+      <member refid="struct_ma_response_1ae155b96f13342a78a6f8887565f36fd2" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>conn</name></member>
+      <member refid="struct_ma_response_1af625e9806bb87b866a83f24e2f59ed58" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>connector</name></member>
+      <member refid="struct_ma_response_1a8551558392e406a439b7eb0360991e87" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>currentRange</name></member>
+      <member refid="struct_ma_response_1a160f398b4fa6525ec2a5f4d34077fc8c" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>entityLength</name></member>
+      <member refid="struct_ma_response_1a94f8c818d2a435c0af289d48d1737d75" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>envCallback</name></member>
+      <member refid="struct_ma_response_1a1b77b315d989ccadeff1bef482da41fa" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>etag</name></member>
+      <member refid="struct_ma_response_1a1f39f0f2c38c1426f779408d7c00bdf3" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>extension</name></member>
+      <member refid="struct_ma_response_1ade9bbf66e7d363b1789e967cf869e11f" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>file</name></member>
+      <member refid="struct_ma_response_1a32116c3e1498a7495fcbd0f6c5515ae7" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>fileInfo</name></member>
+      <member refid="struct_ma_response_1aa0548b6bd87bf43818a94ae04946bcb7" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>filename</name></member>
+      <member refid="struct_ma_response_1a7961a067814fd0ce74e40b95ec559c04" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>flags</name></member>
+      <member refid="struct_ma_response_1a5d32ed9cada191b8bd631891421fb455" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>handler</name></member>
+      <member refid="struct_ma_response_1ae216e4a50f9f82fc5fe4648ef4fe2af0" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>handlerData</name></member>
+      <member refid="struct_ma_response_1a4e05a7734e417ecf6cca7c2b48256783" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>header</name></member>
+      <member refid="struct_ma_response_1ae162e894871e7fea699f98643994b62b" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>headers</name></member>
+      <member refid="struct_ma_response_1a1a89f86eae1ba7221cabe6e231132329" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>headerSize</name></member>
+      <member refid="struct_ma_response_1a8cbaa01333fc6d26756477c61e160084" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>length</name></member>
+      <member refid="struct_ma_response_1af0cb5569ec1b0324d2a9c4fecbcf87ec" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>mimeType</name></member>
+      <member refid="struct_ma_response_1a6a72c4defd25c726101067629600a08e" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>outputPipeline</name></member>
+      <member refid="struct_ma_response_1a2995297c35bd16772a67dd789e043b4b" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>queue</name></member>
+      <member refid="struct_ma_response_1a904ff7156a590acaf79f6b0c1b2d30e8" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>rangeBoundary</name></member>
+      <member refid="struct_ma_response_1a0e7ab160cb61030fdb4118e323ae6a41" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>rangePos</name></member>
+      <member refid="struct_ma_response_1ad5279cdb9fb66c2d5dccda2df43fb627" prot="public" virt="non-virtual"><scope>MaResponse</scope><name>redirectCallback</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,262 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="group___ma_packet" kind="group">
+    <compoundname>MaPacket</compoundname>
+    <title>MaPacket</title>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="group___ma_packet_1ga5df1a8ee94fca1ff1aa9576abc429b85" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>MaPacket *</type>
+        <definition>MaPacket* maCreateDataPacket</definition>
+        <argsstring>(MprCtx ctx, int size)</argsstring>
+        <name>maCreateDataPacket</name>
+        <param>
+          <type>MprCtx</type>
+          <declname>ctx</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>size</declname>
+        </param>
+        <briefdescription>
+<para>Create a data packet. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Create a packet and set the MA_PACKET_DATA flag Data packets convey data through the response pipeline. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>ctx</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A conn or request memory context object. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>size</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Size of the package data storage. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>MaPacket object. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1154"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_packet_1gaf6e524d50d35ee9f7095e85a2c5f7b0c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>MaPacket *</type>
+        <definition>MaPacket* maCreateEndPacket</definition>
+        <argsstring>(MprCtx ctx)</argsstring>
+        <name>maCreateEndPacket</name>
+        <param>
+          <type>MprCtx</type>
+          <declname>ctx</declname>
+        </param>
+        <briefdescription>
+<para>Create an end packet. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Create an end-of-stream packet and set the MA_PACKET_END flag. The end pack signifies the end of data. It is used on both incoming and outgoing streams through the request/response pipeline. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>ctx</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A conn or request memory context object. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>MaPacket object. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1175"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_packet_1gac4d07f426450d99470479ce71db99803" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>MaPacket *</type>
+        <definition>MaPacket* maCreateHeaderPacket</definition>
+        <argsstring>(MprCtx ctx)</argsstring>
+        <name>maCreateHeaderPacket</name>
+        <param>
+          <type>MprCtx</type>
+          <declname>ctx</declname>
+        </param>
+        <briefdescription>
+<para>Create a response header packet. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Create a response header packet and set the MA_PACKET_HEADER flag. A header packet is used by the pipeline to hold the response headers. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>ctx</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A conn or request memory context object. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>MaPacket object. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1165"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_packet_1gae7a1cc0bbf598580bd1ad8a166a9ba82" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>MaPacket *</type>
+        <definition>MaPacket* maCreatePacket</definition>
+        <argsstring>(MprCtx ctx, int size)</argsstring>
+        <name>maCreatePacket</name>
+        <param>
+          <type>MprCtx</type>
+          <declname>ctx</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>size</declname>
+        </param>
+        <briefdescription>
+<para>Create a data packet. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Create a packet of the required size. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>ctx</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A conn or request memory context object. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>size</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Size of the package data storage. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>MaPacket object. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1139"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_packet_1ga3fbb007c176ea20c68c675bd8dde4efd" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int maGetPacketLength</definition>
+        <argsstring>(MaPacket *packet)</argsstring>
+        <name>maGetPacketLength</name>
+        <param>
+          <type>MaPacket *</type>
+          <declname>packet</declname>
+        </param>
+        <briefdescription>
+<para>Get the length of the packet data contents. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Get the content length of a packet. This does not include the prefix or suffix data length -- just the pure data contents. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>packet</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Packet to examine. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Count of bytes contained by the packet. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1212"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_packet_1gacfdb85fc6850462b81db3e1da730d2b6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int maJoinPacket</definition>
+        <argsstring>(MaPacket *packet, MaPacket *other)</argsstring>
+        <name>maJoinPacket</name>
+        <param>
+          <type>MaPacket *</type>
+          <declname>packet</declname>
+        </param>
+        <param>
+          <type>MaPacket *</type>
+          <declname>other</declname>
+        </param>
+        <briefdescription>
+<para>Join tow packets. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Join the contents of one packet to another by copying the data from the <emphasis>other</emphasis> packet into the first packet. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>packet</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Destination packet </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>other</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Other packet to copy data from. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Zero if successful, otherwise a negative Mpr error code </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1186"/>
+      </memberdef>
+      <memberdef kind="function" id="group___ma_packet_1ga33ae09635d8a800aa600a207c8ec16fc" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>MaPacket *</type>
+        <definition>MaPacket* maSplitPacket</definition>
+        <argsstring>(MprCtx ctx, MaPacket *packet, int offset)</argsstring>
+        <name>maSplitPacket</name>
+        <param>
+          <type>MprCtx</type>
+          <declname>ctx</declname>
+        </param>
+        <param>
+          <type>MaPacket *</type>
+          <declname>packet</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>offset</declname>
+        </param>
+        <briefdescription>
+<para>Split a data packet. </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>Split a data packet at the specified offset. Packets may need to be split so that downstream stages can digest their contents. If a packet is too large for the queue maximum size, it should be split. When the packet is split, a new packet is created containing the data after the offset. Any suffix headers are moved to the new packet. </para></simplesect>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>ctx</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A conn or request memory context object to own the packet. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>packet</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Packet to split </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>offset</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Location in the original packet at which to split </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>New MaPacket object containing the data after the offset. No need to free, unless you have a very long running request. Otherwise the packet memory will be released automatically when the request completes. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1201"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Data packet. </para>    </briefdescription>
+    <detaileddescription>
+<para><simplesect kind="par"><title><bold>Description</bold>:</title><para>The request/response pipeline sends data and control information in MaPacket objects. The output stream typically consists of a HEADER packet followed by zero or more data packets and terminated by an END packet. If the request has input data, the input stream is consists of one or more data packets followed by an END packet. <linebreak/>
+<linebreak/>
+ Packets contain data and optional prefix or suffix headers. Packets can be split, joined, filled or emptied. The pipeline stages will fill or transform packet data as required. </para></simplesect>
+<simplesect kind="par"><title><bold>API</bold> Stability:</title><para>Evolving</para></simplesect>
+<simplesect kind="see"><para><ref refid="group___ma_packet" kindref="compound">MaPacket</ref> <ref refid="group___ma_queue" kindref="compound">MaQueue</ref> <ref refid="group___ma_packet_1ga5df1a8ee94fca1ff1aa9576abc429b85" kindref="member">maCreateDataPacket</ref> <ref refid="group___ma_packet_1gae7a1cc0bbf598580bd1ad8a166a9ba82" kindref="member">maCreatePacket</ref> <ref refid="group___ma_packet_1gaf6e524d50d35ee9f7095e85a2c5f7b0c" kindref="member">maCreateEndPacket</ref> <ref refid="group___ma_packet_1gacfdb85fc6850462b81db3e1da730d2b6" kindref="member">maJoinPacket</ref> <ref refid="group___ma_packet_1ga33ae09635d8a800aa600a207c8ec16fc" kindref="member">maSplitPacket</ref> <ref refid="group___ma_packet_1ga3fbb007c176ea20c68c675bd8dde4efd" kindref="member">maGetPacketLength</ref> <ref refid="group___ma_packet_1gac4d07f426450d99470479ce71db99803" kindref="member">maCreateHeaderPacket</ref> </para></simplesect>
+</para>    </detaileddescription>
+  </compounddef>
+</doxygen>

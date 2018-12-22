@@ -1,0 +1,71 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="struct_ma_range" kind="struct" prot="public">
+    <compoundname>MaRange</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_ma_range_1a0912d1f31dba199eb5a86b65528f11b7" prot="public" static="no" mutable="no">
+        <type>MprOff</type>
+        <definition>MprOff MaRange::end</definition>
+        <argsstring></argsstring>
+        <name>end</name>
+        <briefdescription>
+<para>End byte of range + 1. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1091" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1091" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_range_1a09738f8191e32fe2bc2a9ccc679bc71f" prot="public" static="no" mutable="no">
+        <type>MprOff</type>
+        <definition>MprOff MaRange::len</definition>
+        <argsstring></argsstring>
+        <name>len</name>
+        <briefdescription>
+<para>Redundant range length. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1092" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1092" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_range_1aa12434fe979f5cb16ab1ed082120b60e" prot="public" static="no" mutable="no">
+        <type>struct MaRange *</type>
+        <definition>struct MaRange* MaRange::next</definition>
+        <argsstring></argsstring>
+        <name>next</name>
+        <briefdescription>
+<para>Next range. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1093" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1093" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_ma_range_1a745edd98b13151ffe41d824ed3e859a3" prot="public" static="no" mutable="no">
+        <type>MprOff</type>
+        <definition>MprOff MaRange::start</definition>
+        <argsstring></argsstring>
+        <name>start</name>
+        <briefdescription>
+<para>Start of range. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1090" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1090" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/Users/mob/git/appweb-3/all/appweb.h" line="1089" bodyfile="/Users/mob/git/appweb-3/all/appweb.h" bodystart="1089" bodyend="1094"/>
+    <listofallmembers>
+      <member refid="struct_ma_range_1a0912d1f31dba199eb5a86b65528f11b7" prot="public" virt="non-virtual"><scope>MaRange</scope><name>end</name></member>
+      <member refid="struct_ma_range_1a09738f8191e32fe2bc2a9ccc679bc71f" prot="public" virt="non-virtual"><scope>MaRange</scope><name>len</name></member>
+      <member refid="struct_ma_range_1aa12434fe979f5cb16ab1ed082120b60e" prot="public" virt="non-virtual"><scope>MaRange</scope><name>next</name></member>
+      <member refid="struct_ma_range_1a745edd98b13151ffe41d824ed3e859a3" prot="public" virt="non-virtual"><scope>MaRange</scope><name>start</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>
