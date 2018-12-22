@@ -196,9 +196,9 @@
             <p>To build Appweb with CGI support consult <a href="./cgi.html">Building with CGI</a>.</p>
 
             <h3>Using the in-memory PHP handler</h3>
-            <p>The appweb-php package implements the Appweb in-memory handler for PHP and does not include the source code for PHP which is very large. </p>
+            <p>The appweb-php package implements the Appweb in-memory handler for PHP 5.X and does not include the source code for PHP which is very large. PHP 7 is not supported.</p>
 
-            <p>The Appweb PHP handler is called mod_php.so and the handler loads the actual external PHP library which is called libphp5.so on Linux and libphp5.dll on Windows.
+            <p>The Appweb PHP handler is called mod_php.so and the handler loads the actual external PHP library which is called libphp*.so on Linux and libphp*.dll on Windows.
 
             <h3>Building Appweb with PHP</h3>
 
@@ -226,7 +226,7 @@ tar --strip-components 1 -xvf ../appweb-php.tgz
             <pre class="ui code segment">
 ./configure --with php=/path/to/php-source
 me</pre>
-            <p>If you are building with <em>make</em>, use:</p>
+            <p>If you are building with <em>make</em> first copy the built PHP library into your build/*/bin directory. Then use:</p>
 <pre class="ui code segment">
 make ME_COM_PHP=1 ME_COM_PHP_PATH=/path/to/php</pre>
 
