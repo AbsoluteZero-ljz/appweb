@@ -1,0 +1,94 @@
+/*
+    php.me - PHP MakeMe Component
+ */
+
+Me.load({
+    targets: {
+        php: {
+            description: 'PHP Web Framework',
+            configurable: true,
+            config: function (target) {
+                if (me.options.gen) {
+                    /*
+                        This is hard coded for php5
+                     */
+                    return {
+                        path: target.withpath || '/usr/src/php',
+                        includes: [ 
+                            '$(ME_COM_PHP_PATH)', 
+                            '$(ME_COM_PHP_PATH)/main', 
+                            '$(ME_COM_PHP_PATH)/Zend',
+                            '$(ME_COM_PHP_PATH)/TSRM'],
+                        libpaths: [ '$(ME_COM_PHP_PATH)/libs' ],
+                        libraries: (me.platform.os == 'windows') ? ([ 'php5ts.lib' ]) : ([ 'php5' ]),
+                    }
+                }
+                if (me.platform.os == 'windows') {
+                    let search = getComponentSearch(target, 'php-src')
+                    if (!search || !search[0]) {
+                        throw 'Cannot find php-src'
+                    }
+                    let ver = search[0].parent.match(/\d/)
+                    if (!ver) {
+                        throw 'Cannot find php-src'
+                    }
+                    let major = ver[0]
+                    let name = 'php' +major
+                    let path = probe(name + '.spec.in', {search: search, nopath: true})
+                    search = [
+                        path.join('x64/Release_TS'),
+                        path.join('x64/Release'),
+                        path.join('Release_TS'),
+                        path.join('Release'),
+                        path.join('Debug_TS'),
+                        path.join('Debug'),
+                    ]
+                    let reldir = probe('php.exe', {search: search}).absolute
+                    let lnames = { Release_TS: name + 'ts.dll', Release: name + '.dll', Debug_TS: name + 'ts_debug.dll', Debug: name + '.dll' }
+                    let lib = probe(lnames[reldir.basename], {fullpath: true, search: search}).absolute
+                    let incdir = probe('main/php.h', {search: [path]}).absolute
+                    return {
+                        path:      path,
+                        includes:  [ incdir, incdir.join('main'), incdir.join('Zend'), incdir.join('TSRM') ],
+                        libraries: [ name + 'ts.lib' ],
+                        linker:    [ '-libpath:' + lib.parent ],
+                        imports:   lib.parent.files(name + 'ts.*')
+                    }
+
+                } else {
+                    let search = getComponentSearch(target, 'php-src', 'libs')
+                    if (!search || !search[0]) {
+                        throw 'Cannot find php-src'
+                    }
+                    let ver = search[0].parent.match(/\d/)
+                    if (!ver) {
+                        throw 'Cannot find php-src'
+                    }
+                    let major = ver[0]
+                    let name = 'php' + major
+                    let lib = probe('lib' + name + '.' + me.ext.shobj, {fullpath: true, search: search}).absolute
+                    let path = lib.dirname.parent
+                    let incdir = probe('php.h', {search: [path.join('main'), '/usr/include']}).absolute.parent
+                    return {
+                        path:      path,
+                        includes:  [ incdir, incdir.join('main'), incdir.join('Zend'), incdir.join('TSRM') ],
+                        libraries: [ name ],
+                        linker:    [ '-L' + lib.parent ],
+                        imports:   lib.parent.files('lib' + name + '*.' + me.ext.shobj + '*')
+                    }
+                }
+            }
+        },
+        libmod_php: {
+            type: 'lib',
+            sources: [ '*.c' ],
+            '-compiler': [
+                '-Wall',
+                '-Wshorten-64-to-32',
+                '-Wunreachable-code'
+            ],
+            depends: [ 'libappweb', 'php' ],
+            ifdef: [ 'php' ]
+        }
+    }
+})
