@@ -1,0 +1,35 @@
+{
+    "name": "appweb",
+    "description": "Embedthis Appweb Embedded Web Server",
+    "title": "Embedthis Appweb",
+    "version": "2.4.4",
+    "keywords": [
+        "appweb",
+        "http",
+        "webserver"
+    ],
+    "homepage": "https://embedthis.com/appweb/",
+    "author": {
+        "name": "Embedthis Software",
+        "email": "dev@embedthis.com",
+        "url": "http://embedthis.com"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/embedthis/appweb.git"
+    },
+    "bugs": {
+        "email": "dev@embedthis.com",
+        "url": "http://github.com/embedthis/appweb/issues"
+    },
+    "licenses": [
+        {
+            "type": "GPL",
+            "url": "http://www.gnu.org/licenses/gpl-2.0.html"
+        },
+        {
+            "type": "Commercial",
+            "url": "http://embedthis.com/licensing/"
+        }
+    ]
+}

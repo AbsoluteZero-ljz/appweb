@@ -1,0 +1,34 @@
+<HTML>
+<HEAD>
+<TITLE>Test ESP Program</TITLE>
+</HEAD>
+
+<BODY>
+
+<H1>Embedded Server Pages</H1>
+<H2>Variable Status</H2>
+<p>Do <b>NOT</b> include this document in any of your production code. It is a
+   debug script only to show how to display ESP variables. Echoing
+   raw input back to the browers is insecure and subject to CSS 
+   exploits .<p>
+
+<%
+    var a = new Array(10);
+    write("LEN " + a.length);
+
+	for (v in server) {
+		write('<P>server[' + v + "]=" + server[v] + '</P>\n');
+	}
+	for (v in request) {
+		write('<P>request[' + v + "]=" + request[v] + '</P>\n');
+	}
+	for (v in form) {
+		write('<P>form[' + v + "]=" + form[v] + '</P>\n');
+	}
+	for (v in headers) {
+		write('<P>headers[' + v + "]=" + headers[v] + '</P>\n');
+	}
+%>
+
+</BODY>
+</HTML>

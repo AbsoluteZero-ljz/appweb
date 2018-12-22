@@ -1,0 +1,8 @@
+#
+# sslDev.files - Package various SSL implementations
+#
+# Copyright (c) Embedthis Software LLC, 2003-2009. All Rights Reserved.
+#
+
+# NOTE: Usage: cpmod src dest [perm] [owner.group]
+
