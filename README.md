@@ -1,7 +1,7 @@
 Embedthis Appweb Community Edition
 ===
 
-The compact, fast and secure web server for embedded applications.
+Appweb is a compact, fast and secure web server for embedded applications. It supports HTTP/1 and HTTP/2 with a web server   and HTTP client utility.
 
 Branches
 ---
