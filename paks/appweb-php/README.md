@@ -62,4 +62,3 @@ The following configure command will build a minimal PHP library for Linux. You 
     --with-xml \
     --with-xmlrpc \
     --with-zlib
-

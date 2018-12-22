@@ -43,7 +43,7 @@
     },
     "optionalDependencies": {
         "appweb-ejscript": "~0.2",
-        "appweb-php": "~0.1",
+        "appweb-php": "~0.2",
         "certs": "~0.1",
         "ejscript": "~2.7",
         "esp": "~7",
