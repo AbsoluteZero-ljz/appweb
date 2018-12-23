@@ -1,5 +1,5 @@
 /*
- * Embedthis Appweb Library Source
+ * Embedthis Appweb Core Library Source
  */
 
 #include "appweb.h"
