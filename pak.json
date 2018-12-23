@@ -1,7 +1,7 @@
 {
     "name": "appweb",
-    "description": "Embedthis Appweb Embedded Web Server",
-    "title": "Embedthis Appweb",
+    "description": "Embedthis Appweb Core",
+    "title": "Embedthis Appweb Core",
     "version": "8.0.0-beta.3",
     "keywords": [
         "appweb",
@@ -35,6 +35,7 @@
     "dependencies": {
         "http": "~8",
         "makerom": "~0.3",
+        "me-win": "~0.1",
         "mpr": "~8",
         "osdep": "~0.9",
         "pcre": "~1.0",
