@@ -12,3 +12,4 @@ test/cgi-bin/.prepared
 test/future.json
 test/test.dat
 samples/certs
+/start.me
