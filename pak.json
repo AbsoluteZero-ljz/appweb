@@ -33,6 +33,7 @@
         }
     ],
     "dependencies": {
+        "assist": "~0.1",
         "http": "~7",
         "makerom": "~0.3",
         "mpr": "~8",
