@@ -20,3 +20,4 @@ src/server/certs
 test/exploits/
 cache/
 /build
+/start.me
