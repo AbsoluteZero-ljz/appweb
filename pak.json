@@ -33,6 +33,7 @@
         }
     ],
     "dependencies": {
+        "assist": "~0.1",
         "http": "~8",
         "makerom": "~0.3",
         "me-win": "~0.1",
