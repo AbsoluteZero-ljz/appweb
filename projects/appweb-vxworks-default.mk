@@ -1,5 +1,5 @@
 #
-#   appweb-vxworks-default.mk -- Makefile to build Embedthis Appweb for vxworks
+#   appweb-vxworks-default.mk -- Makefile to build Embedthis Appweb Core for vxworks
 #
 
 NAME                  := appweb
@@ -10,6 +10,7 @@ CPU                   ?= $(subst X86,PENTIUM,$(shell echo $(ARCH) | tr a-z A-Z))
 OS                    ?= vxworks
 CC                    ?= cc$(subst x86,pentium,$(ARCH))
 LD                    ?= ldundefined
+AR                    ?= arundefined
 CONFIG                ?= $(OS)-$(ARCH)-$(PROFILE)
 BUILD                 ?= build/$(CONFIG)
 LBIN                  ?= $(BUILD)/bin
@@ -243,11 +244,17 @@ $(BUILD)/inc/appweb.h: $(DEPS_5)
 	cp src/appweb.h $(BUILD)/inc/appweb.h
 
 #
+#   server.c
+#
+
+$(BUILD)/inc/cache/server.c: $(DEPS_6)
+
+#
 #   customize.h
 #
-DEPS_6 += src/customize.h
+DEPS_7 += src/customize.h
 
-$(BUILD)/inc/customize.h: $(DEPS_6)
+$(BUILD)/inc/customize.h: $(DEPS_7)
 	@echo '      [Copy] $(BUILD)/inc/customize.h'
 	mkdir -p "$(BUILD)/inc"
 	cp src/customize.h $(BUILD)/inc/customize.h
@@ -255,9 +262,9 @@ $(BUILD)/inc/customize.h: $(DEPS_6)
 #
 #   embedtls.h
 #
-DEPS_7 += src/mbedtls/embedtls.h
+DEPS_8 += src/mbedtls/embedtls.h
 
-$(BUILD)/inc/embedtls.h: $(DEPS_7)
+$(BUILD)/inc/embedtls.h: $(DEPS_8)
 	@echo '      [Copy] $(BUILD)/inc/embedtls.h'
 	mkdir -p "$(BUILD)/inc"
 	cp src/mbedtls/embedtls.h $(BUILD)/inc/embedtls.h
@@ -265,12 +272,12 @@ $(BUILD)/inc/embedtls.h: $(DEPS_7)
 #
 #   esp.h
 #
-DEPS_8 += src/esp/esp.h
-DEPS_8 += $(BUILD)/inc/me.h
-DEPS_8 += $(BUILD)/inc/osdep.h
-DEPS_8 += $(BUILD)/inc/http.h
+DEPS_9 += src/esp/esp.h
+DEPS_9 += $(BUILD)/inc/me.h
+DEPS_9 += $(BUILD)/inc/osdep.h
+DEPS_9 += $(BUILD)/inc/http.h
 
-$(BUILD)/inc/esp.h: $(DEPS_8)
+$(BUILD)/inc/esp.h: $(DEPS_9)
 	@echo '      [Copy] $(BUILD)/inc/esp.h'
 	mkdir -p "$(BUILD)/inc"
 	cp src/esp/esp.h $(BUILD)/inc/esp.h
@@ -278,9 +285,9 @@ $(BUILD)/inc/esp.h: $(DEPS_8)
 #
 #   mbedtls.h
 #
-DEPS_9 += src/mbedtls/mbedtls.h
+DEPS_10 += src/mbedtls/mbedtls.h
 
-$(BUILD)/inc/mbedtls.h: $(DEPS_9)
+$(BUILD)/inc/mbedtls.h: $(DEPS_10)
 	@echo '      [Copy] $(BUILD)/inc/mbedtls.h'
 	mkdir -p "$(BUILD)/inc"
 	cp src/mbedtls/mbedtls.h $(BUILD)/inc/mbedtls.h
@@ -288,10 +295,10 @@ $(BUILD)/inc/mbedtls.h: $(DEPS_9)
 #
 #   mpr-version.h
 #
-DEPS_10 += src/mpr-version/mpr-version.h
-DEPS_10 += $(BUILD)/inc/mpr.h
+DEPS_11 += src/mpr-version/mpr-version.h
+DEPS_11 += $(BUILD)/inc/mpr.h
 
-$(BUILD)/inc/mpr-version.h: $(DEPS_10)
+$(BUILD)/inc/mpr-version.h: $(DEPS_11)
 	@echo '      [Copy] $(BUILD)/inc/mpr-version.h'
 	mkdir -p "$(BUILD)/inc"
 	cp src/mpr-version/mpr-version.h $(BUILD)/inc/mpr-version.h
@@ -299,24 +306,18 @@ $(BUILD)/inc/mpr-version.h: $(DEPS_10)
 #
 #   pcre.h
 #
-DEPS_11 += src/pcre/pcre.h
+DEPS_12 += src/pcre/pcre.h
 
-$(BUILD)/inc/pcre.h: $(DEPS_11)
+$(BUILD)/inc/pcre.h: $(DEPS_12)
 	@echo '      [Copy] $(BUILD)/inc/pcre.h'
 	mkdir -p "$(BUILD)/inc"
 	cp src/pcre/pcre.h $(BUILD)/inc/pcre.h
 
 #
-#   server.c
-#
-
-src/server/cache/server.c: $(DEPS_12)
-
-#
 #   appweb.o
 #
 DEPS_13 += $(BUILD)/inc/appweb.h
-DEPS_13 += src/server/cache/server.c
+DEPS_13 += $(BUILD)/inc/cache/server.c
 
 $(BUILD)/obj/appweb.o: \
     src/server/appweb.c $(DEPS_13)
@@ -593,7 +594,7 @@ DEPS_42 += $(BUILD)/obj/mbedtls.o
 
 $(BUILD)/bin/libmbedtls.a: $(DEPS_42)
 	@echo '      [Link] $(BUILD)/bin/libmbedtls.a'
-	arundefined -cr $(BUILD)/bin/libmbedtls.a "$(BUILD)/obj/mbedtls.o"
+	$(AR) -cr $(BUILD)/bin/libmbedtls.a "$(BUILD)/obj/mbedtls.o"
 endif
 
 ifeq ($(ME_COM_MBEDTLS),1)
@@ -605,7 +606,7 @@ DEPS_43 += $(BUILD)/obj/mpr-mbedtls.o
 
 $(BUILD)/bin/libmpr-mbedtls.a: $(DEPS_43)
 	@echo '      [Link] $(BUILD)/bin/libmpr-mbedtls.a'
-	arundefined -cr $(BUILD)/bin/libmpr-mbedtls.a "$(BUILD)/obj/mpr-mbedtls.o"
+	$(AR) -cr $(BUILD)/bin/libmpr-mbedtls.a "$(BUILD)/obj/mpr-mbedtls.o"
 endif
 
 ifeq ($(ME_COM_OPENSSL),1)
@@ -616,7 +617,7 @@ DEPS_44 += $(BUILD)/obj/mpr-openssl.o
 
 $(BUILD)/bin/libmpr-openssl.a: $(DEPS_44)
 	@echo '      [Link] $(BUILD)/bin/libmpr-openssl.a'
-	arundefined -cr $(BUILD)/bin/libmpr-openssl.a "$(BUILD)/obj/mpr-openssl.o"
+	$(AR) -cr $(BUILD)/bin/libmpr-openssl.a "$(BUILD)/obj/mpr-openssl.o"
 endif
 
 #
@@ -697,7 +698,7 @@ DEPS_48 += $(BUILD)/obj/mpr-version.o
 
 $(BUILD)/bin/libmpr-version.a: $(DEPS_48)
 	@echo '      [Link] $(BUILD)/bin/libmpr-version.a'
-	arundefined -cr $(BUILD)/bin/libmpr-version.a "$(BUILD)/obj/mpr-version.o"
+	$(AR) -cr $(BUILD)/bin/libmpr-version.a "$(BUILD)/obj/mpr-version.o"
 
 ifeq ($(ME_COM_ESP),1)
 #

@@ -21,6 +21,9 @@
 #ifndef ME_COMPANY
     #define ME_COMPANY "embedthis"
 #endif
+#ifndef ME_COMPAT
+    #define ME_COMPAT 1
+#endif
 #ifndef ME_COMPATIBLE
     #define ME_COMPATIBLE "8.0"
 #endif
@@ -85,7 +88,7 @@
     #define ME_DEPTH 1
 #endif
 #ifndef ME_DESCRIPTION
-    #define ME_DESCRIPTION "Embedthis Appweb Embedded Web Server"
+    #define ME_DESCRIPTION "Embedthis Appweb Core"
 #endif
 #ifndef ME_ESP_CMD
     #define ME_ESP_CMD 1
@@ -150,11 +153,17 @@
 #ifndef ME_OPENSSL_VERSION
     #define ME_OPENSSL_VERSION "1.0"
 #endif
+#ifndef ME_PARTS
+    #define ME_PARTS "undefined"
+#endif
 #ifndef ME_PLATFORMS
     #define ME_PLATFORMS "local"
 #endif
 #ifndef ME_PREFIXES
     #define ME_PREFIXES "install-prefixes"
+#endif
+#ifndef ME_PROFILE
+    #define ME_PROFILE "undefined"
 #endif
 #ifndef ME_ROM
     #define ME_ROM 0
@@ -166,7 +175,7 @@
     #define ME_STATIC 1
 #endif
 #ifndef ME_TITLE
-    #define ME_TITLE "Embedthis Appweb"
+    #define ME_TITLE "Embedthis Appweb Core"
 #endif
 #ifndef ME_TUNE
     #define ME_TUNE "size"
