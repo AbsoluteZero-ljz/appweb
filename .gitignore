@@ -35,3 +35,4 @@ cache/
 /build
 /projects/setenv.bat
 samples/chroot-server/server
+/projects/appweb-core*
