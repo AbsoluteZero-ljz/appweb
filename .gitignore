@@ -1,7 +1,6 @@
 *.cgi
 test/web/huge.txt
 test/web/tmp/
-src/server/cache/
 test/app/
 test/cache/
 test/cgi-bin/*cgi*
@@ -31,7 +30,7 @@ test/test.dat
 /projects/.vs
 /projects/*yours*
 /test/.test-prepared
-cache/
+/cache/
 /build
 /projects/setenv.bat
 samples/chroot-server/server
