@@ -267,7 +267,7 @@ MAIN(appweb, int argc, char **argv, char **envp)
     /*
         Invoke ESP initializers here
      */
-    esp_app_server_combine(httpGetDefaultRoute(NULL), NULL);
+    esp_app_server_combine(httpGetDefaultRoute(NULL));
 #endif
 
 #if OLD
