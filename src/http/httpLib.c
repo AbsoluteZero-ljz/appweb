@@ -17650,10 +17650,9 @@ PUBLIC char *httpGetExt(HttpConn *conn)
 }
 
 
-//  FUTURE - can this just use the default compare
 static int compareLang(char **s1, char **s2)
 {
-    return scmp(*s1, *s2);
+    return scmp(*s2, *s1);
 }
 
 
@@ -17676,7 +17675,7 @@ PUBLIC HttpLang *httpGetLanguage(HttpConn *conn, MprHash *spoken, cchar *default
     list = mprCreateList(-1, MPR_LIST_STABLE);
     if ((accept = httpGetHeader(conn, "Accept-Language")) != 0) {
         for (tok = stok(sclone(accept), ",", &nextTok); tok; tok = stok(nextTok, ",", &nextTok)) {
-            language = stok(tok, ";", &quality);
+            language = stok(tok, ";q=", &quality);
             if (quality == 0) {
                 quality = "1";
             }
