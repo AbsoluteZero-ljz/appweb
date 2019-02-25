@@ -12,7 +12,7 @@
 #	DFLAGS and will then override the me.h default values. Use "make help" for a list of available 
 #	make variable options.
 #
-NAME    := appweb
+NAME    := appweb-core
 OS      := $(shell uname | sed 's/CYGWIN.*/windows/;s/Darwin/macosx/' | tr '[A-Z]' '[a-z]')
 PROFILE := default
 
@@ -102,5 +102,6 @@ help:
 	@echo '  PROFILE            # Set to "static" for static linking or "default" for dynamic' >&2
 	@echo '' >&2
 	@echo 'Use "SHOW=1 make" to show executed commands.' >&2
+	@echo 'Use "DEBUG=release make" to build for release.' >&2
 	@echo '' >&2
 
