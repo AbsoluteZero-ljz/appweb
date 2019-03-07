@@ -8093,8 +8093,9 @@ typedef struct MprSsl {
 #define MPR_PROTO_TLSV1_0  0x8              /**< TLS V1.0 protocol */
 #define MPR_PROTO_TLSV1_1  0x10             /**< TLS V1.1 protocol */
 #define MPR_PROTO_TLSV1_2  0x20             /**< TLS V1.2 protocol */
-#define MPR_PROTO_TLSV1    (MPR_PROTO_TLSV1_1 | MPR_PROTO_TLSV1_2)
-#define MPR_PROTO_ALL      0x2F             /**< All protocols */
+#define MPR_PROTO_TLSV1_3  0x40             /**< TLS V1.3 protocol */
+#define MPR_PROTO_TLSV1    (MPR_PROTO_TLSV1_1 | MPR_PROTO_TLSV1_2 | MPR_PROTO_TLSV1_3)
+#define MPR_PROTO_ALL      0x6B             /**< All protocols */
 
 /**
     Add the ciphers to use for SSL
