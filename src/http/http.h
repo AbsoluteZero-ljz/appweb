@@ -6890,7 +6890,7 @@ PUBLIC cchar *httpGetBodyInput(HttpStream *stream);
     Read response data as a string. This will read all rx body and return a string that the caller should free.
     This will block and should not be used in async mode.
     @param stream HttpStream stream object created via #httpCreateStream
-    @returns A string containing the rx body. Caller should free.
+    @returns A string containing the rx body.
     @ingroup HttpRx
     @stability Stable
  */

@@ -5276,10 +5276,14 @@ static void parseSslProtocols(HttpRoute *route, cchar *key, MprJson *prop)
             bit = MPR_PROTO_SSLV3;
         } else if (scaselessmatch(value, "tlsv1") || scaselessmatch(value, "tls")) {
             bit = MPR_PROTO_TLSV1;
+        } else if (scaselessmatch(value, "tlsv1.0")) {
+            bit = MPR_PROTO_TLSV1_0;
         } else if (scaselessmatch(value, "tlsv1.1")) {
             bit = MPR_PROTO_TLSV1_1;
         } else if (scaselessmatch(value, "tlsv1.2")) {
             bit = MPR_PROTO_TLSV1_2;
+        } else if (scaselessmatch(value, "tlsv1.3")) {
+            bit = MPR_PROTO_TLSV1_3;
         }
         if (clear) {
             mask &= ~bit;

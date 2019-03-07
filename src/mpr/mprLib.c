@@ -1553,6 +1553,7 @@ PUBLIC size_t psize(void *ptr)
 
 /*
     WARNING: this does not mark component members. If that is required, use mprAddRoot.
+    WARNING: this should only ever be used by MPR threads that are not yielded when this API is called.
  */
 PUBLIC void mprHold(cvoid *ptr)
 {
@@ -9759,7 +9760,7 @@ PUBLIC int mprServiceEvents(MprTicks timeout, int flags)
         if (flags & MPR_SERVICE_NO_BLOCK) {
             break;
         }
-        if (mprIsStopping() && (mprIsStopped() || mprIsIdle(0))) {
+        if (mprIsStopping()) {
             break;
         }
     }
@@ -23509,7 +23510,7 @@ PUBLIC MprSsl *mprCreateSsl(int server)
     if ((ssl = mprAllocObj(MprSsl, manageSsl)) == 0) {
         return 0;
     }
-    ssl->protocols = MPR_PROTO_TLSV1_1 | MPR_PROTO_TLSV1_2;
+    ssl->protocols = MPR_PROTO_TLSV1_1 | MPR_PROTO_TLSV1_2 | MPR_PROTO_TLSV1_3;
 
     /*
         The default for servers is not to verify client certificates.
