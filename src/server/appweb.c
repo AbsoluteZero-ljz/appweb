@@ -269,7 +269,6 @@ MAIN(appweb, int argc, char **argv, char **envp)
      */
     esp_app_server_combine(httpGetDefaultRoute(NULL), NULL);
 #endif
-
     /*
         Events thread will service requests. We block here.
      */

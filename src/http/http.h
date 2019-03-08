@@ -6530,7 +6530,7 @@ PUBLIC cchar *httpGetBodyInput(HttpConn *conn);
     Read response data as a string. This will read all rx body and return a string that the caller should free.
     This will block and should not be used in async mode.
     @param conn HttpConn connection object created via #httpCreateConn
-    @returns A string containing the rx body. Caller should free.
+    @returns A string containing the rx body.
     @ingroup HttpRx
     @stability Stable
  */
