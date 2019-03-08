@@ -23509,7 +23509,7 @@ PUBLIC MprSsl *mprCreateSsl(int server)
     if ((ssl = mprAllocObj(MprSsl, manageSsl)) == 0) {
         return 0;
     }
-    ssl->protocols = MPR_PROTO_TLSV1_1 | MPR_PROTO_TLSV1_2;
+    ssl->protocols = MPR_PROTO_TLSV1_1 | MPR_PROTO_TLSV1_2 | MPR_PROTO_TLSV1_3;
 
     /*
         The default for servers is not to verify client certificates.
