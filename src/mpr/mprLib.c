@@ -1553,6 +1553,7 @@ PUBLIC size_t psize(void *ptr)
 
 /*
     WARNING: this does not mark component members. If that is required, use mprAddRoot.
+    WARNING: this should only ever be used by MPR threads that are not yielded when this API is called.
  */
 PUBLIC void mprHold(cvoid *ptr)
 {
@@ -9759,7 +9760,7 @@ PUBLIC int mprServiceEvents(MprTicks timeout, int flags)
         if (flags & MPR_SERVICE_NO_BLOCK) {
             break;
         }
-        if (mprIsStopping() && (mprIsStopped() || mprIsIdle(0))) {
+        if (mprIsStopping()) {
             break;
         }
     }
