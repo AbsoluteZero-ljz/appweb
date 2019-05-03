@@ -16,8 +16,8 @@
     Please change this test URL to a local url
  */
 #define TEST_URL        "http://example.com/index.html"
-#define TEST_METHOD     "POST"
-#define TEST_POST_DATA  "Hello Post"
+#define TEST_METHOD     "GET"
+#define TEST_DATA       ""
 
 /*
     Number of requests outstanding
@@ -68,7 +68,7 @@ MAIN(simpleClient, int argc, char **argv, char **envp)
     dispatcher = mprCreateDispatcher("httpRequest", 0);
 
     for (i = 0; i < MAX_REQUESTS; i++) {
-        if (setupRequest(dispatcher, TEST_METHOD, TEST_URL, TEST_POST_DATA) < 0) {
+        if (setupRequest(dispatcher, TEST_METHOD, TEST_URL, TEST_DATA) < 0) {
             mprError("Cannot start request");
             break;
         }
@@ -119,7 +119,7 @@ static int setupRequest(MprDispatcher *dispatcher, cchar *method, cchar *uri, cc
     }
     HTTP_NOTIFY(conn, HTTP_EVENT_WRITABLE, 0);
     httpServiceQueues(conn, 0);
-    // httpEnableConnEvents(conn);
+    httpEnableConnEvents(conn);
     return 0;
 }
 
