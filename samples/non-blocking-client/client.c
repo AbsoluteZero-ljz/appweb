@@ -16,8 +16,8 @@
     Please change this test URL to a local url
  */
 #define TEST_URL        "http://example.com/index.html"
-#define TEST_METHOD     "POST"
-#define TEST_DATA       "Hello Post"
+#define TEST_METHOD     "GET"
+#define TEST_DATA       ""
 
 /*
     Number of requests outstanding
@@ -100,6 +100,8 @@ static int setupRequest(MprDispatcher *dispatcher, cchar *method, cchar *uri, cc
         However, here we could create multiple network connections so it will work over HTTP/1.
      */
     net = httpCreateNet(dispatcher, NULL, 1, 0);
+    httpSetAsync(net, 1);
+
     if ((stream = httpCreateStream(net, 0)) == 0) {
         httpDestroyNet(net);
         return MPR_ERR_CANT_CREATE;
@@ -108,7 +110,7 @@ static int setupRequest(MprDispatcher *dispatcher, cchar *method, cchar *uri, cc
         Disable timeouts incase you are debugging. Otherwise, you should utilize the standard timeouts
      */
     httpSetTimeout(stream, 0, 0);
-
+    
     /*
         Setup the callback to be notified on readable, writable and state change events.
         We write the post data, if any, in the callback. If no post data, the request will be finalized when the
