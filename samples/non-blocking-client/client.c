@@ -54,9 +54,9 @@ MAIN(simpleClient, int argc, char **argv, char **envp)
     /*
         Enable if you would like logging and request tracing
 
+        mprStartLogging("stdout:6", 0);
+        httpStartTracing("stdout:6");
      */
-    mprStartLogging("stdout:6", 0);
-    httpStartTracing("stdout:6");
 
     mprStart();
 
@@ -105,7 +105,8 @@ static int setupRequest(MprDispatcher *dispatcher, cchar *method, cchar *uri, cc
         Disable timeouts incase you are debugging. Otherwise, you should utilize the standard timeouts
      */
     httpSetTimeout(conn, 0, 0);
-
+    httpSetAsync(conn, 1);
+    
     /*
         Setup the callback to be notified on readable, writable and state change events.
         We write the post data, if any, in the callback. If no post data, the request will be finalized when the
