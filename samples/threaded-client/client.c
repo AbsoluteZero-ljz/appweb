@@ -15,7 +15,8 @@
 #define TEST_URL "http://example.com/index.html"
 #define TEST_THREADS 1
 #define TEST_ITERATIONS 1
-#define TEST_POST_DATA "Hello Post"
+#define TEST_METHOD "GET"
+#define TEST_DATA ""
 
 static int threadCount = 0;
 
@@ -118,11 +119,11 @@ static int request(HttpConn *conn)
     /*
        Connect and issue the request. Then finalize the request output - this forces the request out.
      */
-    if (httpConnect(conn, "POST", TEST_URL, NULL) < 0) {
+    if (httpConnect(conn, TEST_METHOD, TEST_URL, NULL) < 0) {
         mprError("Cannot connect to %s", TEST_URL);
         return MPR_ERR_CANT_CONNECT;
     }
-    data = TEST_POST_DATA;
+    data = TEST_DATA;
     if (data) {
         len = slen(data);
         if (httpWriteBlock(conn->writeq, data, len, HTTP_BLOCK) != len) {
