@@ -16608,6 +16608,10 @@ static bool parseHeaders(HttpConn *conn, HttpPacket *packet)
             Step over "\r\n" after headers.
             Don't do this if chunked so chunking can parse a single chunk delimiter of "\r\nSIZE ...\r\n"
          */
+        if (mprGetBufLength(content) < 2) {
+            httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad header format");
+            return 0;
+        }
         mprAdjustBufStart(content, 2);
     }
     /*
