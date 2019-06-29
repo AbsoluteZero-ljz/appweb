@@ -2816,7 +2816,6 @@ PUBLIC void httpInitChunking(HttpStream *stream)
     Return number of bytes available to read.
     NOTE: may set rx->eof and return 0 bytes on EOF.
  */
-
 static void incomingChunk(HttpQueue *q, HttpPacket *packet)
 {
     HttpStream  *stream;
@@ -3010,7 +3009,7 @@ static bool needChunking(HttpQueue *q)
         tx->length = stoi(value);
     }
     if (tx->length < 0 && tx->chunkSize < 0) {
-        if (q->last->flags & HTTP_PACKET_END) {
+        if (q->last && q->last->flags & HTTP_PACKET_END) {
             if (q->count > 0) {
                 tx->length = q->count;
             }
@@ -3067,7 +3066,7 @@ static void setChunkPrefix(HttpQueue *q, HttpPacket *packet)
 /********************************* Forwards ***********************************/
 
 static void setDefaultHeaders(HttpStream *stream);
-static int clientRequest(HttpStream *stream, cchar *method, cchar *uri, cchar *data, int protocol, char **err);
+static int clientRequest(HttpStream *stream, cchar *method, cchar *uri, cchar *data, char **err);
 
 /*********************************** Code *************************************/
 /*
@@ -3186,9 +3185,17 @@ PUBLIC int httpConnect(HttpStream *stream, cchar *method, cchar *url, MprSsl *ss
         }
 #endif
     }
+
     httpCreatePipeline(stream);
     setDefaultHeaders(stream);
+    tx->started = 1;
+
     httpSetState(stream, HTTP_STATE_CONNECTED);
+    httpPumpOutput(stream->writeq);
+
+    httpServiceNetQueues(net, 0);
+    httpEnableNetEvents(net);
+
     protocol = net->protocol < 2 ? "HTTP/1.1" : "HTTP/2";
     httpLog(net->trace, "client.request", "request", "method='%s', url='%s', protocol='%s'", tx->method, url, protocol);
     return 0;
@@ -3436,7 +3443,7 @@ PUBLIC HttpStream *httpRequest(cchar *method, cchar *uri, cchar *data, int proto
     }
     mprAddRoot(stream);
 
-    if (clientRequest(stream, method, uri, data, protocol, err) < 0) {
+    if (clientRequest(stream, method, uri, data, err) < 0) {
         mprRemoveRoot(stream);
         httpDestroyNet(net);
         return 0;
@@ -3446,7 +3453,7 @@ PUBLIC HttpStream *httpRequest(cchar *method, cchar *uri, cchar *data, int proto
 }
 
 
-static int clientRequest(HttpStream *stream, cchar *method, cchar *uri, cchar *data, int protocol, char **err)
+static int clientRequest(HttpStream *stream, cchar *method, cchar *uri, cchar *data, char **err)
 {
     ssize   len;
 
@@ -9065,7 +9072,7 @@ static HttpPacket *parseFields(HttpQueue *q, HttpPacket *packet)
             httpLimitError(stream, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Too many headers");
             return 0;
         }
-        if ((key = getToken(packet, ":")) == 0 || *key == '\0') {
+        if ((key = getToken(packet, ":")) == 0 || *key == '\0' || mprGetBufLength(packet->content) == 0) {
             httpBadRequestError(stream, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad header format");
             return 0;
         }
@@ -13609,13 +13616,7 @@ PUBLIC void httpNetClosed(HttpNet *net)
 
     for (ITERATE_ITEMS(net->streams, stream, next)) {
         if (stream->state < HTTP_STATE_PARSED) {
-            if (!stream->errorMsg) {
-                stream->errorMsg = sfmt("Peer closed connection before receiving a response");
-            }
-            if (!net->errorMsg) {
-                net->errorMsg = stream->errorMsg;
-            }
-            stream->error = 1;
+            httpError(stream, 0, "Peer closed connection before receiving a response");
         }
         httpSetEof(stream);
         httpSetState(stream, HTTP_STATE_COMPLETE);
@@ -14991,7 +14992,7 @@ static int pamChat(int msgCount, const struct pam_message **msg, struct pam_resp
 
 /*********************************** Code *************************************/
 /*
-    Use PAM to verify a user.  The password may be NULL if using auto-login.
+    Use PAM to verify a user. The password may be NULL if using auto-login.
  */
 PUBLIC bool httpPamVerifyUser(HttpStream *stream, cchar *username, cchar *password)
 {
@@ -15660,7 +15661,6 @@ static void processHttp(HttpQueue *q);
 static void processParsed(HttpQueue *q);
 static void processReady(HttpQueue *q);
 static bool processRunning(HttpQueue *q);
-static bool pumpOutput(HttpQueue *q);
 static void routeRequest(HttpStream *stream);
 static int sendContinue(HttpQueue *q);
 
@@ -16193,7 +16193,7 @@ static void routeRequest(HttpStream *stream)
 }
 
 
-static bool pumpOutput(HttpQueue *q)
+PUBLIC bool httpPumpOutput(HttpQueue *q)
 {
     HttpStream  *stream;
     HttpTx      *tx;
@@ -16208,7 +16208,7 @@ static bool pumpOutput(HttpQueue *q)
         count = wq->count;
         if (!tx->finalizedOutput) {
             HTTP_NOTIFY(stream, HTTP_EVENT_WRITABLE, 0);
-            if (tx->handler->writable) {
+            if (tx->handler && tx->handler->writable) {
                 tx->handler->writable(wq);
             }
         }
@@ -16248,7 +16248,7 @@ static bool processContent(HttpQueue *q)
             HTTP_NOTIFY(stream, HTTP_EVENT_READABLE, 0);
         }
     }
-    return pumpOutput(q) || rx->eof;
+    return httpPumpOutput(q) || rx->eof;
 }
 
 
@@ -16280,7 +16280,7 @@ static bool processRunning(HttpQueue *q)
         httpSetState(stream, HTTP_STATE_FINALIZED);
         return 1;
     }
-    return pumpOutput(q);
+    return httpPumpOutput(q);
 }
 
 

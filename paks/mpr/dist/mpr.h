@@ -102,6 +102,9 @@ struct  MprXml;
 #ifndef ME_MPR_MAX_PASSWORD
     #define ME_MPR_MAX_PASSWORD 256    /**< Max password length */
 #endif
+#ifndef ME_MPR_THREAD_CORE_LIMIT
+    #define ME_MPR_THREAD_CORE_LIMIT 1
+#endif
 
 /*
     Select wakeup port. Port can be any free port number. If this is not free, the MPR will use the next free port.
@@ -5818,20 +5821,20 @@ typedef void (*MprEventProc)(void *data, struct MprEvent *event);
     @stability Internal
  */
 typedef struct MprEvent {
-    cchar               *name;          /**< Static debug name of the event */
-    MprEventProc        proc;           /**< Callback procedure */
-    MprTicks            timestamp;      /**< When was the event created */
-    MprTicks            due;            /**< When is the event due */
-    void                *data;          /**< Event private data (managed|unmanged depending on flags) */
-    void                *sock;          /**< Optional socket data */
-    int                 flags;          /**< Event flags */
-    int                 mask;           /**< I/O mask of events */
-    MprTicks            period;         /**< Reschedule period */
-    struct MprEvent     *next;          /**< Next event linkage */
-    struct MprEvent     *prev;          /**< Previous event linkage */
-    struct MprDispatcher *dispatcher;   /**< Event dispatcher service */
-    struct MprWaitHandler *handler;     /**< Optional wait handler */
-    MprCond             *cond;          /**< Wait for event to complete */
+    cchar                   *name;              /**< Static debug name of the event */
+    MprEventProc            proc;               /**< Callback procedure */
+    MprTicks                timestamp;          /**< When was the event created */
+    MprTicks                due;                /**< When is the event due */
+    void                    *data;              /**< Event private data (managed|unmanged depending on flags) */
+    void                    *sock;              /**< Optional socket data */
+    int                     flags;              /**< Event flags */
+    int                     mask;               /**< I/O mask of events */
+    MprTicks                period;             /**< Reschedule period */
+    struct MprEvent         *next;              /**< Next event linkage */
+    struct MprEvent         *prev;              /**< Previous event linkage */
+    struct MprDispatcher    *dispatcher;        /**< Event dispatcher service */
+    struct MprWaitHandler   *handler;           /**< Optional wait handler */
+    MprCond                 *cond;              /**< Wait for event to complete */
 } MprEvent;
 
 /*
@@ -6048,8 +6051,9 @@ PUBLIC void mprSignalDispatcher(MprDispatcher *dispatcher);
         without utilizing using a worker thread. This should only be used for quick non-blocking event callbacks.
         \n\n
         When calling this routine from foreign threads, you must use the MPR_EVENT_FOREIGN flag. IN this case the supplied dispatcher will be ignored and the MPR_EVENT_QUICK and MPR_EVENT_STATIC_DATA flags will be implied. Data supplied from foreign threads must be non-mpr memory and must persist until the callback has completed. This typically means the data memory should either be static or be allocated using malloc() before the call and released via free() in the callback.
-    @return Returns the event object if successful. This routine may return before or after the even callback has run.
-        If MPR_EVENT_FOREIGN is supplied, the return value is always zero.
+    @return Returns the event object if successful. This routine may return before or after the event callback has run.
+        If MPR_EVENT_FOREIGN is supplied, the return value is may point to freed memory. You may test the pointer if it is
+        NULL, but do not dereference it.
     @ingroup MprEvent
     @stability Evolving
  */
@@ -6060,10 +6064,11 @@ PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks
     @description Queue an event for service
     @param dispatcher Dispatcher object created via mprCreateDispatcher
     @param event Event object to queue
+    @returns True if the event was scheduled on the dispatcher.
     @ingroup MprEvent
     @stability Stable
  */
-PUBLIC void mprQueueEvent(MprDispatcher *dispatcher, MprEvent *event);
+PUBLIC bool mprQueueEvent(MprDispatcher *dispatcher, MprEvent *event);
 
 /**
     Remove an event
@@ -8048,6 +8053,7 @@ PUBLIC ssize mprWriteSocketVector(MprSocket *sp, MprIOVec *iovec, int count);
     #define ME_MPR_SSL_TIMEOUT 86400
 #endif
 #define ME_MPR_HAS_ALPN 1
+#define MPR_HAS_CRPTO_ENGINE 1
 
 /**
     Callback function for SNI connections.
@@ -8068,6 +8074,7 @@ typedef struct MprSsl {
     cchar           *caFile;            /**< Certificate verification cert file or bundle */
     cchar           *caPath;            /**< Certificate verification cert directory (OpenSSL only) */
     cchar           *ciphers;           /**< Candidate ciphers to use */
+    cchar           *device;            /**< Crypto hardware device to use */
     cchar           *hostname;          /**< Hostname when using SNI */
     MprList         *alpn;              /**< ALPN protocols */
     void            *config;            /**< Extended provider SSL configuration */

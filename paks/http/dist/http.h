@@ -8509,6 +8509,9 @@ PUBLIC void httpRemoveOption(MprHash *options, cchar *field);
  */
 PUBLIC void httpSetOption(MprHash *options, cchar *field, cchar *value);
 
+//  DOC
+PUBLIC bool httpPumpOutput(HttpQueue *q);
+
 /********************************* Compat **************************************/
 /*
     LEGACY redefines for compatibility with http versions 4-7
