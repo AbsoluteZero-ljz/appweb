@@ -8421,6 +8421,26 @@ typedef struct HttpDir {
  */
 PUBLIC HttpDir *httpGetDirObj(HttpRoute *route);
 
+/************************************ Invoke ***************************************/
+
+/**
+    Event callback function for httpInvoke
+    @ingroup HttpStream
+    @stability Prototype
+ */
+typedef void (*HttpInvokeProc)(HttpStream *stream, void *data);
+
+/**
+    Invoke a callback on an Appweb thread from a non-appweb thread.
+    @description Used to safely call back into Apppweb. This API provides a wrapper over mprCreateEvent.
+    @param stream HttpStream object created via #httpCreateStream
+    @param callback Callback function to invoke
+    @param data Data to pass to the callback. Caller is responsible to free in the callback if required.
+    @ingroup HttpStream
+    @stability Prototype
+ */
+PUBLIC void httpInvoke(HttpStream *stream, HttpInvokeProc callback, void *data);
+
 /************************************ Misc *****************************************/
 /**
     Add an option to the options table
@@ -8508,6 +8528,18 @@ PUBLIC void httpRemoveOption(MprHash *options, cchar *field);
     @stability Evolving
  */
 PUBLIC void httpSetOption(MprHash *options, cchar *field, cchar *value);
+
+/**
+    Get more output by invoking the handler's writable callback.
+    Called by processRunning.
+    Also issues an HTTP_EVENT_WRITABLE for application level notification.
+    @description Get more output by invoking the handler's writable callback. Called by processRunning.
+    Also issues an HTTP_EVENT_WRITABLE for application level notification.
+    @param q HttpQueue input queue object
+    @ingroup HttpConn
+    @stability Internal
+ */
+PUBLIC bool httpPumpOutput(HttpQueue *q);
 
 /********************************* Compat **************************************/
 /*

@@ -22087,6 +22087,14 @@ PUBLIC HttpStage *httpCreateStreamector(cchar *name, MprModule *module)
 
 
 
+/********************************** Locals ************************************/
+
+typedef struct HttpInvoke {
+    HttpInvokeProc  callback;
+    void            *data;         //  User data - caller must free if required in callback
+    HttpStream      *stream;       //  Relevant stream
+} HttpInvoke;
+
 /***************************** Forward Declarations ***************************/
 
 static void pickStreamNumber(HttpStream *stream);
@@ -22723,6 +22731,26 @@ PUBLIC void httpTraceQueues(HttpStream *stream)
 #endif
 }
 
+
+static void invokeWrapper(HttpInvoke *invoke)
+{
+    invoke->callback(invoke->conn, invoke->data);
+    pfree(invoke);
+}
+
+
+PUBLIC void httpInvoke(HttpStream *stream, HttpInvokeProc callback, void *data)
+{
+    HttpInvoke  *invoke;
+
+    if ((invoke = palloc(sizeof(HttpInvoke))) != NULL) {
+        invoke->callback = callback;
+        invoke->data = data;
+        invoke->stream = stream;
+        mprCreateEvent(stream->dispatcher, "httpInvoke", 0, (MprEventProc) invokeWrapper, invoke,
+            MPR_EVENT_FOREIGN | MPR_EVENT_STATIC_DATA);
+    }
+}
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
     This software is distributed under commercial and open source licenses.
