@@ -94,6 +94,8 @@ static void chat_action()
 
     /*
         Add the client to the list of clients. This API is thread-safe.
+        Note: this clients list should never be accessed by foreign (non-Appweb) threads as a stream / connection
+         may be destroyed while the foreign thread is executing.
      */
     stream = getConn();
     mprAddItem(clients, stream);

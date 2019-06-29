@@ -20,6 +20,10 @@ To run:
 ---
     me run
 
+The server listens on port 8080. Browse to:
+
+     http://localhost:8080/
+
 Code:
 ---
 * [cache](cache) - Directory for compiled ESP modules
