@@ -23490,6 +23490,7 @@ static void manageSsl(MprSsl *ssl, int flags)
         mprMark(ssl->caFile);
         mprMark(ssl->ciphers);
         mprMark(ssl->config);
+        mprMark(ssl->device);
         mprMark(ssl->keyFile);
         mprMark(ssl->hostname);
         mprMark(ssl->mutex);
@@ -23678,6 +23679,12 @@ PUBLIC void mprSetSslCiphers(MprSsl *ssl, cchar *ciphers)
     assert(ssl);
     ssl->ciphers = sclone(ciphers);
     ssl->changed = 1;
+}
+
+
+PUBLIC void mprSetSslDevice(MprSsl *ssl, cchar *device)
+{
+    ssl->device = sclone(device);
 }
 
 
