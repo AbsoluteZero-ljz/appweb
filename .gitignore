@@ -35,3 +35,8 @@ test/test.dat
 /projects/setenv.bat
 samples/chroot-server/server
 /projects/appweb-core*
+XCBuildData/
+app-macosx-debug.xcodeproj
+Debug/
+samples/*/client
+samples/*/roots.crt
