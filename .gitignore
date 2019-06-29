@@ -19,3 +19,9 @@ src/server/certs
 *.guid
 test/exploits/
 /start.me
+XCBuildData/
+app-macosx-debug.xcodeproj
+Debug/
+samples/*/client
+samples/*/roots.crt
+.makefile

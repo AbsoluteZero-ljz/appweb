@@ -35,7 +35,8 @@ Me.load({
         run: {
             depends: [ 'compile' ],
             run: '${BIN}/appweb --log stdout:2',
-            generate: 'appweb --log stdout:2',
+            generate: '${LBIN}/appweb --log stdout:2',
+            'generate-nmake': '..\\..\\build\\${CONFIG}\\bin\\appweb --log stdout:2',
         },
 
         rom: {
