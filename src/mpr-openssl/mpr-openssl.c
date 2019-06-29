@@ -41,6 +41,11 @@
 
 #if OPENSSL_VERSION_NUMBER >= 0x10002000L
     #include    <openssl/x509v3.h>
+#ifndef OPENSSL_NO_ENGINE
+    #include    <openssl/engine.h>
+#else
+    #define MPR_HAS_CRYPTO_ENGINE 1
+#endif
 #endif
 
 /************************************* Defines ********************************/
@@ -328,6 +333,9 @@ PUBLIC int mprSslInit(void *unused, MprModule *module)
          */
         SSL_library_init();
         SSL_load_error_strings();
+#if MPR_HAS_CRYPTO_ENGINE
+        ENGINE_load_builtin_engines();
+#endif
     }
     mprGlobalUnlock();
     return 0;
@@ -353,6 +361,9 @@ static void manageOpenConfig(OpenConfig *cfg, int flags)
                 cfg->dhKey = 0;
             }
         }
+#if MPR_HAS_CRYPTO_ENGINE
+        ENGINE_cleanup();
+#endif
     }
 }
 
@@ -411,7 +422,7 @@ static DynLock *sslCreateDynLock(cchar *file, int line)
     DynLock     *dl;
 
     dl = mprAllocZeroed(sizeof(DynLock));
-    dl->mutex = mprCreateLock(dl);
+    dl->mutex = mprCreateLock();
     mprHold(dl->mutex);
     return dl;
 }
@@ -419,9 +430,12 @@ static DynLock *sslCreateDynLock(cchar *file, int line)
 
 static void sslDestroyDynLock(DynLock *dl, cchar *file, int line)
 {
+    MprMutex    *mutex;
+
     if (dl->mutex) {
-        mprRelease(dl->mutex);
+        mutex = dl->mutex;
         dl->mutex = 0;
+        mprRelease(mutex);
     }
 }
 
@@ -582,6 +596,10 @@ static int configOss(MprSsl *ssl, int flags, char **errorMsg)
         cfg->setFlags |= SSL_OP_NO_TLSv1_2;
     }
 #endif
+#ifdef SSL_OP_NO_TLSv1_3
+    if (!(ssl->protocols & MPR_PROTO_TLSV1_3)) {
+        cfg->setFlags |= SSL_OP_NO_TLSv1_3;
+    }
 #ifdef SSL_OP_MSIE_SSLV2_RSA_PADDING
     cfg->setFlags |= SSL_OP_MSIE_SSLV2_RSA_PADDING;
 #endif
@@ -711,8 +729,33 @@ static int configOss(MprSsl *ssl, int flags, char **errorMsg)
         SSL_CTX_set_alpn_select_cb(ctx, selectAlpn, NULL);
     }
 #endif
+
+#if MPR_HAS_CRYPTO_ENGINE
+    if (initEngine(ssl) < 0) {
+        /* Continue without engine */
+    }
+#endif
     return 0;
 }
+
+#if MPR_HAS_CRYPTO_ENGINE
+static void initEngine(MprSsl *ssl)
+{
+    ENGINE  engine;
+
+    if (!(engine = ENGINE_by_id(ssl->device))) {
+        mprLog("mpr ssl openssl error", "Cannot find crypto device %s", ssl->device);
+        return MPR_CANT_FIND;
+    }
+    if (!ENGINE_set_default(engine, ENGINE_METHOD_ALL)) {
+        mprLog("mpr ssl openssl error", "Cannot find crypto device %s", ssl->device);
+        ENGINE_free(engine);
+        return MPR_CANT_FIND;
+    }
+    mprLog("mpr ssl openssl info", "Loaded crypto device %s", ssl->device);
+    ENGINE_free(engine);
+}
+#endif
 
 
 #if ME_MPR_HAS_ALPN
@@ -1490,6 +1533,8 @@ static cchar *mapCipherNames(cchar *ciphers)
 
 /*
     DH Parameters from RFC3526
+    Alternatively, replace with your own DH params generated via:
+    openssl dhparam --out dh.c -C 2048
  */
 
 static DH *getDhKey()
