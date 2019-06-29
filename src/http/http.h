@@ -8030,6 +8030,25 @@ typedef struct HttpDir {
  */
 PUBLIC HttpDir *httpGetDirObj(HttpRoute *route);
 
+/************************************ Invoke ***************************************/
+/**
+    Event callback function
+    @ingroup HttpConn
+    @stability Prototype
+ */
+typedef void (*HttpInvokeProc)(HttpConn *conn, void *data);
+
+/**
+    Invoke a callback on an Appweb thread from a non-appweb thread.
+    @description Used to safely call back into Apppweb. This API provides a wrapper over mprCreateEvent.
+    @param conn HttpConn connection object created via #httpCreateConn
+    @param callback Callback function to invoke
+    @param data Data to pass to the callback. Caller is responsible to free in the callback if required.
+    @ingroup HttpConn
+    @stability Prototype
+ */
+PUBLIC void httpInvoke(HttpConn *conn, HttpInvokeProc callback, void *data);
+
 /************************************ Misc *****************************************/
 /**
     Add an option to the options table
