@@ -87,20 +87,18 @@ Me.load({
         },
 
         mpr: {
-            /*
-                Enable logging via mprLog to the log file
-                The default is to enable logging for both debug and release builds.
-             */
-            logging: true,              /* Enable application logging */
-            romMount: "/rom",           /* Virtual mount point for a rom file system */
-            threadStack: 0,             /* Use the default system stack size */
-            oslog: false,               /* Write to the O/S log file */
-
             alloc: {
                 // quota: 204800,       /* Amount of memory to allocate before a GC */
                 // cache: 0,            /* Amount of memory to buffer for fast allocations */
                 // check: false,        /* Memory allocation debug and stats (slow) */
             },
+            /*
+                Enable logging via mprLog to the log file
+                The default is to enable logging for both debug and release builds.
+             */
+            logging: true,              /* Enable application logging */
+            oslog: false,               /* Write to the O/S log file */
+            romMount: "/rom",           /* Virtual mount point for a rom file system */
             ssl: {
                 cache: 512,             /* Set the session cache size (items) */
                 logLevel: 6,            /* Starting logging level for SSL messages */
@@ -108,6 +106,8 @@ Me.load({
                 ticket: true,           /* Enable session resumption via ticketing - client side session caching */
                 timeout: 86400,         /* Session and ticketing duration in seconds */
             },
+            threadStack: 0,             /* Use the default system stack size */
+            threadLimitByCores: true,   /* Limit threads to CPU core count */
         },
 
         /*
