@@ -4,7 +4,7 @@
       <ItemDefinitionGroup>
         <ClCompile>
           <PreprocessorDefinitions>ME_DEBUG=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-          <AdditionalIncludeDirectories>/Users/mob/dev/appweb-7/build/windows-x64-openssl_11/inc;/Users/mob/dev/appweb-7/build/windows-x64-openssl_11/inc;$(ME_COM_OPENSSL_PATH)/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+          <AdditionalIncludeDirectories>$(IncDir);$(IncDir);$(ME_COM_OPENSSL_PATH)/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
           <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -14,7 +14,7 @@
       </ItemDefinitionGroup>
 
       <PropertyGroup Label="Globals">
-        <ProjectGuid>{79ef795a-9079-4faa-8ba8-60d6c8ec8974}</ProjectGuid>
+        <ProjectGuid>{af00480f-61ce-414e-b755-9b1c46bc2b9c}</ProjectGuid>
         <RootNamespace />
         <Keyword>Win32Proj</Keyword>
       </PropertyGroup>

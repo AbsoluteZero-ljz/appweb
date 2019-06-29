@@ -4,7 +4,7 @@
       <ItemDefinitionGroup>
         <ClCompile>
           <PreprocessorDefinitions>ME_DEBUG=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-          <AdditionalIncludeDirectories>/Users/mob/dev/appweb-7/build/windows-x64-static/inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+          <AdditionalIncludeDirectories>$(IncDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
           <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -14,7 +14,7 @@
       </ItemDefinitionGroup>
 
       <PropertyGroup Label="Globals">
-        <ProjectGuid>{ad4e711f-44b6-49ec-8584-51f1e9b5d821}</ProjectGuid>
+        <ProjectGuid>{3aeec68b-3daa-4809-987f-1b4635509dfa}</ProjectGuid>
         <RootNamespace />
         <Keyword>Win32Proj</Keyword>
       </PropertyGroup>

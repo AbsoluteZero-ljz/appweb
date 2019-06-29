@@ -9,6 +9,7 @@ ARCH                  ?= $(shell uname -m | sed 's/i.86/x86/;s/x86_64/x64/;s/arm
 CC_ARCH               ?= $(shell echo $(ARCH) | sed 's/x86/i686/;s/x64/x86_64/')
 OS                    ?= freebsd
 CC                    ?= gcc
+AR                    ?= ar
 CONFIG                ?= $(OS)-$(ARCH)-$(PROFILE)
 BUILD                 ?= build/$(CONFIG)
 LBIN                  ?= $(BUILD)/bin
@@ -584,7 +585,7 @@ DEPS_42 += $(BUILD)/obj/mbedtls.o
 
 $(BUILD)/bin/libmbedtls.a: $(DEPS_42)
 	@echo '      [Link] $(BUILD)/bin/libmbedtls.a'
-	ar -cr $(BUILD)/bin/libmbedtls.a "$(BUILD)/obj/mbedtls.o"
+	$(AR) -cr $(BUILD)/bin/libmbedtls.a "$(BUILD)/obj/mbedtls.o"
 endif
 
 ifeq ($(ME_COM_MBEDTLS),1)
@@ -596,7 +597,7 @@ DEPS_43 += $(BUILD)/obj/mpr-mbedtls.o
 
 $(BUILD)/bin/libmpr-mbedtls.a: $(DEPS_43)
 	@echo '      [Link] $(BUILD)/bin/libmpr-mbedtls.a'
-	ar -cr $(BUILD)/bin/libmpr-mbedtls.a "$(BUILD)/obj/mpr-mbedtls.o"
+	$(AR) -cr $(BUILD)/bin/libmpr-mbedtls.a "$(BUILD)/obj/mpr-mbedtls.o"
 endif
 
 ifeq ($(ME_COM_OPENSSL),1)
@@ -607,7 +608,7 @@ DEPS_44 += $(BUILD)/obj/mpr-openssl.o
 
 $(BUILD)/bin/libmpr-openssl.a: $(DEPS_44)
 	@echo '      [Link] $(BUILD)/bin/libmpr-openssl.a'
-	ar -cr $(BUILD)/bin/libmpr-openssl.a "$(BUILD)/obj/mpr-openssl.o"
+	$(AR) -cr $(BUILD)/bin/libmpr-openssl.a "$(BUILD)/obj/mpr-openssl.o"
 endif
 
 #
@@ -628,7 +629,7 @@ DEPS_45 += $(BUILD)/obj/mprLib.o
 
 $(BUILD)/bin/libmpr.a: $(DEPS_45)
 	@echo '      [Link] $(BUILD)/bin/libmpr.a'
-	ar -cr $(BUILD)/bin/libmpr.a "$(BUILD)/obj/mprLib.o"
+	$(AR) -cr $(BUILD)/bin/libmpr.a "$(BUILD)/obj/mprLib.o"
 
 ifeq ($(ME_COM_PCRE),1)
 #
@@ -639,7 +640,7 @@ DEPS_46 += $(BUILD)/obj/pcre.o
 
 $(BUILD)/bin/libpcre.a: $(DEPS_46)
 	@echo '      [Link] $(BUILD)/bin/libpcre.a'
-	ar -cr $(BUILD)/bin/libpcre.a "$(BUILD)/obj/pcre.o"
+	$(AR) -cr $(BUILD)/bin/libpcre.a "$(BUILD)/obj/pcre.o"
 endif
 
 ifeq ($(ME_COM_HTTP),1)
@@ -655,7 +656,7 @@ DEPS_47 += $(BUILD)/obj/httpLib.o
 
 $(BUILD)/bin/libhttp.a: $(DEPS_47)
 	@echo '      [Link] $(BUILD)/bin/libhttp.a'
-	ar -cr $(BUILD)/bin/libhttp.a "$(BUILD)/obj/httpLib.o"
+	$(AR) -cr $(BUILD)/bin/libhttp.a "$(BUILD)/obj/httpLib.o"
 endif
 
 #
@@ -666,7 +667,7 @@ DEPS_48 += $(BUILD)/obj/mpr-version.o
 
 $(BUILD)/bin/libmpr-version.a: $(DEPS_48)
 	@echo '      [Link] $(BUILD)/bin/libmpr-version.a'
-	ar -cr $(BUILD)/bin/libmpr-version.a "$(BUILD)/obj/mpr-version.o"
+	$(AR) -cr $(BUILD)/bin/libmpr-version.a "$(BUILD)/obj/mpr-version.o"
 
 ifeq ($(ME_COM_ESP),1)
 #
@@ -681,7 +682,7 @@ DEPS_49 += $(BUILD)/obj/espLib.o
 
 $(BUILD)/bin/libesp.a: $(DEPS_49)
 	@echo '      [Link] $(BUILD)/bin/libesp.a'
-	ar -cr $(BUILD)/bin/libesp.a "$(BUILD)/obj/espLib.o"
+	$(AR) -cr $(BUILD)/bin/libesp.a "$(BUILD)/obj/espLib.o"
 endif
 
 #
@@ -704,7 +705,7 @@ DEPS_50 += $(BUILD)/obj/rom.o
 
 $(BUILD)/bin/libappweb.a: $(DEPS_50)
 	@echo '      [Link] $(BUILD)/bin/libappweb.a'
-	ar -cr $(BUILD)/bin/libappweb.a "$(BUILD)/obj/config.o" "$(BUILD)/obj/convenience.o" "$(BUILD)/obj/cgiHandler.o" "$(BUILD)/obj/espHandler.o" "$(BUILD)/obj/rom.o"
+	$(AR) -cr $(BUILD)/bin/libappweb.a "$(BUILD)/obj/config.o" "$(BUILD)/obj/convenience.o" "$(BUILD)/obj/cgiHandler.o" "$(BUILD)/obj/espHandler.o" "$(BUILD)/obj/rom.o"
 
 #
 #   appweb
@@ -1000,7 +1001,7 @@ DEPS_58 += $(BUILD)/obj/phpHandler7.o
 
 $(BUILD)/bin/libmod_php.a: $(DEPS_58)
 	@echo '      [Link] $(BUILD)/bin/libmod_php.a'
-	ar -cr $(BUILD)/bin/libmod_php.a "$(BUILD)/obj/phpHandler5.o" "$(BUILD)/obj/phpHandler7.o"
+	$(AR) -cr $(BUILD)/bin/libmod_php.a "$(BUILD)/obj/phpHandler5.o" "$(BUILD)/obj/phpHandler7.o"
 endif
 
 #

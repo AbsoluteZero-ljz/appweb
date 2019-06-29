@@ -10,6 +10,7 @@ CPU                   ?= $(subst X86,PENTIUM,$(shell echo $(ARCH) | tr a-z A-Z))
 OS                    ?= vxworks
 CC                    ?= cc$(subst x86,pentium,$(ARCH))
 LD                    ?= ldundefined
+AR                    ?= arundefined
 CONFIG                ?= $(OS)-$(ARCH)-$(PROFILE)
 BUILD                 ?= build/$(CONFIG)
 LBIN                  ?= $(BUILD)/bin
@@ -593,7 +594,7 @@ DEPS_42 += $(BUILD)/obj/mbedtls.o
 
 $(BUILD)/bin/libmbedtls.a: $(DEPS_42)
 	@echo '      [Link] $(BUILD)/bin/libmbedtls.a'
-	arundefined -cr $(BUILD)/bin/libmbedtls.a "$(BUILD)/obj/mbedtls.o"
+	$(AR) -cr $(BUILD)/bin/libmbedtls.a "$(BUILD)/obj/mbedtls.o"
 endif
 
 ifeq ($(ME_COM_MBEDTLS),1)
@@ -605,7 +606,7 @@ DEPS_43 += $(BUILD)/obj/mpr-mbedtls.o
 
 $(BUILD)/bin/libmpr-mbedtls.a: $(DEPS_43)
 	@echo '      [Link] $(BUILD)/bin/libmpr-mbedtls.a'
-	arundefined -cr $(BUILD)/bin/libmpr-mbedtls.a "$(BUILD)/obj/mpr-mbedtls.o"
+	$(AR) -cr $(BUILD)/bin/libmpr-mbedtls.a "$(BUILD)/obj/mpr-mbedtls.o"
 endif
 
 ifeq ($(ME_COM_OPENSSL),1)
@@ -616,7 +617,7 @@ DEPS_44 += $(BUILD)/obj/mpr-openssl.o
 
 $(BUILD)/bin/libmpr-openssl.a: $(DEPS_44)
 	@echo '      [Link] $(BUILD)/bin/libmpr-openssl.a'
-	arundefined -cr $(BUILD)/bin/libmpr-openssl.a "$(BUILD)/obj/mpr-openssl.o"
+	$(AR) -cr $(BUILD)/bin/libmpr-openssl.a "$(BUILD)/obj/mpr-openssl.o"
 endif
 
 #
@@ -697,7 +698,7 @@ DEPS_48 += $(BUILD)/obj/mpr-version.o
 
 $(BUILD)/bin/libmpr-version.a: $(DEPS_48)
 	@echo '      [Link] $(BUILD)/bin/libmpr-version.a'
-	arundefined -cr $(BUILD)/bin/libmpr-version.a "$(BUILD)/obj/mpr-version.o"
+	$(AR) -cr $(BUILD)/bin/libmpr-version.a "$(BUILD)/obj/mpr-version.o"
 
 ifeq ($(ME_COM_ESP),1)
 #
