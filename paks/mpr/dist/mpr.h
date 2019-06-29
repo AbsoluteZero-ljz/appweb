@@ -102,8 +102,8 @@ struct  MprXml;
 #ifndef ME_MPR_MAX_PASSWORD
     #define ME_MPR_MAX_PASSWORD 256    /**< Max password length */
 #endif
-#ifndef ME_MPR_THREAD_CORE_LIMIT
-    #define ME_MPR_THREAD_CORE_LIMIT 1
+#ifndef ME_MPR_THREAD_LIMIT_BY_CORES
+    #define ME_MPR_THREAD_LIMIT_BY_CORES 1
 #endif
 
 /*
