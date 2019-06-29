@@ -129,7 +129,7 @@ RC                    = rc
 CFLAGS                = -nologo -GR- -W3 -Zi -Od -MDd
 DFLAGS                = -DME_DEBUG=1 -DME_COM_CGI=$(ME_COM_CGI) -DME_COM_COMPILER=$(ME_COM_COMPILER) -DME_COM_DIR=$(ME_COM_DIR) -DME_COM_EJS=$(ME_COM_EJS) -DME_COM_ESP=$(ME_COM_ESP) -DME_COM_HTTP=$(ME_COM_HTTP) -DME_COM_LIB=$(ME_COM_LIB) -DME_COM_LINK=$(ME_COM_LINK) -DME_COM_MATRIXSSL=$(ME_COM_MATRIXSSL) -DME_COM_MBEDTLS=$(ME_COM_MBEDTLS) -DME_COM_MDB=$(ME_COM_MDB) -DME_COM_MPR=$(ME_COM_MPR) -DME_COM_NANOSSL=$(ME_COM_NANOSSL) -DME_COM_OPENSSL=$(ME_COM_OPENSSL) -DME_COM_OSDEP=$(ME_COM_OSDEP) -DME_COM_PCRE=$(ME_COM_PCRE) -DME_COM_PHP=$(ME_COM_PHP) -DME_COM_RC=$(ME_COM_RC) -DME_COM_SSL=$(ME_COM_SSL) -DME_COM_VXWORKS=$(ME_COM_VXWORKS) -DME_COM_WATCHDOG=$(ME_COM_WATCHDOG) 
 IFLAGS                = -Ibuild\$(CONFIG)\inc
-LDFLAGS               = -nologo -incremental:no -debug -machine:x64
+LDFLAGS               = -nologo -incremental:no -dynamicbase -highentropyva -nxcompat -debug -machine:x64
 LIBPATHS              = "-libpath:$(BUILD)\bin"
 LIBS                  = ws2_32.lib advapi32.lib user32.lib kernel32.lib oldnames.lib shell32.lib
 
@@ -709,7 +709,7 @@ DEPS_46 = $(DEPS_46) build\$(CONFIG)\obj\mbedtls.obj
 
 build\$(CONFIG)\bin\libmbedtls.lib: $(DEPS_46)
 	@echo ..... [Link] build\$(CONFIG)\bin\libmbedtls.lib
-	"lib.exe" -nologo -out:$(BUILD)\bin\libmbedtls.lib "$(BUILD)\obj\mbedtls.obj" $(LOG)
+	"$(AR)" -nologo -out:$(BUILD)\bin\libmbedtls.lib "$(BUILD)\obj\mbedtls.obj" $(LOG)
 !ENDIF
 
 !IF "$(ME_COM_MBEDTLS)" == "1"
@@ -721,7 +721,7 @@ DEPS_47 = $(DEPS_47) build\$(CONFIG)\obj\mpr-mbedtls.obj
 
 build\$(CONFIG)\bin\libmpr-mbedtls.lib: $(DEPS_47)
 	@echo ..... [Link] build\$(CONFIG)\bin\libmpr-mbedtls.lib
-	"lib.exe" -nologo -out:$(BUILD)\bin\libmpr-mbedtls.lib "$(BUILD)\obj\mpr-mbedtls.obj" $(LOG)
+	"$(AR)" -nologo -out:$(BUILD)\bin\libmpr-mbedtls.lib "$(BUILD)\obj\mpr-mbedtls.obj" $(LOG)
 !ENDIF
 
 !IF "$(ME_COM_OPENSSL)" == "1"
@@ -732,7 +732,7 @@ DEPS_48 = $(DEPS_48) build\$(CONFIG)\obj\mpr-openssl.obj
 
 build\$(CONFIG)\bin\libmpr-openssl.lib: $(DEPS_48)
 	@echo ..... [Link] build\$(CONFIG)\bin\libmpr-openssl.lib
-	"lib.exe" -nologo -out:$(BUILD)\bin\libmpr-openssl.lib "$(BUILD)\obj\mpr-openssl.obj" $(LOG)
+	"$(AR)" -nologo -out:$(BUILD)\bin\libmpr-openssl.lib "$(BUILD)\obj\mpr-openssl.obj" $(LOG)
 !ENDIF
 
 #
@@ -753,7 +753,7 @@ DEPS_49 = $(DEPS_49) build\$(CONFIG)\obj\mprLib.obj
 
 build\$(CONFIG)\bin\libmpr.lib: $(DEPS_49)
 	@echo ..... [Link] build\$(CONFIG)\bin\libmpr.lib
-	"lib.exe" -nologo -out:$(BUILD)\bin\libmpr.lib "$(BUILD)\obj\mprLib.obj" $(LOG)
+	"$(AR)" -nologo -out:$(BUILD)\bin\libmpr.lib "$(BUILD)\obj\mprLib.obj" $(LOG)
 
 !IF "$(ME_COM_PCRE)" == "1"
 #
@@ -764,7 +764,7 @@ DEPS_50 = $(DEPS_50) build\$(CONFIG)\obj\pcre.obj
 
 build\$(CONFIG)\bin\libpcre.lib: $(DEPS_50)
 	@echo ..... [Link] build\$(CONFIG)\bin\libpcre.lib
-	"lib.exe" -nologo -out:$(BUILD)\bin\libpcre.lib "$(BUILD)\obj\pcre.obj" $(LOG)
+	"$(AR)" -nologo -out:$(BUILD)\bin\libpcre.lib "$(BUILD)\obj\pcre.obj" $(LOG)
 !ENDIF
 
 !IF "$(ME_COM_HTTP)" == "1"
@@ -780,7 +780,7 @@ DEPS_51 = $(DEPS_51) build\$(CONFIG)\obj\httpLib.obj
 
 build\$(CONFIG)\bin\libhttp.lib: $(DEPS_51)
 	@echo ..... [Link] build\$(CONFIG)\bin\libhttp.lib
-	"lib.exe" -nologo -out:$(BUILD)\bin\libhttp.lib "$(BUILD)\obj\httpLib.obj" $(LOG)
+	"$(AR)" -nologo -out:$(BUILD)\bin\libhttp.lib "$(BUILD)\obj\httpLib.obj" $(LOG)
 !ENDIF
 
 #
@@ -791,7 +791,7 @@ DEPS_52 = $(DEPS_52) build\$(CONFIG)\obj\mpr-version.obj
 
 build\$(CONFIG)\bin\libmpr-version.lib: $(DEPS_52)
 	@echo ..... [Link] build\$(CONFIG)\bin\libmpr-version.lib
-	"lib.exe" -nologo -out:$(BUILD)\bin\libmpr-version.lib "$(BUILD)\obj\mpr-version.obj" $(LOG)
+	"$(AR)" -nologo -out:$(BUILD)\bin\libmpr-version.lib "$(BUILD)\obj\mpr-version.obj" $(LOG)
 
 !IF "$(ME_COM_ESP)" == "1"
 #
@@ -806,7 +806,7 @@ DEPS_53 = $(DEPS_53) build\$(CONFIG)\obj\espLib.obj
 
 build\$(CONFIG)\bin\libesp.lib: $(DEPS_53)
 	@echo ..... [Link] build\$(CONFIG)\bin\libesp.lib
-	"lib.exe" -nologo -out:$(BUILD)\bin\libesp.lib "$(BUILD)\obj\espLib.obj" $(LOG)
+	"$(AR)" -nologo -out:$(BUILD)\bin\libesp.lib "$(BUILD)\obj\espLib.obj" $(LOG)
 !ENDIF
 
 #
@@ -829,7 +829,7 @@ DEPS_54 = $(DEPS_54) build\$(CONFIG)\obj\rom.obj
 
 build\$(CONFIG)\bin\libappweb.lib: $(DEPS_54)
 	@echo ..... [Link] build\$(CONFIG)\bin\libappweb.lib
-	"lib.exe" -nologo -out:$(BUILD)\bin\libappweb.lib "$(BUILD)\obj\config.obj" "$(BUILD)\obj\convenience.obj" "$(BUILD)\obj\cgiHandler.obj" "$(BUILD)\obj\espHandler.obj" "$(BUILD)\obj\rom.obj" $(LOG)
+	"$(AR)" -nologo -out:$(BUILD)\bin\libappweb.lib "$(BUILD)\obj\config.obj" "$(BUILD)\obj\convenience.obj" "$(BUILD)\obj\cgiHandler.obj" "$(BUILD)\obj\espHandler.obj" "$(BUILD)\obj\rom.obj" $(LOG)
 
 #
 #   appweb
@@ -1210,7 +1210,7 @@ DEPS_64 = $(DEPS_64) build\$(CONFIG)\obj\phpHandler7.obj
 
 build\$(CONFIG)\bin\libmod_php.lib: $(DEPS_64)
 	@echo ..... [Link] build\$(CONFIG)\bin\libmod_php.lib
-	"lib.exe" -nologo -out:$(BUILD)\bin\libmod_php.lib "$(BUILD)\obj\phpHandler5.obj" "$(BUILD)\obj\phpHandler7.obj" $(LOG)
+	"$(AR)" -nologo -out:$(BUILD)\bin\libmod_php.lib "$(BUILD)\obj\phpHandler5.obj" "$(BUILD)\obj\phpHandler7.obj" $(LOG)
 !ENDIF
 
 #
