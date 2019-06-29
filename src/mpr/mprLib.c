@@ -25625,7 +25625,7 @@ PUBLIC void mprGetWorkerStats(MprWorkerStats *stats)
 PUBLIC int mprAvailableWorkers()
 {
     MprWorkerStats  wstats;
-    int             activeWorkers, spareThreads, spareCores, result;
+    int             spareThreads, result;
 
     memset(&wstats, 0, sizeof(wstats));
     mprGetWorkerStats(&wstats);
@@ -25635,13 +25635,19 @@ PUBLIC int mprAvailableWorkers()
         SpareCores      == Cores available on the system
         Result          == Idle workers + lesser of SpareCores|SpareThreads
      */
-    spareThreads = wstats.max - wstats.busy - wstats.idle;
+    result = spareThreads = wstats.max - wstats.busy - wstats.idle;
+#if ME_MPR_THREAD_LIMIT_BY_CORES
+{
+    int     activeWorkers, spareCores;
+
     activeWorkers = wstats.busy - wstats.yielded;
     spareCores = MPR->heap->stats.cpuCores - activeWorkers;
     if (spareCores <= 0) {
         return 0;
     }
     result = wstats.idle + min(spareThreads, spareCores);
+}
+#endif
 #if DEBUG_TRACE
     printf("Avail %d, busy %d, yielded %d, idle %d, spare-threads %d, spare-cores %d, mustYield %d\n", result, wstats.busy,
         wstats.yielded, wstats.idle, spareThreads, spareCores, MPR->heap->mustYield);
@@ -25692,7 +25698,7 @@ PUBLIC int mprStartWorker(MprWorkerProc proc, void *data)
         unlock(ws);
         return MPR_ERR_BUSY;
     }
-    if (!ws->pruneTimer && (ws->numThreads < ws->minThreads)) {
+    if (!ws->pruneTimer && (ws->numThreads > ws->minThreads)) {
         ws->pruneTimer = mprCreateTimerEvent(NULL, "pruneWorkers", MPR_TIMEOUT_PRUNER, pruneWorkers, ws, MPR_EVENT_QUICK);
     }
     unlock(ws);

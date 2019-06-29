@@ -102,6 +102,9 @@ struct  MprXml;
 #ifndef ME_MPR_MAX_PASSWORD
     #define ME_MPR_MAX_PASSWORD 256    /**< Max password length */
 #endif
+#ifndef ME_MPR_THREAD_CORE_LIMIT
+    #define ME_MPR_THREAD_CORE_LIMIT 1
+#endif
 
 /*
     Select wakeup port. Port can be any free port number. If this is not free, the MPR will use the next free port.
