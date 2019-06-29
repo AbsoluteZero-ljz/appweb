@@ -3175,6 +3175,7 @@ PUBLIC int httpConnect(HttpConn *conn, cchar *method, cchar *uri, struct MprSsl 
      */
     httpCreateTxPipeline(conn, conn->http->clientRoute);
     httpSetState(conn, HTTP_STATE_CONNECTED);
+    httpPumpOutput(conn);
     setDefaultHeaders(conn);
     return 0;
 }
@@ -16900,7 +16901,7 @@ static bool processContent(HttpConn *conn)
         /*
             Some requests (websockets) remain in the content state while still generating output
          */
-        moreData += getOutput(conn);
+        moreData += httpPumpOutput(conn);
     }
     return (conn->connError || moreData || mprNeedYield());
 }
@@ -16929,7 +16930,7 @@ static bool processRunning(HttpConn *conn)
         return 1;
     }
     if (httpServerConn(conn)) {
-        return getOutput(conn) || httpQueuesNeedService(conn) || mprNeedYield();
+        return httpPumpOutput(conn) || httpQueuesNeedService(conn) || mprNeedYield();
     }
     return 0;
 }
@@ -16939,7 +16940,7 @@ static bool processRunning(HttpConn *conn)
     Get more output by invoking the handler's writable callback. Called by processRunning.
     Also issues an HTTP_EVENT_WRITABLE for application level notification.
  */
-static bool getOutput(HttpConn *conn)
+PUBLIC bool httpPumpOutput(HttpConn *conn)
 {
     HttpQueue   *q;
     HttpTx      *tx;

@@ -3381,6 +3381,18 @@ PUBLIC void httpAfterEvent(HttpConn *conn);
 PUBLIC void httpPrepClientConn(HttpConn *conn, bool keepHeaders);
 
 /**
+    Get more output by invoking the handler's writable callback.
+    Called by processRunning.
+    Also issues an HTTP_EVENT_WRITABLE for application level notification.
+    @description Get more output by invoking the handler's writable callback. Called by processRunning.
+    Also issues an HTTP_EVENT_WRITABLE for application level notification.
+    @param conn HttpConn object created via #httpCreateConn
+    @ingroup HttpConn
+    @stability Internal
+ */
+PUBLIC bool httpPumpOutput(HttpConn *conn);
+
+/**
     Run the handler ready callback.
     @description This will be called when all incoming data for the request has been fully received.
     @param conn HttpConn object created via #httpCreateConn
