@@ -6071,7 +6071,7 @@ PUBLIC char *espExpandCommand(HttpRoute *route, cchar *command, cchar *source, c
 }
 
 
-static int runCommand(HttpRoute *route, MprDispatcher *dispatcher, cchar *command, cchar *csource, cchar *module, 
+static int runCommand(HttpRoute *route, MprDispatcher *dispatcher, cchar *command, cchar *csource, cchar *module,
     char **errMsg)
 {
     MprCmd      *cmd;
@@ -6159,7 +6159,7 @@ PUBLIC int espLoadCompilerRules(HttpRoute *route)
 
     WARNING: this routine blocks and runs GC. All parameters must be retained.
  */
-PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *source, cchar *module, cchar *cacheName, 
+PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *source, cchar *module, cchar *cacheName,
     int isView, char **errMsg)
 {
     MprFile     *fp;
@@ -6377,7 +6377,7 @@ static char *joinLine(cchar *str, ssize *lenp)
  */
 
 //  DEPRECATED layout
-PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *cacheName, cchar *layout, 
+PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *cacheName, cchar *layout,
         EspState *state, char **err)
 {
     EspState    top;
