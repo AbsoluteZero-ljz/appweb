@@ -2517,6 +2517,10 @@ static int sslProtocolDirective(MaState *state, cchar *key, cchar *value)
             protoMask &= ~(MPR_PROTO_TLSV1 & ~mask);
             protoMask |= (MPR_PROTO_TLSV1 & mask);
 
+        } else if (scaselesscmp(word, "TLSv1.0") == 0) {
+            protoMask &= ~(MPR_PROTO_TLSV1_0 & ~mask);
+            protoMask |= (MPR_PROTO_TLSV1_0 & mask);
+
         } else if (scaselesscmp(word, "TLSv1.1") == 0) {
             protoMask &= ~(MPR_PROTO_TLSV1_1 & ~mask);
             protoMask |= (MPR_PROTO_TLSV1_1 & mask);
@@ -2524,6 +2528,10 @@ static int sslProtocolDirective(MaState *state, cchar *key, cchar *value)
         } else if (scaselesscmp(word, "TLSv1.2") == 0) {
             protoMask &= ~(MPR_PROTO_TLSV1_2 & ~mask);
             protoMask |= (MPR_PROTO_TLSV1_2 & mask);
+
+        } else if (scaselesscmp(word, "TLSv1.3") == 0) {
+            protoMask &= ~(MPR_PROTO_TLSV1_3 & ~mask);
+            protoMask |= (MPR_PROTO_TLSV1_3 & mask);
 
         } else if (scaselesscmp(word, "ALL") == 0) {
             protoMask &= ~(MPR_PROTO_ALL & ~mask);
@@ -3572,7 +3580,7 @@ static int openCgi(HttpQueue *q)
 
     conn = q->conn;
     if ((nproc = (int) httpMonitorEvent(conn, HTTP_COUNTER_ACTIVE_PROCESSES, 1)) >= conn->limits->processMax) {
-        httpTrace(conn->trace, "cgi.limit.error", "error",
+        httpLog(conn->trace, "cgi.limit.error", "error",
             "msg=\"Too many concurrent processes\", activeProcesses=%d, maxProcesses=%d",
             nproc, conn->limits->processMax);
         httpError(conn, HTTP_CODE_SERVICE_UNAVAILABLE, "Server overloaded");
@@ -3793,7 +3801,7 @@ static void browserToCgiService(HttpQueue *q)
                     httpPutBackPacket(q, packet);
                     break;
                 }
-                httpTrace(conn->trace, "cgi.error", "error", "msg=\"Cannot write to CGI gateway\", errno=%d", mprGetOsError());
+                httpLog(conn->trace, "cgi.error", "error", "msg=\"Cannot write to CGI gateway\", errno=%d", mprGetOsError());
                 mprCloseCmdFd(cmd, MPR_CMD_STDIN);
                 httpDiscardQueueData(q, 1);
                 httpError(conn, HTTP_CODE_BAD_GATEWAY, "Cannot write body data to CGI gateway");
@@ -4353,7 +4361,7 @@ PUBLIC int httpCgiInit(Http *http, MprModule *module)
     handler->open = openCgi;
     handler->start = startCgi;
 
-    if ((connector = httpCreateConnector("cgiConnector", module)) == 0) {
+    if ((connector = httpCreateStage("cgiConnector", HTTP_STAGE_CONNECTOR, module)) == 0) {
         return MPR_ERR_CANT_CREATE;
     }
     http->cgiConnector = connector;

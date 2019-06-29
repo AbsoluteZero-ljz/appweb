@@ -5801,7 +5801,6 @@ PUBLIC int mprUnloadModule(MprModule *mp);
 
 /**
     Event callback function
-    @return Return non-zero if the dispatcher is deleted. Otherwise return 0
     @ingroup MprEvent
     @stability Stable
  */

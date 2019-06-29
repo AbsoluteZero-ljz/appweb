@@ -1302,6 +1302,13 @@
       <arglist>)(void *arg)</arglist>
     </member>
     <member kind="typedef">
+      <type>void(*</type>
+      <name>HttpInvokeProc</name>
+      <anchorfile>group___http_stream.html</anchorfile>
+      <anchor>gab448e1095b32f19c1391c4d7455831b4</anchor>
+      <arglist>)(HttpStream *stream, void *data)</arglist>
+    </member>
+    <member kind="typedef">
       <type>int(*</type>
       <name>HttpListenCallback</name>
       <anchorfile>group___http_stream.html</anchorfile>
@@ -1461,6 +1468,13 @@
       <anchorfile>group___http_stream.html</anchorfile>
       <anchor>gad711fe733965aae505eaf6e2ed021834</anchor>
       <arglist>(HttpStream *stream)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>httpInvoke</name>
+      <anchorfile>group___http_stream.html</anchorfile>
+      <anchor>ga11bfbd86db3b498d0b0867f62ea6c931</anchor>
+      <arglist>(HttpStream *stream, HttpInvokeProc callback, void *data)</arglist>
     </member>
     <member kind="function">
       <type>void void</type>
