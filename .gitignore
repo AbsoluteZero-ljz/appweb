@@ -20,3 +20,9 @@ test/exploits/
 /cache/
 /build
 /start.me
+XCBuildData/
+app-macosx-debug.xcodeproj
+Debug/
+samples/*/client
+samples/*/roots.crt
+.makefile
