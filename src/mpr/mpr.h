@@ -8048,6 +8048,7 @@ PUBLIC ssize mprWriteSocketVector(MprSocket *sp, MprIOVec *iovec, int count);
     #define ME_MPR_SSL_TIMEOUT 86400
 #endif
 #define ME_MPR_HAS_ALPN 1
+#define MPR_HAS_CRPTO_ENGINE 1
 
 /**
     Callback function for SNI connections.
@@ -8068,6 +8069,7 @@ typedef struct MprSsl {
     cchar           *caFile;            /**< Certificate verification cert file or bundle */
     cchar           *caPath;            /**< Certificate verification cert directory (OpenSSL only) */
     cchar           *ciphers;           /**< Candidate ciphers to use */
+    cchar           *device;            /**< Crypto hardware device to use */
     cchar           *hostname;          /**< Hostname when using SNI */
     MprList         *alpn;              /**< ALPN protocols */
     void            *config;            /**< Extended provider SSL configuration */
