@@ -1,5 +1,5 @@
 /*
-    me.h -- MakeMe Configure Header for windows-x86-static
+    me.h -- MakeMe Configure Header for windows-x64-static
 
     This header is created by Me during configuration. To change settings, re-run
     configure or define variables in your Makefile to override these default values.
@@ -22,7 +22,7 @@
     #define ME_COMPANY "embedthis"
 #endif
 #ifndef ME_COMPATIBLE
-    #define ME_COMPATIBLE "7.0"
+    #define ME_COMPATIBLE "7.1"
 #endif
 #ifndef ME_COMPILER_FORTIFY
     #define ME_COMPILER_FORTIFY 1
@@ -71,30 +71,6 @@
 #endif
 #ifndef ME_DESCRIPTION
     #define ME_DESCRIPTION "Embedthis Appweb Embedded Web Server"
-#endif
-#ifndef ME_EJSCRIPT_DB
-    #define ME_EJSCRIPT_DB 1
-#endif
-#ifndef ME_EJSCRIPT_MAIL
-    #define ME_EJSCRIPT_MAIL 1
-#endif
-#ifndef ME_EJSCRIPT_MAPPER
-    #define ME_EJSCRIPT_MAPPER 1
-#endif
-#ifndef ME_EJSCRIPT_SHELL
-    #define ME_EJSCRIPT_SHELL 1
-#endif
-#ifndef ME_EJSCRIPT_TAR
-    #define ME_EJSCRIPT_TAR 1
-#endif
-#ifndef ME_EJSCRIPT_TEMPLATE
-    #define ME_EJSCRIPT_TEMPLATE 1
-#endif
-#ifndef ME_EJSCRIPT_WEB
-    #define ME_EJSCRIPT_WEB 1
-#endif
-#ifndef ME_EJSCRIPT_ZLIB
-    #define ME_EJSCRIPT_ZLIB 1
 #endif
 #ifndef ME_ESP_CMD
     #define ME_ESP_CMD 1
@@ -153,11 +129,17 @@
 #ifndef ME_NAME
     #define ME_NAME "appweb"
 #endif
+#ifndef ME_PARTS
+    #define ME_PARTS "undefined"
+#endif
 #ifndef ME_PLATFORMS
     #define ME_PLATFORMS "local"
 #endif
 #ifndef ME_PREFIXES
     #define ME_PREFIXES "install-prefixes"
+#endif
+#ifndef ME_PROFILE
+    #define ME_PROFILE "undefined"
 #endif
 #ifndef ME_ROM
     #define ME_ROM 0
@@ -175,7 +157,7 @@
     #define ME_TUNE "size"
 #endif
 #ifndef ME_VERSION
-    #define ME_VERSION "7.0.3"
+    #define ME_VERSION "7.1.1"
 #endif
 #ifndef ME_WATCHDOG_NAME
     #define ME_WATCHDOG_NAME "appman"
@@ -262,7 +244,7 @@
 
 /* Profile */
 #ifndef ME_CONFIG_CMD
-    #define ME_CONFIG_CMD "me -d -q -platform windows-x86-static -static -configure . -without ssl -gen vs"
+    #define ME_CONFIG_CMD "me -d -q -platform windows-x64-static -static -configure . -gen vs"
 #endif
 #ifndef ME_APPWEB_PRODUCT
     #define ME_APPWEB_PRODUCT 1
@@ -279,13 +261,13 @@
     #define ME_MAJOR_VERSION 7
 #endif
 #ifndef ME_MINOR_VERSION
-    #define ME_MINOR_VERSION 0
+    #define ME_MINOR_VERSION 1
 #endif
 #ifndef ME_PATCH_VERSION
-    #define ME_PATCH_VERSION 3
+    #define ME_PATCH_VERSION 1
 #endif
 #ifndef ME_VNUM
-    #define ME_VNUM 700000003
+    #define ME_VNUM 700010001
 #endif
 
 /* Components */
@@ -313,14 +295,23 @@
 #ifndef ME_COM_LINK
     #define ME_COM_LINK 1
 #endif
+#ifndef ME_COM_MATRIXSSL
+    #define ME_COM_MATRIXSSL 0
+#endif
 #ifndef ME_COM_MBEDTLS
-    #define ME_COM_MBEDTLS 0
+    #define ME_COM_MBEDTLS 1
 #endif
 #ifndef ME_COM_MDB
     #define ME_COM_MDB 1
 #endif
 #ifndef ME_COM_MPR
     #define ME_COM_MPR 1
+#endif
+#ifndef ME_COM_NANOSSL
+    #define ME_COM_NANOSSL 0
+#endif
+#ifndef ME_COM_OPENSSL
+    #define ME_COM_OPENSSL 0
 #endif
 #ifndef ME_COM_OSDEP
     #define ME_COM_OSDEP 1
@@ -335,7 +326,7 @@
     #define ME_COM_RC 1
 #endif
 #ifndef ME_COM_SSL
-    #define ME_COM_SSL 0
+    #define ME_COM_SSL 1
 #endif
 #ifndef ME_COM_VXWORKS
     #define ME_COM_VXWORKS 0

@@ -25,3 +25,4 @@ Debug/
 samples/*/client
 samples/*/roots.crt
 .makefile
+test/.test-prepared
