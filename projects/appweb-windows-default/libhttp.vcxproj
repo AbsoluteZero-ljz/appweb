@@ -3,7 +3,7 @@
 
       <ItemDefinitionGroup>
         <ClCompile>
-          <PreprocessorDefinitions>ME_DEBUG=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+          <PreprocessorDefinitions>ME_DEBUG=1;_FILE_OFFSET_BITS=64;MBEDTLS_USER_CONFIG_FILE="embedtls.h";%(PreprocessorDefinitions)</PreprocessorDefinitions>
           <AdditionalIncludeDirectories>$(IncDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -14,7 +14,7 @@
       </ItemDefinitionGroup>
 
       <PropertyGroup Label="Globals">
-        <ProjectGuid>{60dbc3cb-aeb5-468b-a847-f62167a7914f}</ProjectGuid>
+        <ProjectGuid>{25c3370d-82e2-4901-a10a-6585d4e46b4b}</ProjectGuid>
         <RootNamespace />
         <Keyword>Win32Proj</Keyword>
       </PropertyGroup>
@@ -41,22 +41,22 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
         <ConfigurationType>DynamicLibrary</ConfigurationType>
         <CharacterSet>NotSet</CharacterSet>
-        <PlatformToolset>v120</PlatformToolset>
+        <PlatformToolset>v141</PlatformToolset>
       </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
         <ConfigurationType>DynamicLibrary</ConfigurationType>
         <CharacterSet>NotSet</CharacterSet>
-        <PlatformToolset>v120</PlatformToolset>
+        <PlatformToolset>v141</PlatformToolset>
       </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
         <ConfigurationType>DynamicLibrary</ConfigurationType>
         <CharacterSet>NotSet</CharacterSet>
-        <PlatformToolset>v120</PlatformToolset>
+        <PlatformToolset>v141</PlatformToolset>
       </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
         <ConfigurationType>DynamicLibrary</ConfigurationType>
         <CharacterSet>NotSet</CharacterSet>
-        <PlatformToolset>v120</PlatformToolset>
+        <PlatformToolset>v141</PlatformToolset>
       </PropertyGroup>
 
       <Import Project="$(VCTargetsPath)Microsoft.Cpp.Default.props" />
@@ -116,7 +116,7 @@
         
 
       <Link>
-        <AdditionalDependencies>libpcre.lib;libmpr.lib;%(AdditionalDependencies)</AdditionalDependencies>
+        <AdditionalDependencies>libpcre.lib;libmpr.lib;libmpr-mbedtls.lib;libmbedtls.lib;%(AdditionalDependencies)</AdditionalDependencies>
         <AdditionalLibraryDirectories>$(OutDir);build\$(Cfg)\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       </Link>
 
@@ -130,14 +130,14 @@ cd ..\..\projects\appweb-windows-default</Command>
 
     <ItemGroup>
       <ProjectReference Include="libmpr.vcxproj">
-      <Project>2ed02c7a-9d07-4dad-929f-5bd1da80cb12</Project>
+      <Project>67d1f6b8-3546-43d0-ba28-8585853fc407</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       </ProjectReference>
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="libpcre.vcxproj">
-      <Project>ad4e711f-44b6-49ec-8584-51f1e9b5d821</Project>
+      <Project>089159f7-9cf6-41ee-99f2-c24fdfb05305</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       </ProjectReference>
     </ItemGroup>
