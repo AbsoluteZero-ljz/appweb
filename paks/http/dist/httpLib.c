@@ -8970,6 +8970,10 @@ static void parseRequestLine(HttpQueue *q, HttpPacket *packet)
     limits = stream->limits;
 
     method = getToken(packet, NULL, 0);
+    if (method == NULL || *method == '\0') {
+        httpBadRequestError(stream, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad HTTP request. Empty method");
+        return;
+    }
     rx->originalMethod = rx->method = supper(method);
     httpParseMethod(stream);
 
@@ -8977,7 +8981,7 @@ static void parseRequestLine(HttpQueue *q, HttpPacket *packet)
     if (uri == NULL || *uri == '\0') {
         httpBadRequestError(stream, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad HTTP request. Empty URI");
         return;
-    } 
+    }
     len = slen(uri);
     if (len >= limits->uriSize) {
         httpLimitError(stream, HTTP_ABORT | HTTP_CODE_REQUEST_URL_TOO_LARGE,
@@ -8989,6 +8993,10 @@ static void parseRequestLine(HttpQueue *q, HttpPacket *packet)
         rx->originalUri = rx->uri;
     }
     protocol = getToken(packet, "\r\n", 0);
+    if (protocol == NULL || *protocol == '\0') {
+        httpBadRequestError(stream, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad HTTP request. Empty protocol");
+        return;
+    }
     protocol = supper(protocol);
     if (smatch(protocol, "HTTP/1.0") || *protocol == 0) {
         if (rx->flags & (HTTP_POST|HTTP_PUT)) {
@@ -9016,7 +9024,7 @@ static void parseResponseLine(HttpQueue *q, HttpPacket *packet)
     HttpStream  *stream;
     HttpRx      *rx;
     HttpTx      *tx;
-    char        *protocol, *status;
+    char        *message, *protocol, *status;
     ssize       len;
 
     net = q->net;
@@ -9024,7 +9032,12 @@ static void parseResponseLine(HttpQueue *q, HttpPacket *packet)
     rx = stream->rx;
     tx = stream->tx;
 
-    protocol = supper(getToken(packet, NULL, 0));
+    protocol = getToken(packet, NULL, 0);
+    if (protocol == NULL || *protocol == '\0') {
+        httpBadRequestError(stream, HTTP_ABORT | HTTP_CODE_NOT_ACCEPTABLE, "Bad response protocol");
+        return;
+    }
+    protocol = supper(protocol);
     if (strcmp(protocol, "HTTP/1.0") == 0) {
         net->protocol = 0;
         if (!scaselessmatch(tx->method, "HEAD")) {
@@ -9040,7 +9053,13 @@ static void parseResponseLine(HttpQueue *q, HttpPacket *packet)
         return;
     }
     rx->status = atoi(status);
-    rx->statusMessage = sclone(getToken(packet, "\r\n", 0));
+
+    message = getToken(packet, "\r\n", 0);
+    if (message == NULL || *message == '\0') {
+        httpBadRequestError(stream, HTTP_ABORT | HTTP_CODE_NOT_ACCEPTABLE, "Bad response status message");
+        return;
+    }
+    rx->statusMessage = sclone(message);
 
     len = slen(rx->statusMessage);
     if (len >= stream->limits->uriSize) {
@@ -9079,12 +9098,12 @@ static HttpPacket *parseFields(HttpQueue *q, HttpPacket *packet)
             return 0;
         }
         key = getToken(packet, ":", HEADER_KEY);
-        if (key == 0 || *key == '\0' || mprGetBufLength(packet->content) == 0) {
+        if (key == NULL || *key == '\0' || mprGetBufLength(packet->content) == 0) {
             httpBadRequestError(stream, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad header format");
             return 0;
         }
         value = getToken(packet, "\r\n", HEADER_VALUE);
-        if (value == 0 || mprGetBufLength(packet->content) == 0 || packet->content->start[0] == '\0') {
+        if (value == NULL || mprGetBufLength(packet->content) == 0 || packet->content->start[0] == '\0') {
             httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad header value");
             return 0;
         }
