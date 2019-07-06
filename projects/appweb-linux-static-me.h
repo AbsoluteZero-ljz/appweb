@@ -22,7 +22,7 @@
     #define ME_COMPANY "embedthis"
 #endif
 #ifndef ME_COMPATIBLE
-    #define ME_COMPATIBLE "7.0"
+    #define ME_COMPATIBLE "7.1"
 #endif
 #ifndef ME_COMPILER_FORTIFY
     #define ME_COMPILER_FORTIFY 1
@@ -87,30 +87,6 @@
 #ifndef ME_DESCRIPTION
     #define ME_DESCRIPTION "Embedthis Appweb Embedded Web Server"
 #endif
-#ifndef ME_EJSCRIPT_DB
-    #define ME_EJSCRIPT_DB 1
-#endif
-#ifndef ME_EJSCRIPT_MAIL
-    #define ME_EJSCRIPT_MAIL 1
-#endif
-#ifndef ME_EJSCRIPT_MAPPER
-    #define ME_EJSCRIPT_MAPPER 1
-#endif
-#ifndef ME_EJSCRIPT_SHELL
-    #define ME_EJSCRIPT_SHELL 1
-#endif
-#ifndef ME_EJSCRIPT_TAR
-    #define ME_EJSCRIPT_TAR 1
-#endif
-#ifndef ME_EJSCRIPT_TEMPLATE
-    #define ME_EJSCRIPT_TEMPLATE 1
-#endif
-#ifndef ME_EJSCRIPT_WEB
-    #define ME_EJSCRIPT_WEB 1
-#endif
-#ifndef ME_EJSCRIPT_ZLIB
-    #define ME_EJSCRIPT_ZLIB 1
-#endif
 #ifndef ME_ESP_CMD
     #define ME_ESP_CMD 1
 #endif
@@ -168,11 +144,17 @@
 #ifndef ME_NAME
     #define ME_NAME "appweb"
 #endif
+#ifndef ME_PARTS
+    #define ME_PARTS "undefined"
+#endif
 #ifndef ME_PLATFORMS
     #define ME_PLATFORMS "local"
 #endif
 #ifndef ME_PREFIXES
     #define ME_PREFIXES "install-prefixes"
+#endif
+#ifndef ME_PROFILE
+    #define ME_PROFILE "undefined"
 #endif
 #ifndef ME_ROM
     #define ME_ROM 0
@@ -190,7 +172,7 @@
     #define ME_TUNE "size"
 #endif
 #ifndef ME_VERSION
-    #define ME_VERSION "7.0.3"
+    #define ME_VERSION "7.1.1"
 #endif
 #ifndef ME_WATCHDOG_NAME
     #define ME_WATCHDOG_NAME "appman"
@@ -219,7 +201,7 @@
     #define ME_APP_PREFIX "/usr/local/lib/appweb"
 #endif
 #ifndef ME_VAPP_PREFIX
-    #define ME_VAPP_PREFIX "/usr/local/lib/appweb/7.0.3"
+    #define ME_VAPP_PREFIX "/usr/local/lib/appweb/7.1.1"
 #endif
 #ifndef ME_BIN_PREFIX
     #define ME_BIN_PREFIX "/usr/local/bin"
@@ -252,7 +234,7 @@
     #define ME_CACHE_PREFIX "/var/spool/appweb/cache"
 #endif
 #ifndef ME_SRC_PREFIX
-    #define ME_SRC_PREFIX "appweb-7.0.3"
+    #define ME_SRC_PREFIX "appweb-7.1.1"
 #endif
 
 /* Suffixes */
@@ -291,13 +273,13 @@
     #define ME_MAJOR_VERSION 7
 #endif
 #ifndef ME_MINOR_VERSION
-    #define ME_MINOR_VERSION 0
+    #define ME_MINOR_VERSION 1
 #endif
 #ifndef ME_PATCH_VERSION
-    #define ME_PATCH_VERSION 3
+    #define ME_PATCH_VERSION 1
 #endif
 #ifndef ME_VNUM
-    #define ME_VNUM 700000003
+    #define ME_VNUM 700010001
 #endif
 
 /* Components */
