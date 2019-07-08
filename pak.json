@@ -2,12 +2,12 @@
     "name": "appweb",
     "description": "Embedthis Appweb Community Edition",
     "title": "Embedthis Appweb Community Edition",
-    "version": "7.1.1",
     "keywords": [
         "appweb",
         "http",
         "webserver"
     ],
+    "version": "7.1.1",
     "homepage": "https://www.embedthis.com/appweb/",
     "author": {
         "name": "Embedthis Software",
