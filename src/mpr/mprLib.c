@@ -23954,7 +23954,7 @@ PUBLIC char *sncontains(cchar *str, cchar *pattern, ssize limit)
     for (cp = str; limit > 0 && *cp; cp++, limit--) {
         s1 = cp;
         s2 = pattern;
-        for (lim = limit; *s1 && *s2 && (*s1 == *s2) && lim > 0; lim--) {
+        for (lim = limit; lim > 0 && *s1 && *s2 && (*s1 == *s2); lim--) {
             s1++;
             s2++;
         }
@@ -23990,6 +23990,9 @@ PUBLIC ssize scopy(char *dest, ssize destMax, cchar *src)
     /* Must ensure room for null */
     if (destMax <= len) {
         assert(!MPR_ERR_WONT_FIT);
+        if (destMax > 0) {
+            *dest = '\0';
+        }
         return MPR_ERR_WONT_FIT;
     }
     strcpy(dest, src);
@@ -24291,6 +24294,9 @@ PUBLIC ssize sncopy(char *dest, ssize destMax, cchar *src, ssize count)
     len = slen(src);
     len = min(len, count);
     if (destMax <= len) {
+        if (destMax > 0) {
+            *dest = '\0';
+        }
         assert(!MPR_ERR_WONT_FIT);
         return MPR_ERR_WONT_FIT;
     }
