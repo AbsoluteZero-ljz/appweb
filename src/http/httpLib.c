@@ -6094,6 +6094,7 @@ static void readPeerData(HttpConn *conn)
         conn->lastRead = mprReadSocket(conn->sock, mprGetBufEnd(packet->content), size);
         if (conn->lastRead > 0) {
             mprAdjustBufEnd(packet->content, conn->lastRead);
+            mprAddNullToBuf(packet->content);
         } else if (conn->lastRead < 0 && mprIsSocketEof(conn->sock)) {
             if (conn->state < HTTP_STATE_PARSED) {
                 conn->error = 1;
@@ -16047,16 +16048,18 @@ static bool parseIncoming(HttpConn *conn)
         httpMonitorEvent(conn, HTTP_COUNTER_REQUESTS, 1);
     }
 
+    while (httpGetPacketLength(packet) > 0) {
+        start = mprGetBufStart(packet->content);
+        if (*start == '\r' || *start == '\n') {
+            mprGetCharFromBuf(packet->content);
+        } else {
+            break;
+        }
+    }
     if ((len = httpGetPacketLength(packet)) == 0) {
         return 0;
     }
-    start = mprGetBufStart(packet->content);
-    while (*start == '\r' || *start == '\n') {
-        if (mprGetCharFromBuf(packet->content) < 0) {
-            break;
-        }
-        start = mprGetBufStart(packet->content);
-    }
+
     /*
         Don't start processing until all the headers have been received (delimited by two blank lines)
      */
@@ -17499,7 +17502,7 @@ static char *getToken(HttpConn *conn, cchar *delim, int validation)
     /*
         Eat white space
      */
-    for (token = mprGetBufStart(buf); (*token == ' ' || *token == '\t') && token < nextToken; token++) {}
+    for (token = mprGetBufStart(buf); token < nextToken && (*token == ' ' || *token == '\t'); token++) {}
     if (token >= nextToken) {
         if (validation == HEADER_KEY) {
             return NULL;
