@@ -8913,16 +8913,17 @@ static bool monitorActiveRequests(HttpStream *stream)
 
 static cchar *eatBlankLines(HttpPacket *packet)
 {
+    MprBuf  *content;
     cchar   *start;
 
-    start = mprGetBufStart(packet->content);
-    while (*start == '\r' || *start == '\n') {
-        if (mprGetCharFromBuf(packet->content) < 0) {
+    content = packet->content;
+    while (mprGetBufLength(content) > 0) {
+        start = mprGetBufStart(content);
+        if (*start != '\r' && *start != '\n') {
             break;
         }
-        start = mprGetBufStart(packet->content);
     }
-    return start;
+    return mprGetBufStart(content);
 }
 
 
@@ -9167,7 +9168,7 @@ static char *getToken(HttpPacket *packet, cchar *delim, int validation)
         }
 
     } else {
-        if ((endToken = strstr(token, delim)) != 0) {
+        if ((endToken = sncontains(token, delim, nextToken - token)) != 0) {
             *endToken = '\0';
             /* Only eat one occurence of the delimiter */
             nextToken = endToken + strlen(delim);
@@ -14103,6 +14104,7 @@ static HttpPacket *readPacket(HttpNet *net)
 #endif
         if (lastRead > 0) {
             mprAdjustBufEnd(packet->content, lastRead);
+            mprAddNullToBuf(packet->content);
             return packet;
         }
         if (lastRead < 0 && net->eof) {

@@ -41,7 +41,7 @@ Some HttpConn APIs have been migrated to HttpNet and consequently now take a Htt
 Here is a list of the API changes. Please let us know at [dev@embedthis.com](mailto:dev@embedthis.com) if we have missed any impacting change and we'll update the list.
 
 - Added HttpNet structure and httpNet APIs including: httpCreateNet, httpDestroyNet, ...
-- The http*Conn APIs are renamed to http*Stream.
+- The httpConn APIs are renamed to httpStream.
 - These APIs which previously operated on HttpConn/HttpStream objects now operating on HttpNet instances: httpSetAsync, httpServiceQueues, httpEnableConnEvents, httpIOEvent, httpStealSocket.
 - Changed httpRequest signature to add a protocol argument to nominate HTTP/1 or HTTP/2 for client requests. See [httpRequest](http://127.0.0.1:4000/ref/api/http.html#group___http_tx_1gae53c8deff659f3aa5aec8aaeb9d7673e).
 - Changed httpTrace first argument from HttpConn to HttpTrace so that this API can be used for both HttpNet and HttpStream related trace. Use HttpStream.trace or HttpNet.trace as the trace instance for this API. See [httpTrace](http://127.0.0.1:4000/ref/api/http.html#group___http_trace_1ga5f8b026696d0a7285da9a60046483348).
