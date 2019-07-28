@@ -14103,6 +14103,7 @@ static HttpPacket *readPacket(HttpNet *net)
 #endif
         if (lastRead > 0) {
             mprAdjustBufEnd(packet->content, lastRead);
+            mprAddNullToBuf(packet->content);
             return packet;
         }
         if (lastRead < 0 && net->eof) {
