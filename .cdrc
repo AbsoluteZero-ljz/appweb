@@ -26,7 +26,6 @@ if [ -z "${CI}" ] ; then
     export AWS_PROFILE=embedthis
     export BUCKET="embedthis.software"
 
-    # export TF_VAR_profile=${PROFILE}
     export TF_VAR_profile=prod
     export TF_VAR_aws_profile=${AWS_PROFILE}
     export TF_VAR_region=${AWS_DEFAULT_REGION}
