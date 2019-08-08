@@ -2972,18 +2972,20 @@ typedef struct HttpConn {
     char            *ip;                    /**< Remote client IP address */
     char            *protocol;              /**< HTTP protocol */
     char            *protocols;             /**< Supported WebSocket protocols (clients) */
+    uint64          seqno;                  /**< Unique network sequence number */
 
     int             delay;                  /**< Delay servicing request due to defense strategy */
     int             keepAliveCount;         /**< Count of remaining Keep-Alive requests for this connection */
     int             port;                   /**< Remote port */
     int             retries;                /**< Client request retries */
-    int             seqno;                  /**< Unique connection sequence number */
     int             timeout;                /**< Connection timeout indication */
     int             totalRequests;          /**< Total number of requests serviced */
 
     bool            async: 1;               /**< Connection is in async mode (non-blocking) */
     bool            authRequested: 1;       /**< Authorization requested based on user credentials */
+#if DEPRECATED || 1
     bool            borrowed: 1;            /**< Connection has been borrowed */
+#endif
     bool            destroyed: 1;           /**< Connection has been destroyed */
     bool            encoded: 1;             /**< True if the password is MD5(username:realm:password) */
     bool            errorDoc: 1;            /**< Processing an error document */
@@ -3030,6 +3032,7 @@ PUBLIC void httpClosePipeline(HttpConn *conn);
 #define HTTP_INACTIVITY_TIMEOUT     2
 #define HTTP_PARSE_TIMEOUT          3
 
+#if DEPRECATE || 1
 /**
     Borrow a connection
     @description Borrow the connection from Http. This effectively gains an exclusive loan of the connection so that it
@@ -3052,9 +3055,10 @@ PUBLIC void httpClosePipeline(HttpConn *conn);
     \n\n
     @param conn HttpConn object created via #httpCreateConn
     @ingroup HttpConn
-    @stability Prototype
+    @stability Deprecated
  */
 PUBLIC void httpBorrowConn(HttpConn *conn);
+#endif
 
 /**
     Create a connection object.
@@ -3433,6 +3437,7 @@ PUBLIC bool httpRequestExpired(HttpConn *conn, MprTicks timeout);
  */
 PUBLIC void httpResetCredentials(HttpConn *conn);
 
+#if DEPRECATED || 1
 /**
     Return a borrowed a connection
     @description Returns a borrowed connection back to the Http engine. This ends the exclusive loan of the
@@ -3447,9 +3452,10 @@ PUBLIC void httpResetCredentials(HttpConn *conn);
     \n\n
     @param conn HttpConn object created via #httpCreateConn
     @ingroup HttpConn
-    @stability Prototype
+    @stability Deprecated
  */
 PUBLIC void httpReturnConn(HttpConn *conn);
+#endif
 
 /**
     Route the request and select that matching route and handle to process the request.
@@ -8042,24 +8048,24 @@ typedef struct HttpDir {
  */
 PUBLIC HttpDir *httpGetDirObj(HttpRoute *route);
 
-/************************************ Invoke ***************************************/
+/************************************ CreateEvent ***********************************/
 /**
-    Event callback function
+    Event callback function for httpCreateEvent
     @ingroup HttpConn
     @stability Prototype
  */
-typedef void (*HttpInvokeProc)(HttpConn *conn, void *data);
+typedef void (*HttpEventProc)(HttpConn *conn, void *data);
 
 /**
     Invoke a callback on an Appweb thread from a non-appweb thread.
     @description Used to safely call back into Apppweb. This API provides a wrapper over mprCreateEvent.
-    @param conn HttpConn connection object created via #httpCreateConn
+    @param connSeqno HttpConn->seqno identifier
     @param callback Callback function to invoke
     @param data Data to pass to the callback. Caller is responsible to free in the callback if required.
     @ingroup HttpConn
     @stability Prototype
  */
-PUBLIC void httpInvoke(HttpConn *conn, HttpInvokeProc callback, void *data);
+PUBLIC void httpCreateEvent(uint64 connSeqno, HttpEventProc callback, void *data);
 
 /************************************ Misc *****************************************/
 /**
