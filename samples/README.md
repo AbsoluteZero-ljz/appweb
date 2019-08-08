@@ -29,11 +29,12 @@ The following samples are available:
 * [simple-server](simple-server/README.md)                  Simple Http server.
 * [spy-fliter](spy-filter/README.md)                        Simple HTTP pipeline filter.
 * [ssl-server](ssl-server/README.md)                        SSL server.
-* [thread-communication](thread-communication/README.md)    Interthread communications and thread-safe APIs.
+* [thread-comms](thread-comms/README.md)                    Inter-thread communications and thread-safe APIs.
 * [threaded-client](threaded-client/README.md)              Using the client HTTP API with threads.
 * [tiny-server](tiny-server/README.md)                      Configure Appweb to be tiny.
 * [typical-client](typical-client/README.md)                Using the client HTTP API to retrieve a document.
 * [typical-server](typical-server/README.md)                A more fully featured server main program.
+* [websockets-chat](websockets-chat/README.md)              WebSockets chat server using an ESP controller.
 * [websockets-echo](websockets-echo/README.md)              WebSockets echo server using an ESP controller.
 * [websockets-output](websockets-output/README.md)          Using WebSockets to send a large file.
 

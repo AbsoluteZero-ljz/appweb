@@ -4,7 +4,7 @@
 #include "esp.h"
 
 /*
-    This is a reference to a thread safe list of clients
+    List of stream IDs for clients
  */
 static MprList  *clients;
 
@@ -12,31 +12,26 @@ static MprList  *clients;
     Hold a message destined for clients
  */
 typedef struct Msg {
-    HttpStream  *stream;
     HttpPacket  *packet;
 } Msg;
 
 /*
-    ESP garbage collection rention callback.
+    Garbage collection rention callback.
  */
 static void manageMsg(Msg *msg, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
-        mprMark(msg->stream);
         mprMark(msg->packet);
     }
 }
 
 /*
     Send message to a client
-    This is the callback function invoked from the stream event dispatcher.
  */
-static void chat(Msg *msg)
+static void chat(HttpStream *stream, Msg *msg)
 {
-    HttpStream  *stream;
     HttpPacket  *packet;
 
-    stream = msg->stream;
     packet = msg->packet;
     httpSendBlock(stream, packet->type, httpGetPacketStart(packet), httpGetPacketLength(packet), 0);
 }
@@ -48,28 +43,26 @@ static void chat(Msg *msg)
 static void chat_callback(HttpStream *stream, int event, int arg)
 {
     HttpPacket  *packet;
-    HttpStream  *client;
+    void        *client;
     Msg         *msg;
-    int         flags, next;
+    int         next;
 
     if (event == HTTP_EVENT_READABLE) {
         packet = httpGetPacket(stream->readq);
         if (packet->type == WS_MSG_TEXT || packet->type == WS_MSG_BINARY) {
             for (ITERATE_ITEMS(clients, client, next)) {
                 /*
-                    Send the message to each stream. This must be done using each stream event dispatcher
-                    to ensure we don't conflict with other activity on the stream that may happen on another worker
-                    thread at the same time. Set flags = MPR_EVENT_WAIT if calling mprCreateEvent from a non-esp thread and
-                    you want to wait until the event has completed before returning.
-                    This will then wait till the event is run before returning.
+                    Send the message to each stream using the stream sequence number captured earlier.
+                    The "chat" callback will be invoked on the releveant stream's event dispatcher.
+                    This must be done using each stream event dispatcher to ensure we don't conflict with
+                    other activity on the stream that may happen on another worker thread at the same time.
                  */
                 msg = mprAllocObj(Msg, manageMsg);
-                msg->stream = client;
                 msg->packet = packet;
-                flags = 0;
-                mprCreateEvent(client->dispatcher, "chat", 0, chat, msg, flags);
+                httpCreateEvent(PTOL(client), (HttpEventProc) chat, msg);
             }
         }
+
     } else if (event == HTTP_EVENT_APP_CLOSE) {
         /*
             This event is in response to a web sockets close event
@@ -81,7 +74,7 @@ static void chat_callback(HttpStream *stream, int event, int arg)
         /*
             This is invoked when the client is closed. This API is thread safe.
          */
-        mprRemoveItem(clients, stream);
+        mprRemoveItem(clients, LTOP(stream->seqno));
     }
 }
 
@@ -94,11 +87,9 @@ static void chat_action()
 
     /*
         Add the client to the list of clients. This API is thread-safe.
-        Note: this clients list should never be accessed by foreign (non-Appweb) threads as a stream / connection
-         may be destroyed while the foreign thread is executing.
      */
     stream = getConn();
-    mprAddItem(clients, stream);
+    mprAddItem(clients, LTOP(stream->seqno));
 
     /*
         Don't automatically finalize (complete) the request when this routine returns. This keeps the stream open.
@@ -120,7 +111,7 @@ ESP_EXPORT int esp_controller_websockets_chat(HttpRoute *route)
     /*
         Create a list of clients. Preserve from GC by adding as route data.
      */
-    clients = mprCreateList(0, 0);
+    clients = mprCreateList(0, MPR_LIST_STATIC_VALUES);
     httpSetRouteData(route, "clients", clients);
 
     /*
