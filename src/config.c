@@ -1095,6 +1095,18 @@ static int homeDirective(MaState *state, cchar *key, cchar *value)
 }
 
 
+static int http2Directive(MaState *state, cchar *key, cchar *value)
+{
+    bool    on;
+
+    if (!maTokenize(state, value, "%B", &on)) {
+        return MPR_ERR_BAD_SYNTAX;
+    }
+    httpEnableHttp2(on);
+    return 0;
+}
+
+
 /*
     IgnoreEncodingErrors [on|off]
  */
@@ -3247,6 +3259,7 @@ static int parseInit()
     maAddDirective("GroupAccount", groupAccountDirective);
     maAddDirective("Header", headerDirective);
     maAddDirective("Home", homeDirective);
+    maAddDirective("Http2", http2Directive);
     maAddDirective("<If", ifDirective);
     maAddDirective("</If", closeDirective);
     maAddDirective("IgnoreEncodingErrors", ignoreEncodingErrorsDirective);
