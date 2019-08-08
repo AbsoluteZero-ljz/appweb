@@ -272,7 +272,7 @@ PUBLIC Mpr *mprCreateMemService(MprManager manager, int flags)
     }
     heap->gcCond = mprCreateCond();
 
-    heap->roots = mprCreateList(-1, 0/* UNUSED MPR_LIST_STATIC_VALUES */);
+    heap->roots = mprCreateList(-1, 0);
     mprAddRoot(MPR);
     return MPR;
 }
@@ -1265,17 +1265,11 @@ static void markRoots()
     heap->stats.markVisited = 0;
     heap->stats.marked = 0;
 #endif
+    /*
+        Don't mark roots elements here
+     */
     mprMark(heap->roots);
     mprMark(heap->gcCond);
-
-#if UNUSED
-    void    *root;
-    int     next;
-
-    for (ITERATE_ITEMS(heap->roots, root, next)) {
-        mprMark(root);
-    }
-#endif
 }
 
 
@@ -14588,8 +14582,8 @@ PUBLIC int mprNotifyOn(MprWaitHandler *wp, int mask)
 PUBLIC int mprWaitForSingleIO(int fd, int mask, MprTicks timeout)
 {
     struct timespec ts;
-    struct kevent   interest[2], events[1];
-    int             kq, interestCount, rc, result;
+    struct kevent   interest[2], events[2];
+    int             i, kq, interestCount, rc, result;
 
     if (timeout < 0 || timeout > MAXINT) {
         timeout = MAXINT;
@@ -14609,18 +14603,20 @@ PUBLIC int mprWaitForSingleIO(int fd, int mask, MprTicks timeout)
     ts.tv_nsec = ((int) (timeout % 1000)) * 1000 * 1000;
 
     mprYield(MPR_YIELD_STICKY);
-    rc = kevent(kq, interest, interestCount, events, 1, &ts);
+    rc = kevent(kq, interest, interestCount, events, sizeof(events) / sizeof(struct kevent), &ts);
     mprResetYield();
 
     result = 0;
     if (rc < 0) {
         mprLog("error mpr event", 0, "Kevent returned %d, errno=%d", rc, errno);
     } else if (rc > 0) {
-        if (events[0].filter & EVFILT_READ) {
-            result |= MPR_READABLE;
-        }
-        if (events[0].filter == EVFILT_WRITE) {
-            result |= MPR_WRITABLE;
+        for (i = 0; i < rc; i++) {
+            if (events[i].filter & EVFILT_READ) {
+                result |= MPR_READABLE;
+            }
+            if (events[i].filter == EVFILT_WRITE) {
+                result |= MPR_WRITABLE;
+            }
         }
     }
     close(kq);
@@ -23954,7 +23950,7 @@ PUBLIC char *sncontains(cchar *str, cchar *pattern, ssize limit)
     for (cp = str; limit > 0 && *cp; cp++, limit--) {
         s1 = cp;
         s2 = pattern;
-        for (lim = limit; *s1 && *s2 && (*s1 == *s2) && lim > 0; lim--) {
+        for (lim = limit; lim > 0 && *s1 && *s2 && (*s1 == *s2); lim--) {
             s1++;
             s2++;
         }
@@ -23990,6 +23986,9 @@ PUBLIC ssize scopy(char *dest, ssize destMax, cchar *src)
     /* Must ensure room for null */
     if (destMax <= len) {
         assert(!MPR_ERR_WONT_FIT);
+        if (destMax > 0) {
+            *dest = '\0';
+        }
         return MPR_ERR_WONT_FIT;
     }
     strcpy(dest, src);
@@ -24291,6 +24290,9 @@ PUBLIC ssize sncopy(char *dest, ssize destMax, cchar *src, ssize count)
     len = slen(src);
     len = min(len, count);
     if (destMax <= len) {
+        if (destMax > 0) {
+            *dest = '\0';
+        }
         assert(!MPR_ERR_WONT_FIT);
         return MPR_ERR_WONT_FIT;
     }
