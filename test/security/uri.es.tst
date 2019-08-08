@@ -24,7 +24,7 @@ response = get('index.html')
 ttrue(response.toString().contains('Bad Request'))
 
 response = get('/\x01index.html')
-ttrue(response.toString().contains('Bad Request'))
+ttrue(response.toString().length == 0)
 
 response = get('\\index.html')
-ttrue(response.toString().contains('Bad Request'))
+ttrue(response.toString().length == 0)
