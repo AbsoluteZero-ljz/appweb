@@ -9,14 +9,12 @@ static MprList  *clients;
     Hold a message destined for a connection
  */
 typedef struct Msg {
-    HttpConn    *conn;
     HttpPacket  *packet;
 } Msg;
 
 static void manageMsg(Msg *msg, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
-        mprMark(msg->conn);
         mprMark(msg->packet);
     }
 }
@@ -24,14 +22,12 @@ static void manageMsg(Msg *msg, int flags)
 /*
     Send message to a connection
  */
-static void chat(Msg *msg)
+static void chat(HttpConn *conn, Msg *msg)
 {
-    HttpConn    *conn;
     HttpPacket  *packet;
 
-    conn = msg->conn;
     packet = msg->packet;
-    print("Sending %s", httpGetPacketStart(packet));
+    print("webchat: sending %s", httpGetPacketStart(packet));
     httpSendBlock(conn, packet->type, httpGetPacketStart(packet), httpGetPacketLength(packet), 0);
 }
 
@@ -50,27 +46,31 @@ static void chat_callback(HttpConn *conn, int event, int arg)
         if (packet->type == WS_MSG_TEXT || packet->type == WS_MSG_BINARY) {
             for (ITERATE_ITEMS(clients, client, next)) {
                 msg = mprAllocObj(Msg, manageMsg);
-                msg->conn = client;
                 msg->packet = packet;
-                mprCreateEvent(client->dispatcher, "chat", 0, chat, msg, 0);
+                httpCreateEvent(PTOL(client), (HttpEventProc) chat, msg);
             }
         }
     } else if (event == HTTP_EVENT_APP_CLOSE) {
         mprLog(0, "chat.c: close event. Status status %d, orderly closed %d, reason %s", arg,
         httpWebSocketOrderlyClosed(conn), httpGetWebSocketCloseReason(conn));
-        mprRemoveItem(clients, conn);
+
+    } else if (event == HTTP_EVENT_DESTROY) {
+        /*
+            This is invoked when the client is closed. This API is thread safe.
+         */
+        mprRemoveItem(clients, LTOP(conn->seqno));
     }
 }
 
 /*
     Action to run in response to the "test/chat" URI
  */
-static void chat_action() 
+static void chat_action()
 {
     HttpConn    *conn;
 
     conn = getConn();
-    mprAddItem(clients, conn);
+    mprAddItem(clients, LTOP(conn->seqno));
 
     /*
         Don't automatically finalize (complete) the request when this routine returns. This keeps the connection open.
@@ -87,10 +87,9 @@ static void chat_action()
 /*
     Initialize the "chat" loadable module
  */
-ESP_EXPORT int esp_controller_app_chat(HttpRoute *route) 
+ESP_EXPORT int esp_controller_app_chat(HttpRoute *route)
 {
-    clients = mprCreateList(0, 0);
-    mprAddRoot(clients);
+    clients = mprCreateList(0, MPR_LIST_STATIC_VALUES);
 
     /*
         Define the "chat" action that will run when the "test/chat" URI is invoked
