@@ -19,18 +19,18 @@ static int addCondition(MaState *state, cchar *name, cchar *condition, int flags
 static int addUpdate(MaState *state, cchar *name, cchar *details, int flags);
 static bool conditionalDefinition(MaState *state, cchar *key);
 static int configError(MaState *state, cchar *key);
-static MaState *createState();
+static MaState *createState(void);
 static char *getDirective(char *line, char **valuep);
 static void manageState(MaState *state, int flags);
 static int parseFileInner(MaState *state, cchar *path);
-static int parseInit();
+static int parseInit(void);
 static int setTarget(MaState *state, cchar *name, cchar *details);
 
 /******************************************************************************/
 /*
     Load modules builtin modules by default. Subsequent calls to the LoadModule directive will have no effect.
  */
-PUBLIC int maLoadModules()
+PUBLIC int maLoadModules(void)
 {
     int     rc;
 
@@ -3014,7 +3014,7 @@ static int setTarget(MaState *state, cchar *name, cchar *details)
 /*
     This is used to create the outermost state only
  */
-static MaState *createState()
+static MaState *createState(void)
 {
     MaState     *state;
     HttpHost    *host;
@@ -3218,7 +3218,7 @@ PUBLIC void maAddDirective(cchar *directive, MaDirective proc)
 }
 
 
-static int parseInit()
+static int parseInit(void)
 {
     if (directives) {
         return 0;

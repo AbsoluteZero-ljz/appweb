@@ -149,7 +149,7 @@ PUBLIC int maLoadModule(cchar *name, cchar *libname);
     @ingroup MaState
     @stability Prototype
  */
-PUBLIC int maLoadModules();
+PUBLIC int maLoadModules(void);
 
 /**
     Parse an Appweb configuration file

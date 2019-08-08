@@ -59,15 +59,15 @@ static AppwebApp *app;
 
 static int changeRoot(cchar *jail);
 static int checkEnvironment(cchar *program);
-static int findConfigFile();
+static int findConfigFile(void);
 static void manageApp(AppwebApp *app, int flags);
 static int createEndpoints(int argc, char **argv);
-static void usageError();
+static void usageError(void);
 
 #if ME_UNIX_LIKE
     #if defined(SIGINFO) || defined(SIGPWR) || defined(SIGRTMIN)
         static void statusCheck(void *ignored, MprSignal *sp);
-        static void addSignals();
+        static void addSignals(void);
     #endif
     static void traceHandler(void *ignored, MprSignal *sp);
     static int  unixSecurityChecks(cchar *program, cchar *home);
@@ -366,7 +366,7 @@ static int createEndpoints(int argc, char **argv)
         EXE/../BASE
         EXE/../appweb.conf
  */
-static int findConfigFile()
+static int findConfigFile(void)
 {
     cchar   *name;
 
@@ -417,7 +417,7 @@ static int findConfigFile()
 }
 
 
-static void usageError(Mpr *mpr)
+static void usageError()
 {
     cchar   *name;
 
@@ -463,7 +463,7 @@ static int checkEnvironment(cchar *program)
 
 
 #if ME_UNIX_LIKE
-static void addSignals()
+static void addSignals(void)
 {
     app->traceToggle = mprAddSignalHandler(SIGUSR2, traceHandler, 0, 0, MPR_SIGNAL_AFTER);
 
