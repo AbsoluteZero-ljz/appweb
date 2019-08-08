@@ -1,6 +1,6 @@
 /*
 
-    phpHandler.c - Appweb PHP handler
+    phpHandler7.c - Appweb PHP 7.x handler
 
     Copyright (c) All Rights Reserved. See details at the end of the file.
  */
@@ -99,7 +99,7 @@ static int initializePhp(Http *http);
 static void logMessage(char *message, int flags);
 static char *mapHyphen(char *str);
 static size_t readBodyData(char *buffer, size_t len);
-static char *readCookies();
+static char *readCookies(void);
 static void registerServerVars(zval *varArray);
 static int startup(sapi_module_struct *sapiModule);
 static int sendHeaders(sapi_headers_struct *sapiHeaders);
@@ -418,7 +418,7 @@ static void logMessage(char *message, int flags)
 }
 
 
-static char *readCookies()
+static char *readCookies(void)
 {
     HttpStream    *stream;
 

@@ -1,6 +1,6 @@
 /*
 
-    phpHandler.c - Appweb PHP handler
+    phpHandler5.c - Appweb PHP 5.x handler
 
     Copyright (c) All Rights Reserved. See details at the end of the file.
  */
