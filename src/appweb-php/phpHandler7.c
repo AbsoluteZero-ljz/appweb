@@ -99,7 +99,7 @@ static int initializePhp(Http *http);
 static void logMessage(char *message, int flags);
 static char *mapHyphen(char *str);
 static size_t readBodyData(char *buffer, size_t len);
-static char *readCookies(void);
+static char *readCookies();
 static void registerServerVars(zval *varArray);
 static int startup(sapi_module_struct *sapiModule);
 static int sendHeaders(sapi_headers_struct *sapiHeaders);
@@ -418,7 +418,7 @@ static void logMessage(char *message, int flags)
 }
 
 
-static char *readCookies(void)
+static char *readCookies()
 {
     HttpStream    *stream;
 
