@@ -11,6 +11,12 @@ Me.load({
             generate: false,
         },
 
+        load: {
+            action: `run('testme --depth ' + me.settings.depth)`,
+            platforms: [ 'local' ],
+            generate: false,
+        },
+
         'prep-test': {
             platforms: [ 'local' ],
             depends: [ 'clean-test', 'build', 'cgiProgram', 'prep-cgi', 'test-testScript', 'test-cgiProgram' ],
