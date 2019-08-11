@@ -599,6 +599,13 @@ static int authDigestQopDirective(MaState *state, cchar *key, cchar *value)
 }
 
 
+static int autoFinalize(MaState *state, cchar *key, cchar *value)
+{
+    httpSetRouteAutoFinalize(state->route, scaselessmatch(value, "true"));
+    return 0;
+}
+
+
 /*
     Cache options
     Options:
@@ -3240,6 +3247,7 @@ static int parseInit(void)
     maAddDirective("AuthType", authTypeDirective);
     maAddDirective("AuthRealm", authRealmDirective);
     maAddDirective("AuthStore", authStoreDirective);
+    maAddDirective("AutoFinalize", autoFinalize);
     maAddDirective("Cache", cacheDirective);
     maAddDirective("CanonicalName", canonicalNameDirective);
     maAddDirective("Chroot", chrootDirective);
