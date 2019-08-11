@@ -17,3 +17,5 @@ src/server/certs
 .port.log
 /projects/*mine*
 /projects/.vs
+/start.me
+/samples/*/cache/
