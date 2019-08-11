@@ -270,18 +270,10 @@ MAIN(appweb, int argc, char **argv, char **envp)
     esp_app_server_combine(httpGetDefaultRoute(NULL));
 #endif
 
-#if OLD
-    mprYield(MPR_YIELD_STICKY);
-    while (!mprIsStopping()) {
-        mprSuspendThread(-1);
-    }
-    mprResetYield();
-#else
     /*
         Events thread will service requests. We block here.
      */
     mprServiceEvents(-1, 0);
-#endif
 
     mprLog("info appweb", 1, "Stopping Appweb ...");
     mprDestroy();
