@@ -7,70 +7,63 @@
 
     ESP is used to load this test module and it not required to use this design pattern.
  */
-#include "appweb.h"
 #include "esp.h"
 
 static void finalizeResponse(HttpStream *stream, void *message);
-static void response();
-static void threadMain(HttpStream *stream, MprThread *tp);
+static void serviceRequest();
+static void foreignThread(uint64 seqno);
+
 
 /*
+    Create a URL action to respond to HTTP requests.
     We use an ESP module just to make it easier to dynamically load this test module.
  */
 ESP_EXPORT int esp_controller_app_message(HttpRoute *route)
 {
-    /*
-        Create a URL action to respond to HTTP requests.
-     */
-    espDefineAction(route, "response", response);
-    mprLog("info", 0, "Loaded");
+    espDefineAction(route, "request", serviceRequest);
     return 0;
 }
+
 
 /*
     Start servicing a HTTP request
  */
-static void response(HttpStream *stream)
+static void serviceRequest(HttpStream *stream)
 {
-    /*
-        Simulate a foreign thread by creating an MPR thread that will respond to the request.
-        We pass the current HttpStream sequence number which will be storead in MprThread.data.
-     */
-    mprStartThread(mprCreateThread("test", threadMain, LTOP(stream->seqno), 0));
+    uint64      seqno;
 
-    /* Tell ESP to not finalize the request here. Only required for ESP */
-    espSetAutoFinalizing(stream, 0);
+    /*
+        Create an O/S (non-mpr) thread and pass the current HttpStream sequence number.
+     */
+    seqno = stream->seqno;
+    mprStartOsThread("foreign", foreignThread, LTOP(stream->seqno), NULL);
 }
 
-static void threadMain(HttpStream *stream, MprThread *tp)
-{
-    int     streamSeqno = PTOL(tp->data);
 
-    /*
-        Convert this appweb thread to simulate a foreign thread by yielding to the garbage collector permanently.
-        This thread now behaves just like a foreign thread would. Only required for this sample and not when you
-        have a real foreign thread. From here on, do not use any Appweb or MPR APIs here except for httpCreateEvent() and
-        palloc/pfree.
-    */
-    mprYield(MPR_YIELD_STICKY);
+static void foreignThread(uint64 seqno)
+{
+    assert(mprGetCurrentThread() == NULL);
 
     /*
         Invoke the finalizeResponse callback on the Stream event dispatcher and pass in an allocated string to write.
         The first argument is the stream sequence number captured earlier and passed into this thread.
      */
-    httpCreateEvent(streamSeqno, finalizeResponse, strdup("Hello World"));
+    httpCreateEvent(seqno, finalizeResponse, strdup("Hello World"));
 }
 
+
 /*
-    Finalize the response. Invoked indirectly from the foreign thread via httpInvoke.
+    Finalize a response to the Http request. This runs on the stream's dispatcher, thread-safe inside Appweb.
  */
 static void finalizeResponse(HttpStream *stream, void *message)
 {
-    mprLog("info", 0, "Writing message \"%s\"", message);
-    httpWrite(stream->writeq, "message %s\n", message);
+    httpWrite(stream->writeq, "message: %s\n", message);
 
     httpFinalize(stream);
     httpProcess(stream->inputq);
 
+    /*
+        Free the "hello World" memory allocated via strdup in foreignThread
+     */
     free(message);
 }
