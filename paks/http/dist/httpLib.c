@@ -16462,7 +16462,7 @@ static bool processContent(HttpQueue *q)
             HTTP_NOTIFY(stream, HTTP_EVENT_READABLE, 0);
         }
     }
-    return httpPumpOutput(q) || rx->eof;
+    return httpPumpOutput(q) || rx->eof || stream->error;
 }
 
 
