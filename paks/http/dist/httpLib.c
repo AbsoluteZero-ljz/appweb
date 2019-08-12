@@ -22321,14 +22321,16 @@ PUBLIC HttpStage *httpCreateStreamector(cchar *name, MprModule *module)
     Invocation structure for httpCreateEvent
  */
 typedef struct HttpInvoke {
-    HttpStream      *stream;
     HttpEventProc   callback;
+    uint64          seqno;          // Stream sequence number
     void            *data;          //  User data - caller must free if required in callback
+    int             hasRun;
 } HttpInvoke;
 
 /***************************** Forward Declarations ***************************/
 
 static void commonPrep(HttpStream *stream);
+static void createEvent(HttpStream *stream, void *data);
 static void manageInvoke(HttpInvoke *event, int flags);
 static void manageStream(HttpStream *stream, int flags);
 static void pickStreamNumber(HttpStream *stream);
@@ -22972,17 +22974,18 @@ PUBLIC void httpTraceQueues(HttpStream *stream)
 
 /*
     Invoke the callback. This routine is run on the streams dispatcher.
+    If the stream is destroyed, the event will be NULL.
  */
 static void invokeWrapper(HttpInvoke *invoke, MprEvent *event)
 {
     HttpStream  *stream;
 
-    stream = invoke->stream;
-    assert(stream);
-
-    if (HTTP_STATE_BEGIN < stream->state && stream->state < HTTP_STATE_COMPLETE) {
-        invoke->callback(invoke->stream, invoke->data);
+    if (event && (stream = httpFindStream(invoke->seqno, NULL, NULL)) != NULL) {
+        invoke->callback(stream, invoke->data);
+    } else {
+        invoke->callback(NULL, invoke->data);
     }
+    invoke->hasRun = 1;
     mprRelease(invoke);
 }
 
@@ -22993,41 +22996,61 @@ static void invokeWrapper(HttpInvoke *invoke, MprEvent *event)
  */
 PUBLIC int httpCreateEvent(uint64 seqno, HttpEventProc callback, void *data)
 {
-    HttpNet     *net;
-    HttpStream  *stream;
     HttpInvoke  *invoke;
-    int         nextNet, nextStream, status;
-
-    status = MPR_ERR_CANT_FIND;
-    stream = 0;
 
     /*
-        The global lock stops GC. This is important because of the release below.
-        if the event does not run due to the stream and dispatcher being
-        destroyed first, then
+        Must allocate memory immune from GC. The hold is released in the invokeWrapper callback wich is always invoked eventually.
      */
-    mprGlobalLock();
+    if ((invoke = mprAllocMem(sizeof(HttpInvoke), MPR_ALLOC_ZERO | MPR_ALLOC_MANAGER | MPR_ALLOC_HOLD)) != 0) {
+        mprSetManager(invoke, (MprManager) manageInvoke);
+        invoke->seqno = seqno;
+        invoke->callback = callback;
+        invoke->data = data;
+    }
+    if (httpFindStream(seqno, createEvent, invoke)) {
+        return 0;
+    }
+    return MPR_ERR_CANT_FIND;
+}
+
+
+static void createEvent(HttpStream *stream, void *data)
+{
+    mprCreateEvent(stream->dispatcher, "httpEvent", 0, (MprEventProc) invokeWrapper, data, MPR_EVENT_ALWAYS);
+}
+
+
+/*
+    If invoking on a foreign thread, provide a callback proc and data so the stream can be safely accessed while locked.
+    Do not use the returned value except to test for NULL in a foreign thread.
+ */
+PUBLIC HttpStream *httpFindStream(uint64 seqno, HttpEventProc proc, void *data)
+{
+    HttpNet     *net;
+    HttpStream  *stream;
+    int         nextNet, nextStream;
+
+    if (!proc && !mprGetCurrentThread()) {
+        assert(proc || mprGetCurrentThread());
+        return NULL;
+    }
+    /*
+        WARNING: GC can be running here in a foreign thread. The locks will ensure that networks and streams are not destroyed
+        while locked. Event service lock is needed for the manageDispatcher which then marks networks.
+     */
+    stream = 0;
+    lock(MPR->eventService);
     lock(HTTP->networks);
     for (ITERATE_ITEMS(HTTP->networks, net, nextNet)) {
+        /*
+            This lock prevents the stream being freed and from being removed from HttpNet.networks
+         */
         lock(net->streams);
         for (ITERATE_ITEMS(net->streams, stream, nextStream)) {
-            if (stream->seqno == seqno && HTTP_STATE_BEGIN < stream->state && stream->state < HTTP_STATE_COMPLETE) {
-                /*
-                    Must allocate and Hold memory to be immune from GC. The hold is released below after mprCreateEvent
-                    takes ownership of the data. A manager is used to make sure the stream is retained after unlocking below.
-                 */
-                if ((invoke = mprAllocMem(sizeof(HttpInvoke), MPR_ALLOC_MANAGER | MPR_ALLOC_HOLD)) != 0) {
-                    /*
-                        At this point, the invoke memory is held and the stream is preserved via the lock above.
-                     */
-                    invoke->callback = callback;
-                    invoke->data = data;
-                    invoke->stream = stream;
-                    mprSetManager(invoke, (MprManager) manageInvoke);
-                    mprCreateEvent(stream->dispatcher, "httpEvent", 0, (MprEventProc) invokeWrapper, invoke, MPR_EVENT_RELEASE_DATA);
+            if (stream->seqno == seqno && !stream->destroyed) {
+                if (proc) {
+                    (proc)(stream, data);
                 }
-                unlock(net->streams);
-                status = MPR_ERR_OK;
                 nextNet = HTTP->networks->length;
                 break;
             }
@@ -23035,15 +23058,20 @@ PUBLIC int httpCreateEvent(uint64 seqno, HttpEventProc callback, void *data)
         unlock(net->streams);
     }
     unlock(HTTP->networks);
-    mprGlobalUnlock();
-    return status;
+    unlock(MPR->eventService);
+    return stream;
 }
 
 
+/*
+    Destructor for Invoke to make sure the callback is always called.
+ */
 static void manageInvoke(HttpInvoke *invoke, int flags)
 {
-    if (flags & MPR_MANAGE_MARK) {
-        mprMark(invoke->stream);
+    if (flags & MPR_MANAGE_FREE) {
+        if (!invoke->hasRun) {
+            invokeWrapper(invoke, NULL);
+        }
     }
 }
 

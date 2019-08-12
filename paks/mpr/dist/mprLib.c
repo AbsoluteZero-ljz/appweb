@@ -10076,6 +10076,8 @@ static int dispatchEvents(MprDispatcher *dispatcher)
         mprAtomicAdd64(&dispatcher->mark, 1);
 
         (event->proc)(event->data, event);
+        event->hasRun = 1;
+
         if (event->cond) {
             mprSignalCond(event->cond);
         }
@@ -11236,8 +11238,8 @@ static void manageEvent(MprEvent *event, int flags)
         mprMark(event->cond);
 
     } else if (flags & MPR_MANAGE_FREE) {
-        if (event->flags & MPR_EVENT_RELEASE_DATA) {
-            mprRelease(event->data);
+        if (!event->hasRun && (event->flags & MPR_EVENT_ALWAYS)) {
+            (event->proc)(event->data, NULL);
         }
     }
 }

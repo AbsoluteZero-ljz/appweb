@@ -5794,12 +5794,12 @@ PUBLIC int mprUnloadModule(MprModule *mp);
 #define MPR_EVENT_QUICK             0x2     /**< Execute inline without executing via a thread */
 #define MPR_EVENT_STATIC_DATA       0x4     /**< Event data is permanent and should not be marked by GC */
 #define MPR_EVENT_RUNNING           0x8     /**< Event currently executing */
-#define MPR_EVENT_RELEASE_DATA      0x10    /**< Event.data must be released */
+#define MPR_EVENT_ALWAYS            0x10    /**< Always invoke the callback even if the event not run  */
+
 #if UNUSED
-#define MPR_EVENT_DONT_QUEUE        0x20    /**< Don't queue the event. User must call mprQueueEvent. (internal use only) */
-#endif
-#if DEPRECATE || 1
-#define MPR_EVENT_FOREIGN           0x10    /**< Invoking from a foreign non-mpr thread */
+#define MPR_EVENT_FOREIGN           0x20    /**< Invoking from a foreign non-mpr thread -- not used */
+#define MPR_EVENT_RELEASE_DATA      0x10    /**< Event.data must be released */
+#define MPR_EVENT_DONT_QUEUE        0x40    /**< Don't queue the event. User must call mprQueueEvent. (internal use only) */
 #endif
 
 #define MPR_EVENT_MAX_PERIOD (MAXINT64 / 2)
@@ -5833,6 +5833,7 @@ typedef struct MprEvent {
     void                    *sock;              /**< Optional socket data */
     int                     flags;              /**< Event flags */
     int                     mask;               /**< I/O mask of events */
+    int                     hasRun;             /**< Event has run */
     MprTicks                period;             /**< Reschedule period */
     struct MprEvent         *next;              /**< Next event linkage */
     struct MprEvent         *prev;              /**< Previous event linkage */
@@ -6055,9 +6056,12 @@ PUBLIC void mprSignalDispatcher(MprDispatcher *dispatcher);
         without utilizing using a worker thread. This should only be used for quick non-blocking event callbacks.
         \n\n
         When calling this routine from foreign threads, you should use a NULL dispatcher or guarantee the dispatcher is held by
-        other means. Data supplied from foreign threads should generally be non-mpr memory and must persist until the callback
-        has completed. This typically means the data memory should either be static or be allocated using malloc() before the
-        call and released via free() in the callback. Static data should use the MPR_EVENT_STATIC_DATA flag.
+        other means (difficult). Data supplied from foreign threads should generally be non-mpr memory and must persist until
+        the callback has completed. This typically means the data memory should either be static or be allocated using malloc()
+        before the call and released via free() in the callback. Static data should use the MPR_EVENT_STATIC_DATA flag.
+        Use the MPR_EVENT_ALWAYS_CALL to ensure your callback is always invoked even if the dispatcher is destroyed before the
+        event is run. In such cases, the callback "event" argument will be NULL to indicate the dispatcher has been destroyed.
+        Use this flag to free any allocated "data" memory in the callback. This may be important to prevent leaks.
         \n\n
         If using Appweb or the Http library, it is preferable to use the httpCreateEvent API when invoking callbacks on
             HttpStreams.
@@ -6067,22 +6071,6 @@ PUBLIC void mprSignalDispatcher(MprDispatcher *dispatcher);
     @stability Evolving
  */
 PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags);
-
-#if UNUSED
-/*
-    Create an event object
-    @param dispatcher Event dispatcher created via mprCreateDispatcher. Dispatcher must not be null.
-    @param name Static string name of the event used for debugging.
-    @param period Time in milliseconds used by continuous events between firing of the event.
-    @param proc Function to invoke when the event is run.
-    @param data Data to associate with the event. See #mprCreateEvent for details.
-    @param wp WaitHandler reference created via #mprWaitHandler
-    @see MprEvent MprWaitHandler mprCreateEvent mprCreateWaitHandler mprQueueIOEvent
-    @ingroup MprEvent
-    @stability Internal
- */
-PUBLIC MprEvent *mprCreateEventCore(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags);
-#endif
 
 /*
     Create and queue an IO event for a wait handler
