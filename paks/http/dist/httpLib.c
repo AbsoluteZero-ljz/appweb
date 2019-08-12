@@ -23107,6 +23107,12 @@ static void incomingTail(HttpQueue *q, HttpPacket *packet)
     if (q->net->eof) {
         httpSetEof(stream);
     }
+    count = stream->readq->count + httpGetPacketLength(packet);
+    if (rx->form && count >= stream->limits->rxFormSize && stream->limits->rxFormSize != HTTP_UNLIMITED) {
+        httpLimitError(stream, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
+                       "Request form of %ld bytes is too big. Limit %lld", count, stream->limits->rxFormSize);
+        return;
+    }
     httpPutPacketToNext(q, packet);
     if (rx->eof) {
         httpPutPacketToNext(q, httpCreateEndPacket());

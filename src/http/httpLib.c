@@ -23100,6 +23100,7 @@ static void incomingTail(HttpQueue *q, HttpPacket *packet)
 {
     HttpStream  *stream;
     HttpRx      *rx;
+    ssize       count;
 
     stream = q->stream;
     rx = stream->rx;
