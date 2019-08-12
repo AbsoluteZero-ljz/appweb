@@ -12,7 +12,7 @@ Me.load({
         },
 
         load: {
-            action: `run('testme --depth ' + me.settings.depth)`,
+            action: `run('testme --depth ' + me.settings.depth, {env: {TEST_LOAD: true}})`,
             platforms: [ 'local' ],
             generate: false,
         },
