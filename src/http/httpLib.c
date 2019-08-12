@@ -9393,7 +9393,8 @@ PUBLIC void httpCreateHeaders1(HttpQueue *q, HttpPacket *packet)
     mprPutStringToBuf(buf, "\r\n");
 
     if (httpTracing(q->net)) {
-        httpLog(stream->trace, "http.tx.headers", "headers", "\n%s", httpTraceHeaders(q, stream->tx->headers));
+        httpLog(stream->trace, "http.tx.headers", "headers", "\n%s %d %s\n%s",
+            httpGetProtocol(stream->net), tx->status, httpLookupStatus(tx->status), httpTraceHeaders(q, tx->headers));
     }
     /*
         Output headers
