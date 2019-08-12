@@ -3445,6 +3445,12 @@ PUBLIC void httpSetupWaitHandler(HttpNet *net, int eventMask);
 #define HTTP_STATE_FINALIZED        8       /**< Input received, request processed and response transmitted */
 #define HTTP_STATE_COMPLETE         9       /**< Request complete */
 
+/**
+    Event callback function for httpCreateEvent
+    @ingroup HttpStream
+    @stability Prototype
+ */
+typedef void (*HttpEventProc)(struct HttpStream *stream, void *data);
 
 /**
     Callback to fill headers
@@ -3585,6 +3591,17 @@ typedef struct HttpStream {
 } HttpStream;
 
 /**
+    Emit an error message for a badly formatted request
+    @param stream HttpStream stream object created via #httpCreateStream
+    @param status Http status code. The status code can be ored with the flags HTTP_ABORT to immediately abort
+        the connection or HTTP_CLOSE to close the connection at the completion of the request.
+    @param fmt Printf style formatted string
+    @ingroup HttpStream
+    @stability Evolving
+ */
+PUBLIC void httpBadRequestError(HttpStream *stream, int status, cchar *fmt, ...) PRINTF_ATTRIBUTE(3,4);
+
+/**
     Destroy the request pipeline.
     @description This is called at the conclusion of a request.
     @param stream HttpStream object created via #httpCreateStream
@@ -3690,6 +3707,9 @@ PUBLIC void httpEnableUpload(HttpStream *stream);
  */
 PUBLIC void httpError(HttpStream *stream, int status, cchar *fmt, ...) PRINTF_ATTRIBUTE(3,4);
 
+//  MOB DOC
+PUBLIC HttpStream *httpFindStream(uint64 seqno, HttpEventProc proc, void *data);
+
 /**
     Emit an error message for limit violations
     @param stream HttpStream stream object created via #httpCreateStream
@@ -3700,17 +3720,6 @@ PUBLIC void httpError(HttpStream *stream, int status, cchar *fmt, ...) PRINTF_AT
     @stability Evolving
  */
 PUBLIC void httpLimitError(HttpStream *stream, int status, cchar *fmt, ...) PRINTF_ATTRIBUTE(3,4);
-
-/**
-    Emit an error message for a badly formatted request
-    @param stream HttpStream stream object created via #httpCreateStream
-    @param status Http status code. The status code can be ored with the flags HTTP_ABORT to immediately abort
-        the connection or HTTP_CLOSE to close the connection at the completion of the request.
-    @param fmt Printf style formatted string
-    @ingroup HttpStream
-    @stability Evolving
- */
-PUBLIC void httpBadRequestError(HttpStream *stream, int status, cchar *fmt, ...) PRINTF_ATTRIBUTE(3,4);
 
 /**
     Get the preferred chunked size for transfer chunk encoding.
@@ -8452,24 +8461,23 @@ PUBLIC HttpDir *httpGetDirObj(HttpRoute *route);
 
 /************************************ CreateEvent ***********************************/
 /**
-    Event callback function for httpCreateEvent
-    @ingroup HttpStream
-    @stability Prototype
- */
-typedef void (*HttpEventProc)(HttpStream *stream, void *data);
-
-/**
     Invoke a callback on a stream using a stream sequence number.
     @description This routine invokes a callback on a stream's event dispatcher in a thread-safe manner. This API
-        is the only way to invoke APIs on a stream from foreign threads.
+        is the only safe way to invoke APIs on a stream from foreign threads.
     @param streamSeqno HttpStream->seqno identifier extracted when running in an MPR (Appweb) thread.
-    @param callback Callback function to invoke
-    @param data Data to pass to the callback. Caller is responsible to free in the callback if required.
+    @param callback Callback function to invoke. The callback will always be invoked if the call is successful so that you can
+        free any allocated resources. If the stream is destroyed before the event is run, the callback will be invoked and
+        the "stream" argument will be set to NULL.
+        \n\n
+        If is important to check the HttpStream.error and HttpStream.state in the callback to ensure the Stream is in an acceptable
+        state for your logic. Typically you want HttpStream.state to be greater than HTTP_STATE_BEGIN and
+        less than HTTP_STATE_COMPLETE. You may also wish to check HttpStream.error incase the stream request has errored.
+    @param data Data to pass to the callback.
     @return "Zero" if the stream can be found and the event is scheduled, Otherwise returns MPR_ERR_CANT_FIND.
     @ingroup HttpStream
     @stability Prototype
  */
-PUBLIC int httpCreateEvent(uint64 streamSeqno, HttpEventProc callback, void *data);
+PUBLIC int httpCreateEvent(uint64 streamSeqno, HttpEventProc callback, void *data /*, int flags */);
 
 /************************************ Misc *****************************************/
 /**
