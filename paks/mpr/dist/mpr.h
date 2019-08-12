@@ -5794,9 +5794,12 @@ PUBLIC int mprUnloadModule(MprModule *mp);
 #define MPR_EVENT_QUICK             0x2     /**< Execute inline without executing via a thread */
 #define MPR_EVENT_STATIC_DATA       0x4     /**< Event data is permanent and should not be marked by GC */
 #define MPR_EVENT_RUNNING           0x8     /**< Event currently executing */
+#define MPR_EVENT_RELEASE_DATA      0x10    /**< Event.data must be released */
 #if UNUSED
-#define MPR_EVENT_FOREIGN           0x10    /**< Invoking from a foreign non-mpr thread */
 #define MPR_EVENT_DONT_QUEUE        0x20    /**< Don't queue the event. User must call mprQueueEvent. (internal use only) */
+#endif
+#if DEPRECATE || 1
+#define MPR_EVENT_FOREIGN           0x10    /**< Invoking from a foreign non-mpr thread */
 #endif
 
 #define MPR_EVENT_MAX_PERIOD (MAXINT64 / 2)
@@ -6065,6 +6068,7 @@ PUBLIC void mprSignalDispatcher(MprDispatcher *dispatcher);
  */
 PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags);
 
+#if UNUSED
 /*
     Create an event object
     @param dispatcher Event dispatcher created via mprCreateDispatcher. Dispatcher must not be null.
@@ -6078,6 +6082,7 @@ PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks
     @stability Internal
  */
 PUBLIC MprEvent *mprCreateEventCore(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags);
+#endif
 
 /*
     Create and queue an IO event for a wait handler
@@ -6990,7 +6995,7 @@ typedef struct MprThread {
     bool            yielded: 1;         /**< Thread has yielded to GC */
     bool            noyield: 1;         /**< Do not yield (temporary) */
     bool            waitForSweeper: 1;  /**< Yield untill the GC sweeper is complete */
-    int             waiting: 1;         /**< Waiting in mprYield */
+    bool            waiting: 1;         /**< Waiting in mprYield */
 } MprThread;
 
 
