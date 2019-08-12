@@ -22,18 +22,26 @@ static void serviceRequest(HttpStream *stream)
 }
 
 
-static void foreignThread(uint64 seqno)
+static void foreignThread(uint64 streamSeqno)
 {
+    char    *message;
+
     assert(mprGetCurrentThread() == NULL);
-    httpCreateEvent(seqno, finalizeResponse, strdup("Hello World"));
+
+    message = strdup("Hello World");
+    if (httpCreateEvent(streamSeqno, finalizeResponse, message) < 0) {
+        free(message);
+    }
 }
 
 
 static void finalizeResponse(HttpStream *stream, void *message)
 {
-    httpWrite(stream->writeq, "message: %s\n", message);
-
-    httpFinalize(stream);
-    httpProcess(stream->inputq);
+    assert(message);
+    if (stream) {
+        httpWrite(stream->writeq, "message: %s\n", message);
+        httpFinalize(stream);
+        httpProcess(stream->inputq);
+    }
     free(message);
 }

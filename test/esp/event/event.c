@@ -1,12 +1,12 @@
 /*
-    event.c - Test httpCreateEvent
+    event.c - Test mprCreateEvent from foreign threads
  */
 #include "appweb.h"
 #include "esp.h"
 
 static void callback(char *message, MprEvent *event);
 static void serviceRequest();
-static void foreignThread(uint64 seqno);
+static void foreignThread();
 
 
 /*
@@ -23,15 +23,20 @@ ESP_EXPORT int esp_controller_app_event(HttpRoute *route)
 static void serviceRequest(HttpStream *stream)
 {
     httpWrite(stream->writeq, "done\n");
-    mprStartOsThread("foreign", foreignThread, strdup("hello world"), NULL);
+    mprStartOsThread("foreign", foreignThread, NULL, NULL);
 }
 
 
-static void foreignThread(uint64 seqno)
+static void foreignThread()
 {
+    char    *message;
+
     assert(mprGetCurrentThread() == NULL);
 
-    mprCreateEvent(NULL, "foreign", 0, (MprEventProc) callback, strdup("Hello World"), MPR_EVENT_STATIC_DATA);
+    message = strdup("Hello World");
+    if (mprCreateEvent(NULL, "foreign", 0, (MprEventProc) callback, message, MPR_EVENT_STATIC_DATA) < 0) {
+        free(message);
+    }
 }
 
 
@@ -41,14 +46,15 @@ static void foreignThread(uint64 seqno)
 static void callback(char *message, MprEvent *event)
 {
     assert(message && *message);
-    assert(event);
-    assert(event->proc);
-    assert(event->timestamp);
-    assert(event->data == message);
-    assert(event->dispatcher);
-    assert(event->sock == NULL);
-    assert(event->proc == (MprEventProc) callback);
 
+    if (event) {
+        assert(event->proc);
+        assert(event->timestamp);
+        assert(event->data == message);
+        assert(event->dispatcher);
+        assert(event->sock == NULL);
+        assert(event->proc == (MprEventProc) callback);
+    }
     // printf("Got \"%s\" from event \"%s\"\n", message, event->name);
     free(message);
 }
