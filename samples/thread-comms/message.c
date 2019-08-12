@@ -40,28 +40,34 @@ static void serviceRequest(HttpStream *stream)
 }
 
 
-static void foreignThread(uint64 seqno)
+static void foreignThread(uint64 streamSeqno)
 {
+    char    *message;
+
     assert(mprGetCurrentThread() == NULL);
 
     /*
-        Invoke the finalizeResponse callback on the Stream event dispatcher and pass in an allocated string to write.
-        The first argument is the stream sequence number captured earlier and passed into this thread.
+        Invoke the finalizeResponse callback on the Stream identified by the sequence number and pass in a message to write.
      */
-    httpCreateEvent(seqno, finalizeResponse, strdup("Hello World"));
+    message = strdup("Hello World");
+    if (httpCreateEvent(streamSeqno, finalizeResponse, message) < 0) {
+        /* Stream destroyed and create event failed */
+        free(message);
+    }
 }
 
 
 /*
     Finalize a response to the Http request. This runs on the stream's dispatcher, thread-safe inside Appweb.
+    If the stream has already been destroyed, stream will be NULL.
  */
 static void finalizeResponse(HttpStream *stream, void *message)
 {
-    httpWrite(stream->writeq, "message: %s\n", message);
-
-    httpFinalize(stream);
-    httpProcess(stream->inputq);
-
+    if (stream) {
+        httpWrite(stream->writeq, "message: %s\n", message);
+        httpFinalize(stream);
+        httpProcess(stream->inputq);
+    }
     /*
         Free the "hello World" memory allocated via strdup in foreignThread
      */

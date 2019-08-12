@@ -12,6 +12,7 @@
         routes: [
             {
                 pattern: '^/ws/{controller}/{action}$',
+                autoFinalize: false,
                 prefix: '/ws',
                 source: 'chat.c',
                 target: '$1/$2',
