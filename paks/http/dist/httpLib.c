@@ -22462,8 +22462,7 @@ PUBLIC void httpDestroyStream(HttpStream *stream)
             stream->net->ownStreams--;
         }
         httpRemoveStream(stream->net, stream);
-        stream->state = HTTP_STATE_BEGIN;
-        stream->net = 0;
+        stream->state = HTTP_STATE_COMPLETE;
         stream->destroyed = 1;
     }
 }
