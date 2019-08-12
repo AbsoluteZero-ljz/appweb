@@ -22977,16 +22977,13 @@ static void invokeWrapper(HttpInvoke *invoke, MprEvent *event)
 {
     HttpStream  *stream;
 
-    /*
-        Stream is safe from GC due to references from invoke.
-     */
     stream = invoke->stream;
     assert(stream);
 
     if (HTTP_STATE_BEGIN < stream->state && stream->state < HTTP_STATE_COMPLETE) {
         invoke->callback(invoke->stream, invoke->data);
     }
-    /* invoke will be collected when the event is collected */
+    mprRelease(invoke);
 }
 
 
@@ -23005,7 +23002,9 @@ PUBLIC int httpCreateEvent(uint64 seqno, HttpEventProc callback, void *data)
     stream = 0;
 
     /*
-        The global lock stops GC
+        The global lock stops GC. This is important because of the release below.
+        if the event does not run due to the stream and dispatcher being
+        destroyed first, then
      */
     mprGlobalLock();
     lock(HTTP->networks);
@@ -23025,8 +23024,7 @@ PUBLIC int httpCreateEvent(uint64 seqno, HttpEventProc callback, void *data)
                     invoke->data = data;
                     invoke->stream = stream;
                     mprSetManager(invoke, (MprManager) manageInvoke);
-                    mprCreateEvent(stream->dispatcher, "httpEvent", 0, (MprEventProc) invokeWrapper, invoke, 0);
-                    mprRelease(invoke);
+                    mprCreateEvent(stream->dispatcher, "httpEvent", 0, (MprEventProc) invokeWrapper, invoke, MPR_EVENT_RELEASE_DATA);
                 }
                 unlock(net->streams);
                 status = MPR_ERR_OK;
