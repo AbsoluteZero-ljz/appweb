@@ -205,7 +205,7 @@
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___ma_state_1ga3a076271dc5d0227cf3e4c79dcb3f026" class="nameRef">maConfigureServer</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *configFile, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *home, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *documents, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *ip, int port)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Configure a web server.</td></tr>
 <tr class="apiDef"><td class="apiType">char*</td><td><a href="#group___ma_state_1ga55e8a5ed07c0c10d79fd20d3c0e1d602" class="nameRef">maGetNextArg</a>(char *s, char **tok)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the argument in a directive.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___ma_state_1ga94cd7d8346894055cff0fc79dcd09a48" class="nameRef">maLoadModule</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *libname)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Load an appweb module.</td></tr>
-<tr class="apiDef"><td class="apiType">int</td><td><a href="#group___ma_state_1gac80272b7427e26d90bcc32570ca2aff5" class="nameRef">maLoadModules</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Load default modules.</td></tr>
+<tr class="apiDef"><td class="apiType">int</td><td><a href="#group___ma_state_1gaa70fb4c9b9835739719c049af17180ef" class="nameRef">maLoadModules</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Load default modules.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___ma_state_1gae9c5d28320c9ebe7f2a6e810215be37c" class="nameRef">maParseConfig</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *path)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Parse an Appweb configuration file.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___ma_state_1gaf65d5f6135abce2b2cbf625e02a5d1f4" class="nameRef">maParseFile</a>(<a href="#group___ma_state" class="ref">MaState</a> *state, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *path)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Parse a configuration file.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___ma_state" class="ref">MaState*</a></td><td><a href="#group___ma_state_1ga2ff0312d66ba2c173b2ff6882e1f4ce9" class="nameRef">maPopState</a>(<a href="#group___ma_state" class="ref">MaState</a> *state)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Pop the state.</td></tr>
@@ -375,12 +375,12 @@ Top level state.
     <a href="#group___ma_state_1ga6a437d214b5963248c0985eb1bc2a096" class="ref">MaDirective</a>, <a href="#group___ma_state" class="ref">MaState</a>, <a href="#group___ma_state_1ga0625b7b754d921353acac4505eb9de02" class="ref">maAddDirective</a>, <a href="#group___ma_state_1ga2ff0312d66ba2c173b2ff6882e1f4ce9" class="ref">maPopState</a>, <a href="#group___ma_state_1gad960c7ab5089293e33a0cf221f41072d" class="ref">maPushState</a>, <a href="#group___ma_state_1gabb856e86d408307d5e31ad0ff2d2f69a" class="ref">maTokenize</a></dd></dl>
   </div>
 </div>
-<a name="group___ma_state_1gac80272b7427e26d90bcc32570ca2aff5"></a>
+<a name="group___ma_state_1gaa70fb4c9b9835739719c049af17180ef"></a>
 <div class="api">
   <div class="prototype">
     int
     maLoadModules
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Load default modules.</p>
