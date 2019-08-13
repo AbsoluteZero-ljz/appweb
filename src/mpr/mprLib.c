@@ -10877,14 +10877,17 @@ PUBLIC void mprManageEpoll(MprWaitService *ws, int flags)
         mprMark(ws->handlerMap);
 
     } else if (flags & MPR_MANAGE_FREE) {
-        if (ws->epoll) {
+        if (ws->epoll >= 0) {
             close(ws->epoll);
+            ws->epoll = -1;
         }
         if (ws->breakFd[0] >= 0) {
             close(ws->breakFd[0]);
+            ws->breakFd[0] = -1;
         }
         if (ws->breakFd[1] >= 0) {
             close(ws->breakFd[1]);
+            ws->breakFd[1] = -1;
         }
     }
 }
@@ -11511,6 +11514,8 @@ PUBLIC MprFile *mprAttachFileFd(int fd, cchar *name, int omode)
 {
     MprFileSystem   *fs;
     MprFile         *file;
+
+    assert(fd >= 0);
 
     fs = mprLookupFileSystem(name);
     if ((file = mprAllocObj(MprFile, manageFile)) != 0) {
@@ -14668,6 +14673,7 @@ PUBLIC void mprManageKqueue(MprWaitService *ws, int flags)
     } else if (flags & MPR_MANAGE_FREE) {
         if (ws->kq >= 0) {
             close(ws->kq);
+            ws->kq = -1;
         }
     }
 }
@@ -21295,6 +21301,7 @@ PUBLIC void mprManageSelect(MprWaitService *ws, int flags)
     } else if (flags & MPR_MANAGE_FREE) {
         if (ws->breakSock >= 0) {
             close(ws->breakSock);
+            ws->breakSock = -1;
         }
     }
 }
@@ -22137,6 +22144,7 @@ static void manageSocket(MprSocket *sp, int flags)
             if (sp->flags & MPR_SOCKET_SERVER) {
                 mprAtomicAdd(&sp->service->numAccept, -1);
             }
+            sp->fd = INVALID_SOCKET;
         }
     }
 }
@@ -28322,11 +28330,15 @@ static MprWaitHandler *initWaitHandler(MprWaitHandler *wp, int fd, int mask, Mpr
 #if ME_DEBUG
     {
         MprWaitHandler  *op;
+        static int      warnOnce = 0;
         int             index;
 
         for (ITERATE_ITEMS(ws->handlers, op, index)) {
             if (op->fd == fd) {
-                mprLog("error mpr event", 0, "Duplicate fd in wait handlers");
+                if (!warnOnce) {
+                    mprLog("error mpr event", 0, "Duplicate fd in wait handlers");
+                    warnOnce = 1;
+                }
             }
         }
     }
@@ -28479,6 +28491,8 @@ PUBLIC void mprRecallWaitHandlerByFd(Socket fd)
     MprWaitHandler  *wp;
     int             index;
 
+    assert(fd >= 0);
+    
     if ((ws = MPR->waitService) == 0) {
         return;
     }
