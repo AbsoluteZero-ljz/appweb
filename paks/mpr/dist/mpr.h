@@ -882,8 +882,6 @@ typedef struct MprMem {
 #if ME_64
     uchar       filler[4];
 #endif
-#else
-    uchar       filler[1];
 #endif
 } MprMem;
 
