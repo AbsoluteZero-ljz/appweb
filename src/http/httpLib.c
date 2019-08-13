@@ -5672,16 +5672,23 @@ PUBLIC int httpInitParser()
 
 /********************************** Locals ************************************/
 
-typedef struct HttpEvent {
+/********************************** Locals ************************************/
+/*
+    Invocation structure for httpCreateEvent
+ */
+typedef struct HttpInvoke {
     HttpEventProc   callback;
-    void            *data;         //  User data - caller must free if required in callback
-    uint64          seqno;         //  Conn seqno
-} HttpEvent;
+    uint64          seqno;          // Connection sequence number
+    void            *data;          //  User data - caller must free if required in callback
+    int             hasRun;
+} HttpInvoke;
 
 /***************************** Forward Declarations ***************************/
 
+static void createEvent(HttpConn *conn, void *data);
 static HttpPacket *getPacket(HttpConn *conn, ssize *bytesToRead);
 static void manageConn(HttpConn *conn, int flags);
+static void manageInvoke(HttpInvoke *event, int flags);
 static bool prepForNext(HttpConn *conn);
 
 /*********************************** Code *************************************/
@@ -6661,6 +6668,7 @@ PUBLIC void httpSetConnReqData(HttpConn *conn, void *data)
 }
 
 
+#if 0
 static HttpConn *getConnBySeqno(uint64 seqno)
 {
     HttpConn    *conn;
@@ -6704,6 +6712,103 @@ PUBLIC void httpCreateEvent(uint64 seqno, HttpEventProc callback, void *data)
         }
     }
     unlock(HTTP);
+}
+#endif
+/*
+    Invoke the callback. This routine is run on the streams dispatcher.
+    If the stream is destroyed, the event will be NULL.
+ */
+static void invokeWrapper(HttpInvoke *invoke, MprEvent *event)
+{
+    HttpConn    *conn;
+
+    if (event && (conn = httpFindConn(invoke->seqno, NULL, NULL)) != NULL) {
+        invoke->callback(conn, invoke->data);
+    } else {
+        invoke->callback(NULL, invoke->data);
+    }
+    invoke->hasRun = 1;
+    mprRelease(invoke);
+}
+
+
+/*
+    Create an event on a conn identified by its sequence number.
+    This routine is foreign thread-safe.
+ */
+PUBLIC int httpCreateEvent(uint64 seqno, HttpEventProc callback, void *data)
+{
+    HttpInvoke  *invoke;
+
+    /*
+        Must allocate memory immune from GC. The hold is released in the invokeWrapper
+        callback which is always invoked eventually.
+     */
+    if ((invoke = mprAllocMem(sizeof(HttpInvoke), MPR_ALLOC_ZERO | MPR_ALLOC_MANAGER | MPR_ALLOC_HOLD)) != 0) {
+        mprSetManager(invoke, (MprManager) manageInvoke);
+        invoke->seqno = seqno;
+        invoke->callback = callback;
+        invoke->data = data;
+    }
+    if (httpFindConn(seqno, createEvent, invoke)) {
+        return 0;
+    }
+    mprRelease(invoke);
+    return MPR_ERR_CANT_FIND;
+}
+
+
+/*
+    Destructor for Invoke to make sure the callback is always called.
+ */
+static void manageInvoke(HttpInvoke *invoke, int flags)
+{
+    if (flags & MPR_MANAGE_FREE) {
+        if (!invoke->hasRun) {
+            invokeWrapper(invoke, NULL);
+        }
+    }
+}
+
+
+static void createEvent(HttpConn *conn, void *data)
+{
+    mprCreateEvent(conn->dispatcher, "httpEvent", 0, (MprEventProc) invokeWrapper, data, MPR_EVENT_ALWAYS);
+}
+
+
+/*
+    If invoking on a foreign thread, provide a callback proc and data so the conn can be safely accessed while locked.
+    Do not use the returned value except to test for NULL in a foreign thread.
+ */
+PUBLIC HttpConn *httpFindConn(uint64 seqno, HttpEventProc proc, void *data)
+{
+    HttpConn    *conn;
+    int         next;
+
+    if (!proc && !mprGetCurrentThread()) {
+        assert(proc || mprGetCurrentThread());
+        return NULL;
+    }
+    /*
+        WARNING: GC can be running here in a foreign thread. The locks will ensure that connections
+        are not destroyed while locked. Event service lock is needed for the manageDispatcher
+        which then marks connections.
+     */
+    conn = 0;
+    lock(MPR->eventService);
+    lock(HTTP->connections);
+    for (ITERATE_ITEMS(HTTP->connections, conn, next)) {
+        if (conn->seqno == seqno && !conn->destroyed) {
+            if (proc) {
+                (proc)(conn, data);
+            }
+            break;
+        }
+    }
+    unlock(HTTP->connections);
+    unlock(MPR->eventService);
+    return conn;
 }
 
 /*
@@ -7972,7 +8077,6 @@ PUBLIC void httpStopEndpoint(HttpEndpoint *endpoint)
 static void acceptConn(HttpEndpoint *endpoint)
 {
     MprDispatcher   *dispatcher;
-    MprEvent        *event;
     MprSocket       *sock;
     MprWaitHandler  *wp;
 
@@ -7987,16 +8091,13 @@ static void acceptConn(HttpEndpoint *endpoint)
     } else {
         dispatcher = mprGetDispatcher();
     }
-    event = mprCreateEvent(dispatcher, "AcceptConn", 0, httpAcceptConn, endpoint, MPR_EVENT_DONT_QUEUE);
-    event->mask = wp->presentMask;
-    event->sock = sock;
-    event->handler = wp;
     /*
         Optimization to wake the event service in this amount of time. This ensures that when the HttpTimer is scheduled,
         it won't need to awaken the notifier.
      */
     mprSetEventServiceSleep(HTTP_TIMER_PERIOD);
-    mprQueueEvent(dispatcher, event);
+
+    mprCreateIOEvent(dispatcher, httpAcceptConn, endpoint, wp, sock);
 }
 
 
@@ -14662,8 +14763,8 @@ static int authCondition(HttpConn *conn, HttpRoute *route, HttpRouteOp *op)
                     httpError(conn, HTTP_CODE_UNAUTHORIZED, "Access Denied, login required");
                 }
             }
-            /* 
-                Request has been denied and a response generated. So OK to accept this route. 
+            /*
+                Request has been denied and a response generated. So OK to accept this route.
              */
             return HTTP_ROUTE_OK;
         }
@@ -14675,8 +14776,8 @@ static int authCondition(HttpConn *conn, HttpRoute *route, HttpRouteOp *op)
             /* Request has been denied and a response generated. So OK to accept this route. */
         }
     }
-    /* 
-        OK to accept route. This does not mean the request was authenticated - an error may have been already generated 
+    /*
+        OK to accept route. This does not mean the request was authenticated - an error may have been already generated
      */
     return HTTP_ROUTE_OK;
 }
@@ -15019,18 +15120,18 @@ PUBLIC HttpRoute *httpAddRestfulRoute(HttpRoute *parent, cchar *methods, cchar *
 PUBLIC void httpAddResourceGroup(HttpRoute *parent, cchar *resource)
 {
     /* Delete is a POST method alternative to remove */
-    httpAddRestfulRoute(parent, "GET",     "$",                           "",          resource);
-    httpAddRestfulRoute(parent, "POST",    "/{id=[0-9]+}/delete$",        "delete",    resource);
-    httpAddRestfulRoute(parent, "POST",    "(/)*$",                       "create",    resource);
-    httpAddRestfulRoute(parent, "GET",     "/{id=[0-9]+}/edit$",          "edit",      resource);
-    httpAddRestfulRoute(parent, "GET",     "/{id=[0-9]+}$",               "get",       resource);
-    httpAddRestfulRoute(parent, "GET",     "/init$",                      "init",      resource);
-    httpAddRestfulRoute(parent, "GET",     "/list$",                      "list",      resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "$",                           "",          resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "/{id=[0-9]+}/delete$",        "delete",    resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "(/)*$",                       "create",    resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "/{id=[0-9]+}/edit$",          "edit",      resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "/{id=[0-9]+}$",               "get",       resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "/init$",                      "init",      resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "/list$",                      "list",      resource);
     httpAddWebSocketsRoute(parent, "stream");
-    httpAddRestfulRoute(parent, "DELETE",  "/{id=[0-9]+}$",               "remove",    resource);
-    httpAddRestfulRoute(parent, "POST",    "/{id=[0-9]+}$",               "update",    resource);
-    httpAddRestfulRoute(parent, "GET,POST","/{id=[0-9]+}/{action}(/)*$",  "${action}", resource);
-    httpAddRestfulRoute(parent, "GET,POST","/{action}(/)*$",              "${action}", resource);
+    httpAddRestfulRoute(parent, "OPTIONS,DELETE",  "/{id=[0-9]+}$",               "remove",    resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "/{id=[0-9]+}$",               "update",    resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET,POST","/{id=[0-9]+}/{action}(/)*$",  "${action}", resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET,POST","/{action}(/)*$",              "${action}", resource);
 }
 
 
@@ -15040,16 +15141,16 @@ PUBLIC void httpAddResourceGroup(HttpRoute *parent, cchar *resource)
 PUBLIC void httpAddResource(HttpRoute *parent, cchar *resource)
 {
     /* Delete is a POST method alternative to remove */
-    httpAddRestfulRoute(parent, "GET",     "$",              "",           resource);
-    httpAddRestfulRoute(parent, "POST",    "/delete$",       "delete",     resource);
-    httpAddRestfulRoute(parent, "POST",    "(/)*$",          "create",     resource);
-    httpAddRestfulRoute(parent, "GET",     "/edit$",         "edit",       resource);
-    httpAddRestfulRoute(parent, "GET",     "(/)*$",          "get",        resource);
-    httpAddRestfulRoute(parent, "GET",     "/init$",         "init",       resource);
-    httpAddRestfulRoute(parent, "POST",    "(/)*$",          "update",     resource);
-    httpAddRestfulRoute(parent, "DELETE",  "(/)*$",          "remove",     resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "$",              "",           resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "/delete$",       "delete",     resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "(/)*$",          "create",     resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "/edit$",         "edit",       resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "(/)*$",          "get",        resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "/init$",         "init",       resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "(/)*$",          "update",     resource);
+    httpAddRestfulRoute(parent, "OPTIONS,DELETE",  "(/)*$",          "remove",     resource);
     httpAddWebSocketsRoute(parent, "stream");
-    httpAddRestfulRoute(parent, "GET,POST","/{action}(/)*$", "${action}",  resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET,POST","/{action}(/)*$", "${action}",  resource);
 }
 
 
@@ -15058,11 +15159,11 @@ PUBLIC void httpAddResource(HttpRoute *parent, cchar *resource)
  */
 PUBLIC void httpAddPermResource(HttpRoute *parent, cchar *resource)
 {
-    httpAddRestfulRoute(parent, "GET",     "$",              "",           resource);
-    httpAddRestfulRoute(parent, "GET",     "(/)*$",          "get",        resource);
-    httpAddRestfulRoute(parent, "POST",    "(/)*$",          "update",     resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "$",              "",           resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "(/)*$",          "get",        resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "(/)*$",          "update",     resource);
     httpAddWebSocketsRoute(parent, "stream");
-    httpAddRestfulRoute(parent, "GET,POST","/{action}(/)*$", "${action}",  resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET,POST","/{action}(/)*$", "${action}",  resource);
 }
 
 
@@ -15078,7 +15179,7 @@ PUBLIC HttpRoute *httpAddWebSocketsRoute(HttpRoute *parent, cchar *action)
     pattern = sfmt("^%s/{controller}/%s", parent->prefix, action);
 #endif
     path = sjoin("$1/", action, NULL);
-    route = httpDefineRoute(parent, "GET", pattern, path, "${controller}.c");
+    route = httpDefineRoute(parent, "OPTIONS,GET", pattern, path, "${controller}.c");
     httpAddRouteFilter(route, "webSocketFilter", "", HTTP_STAGE_RX | HTTP_STAGE_TX);
 
     /*
@@ -16360,7 +16461,7 @@ static bool parseResponseLine(HttpConn *conn, HttpPacket *packet)
         httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_NOT_ACCEPTABLE, "Unsupported HTTP protocol");
         return 0;
     }
-    conn->protocol = supper(protocol);
+    protocol = conn->protocol = supper(protocol);
     if (strcmp(protocol, "HTTP/1.0") == 0) {
         conn->http10 = 1;
         if (!scaselessmatch(tx->method, "HEAD")) {
