@@ -14,7 +14,7 @@ Requirements
 
 To build:
 ---
-    me
+    Nothing to build. The source will be dynamically compiled.
 
 To run:
 ---

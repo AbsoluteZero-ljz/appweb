@@ -54,6 +54,7 @@ static void callback(char *message, MprEvent *event)
         assert(event->dispatcher);
         assert(event->sock == NULL);
         assert(event->proc == (MprEventProc) callback);
+        assert(smatch(message, "Hello World"));
     }
     // printf("Got \"%s\" from event \"%s\"\n", message, event->name);
     free(message);
