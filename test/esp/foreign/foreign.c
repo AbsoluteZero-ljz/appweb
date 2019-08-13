@@ -41,7 +41,7 @@ static void finalizeResponse(HttpConn *conn, void *message)
     if (conn) {
         httpWrite(conn->writeq, "message: %s\n", message);
         httpFinalize(conn);
-        httpProtocol(conn);
+        httpIO(conn, 0);
     }
     free(message);
 }
