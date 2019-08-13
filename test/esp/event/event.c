@@ -9,10 +9,6 @@ static void serviceRequest();
 static void foreignThread();
 
 
-/*
-    Create a URL action to respond to HTTP requests.
-    We use an ESP module just to make it easier to dynamically load this test module.
- */
 ESP_EXPORT int esp_controller_app_event(HttpRoute *route)
 {
     espDefineAction(route, "request", serviceRequest);
@@ -20,9 +16,9 @@ ESP_EXPORT int esp_controller_app_event(HttpRoute *route)
 }
 
 
-static void serviceRequest(HttpStream *stream)
+static void serviceRequest(HttpConn *conn)
 {
-    httpWrite(stream->writeq, "done\n");
+    httpWrite(conn->writeq, "done\n");
     mprStartOsThread("foreign", foreignThread, NULL, NULL);
 }
 
@@ -40,9 +36,6 @@ static void foreignThread()
 }
 
 
-/*
-    Finalize a response to the Http request. This runs on the stream's dispatcher, thread-safe inside Appweb.
- */
 static void callback(char *message, MprEvent *event)
 {
     assert(message && *message);
