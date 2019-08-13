@@ -6037,6 +6037,7 @@ static void readPeerData(HttpConn *conn)
         conn->lastRead = mprReadSocket(conn->sock, mprGetBufEnd(packet->content), size);
         if (conn->lastRead > 0) {
             mprAdjustBufEnd(packet->content, conn->lastRead);
+            mprAddNullToBuf(packet->content);
         } else if (conn->lastRead < 0 && mprIsSocketEof(conn->sock)) {
             if (conn->state < HTTP_STATE_PARSED) {
                 conn->error = 1;
@@ -15752,12 +15753,16 @@ PUBLIC HttpLimits *httpGraduateLimits(HttpRoute *route, HttpLimits *limits)
 /********************************* Includes ***********************************/
 
 
+/*********************************** Locals ***********************************/
+
+#define HEADER_KEY      0x1         /* Validate token as a header key */
+#define HEADER_VALUE    0x2         /* Validate token as a header value */
 
 /***************************** Forward Declarations ***************************/
 
 static void addMatchEtag(HttpConn *conn, char *etag);
 static void delayAwake(HttpConn *conn, MprEvent *event);
-static char *getToken(HttpConn *conn, cchar *delim);
+static char *getToken(HttpConn *conn, cchar *delim, int validation);
 static bool getOutput(HttpConn *conn);
 static void manageRange(HttpRange *range, int flags);
 static void manageRx(HttpRx *rx, int flags);
@@ -15961,16 +15966,18 @@ static bool parseIncoming(HttpConn *conn)
         httpMonitorEvent(conn, HTTP_COUNTER_REQUESTS, 1);
     }
 
+    while (httpGetPacketLength(packet) > 0) {
+        start = mprGetBufStart(packet->content);
+        if (*start == '\r' || *start == '\n') {
+            mprGetCharFromBuf(packet->content);
+        } else {
+            break;
+        }
+    }
     if ((len = httpGetPacketLength(packet)) == 0) {
         return 0;
     }
-    start = mprGetBufStart(packet->content);
-    while (*start == '\r' || *start == '\n') {
-        if (mprGetCharFromBuf(packet->content) < 0) {
-            break;
-        }
-        start = mprGetBufStart(packet->content);
-    }
+
     /*
         Don't start processing until all the headers have been received (delimited by two blank lines)
      */
@@ -16148,21 +16155,30 @@ static bool parseRequestLine(HttpConn *conn, HttpPacket *packet)
     start = content->start;
     headers = httpTracing(conn) ? snclone(start, rx->headerPacketLength) : 0;
 
-    method = getToken(conn, 0);
+    method = getToken(conn, NULL, 0);
+    if (method == NULL || *method == '\0') {
+        httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad HTTP request. Empty Method");
+        return 0;
+    }
     rx->originalMethod = rx->method = supper(method);
     parseMethod(conn);
 
-    uri = getToken(conn, 0);
-    len = slen(uri);
-    if (*uri == '\0') {
+    uri = getToken(conn, NULL, 0);
+    if (uri == NULL || *uri == '\0') {
         httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad HTTP request. Empty URI");
         return 0;
-    } else if (len >= limits->uriSize) {
+    }
+    len = slen(uri);
+    if (len >= limits->uriSize) {
         httpLimitError(conn, HTTP_ABORT | HTTP_CODE_REQUEST_URL_TOO_LARGE,
             "Bad request. URI too long. Length %zd vs limit %zd", len, limits->uriSize);
         return 0;
     }
-    protocol = getToken(conn, "\r\n");
+    protocol = getToken(conn, "\r\n", 0);
+    if (protocol == NULL || *protocol == '\0') {
+        httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad HTTP request. Empty protocol");
+        return 0;
+    }
     conn->protocol = supper(protocol);
     if (smatch(conn->protocol, "HTTP/1.0") || *conn->protocol == 0) {
         if (rx->flags & (HTTP_POST|HTTP_PUT)) {
@@ -16202,13 +16218,18 @@ static bool parseResponseLine(HttpConn *conn, HttpPacket *packet)
     HttpTx      *tx;
     MprBuf      *content;
     cchar       *endp;
-    char        *protocol, *status;
+    char        *message, *protocol, *status;
     ssize       len;
 
     rx = conn->rx;
     tx = conn->tx;
 
-    protocol = conn->protocol = supper(getToken(conn, 0));
+    protocol = getToken(conn, NULL, 0);
+    if (protocol == NULL || protocol == '\0') {
+        httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_NOT_ACCEPTABLE, "Unsupported HTTP protocol");
+        return 0;
+    }
+    protocol = conn->protocol = supper(protocol);
     if (strcmp(protocol, "HTTP/1.0") == 0) {
         conn->http10 = 1;
         if (!scaselessmatch(tx->method, "HEAD")) {
@@ -16218,17 +16239,23 @@ static bool parseResponseLine(HttpConn *conn, HttpPacket *packet)
         httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_NOT_ACCEPTABLE, "Unsupported HTTP protocol");
         return 0;
     }
-    status = getToken(conn, 0);
-    if (*status == '\0') {
+    status = getToken(conn, NULL, 0);
+    if (status == NULL || *status == '\0') {
         httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_NOT_ACCEPTABLE, "Bad response status code");
         return 0;
     }
     rx->status = atoi(status);
-    rx->statusMessage = sclone(getToken(conn, "\r\n"));
+
+    message = getToken(conn, "\r\n", 0);
+    if (message == NULL || *message == '\0') {
+        httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_NOT_ACCEPTABLE, "Bad response status code");
+        return 0;
+    }
+    rx->statusMessage = sclone(message);
 
     len = slen(rx->statusMessage);
     if (len >= conn->limits->uriSize) {
-        httpLimitError(conn, HTTP_CLOSE | HTTP_CODE_REQUEST_URL_TOO_LARGE,
+        httpLimitError(conn, HTTP_ABORT | HTTP_CODE_REQUEST_URL_TOO_LARGE,
             "Bad response. Status message too long. Length %zd vs limit %zd", len, conn->limits->uriSize);
         return 0;
     }
@@ -16249,7 +16276,7 @@ static bool parseResponseLine(HttpConn *conn, HttpPacket *packet)
 
 
 /*
-    Parse the request headers. Return true if the header parsed.
+    Parse the request headers. Return true if the headers are parsed and validate.
  */
 static bool parseHeaders(HttpConn *conn, HttpPacket *packet)
 {
@@ -16268,21 +16295,19 @@ static bool parseHeaders(HttpConn *conn, HttpPacket *packet)
     limits = conn->limits;
     keepAliveHeader = 0;
 
-    for (count = 0; content->start[0] != '\r' && !conn->error; count++) {
+    for (count = 0; mprGetBufLength(content) > 0 && content->start[0] != '\r' && !conn->error; count++) {
         if (count >= limits->headerMax) {
             httpLimitError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Too many headers");
             return 0;
         }
-        if ((key = getToken(conn, ":")) == 0 || *key == '\0') {
+        key = getToken(conn, ":", HEADER_KEY);
+        if (key == NULL || *key == '\0' || mprGetBufLength(content) == 0) {
             httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad header format");
             return 0;
         }
-        value = getToken(conn, "\r\n");
-        while (isspace((uchar) *value)) {
-            value++;
-        }
-        if (strspn(key, "%<>/\\") > 0) {
-            httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad header key value");
+        value = getToken(conn, "\r\n", HEADER_VALUE);
+        if (value == NULL || mprGetBufLength(content) == 0 || content->start[0] == '\0') {
+            httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad header value");
             return 0;
         }
         if ((oldValue = mprLookupKey(rx->headers, key)) != 0) {
@@ -16583,9 +16608,14 @@ static bool parseHeaders(HttpConn *conn, HttpPacket *packet)
             break;
         }
     }
+    if (mprGetBufLength(content) < 2) {
+        httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad headers");
+        return 0;
+    }
     if (rx->form && rx->length >= conn->limits->rxFormSize && conn->limits->rxFormSize != HTTP_UNLIMITED) {
-        httpLimitError(conn, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
+        httpLimitError(conn, HTTP_ABORT | HTTP_CODE_REQUEST_TOO_LARGE,
             "Request form of %lld bytes is too big. Limit %lld", rx->length, conn->limits->rxFormSize);
+        return 0;
     }
     if (conn->error) {
         /* Cannot reliably continue with keep-alive as the headers have not been correctly parsed */
@@ -16646,7 +16676,7 @@ static bool processParsed(HttpConn *conn)
             can be defined per route.
          */
         if (!rx->upload && rx->length >= conn->limits->rxBodySize && conn->limits->rxBodySize != HTTP_UNLIMITED) {
-            httpLimitError(conn, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
+            httpLimitError(conn, HTTP_ABORT | HTTP_CODE_REQUEST_TOO_LARGE,
                 "Request content length %lld bytes is too big. Limit %lld", rx->length, conn->limits->rxBodySize);
             return 0;
         }
@@ -16885,7 +16915,7 @@ static bool getOutput(HttpConn *conn)
         count = q->count;
         if (!tx->finalizedOutput) {
             HTTP_NOTIFY(conn, HTTP_EVENT_WRITABLE, 0);
-            if (tx->handler->writable) {
+            if (tx->handler && tx->handler->writable) {
                 tx->handler->writable(q);
             }
         }
@@ -17379,20 +17409,26 @@ static void addMatchEtag(HttpConn *conn, char *etag)
 
 
 /*
-    Get the next input token. The content buffer is advanced to the next token. This routine always returns a
-    non-null token. The empty string means the delimiter was not found. The delimiter is a string to match and not
-    a set of characters. If null, it means use white space (space or tab) as a delimiter.
+    Get the next input token. The content buffer is advanced to the next token.
+    The delimiter is a string to match and not a set of characters.
+    If the delimeter null, it means use white space (space or tab) as a delimiter.
  */
-static char *getToken(HttpConn *conn, cchar *delim)
+static char *getToken(HttpConn *conn, cchar *delim, int validation)
 {
     MprBuf  *buf;
-    char    *token, *endToken, *nextToken;
+    char    *t, *token, *endToken, *nextToken;
 
     buf = conn->input->content;
     nextToken = mprGetBufEnd(buf);
 
-    for (token = mprGetBufStart(buf); (*token == ' ' || *token == '\t') && token < nextToken; token++) {}
+    /*
+        Eat white space
+     */
+    for (token = mprGetBufStart(buf); token < nextToken && (*token == ' ' || *token == '\t'); token++) {}
     if (token >= nextToken) {
+        if (validation == HEADER_KEY) {
+            return NULL;
+        }
         return "";
     }
     if (delim == 0) {
@@ -17400,12 +17436,47 @@ static char *getToken(HttpConn *conn, cchar *delim)
         if ((endToken = strpbrk(token, delim)) != 0) {
             nextToken = endToken + strspn(endToken, delim);
             *endToken = '\0';
+        } else {
+            return NULL;
         }
+
     } else {
         if ((endToken = strstr(token, delim)) != 0) {
             *endToken = '\0';
             /* Only eat one occurence of the delimiter */
             nextToken = endToken + strlen(delim);
+        } else {
+            return NULL;
+        }
+    }
+
+    if (validation == HEADER_KEY) {
+        if (strpbrk(token, "\"\\/ \t\r\n(),:;<=>?@[]{}")) {
+            return NULL;
+        }
+        for (t = token; *t; t++) {
+            if (!isprint(*t)) {
+                return NULL;
+            }
+        }
+    } else if (validation == HEADER_VALUE) {
+        /* Trim white space */
+        if (slen(token) > 0) {
+            for (t = &token[slen(token) - 1]; t >= token; t--) {
+                if (isspace((uchar) *t)) {
+                    *t = '\0';
+                } else {
+                    break;
+                }
+            }
+        }
+        while (isspace((uchar) *token)) {
+            token++;
+        }
+        for (t = token; *t; t++) {
+            if (!isprint(*t)) {
+                return NULL;
+            }
         }
     }
     buf->start = nextToken;
