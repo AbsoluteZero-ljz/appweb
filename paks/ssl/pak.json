@@ -2,14 +2,14 @@
     "name": "ssl",
     "description": "SSL Interface",
     "title": "SSL Interface",
-    "version": "0.9.4",
+    "version": "1.0.0",
     "keywords": [
         "me",
         "ssl"
     ],
     "author": {
         "name": "Michael O'Brien",
-        "email": "mob@emobrien.com"
+        "email": "mob@embedthis.com"
     },
     "repository": {
         "type": "git",
@@ -28,7 +28,5 @@
             "url": "https://embedthis.com/licensing/"
         }
     ],
-    "pak": {
-        "origin": "embedthis/ssl"
-    }
+    "origin": "embedthis/ssl"
 }

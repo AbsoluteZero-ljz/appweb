@@ -880,10 +880,14 @@ typedef struct MprMem {
                                              ME_MPR_ALLOC_BIG is defined and then it will be 64 bits. */
     uchar       qindex;                 /**< Freeq index. Always less than 512 queues. */
     uchar       eternal;                /**< Immune from GC. Implemented as a byte to be atomic */
+    uchar       mark;                   /**< GC mark indicator. Toggled for each GC pass by mark() when thread yielded. */
+
+    /*
+        Bit fields for fields only updated by mark/sweeper. Must not use bits for fields updated by multiple threads.
+     */
     uchar       free: 1;                /**< Block not in use */
     uchar       first: 1;               /**< Block is first block in region */
     uchar       hasManager: 1;          /**< Has manager function. Set at block init. */
-    uchar       mark: 1;                /**< GC mark indicator. Toggled for each GC pass by mark() when thread yielded. */
     uchar       fullRegion: 1;          /**< Block is an entire region - never on free queues . */
 
 #if ME_MPR_ALLOC_DEBUG
@@ -894,8 +898,6 @@ typedef struct MprMem {
 #if ME_64
     uchar       filler[4];
 #endif
-#else
-    uchar       filler[1];
 #endif
 } MprMem;
 
