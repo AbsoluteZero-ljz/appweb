@@ -3,7 +3,7 @@
  */
 #include "esp.h"
 
-static void finalizeResponse(HttpStream *stream, void *message);
+static void finalizeResponse(HttpConn *conn, void *message);
 static void serviceRequest();
 static void foreignThread(uint64 seqno);
 
@@ -13,35 +13,35 @@ ESP_EXPORT int esp_controller_app_foreign(HttpRoute *route)
     return 0;
 }
 
-static void serviceRequest(HttpStream *stream)
+static void serviceRequest(HttpConn *conn)
 {
     uint64      seqno;
 
-    seqno = stream->seqno;
-    mprStartOsThread("foreign", foreignThread, LTOP(stream->seqno), NULL);
+    seqno = conn->seqno;
+    mprStartOsThread("foreign", foreignThread, LTOP(conn->seqno), NULL);
 }
 
 
-static void foreignThread(uint64 streamSeqno)
+static void foreignThread(uint64 connSeqno)
 {
     char    *message;
 
     assert(mprGetCurrentThread() == NULL);
 
     message = strdup("Hello World");
-    if (httpCreateEvent(streamSeqno, finalizeResponse, message) < 0) {
+    if (httpCreateEvent(connSeqno, finalizeResponse, message) < 0) {
         free(message);
     }
 }
 
 
-static void finalizeResponse(HttpStream *stream, void *message)
+static void finalizeResponse(HttpConn *conn, void *message)
 {
     assert(message);
-    if (stream) {
-        httpWrite(stream->writeq, "message: %s\n", message);
-        httpFinalize(stream);
-        httpProcess(stream->inputq);
+    if (conn) {
+        httpWrite(conn->writeq, "message: %s\n", message);
+        httpFinalize(conn);
+        httpProtocol(conn);
     }
     free(message);
 }
