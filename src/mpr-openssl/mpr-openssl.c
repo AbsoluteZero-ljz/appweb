@@ -40,15 +40,36 @@
  #include    <openssl/dh.h>
 
 #if OPENSSL_VERSION_NUMBER >= 0x10002000L
- #include    <openssl/x509v3.h>
+    #include    <openssl/x509v3.h>
+#ifndef OPENSSL_NO_ENGINE
+    #include    <openssl/engine.h>
+#else
+    #define MPR_HAS_CRYPTO_ENGINE 1
+#endif
 #endif
 
 /************************************* Defines ********************************/
 /*
     Default ciphers from Mozilla (https://wiki.mozilla.org/Security/Server_Side_TLS) without SSLv3 ciphers.
     TLSv1 and TLSv2 only. Recommended RSA and DH parameter size: 2048 bits.
+
+    See cipher mappings at: https://wiki.mozilla.org/Security/Server_Side_TLS#Cipher_names_correspondence_table
+
+    Rationale:
+
+    * AES256-GCM is prioritized above its 128 bits variant, and ChaCha20 because we assume that most modern
+      devices support AESNI instructions and thus benefit from fast and constant time AES.
+    * We recommend ECDSA certificates with P256 as other curves may not be supported everywhere. RSA signatures
+      on ECDSA certificates are permitted because very few CAs sign with ECDSA at the moment.
+    * DHE is removed entirely because it is slow in comparison with ECDHE, and all modern clients support
+      elliptic curve key exchanges.
+    * SHA1 signature algorithm is removed in favor of SHA384 for AES256 and SHA256 for AES128.
  */
-#define OPENSSL_DEFAULT_CIPHERS "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4:!SSLv3"
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+    #define OPENSSL_DEFAULT_CIPHERS "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256"
+#else
+    #define OPENSSL_DEFAULT_CIPHERS "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4:!SSLv3"
+#endif
 
 /*
     Map Iana names to OpenSSL names
@@ -172,9 +193,10 @@ static CipherMap cipherMap[] = {
 typedef struct OpenConfig {
     SSL_CTX         *ctx;
     DH              *dhKey;
+    cchar           *alpn;
     int             clearFlags;
-    int             setFlags;
     int             maxHandshakes;
+    long            setFlags;
 } OpenConfig;
 
 typedef struct OpenSocket {
@@ -194,8 +216,9 @@ typedef struct RandBuf {
 static MprSocketProvider *openProvider;
 static OpenConfig *defaultOpenConfig;
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 /*
-    OpenSSL uses shared data and will crash if multithread locks are not used
+    OpenSSL 1.0 uses shared data and will crash if multithread locks are not used
  */
 static int      numLocks;
 static MprMutex **olocks;
@@ -204,6 +227,7 @@ struct CRYPTO_dynlock_value {
     MprMutex    *mutex;
 };
 typedef struct CRYPTO_dynlock_value DynLock;
+#endif
 
 /*
     Used for OpenSSL versions < 1.0.2
@@ -233,16 +257,23 @@ static ssize    readOss(MprSocket *sp, void *buf, ssize len);
 static void     setSecured(MprSocket *sp);
 static int      setCertFile(SSL_CTX *ctx, cchar *certFile);
 static int      setKeyFile(SSL_CTX *ctx, cchar *keyFile);
-static DynLock  *sslCreateDynLock(cchar *file, int line);
-static void     sslDynLock(int mode, DynLock *dl, cchar *file, int line);
-static void     sslDestroyDynLock(DynLock *dl, cchar *file, int line);
-static void     sslStaticLock(int mode, int n, cchar *file, int line);
-static ulong    sslThreadId(void);
 static int      sniHostname(SSL *ssl, int *al, void *arg);
 static int      upgradeOss(MprSocket *sp, MprSsl *ssl, cchar *requiredPeerName);
 static int      verifyPeerCertificate(int ok, X509_STORE_CTX *xctx);
 static ssize    writeOss(MprSocket *sp, cvoid *buf, ssize len);
 
+#if ME_MPR_HAS_ALPN
+static cchar    *makeAlpn(MprSsl *ssl);
+static int      selectAlpn(SSL *ssl, cuchar **out, uchar *outlen, cuchar *in, uint inlen, void *arg);
+#endif
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+static DynLock  *sslCreateDynLock(cchar *file, int line);
+static void     sslDynLock(int mode, DynLock *dl, cchar *file, int line);
+static void     sslDestroyDynLock(DynLock *dl, cchar *file, int line);
+static void     sslStaticLock(int mode, int n, cchar *file, int line);
+static ulong    sslThreadId(void);
+#endif
 
 /************************************* Code ***********************************/
 /*
@@ -251,7 +282,6 @@ static ssize    writeOss(MprSocket *sp, cvoid *buf, ssize len);
 PUBLIC int mprSslInit(void *unused, MprModule *module)
 {
     RandBuf     randBuf;
-    int         i;
 
     randBuf.now = mprGetTime();
     randBuf.pid = getpid();
@@ -279,6 +309,8 @@ PUBLIC int mprSslInit(void *unused, MprModule *module)
      */
     mprGlobalLock();
     if (CRYPTO_get_id_callback() == 0) {
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+        int     i;
         numLocks = CRYPTO_num_locks();
         if ((olocks = mprAlloc(numLocks * sizeof(MprMutex*))) == 0) {
             return MPR_ERR_MEMORY;
@@ -288,10 +320,11 @@ PUBLIC int mprSslInit(void *unused, MprModule *module)
         }
         CRYPTO_set_id_callback(sslThreadId);
         CRYPTO_set_locking_callback(sslStaticLock);
-
         CRYPTO_set_dynlock_create_callback(sslCreateDynLock);
         CRYPTO_set_dynlock_destroy_callback(sslDestroyDynLock);
         CRYPTO_set_dynlock_lock_callback(sslDynLock);
+#endif
+
 #if !ME_WIN_LIKE
         OpenSSL_add_all_algorithms();
 #endif
@@ -300,6 +333,9 @@ PUBLIC int mprSslInit(void *unused, MprModule *module)
          */
         SSL_library_init();
         SSL_load_error_strings();
+#if MPR_HAS_CRYPTO_ENGINE
+        ENGINE_load_builtin_engines();
+#endif
     }
     mprGlobalUnlock();
     return 0;
@@ -312,7 +348,7 @@ PUBLIC int mprSslInit(void *unused, MprModule *module)
 static void manageOpenConfig(OpenConfig *cfg, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
-        /* Nothing to do  */
+        mprMark(cfg->alpn);
 
     } else if (flags & MPR_MANAGE_FREE) {
         if (cfg->ctx != 0) {
@@ -325,6 +361,9 @@ static void manageOpenConfig(OpenConfig *cfg, int flags)
                 cfg->dhKey = 0;
             }
         }
+#if MPR_HAS_CRYPTO_ENGINE
+        ENGINE_cleanup();
+#endif
     }
 }
 
@@ -334,24 +373,82 @@ static void manageOpenConfig(OpenConfig *cfg, int flags)
  */
 static void manageOpenProvider(MprSocketProvider *provider, int flags)
 {
-    int     i;
-
     if (flags & MPR_MANAGE_MARK) {
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
         /* Mark global locks */
+        int     i;
         if (olocks) {
             mprMark(olocks);
             for (i = 0; i < numLocks; i++) {
                 mprMark(olocks[i]);
             }
         }
+#endif
         mprMark(defaultOpenConfig);
         mprMark(provider->name);
 
     } else if (flags & MPR_MANAGE_FREE) {
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
         olocks = 0;
+#endif
     }
 }
 
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+
+static ulong sslThreadId()
+{
+    return (long) mprGetCurrentOsThread();
+}
+
+
+static void sslStaticLock(int mode, int n, cchar *file, int line)
+{
+    assert(0 <= n && n < numLocks);
+
+    if (olocks) {
+        if (mode & CRYPTO_LOCK) {
+            mprLock(olocks[n]);
+        } else {
+            mprUnlock(olocks[n]);
+        }
+    }
+}
+
+
+static DynLock *sslCreateDynLock(cchar *file, int line)
+{
+    DynLock     *dl;
+
+    dl = mprAllocZeroed(sizeof(DynLock));
+    dl->mutex = mprCreateLock();
+    mprHold(dl->mutex);
+    return dl;
+}
+
+
+static void sslDestroyDynLock(DynLock *dl, cchar *file, int line)
+{
+    MprMutex    *mutex;
+
+    if (dl->mutex) {
+        mutex = dl->mutex;
+        dl->mutex = 0;
+        mprRelease(mutex);
+    }
+}
+
+
+static void sslDynLock(int mode, DynLock *dl, cchar *file, int line)
+{
+    if (mode & CRYPTO_LOCK) {
+        mprLock(dl->mutex);
+    } else {
+        mprUnlock(dl->mutex);
+    }
+}
+#endif
 
 /*
     Create and initialize an SSL configuration for a route. This configuration is used by all requests for
@@ -380,8 +477,11 @@ static int configOss(MprSsl *ssl, int flags, char **errorMsg)
         mprLog("error openssl", 0, "Unable to create SSL context");
         return MPR_ERR_CANT_INITIALIZE;
     }
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+    SSL_CTX_set_ex_data(ctx, 0, (void*) ssl);
+#else
     SSL_CTX_set_app_data(ctx, (void*) ssl);
-
+#endif
     if (ssl->verifyPeer && !(ssl->caFile || ssl->caPath)) {
         *errorMsg = sfmt("Cannot verify peer due to undefined CA certificates");
         SSL_CTX_free(ctx);
@@ -453,15 +553,18 @@ static int configOss(MprSsl *ssl, int flags, char **errorMsg)
             SSL_CTX_free(ctx);
             return MPR_ERR_CANT_INITIALIZE;
         }
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+        X509_STORE_set_ex_data(store, 0, (void*) ssl);
+#endif
         if (flags & MPR_SOCKET_SERVER) {
             SSL_CTX_set_verify_depth(ctx, ssl->verifyDepth);
         }
+        SSL_CTX_set_verify(ctx, verifyMode, verifyPeerCertificate);
     }
 
     /*
         Define callbacks
      */
-    SSL_CTX_set_verify(ctx, verifyMode, verifyPeerCertificate);
     if (flags & MPR_SOCKET_SERVER) {
         SSL_CTX_set_tlsext_servername_callback(ctx, sniHostname);
     }
@@ -491,6 +594,11 @@ static int configOss(MprSsl *ssl, int flags, char **errorMsg)
 #ifdef SSL_OP_NO_TLSv1_2
     if (!(ssl->protocols & MPR_PROTO_TLSV1_2)) {
         cfg->setFlags |= SSL_OP_NO_TLSv1_2;
+    }
+#endif
+#ifdef SSL_OP_NO_TLSv1_3
+    if (!(ssl->protocols & MPR_PROTO_TLSV1_3)) {
+        cfg->setFlags |= SSL_OP_NO_TLSv1_3;
     }
 #endif
 #ifdef SSL_OP_MSIE_SSLV2_RSA_PADDING
@@ -614,9 +722,99 @@ static int configOss(MprSsl *ssl, int flags, char **errorMsg)
     cfg->ctx = ctx;
     ssl->changed = 0;
     ssl->config = cfg;
+
+#if ME_MPR_HAS_ALPN
+    if (ssl->alpn) {
+        cfg->alpn = makeAlpn(ssl);
+        SSL_CTX_set_alpn_protos(ctx, (cuchar*) cfg->alpn, (int) slen(cfg->alpn));
+        SSL_CTX_set_alpn_select_cb(ctx, selectAlpn, NULL);
+    }
+#endif
+
+#if MPR_HAS_CRYPTO_ENGINE
+    if (initEngine(ssl) < 0) {
+        /* Continue without engine */
+    }
+#endif
     return 0;
 }
 
+#if MPR_HAS_CRYPTO_ENGINE
+static void initEngine(MprSsl *ssl)
+{
+    ENGINE  engine;
+
+    if (!(engine = ENGINE_by_id(ssl->device))) {
+        mprLog("mpr ssl openssl error", "Cannot find crypto device %s", ssl->device);
+        return MPR_CANT_FIND;
+    }
+    if (!ENGINE_set_default(engine, ENGINE_METHOD_ALL)) {
+        mprLog("mpr ssl openssl error", "Cannot find crypto device %s", ssl->device);
+        ENGINE_free(engine);
+        return MPR_CANT_FIND;
+    }
+    mprLog("mpr ssl openssl info", "Loaded crypto device %s", ssl->device);
+    ENGINE_free(engine);
+}
+#endif
+
+
+#if ME_MPR_HAS_ALPN
+static int selectAlpn(SSL *ssl, cuchar **out, uchar *outlen, cuchar *in, uint inlen, void *arg)
+{
+    OpenSocket  *osp;
+    cchar       *alpn;
+    ssize       len;
+
+    /*
+    for (i = 0; i < inlen; i += in[i] + 1) {
+        print("Client ALPN: %*s", (int) in[i], &in[i + 1]);
+    } */
+
+    if ((osp = (OpenSocket*) SSL_get_app_data(ssl)) == 0) {
+        return SSL_TLSEXT_ERR_NOACK;
+    }
+    alpn = osp->cfg->alpn;
+    if (alpn == 0) {
+        return SSL_TLSEXT_ERR_NOACK;
+    }
+
+    /*
+        WARNING: this appalling API expects pbuf to be static / persistent and sets *out to refer to it.
+     */
+    len = slen(alpn);
+    if (SSL_select_next_proto((uchar **) out, outlen, (cuchar*) alpn, (int) slen(alpn), in, inlen) != OPENSSL_NPN_NEGOTIATED) {
+        return SSL_TLSEXT_ERR_NOACK;
+    }
+    /* print("SSL ALPN selected: %*s", (int) *outlen, *out); */
+    return SSL_TLSEXT_ERR_OK;
+}
+#endif
+
+
+#if ME_MPR_HAS_ALPN
+static cchar *makeAlpn(MprSsl *ssl)
+{
+    cchar   *proto;
+    char    *dp, *pbuf;
+    ssize   len, plen;
+    int     next;
+
+    len = 1;
+    for (ITERATE_ITEMS(ssl->alpn, proto, next)) {
+        len += slen(proto) + 1;
+    }
+    pbuf = mprAlloc(len);
+    dp = pbuf;
+    for (ITERATE_ITEMS(ssl->alpn, proto, next)) {
+        plen = slen(proto);
+        *dp++ = (uchar) plen;
+        scopy((char*) dp, len - (dp - pbuf), proto);
+        dp += plen;
+    }
+    return pbuf;
+}
+#endif
 
 /*
     MPR Garbage collector manager callback for OpenSocket. Called on each GC sweep.
@@ -886,14 +1084,25 @@ static char *getOssSession(MprSocket *sp)
     osp = sp->sslSocket;
 
     if ((sess = SSL_get0_session(osp->handle)) != 0) {
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+        uint len;
+        cuchar *id = SSL_SESSION_get_id(sess, &len);
+        if (len == 0) {
+            return sclone("ticket");
+        }
+        buf = mprCreateBuf((len * 2) + 1, 0);
+        for (i = 0; i < (int) len ; i++) {
+            mprPutToBuf(buf, "%02X", (uchar) id[i]);
+        }
+#else
         if (sess->session_id_length == 0 && osp->handle->tlsext_ticket_expected) {
             return sclone("ticket");
         }
         buf = mprCreateBuf((sess->session_id_length * 2) + 1, 0);
-        assert(buf->start);
         for (i = 0; i < (int) sess->session_id_length; i++) {
             mprPutToBuf(buf, "%02X", (uchar) sess->session_id[i]);
         }
+#endif
         return mprBufToString(buf);
     }
     return 0;
@@ -1078,7 +1287,7 @@ static int setCertFile(SSL_CTX *ctx, cchar *certFile)
 
     } else if (SSL_CTX_use_certificate(ctx, cert) != 1) {
         mprLog("error openssl", 0, "Unable to use certificate %s", certFile);
-        
+
     } else {
         rc = 0;
     }
@@ -1146,8 +1355,7 @@ static int verifyPeerCertificate(int ok, X509_STORE_CTX *xctx)
     int             error, depth;
 
     subject[0] = issuer[0] = '\0';
-
-    handle = (SSL*) X509_STORE_CTX_get_app_data(xctx);
+    handle = (SSL*) X509_STORE_CTX_get_ex_data(xctx, SSL_get_ex_data_X509_STORE_CTX_idx());
     osp = (OpenSocket*) SSL_get_app_data(handle);
     sp = osp->sock;
     ssl = sp->ssl;
@@ -1208,7 +1416,7 @@ static int verifyPeerCertificate(int ok, X509_STORE_CTX *xctx)
         sp->errorMsg = sfmt("Certificate has expired");
         ok = 0;
         break;
-            
+
 #ifdef X509_V_ERR_HOSTNAME_MISMATCH
     case X509_V_ERR_HOSTNAME_MISMATCH:
         sp->errorMsg = sfmt("Certificate hostname mismatch. Expecting %s got %s", osp->requiredPeerName, peerName);
@@ -1284,59 +1492,9 @@ static void setSecured(MprSocket *sp)
 }
 
 
-static ulong sslThreadId()
-{
-    return (long) mprGetCurrentOsThread();
-}
-
-
-static void sslStaticLock(int mode, int n, cchar *file, int line)
-{
-    assert(0 <= n && n < numLocks);
-
-    if (olocks) {
-        if (mode & CRYPTO_LOCK) {
-            mprLock(olocks[n]);
-        } else {
-            mprUnlock(olocks[n]);
-        }
-    }
-}
-
-
-static DynLock *sslCreateDynLock(cchar *file, int line)
-{
-    DynLock     *dl;
-
-    dl = mprAllocZeroed(sizeof(DynLock));
-    dl->mutex = mprCreateLock(dl);
-    mprHold(dl->mutex);
-    return dl;
-}
-
-
-static void sslDestroyDynLock(DynLock *dl, cchar *file, int line)
-{
-    if (dl->mutex) {
-        mprRelease(dl->mutex);
-        dl->mutex = 0;
-    }
-}
-
-
-static void sslDynLock(int mode, DynLock *dl, cchar *file, int line)
-{
-    if (mode & CRYPTO_LOCK) {
-        mprLock(dl->mutex);
-    } else {
-        mprUnlock(dl->mutex);
-    }
-}
-
-
 static char *getOssError(MprSocket *sp)
 {
-    char    ebuf[ME_MAX_BUFFER];
+    char    ebuf[ME_BUFSIZE];
     ulong   error;
 
     error = ERR_get_error();
@@ -1376,6 +1534,8 @@ static cchar *mapCipherNames(cchar *ciphers)
 
 /*
     DH Parameters from RFC3526
+    Alternatively, replace with your own DH params generated via:
+    openssl dhparam --out dh.c -C 2048
  */
 
 static DH *getDhKey()
@@ -1406,12 +1566,26 @@ static DH *getDhKey()
     if ((dh = DH_new()) == 0) {
         return 0;
     }
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+{
+    BIGNUM  *p, *g;
+    p = BN_bin2bn(dh2048_p, sizeof(dh2048_p), NULL);
+    g = BN_bin2bn(dh2048_g, sizeof(dh2048_g), NULL);
+    if (!DH_set0_pqg(dh, p, NULL, g)) {
+        BN_free(p);
+        BN_free(g);
+        DH_free(dh);
+        return 0;
+    }
+}
+#else
     dh->p = BN_bin2bn(dh2048_p, sizeof(dh2048_p), NULL);
     dh->g = BN_bin2bn(dh2048_g, sizeof(dh2048_g), NULL);
     if ((dh->p == 0) || (dh->g == 0)) {
         DH_free(dh);
         return 0;
     }
+#endif
     return dh;
 }
 
