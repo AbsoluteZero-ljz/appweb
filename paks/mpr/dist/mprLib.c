@@ -9518,13 +9518,16 @@ static bool ownedDispatcher(MprDispatcher *dispatcher);
 static void queueDispatcher(MprDispatcher *prior, MprDispatcher *dispatcher);
 static bool reclaimDispatcher(MprDispatcher *dispatcher);
 static void releaseDispatcher(MprDispatcher *dispatcher);
-static bool reservedDispatcher(MprDispatcher *dispatcher);
 
 #define isIdle(dispatcher) (dispatcher->parent == dispatcher->service->idleQ)
 #define isRunning(dispatcher) (dispatcher->parent == dispatcher->service->runQ)
 #define isReady(dispatcher) (dispatcher->parent == dispatcher->service->readyQ)
 #define isWaiting(dispatcher) (dispatcher->parent == dispatcher->service->waitQ)
 #define isEmpty(dispatcher) (dispatcher->eventQ->next == dispatcher->eventQ)
+
+#if ME_DEBUG
+static bool isReservedDispatcher(MprDispatcher *dispatcher);
+#endif
 
 /************************************* Code ***********************************/
 /*
@@ -9764,7 +9767,7 @@ PUBLIC int mprServiceEvents(MprTicks timeout, int flags)
         mprServiceSignals();
 
         while ((dp = getNextReadyDispatcher(es)) != NULL) {
-            assert(reservedDispatcher(dp));
+            assert(isReservedDispatcher(dp));
             assert(!isRunning(dp));
             queueDispatcher(es->runQ, dp);
             assert(isRunning(dp));
@@ -10395,13 +10398,15 @@ static bool ownedDispatcher(MprDispatcher *dispatcher)
 }
 
 
-static bool reservedDispatcher(MprDispatcher *dispatcher)
+#if ME_DEBUG
+static bool isReservedDispatcher(MprDispatcher *dispatcher)
 {
     if (dispatcher->flags & MPR_DISPATCHER_DESTROYED) {
         return 0;
     }
     return (dispatcher->owner == RESERVED_DISPATCHER) ? 1 : 0;
 }
+#endif
 
 
 PUBLIC void mprSignalDispatcher(MprDispatcher *dispatcher)
