@@ -864,10 +864,14 @@ typedef struct MprMem {
                                              ME_MPR_ALLOC_BIG is defined and then it will be 64 bits. */
     uchar       qindex;                 /**< Freeq index. Always less than 512 queues. */
     uchar       eternal;                /**< Immune from GC. Implemented as a byte to be atomic */
+    uchar       mark;                   /**< GC mark indicator. Toggled for each GC pass by mark() when thread yielded. */
+
+    /*
+        Bit fields for fields only updated by mark/sweeper. Must not use bits for fields updated by multiple threads.
+     */
     uchar       free: 1;                /**< Block not in use */
     uchar       first: 1;               /**< Block is first block in region */
     uchar       hasManager: 1;          /**< Has manager function. Set at block init. */
-    uchar       mark: 1;                /**< GC mark indicator. Toggled for each GC pass by mark() when thread yielded. */
     uchar       fullRegion: 1;          /**< Block is an entire region - never on free queues . */
 
 #if ME_MPR_ALLOC_DEBUG
@@ -5792,15 +5796,10 @@ PUBLIC int mprUnloadModule(MprModule *mp);
  */
 #define MPR_EVENT_CONTINUOUS        0x1     /**< Timer event runs is automatically rescheduled */
 #define MPR_EVENT_QUICK             0x2     /**< Execute inline without executing via a thread */
-#define MPR_EVENT_STATIC_DATA       0x4     /**< Event data is permanent and should not be marked by GC */
-#define MPR_EVENT_RUNNING           0x8     /**< Event currently executing */
-#define MPR_EVENT_ALWAYS            0x10    /**< Always invoke the callback even if the event not run  */
-
-#if UNUSED
-#define MPR_EVENT_FOREIGN           0x20    /**< Invoking from a foreign non-mpr thread -- not used */
-#define MPR_EVENT_RELEASE_DATA      0x10    /**< Event.data must be released */
-#define MPR_EVENT_DONT_QUEUE        0x40    /**< Don't queue the event. User must call mprQueueEvent. (internal use only) */
-#endif
+#define MPR_EVENT_DONT_QUEUE        0x4     /**< Don't queue the event. User must call mprQueueEvent */
+#define MPR_EVENT_STATIC_DATA       0x8     /**< Event data is permanent and should not be marked by GC */
+#define MPR_EVENT_RUNNING           0x10    /**< Event currently executing */
+#define MPR_EVENT_ALWAYS            0x20    /**< Always invoke the callback even if the event not run  */
 
 #define MPR_EVENT_MAX_PERIOD (MAXINT64 / 2)
 
@@ -6977,13 +6976,16 @@ typedef struct MprThread {
     void            *stackBase;         /**< Base of stack (approx) */
     int             peakStack;          /**< Peak stack usage */
 #endif
-    bool            isWorker: 1;        /**< Is a worker thread */
-    bool            isMain: 1;          /**< Is the main thread */
-    bool            stickyYield: 1;     /**< Yielded does not auto-clear after GC */
-    bool            yielded: 1;         /**< Thread has yielded to GC */
-    bool            noyield: 1;         /**< Do not yield (temporary) */
-    bool            waitForSweeper: 1;  /**< Yield untill the GC sweeper is complete */
-    bool            waiting: 1;         /**< Waiting in mprYield */
+    bool            isWorker;           /**< Is a worker thread */
+    bool            isMain;             /**< Is the main thread */
+    /*
+        Don' use bit fields for racing updates
+     */
+    bool            stickyYield;        /**< Yielded does not auto-clear after GC */
+    bool            yielded;            /**< Thread has yielded to GC */
+    bool            waiting;            /**< Waiting in mprYield */
+    bool            noyield;            /**< Do not yield (temporary) */
+    bool            waitForSweeper;     /**< Yield untill the GC sweeper is complete */
 } MprThread;
 
 
