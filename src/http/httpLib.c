@@ -16100,8 +16100,6 @@ PUBLIC void httpDestroyRx(HttpRx *rx)
     Process an incoming request and drive the state machine. This will process only one request.
     All socket I/O is non-blocking, and this routine must not block. Note: packet may be null.
     Return true if the request is completed successfully.
-
-    MUST only ever be called from httpIOEvent otherwise recursion plays havoc.
  */
 PUBLIC void httpProtocol(HttpConn *conn)
 {
