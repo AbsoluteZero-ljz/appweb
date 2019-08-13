@@ -14,7 +14,7 @@
 
 #define MOUNT_POINT "/rom"
 
-static void printUsage();
+static void printUsage(void);
 static int binToC(MprList *files, cchar *mount, cchar *strip);
 
 /*********************************** Code *************************************/
@@ -90,7 +90,7 @@ int main(int argc, char **argv)
 }
 
 
-static void printUsage()
+static void printUsage(void)
 {
     mprEprintf("usage: makerom [options] files... >output.c\n");
     mprEprintf("  Makerom options:\n");
