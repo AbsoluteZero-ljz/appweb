@@ -9021,7 +9021,7 @@ static void parseRequestLine(HttpQueue *q, HttpPacket *packet)
         httpBadRequestError(stream, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad HTTP request. Empty protocol");
         return;
     }
-    protocol = supper(protocol);
+    rx->protocol = protocol = supper(protocol);
     if (smatch(protocol, "HTTP/1.0") || *protocol == 0) {
         if (rx->flags & (HTTP_POST|HTTP_PUT)) {
             rx->remainingContent = HTTP_UNLIMITED;
@@ -15997,7 +15997,8 @@ static void processFirst(HttpQueue *q)
     if (httpTracing(net) && httpIsServer(net)) {
         httpLog(stream->trace, "http.rx.request", "request", "method:'%s', uri:'%s', protocol:'%d'",
             rx->method, rx->uri, stream->net->protocol);
-        httpLog(stream->trace, "http.rx.headers", "headers", "\n%s", httpTraceHeaders(q, stream->rx->headers));
+        httpLog(stream->trace, "http.rx.headers", "headers", "\n%s %s %s\n%s", 
+            rx->originalMethod, rx->uri, rx->protocol, httpTraceHeaders(q, stream->rx->headers));
     }
 }
 
@@ -21195,6 +21196,7 @@ static void manageRx(HttpRx *rx, int flags)
         mprMark(rx->passwordDigest);
         mprMark(rx->pathInfo);
         mprMark(rx->pragma);
+        mprMark(rx->protocol);
         mprMark(rx->redirect);
         mprMark(rx->referrer);
         mprMark(rx->requestData);
@@ -22999,7 +23001,8 @@ PUBLIC int httpCreateEvent(uint64 seqno, HttpEventProc callback, void *data)
     HttpInvoke  *invoke;
 
     /*
-        Must allocate memory immune from GC. The hold is released in the invokeWrapper callback wich is always invoked eventually.
+        Must allocate memory immune from GC. The hold is released in the invokeWrapper
+        callback which is always invoked eventually.
      */
     if ((invoke = mprAllocMem(sizeof(HttpInvoke), MPR_ALLOC_ZERO | MPR_ALLOC_MANAGER | MPR_ALLOC_HOLD)) != 0) {
         mprSetManager(invoke, (MprManager) manageInvoke);
@@ -23010,7 +23013,21 @@ PUBLIC int httpCreateEvent(uint64 seqno, HttpEventProc callback, void *data)
     if (httpFindStream(seqno, createEvent, invoke)) {
         return 0;
     }
+    mprRelease(invoke);
     return MPR_ERR_CANT_FIND;
+}
+
+
+/*
+    Destructor for Invoke to make sure the callback is always called.
+ */
+static void manageInvoke(HttpInvoke *invoke, int flags)
+{
+    if (flags & MPR_MANAGE_FREE) {
+        if (!invoke->hasRun) {
+            invokeWrapper(invoke, NULL);
+        }
+    }
 }
 
 
@@ -23035,8 +23052,9 @@ PUBLIC HttpStream *httpFindStream(uint64 seqno, HttpEventProc proc, void *data)
         return NULL;
     }
     /*
-        WARNING: GC can be running here in a foreign thread. The locks will ensure that networks and streams are not destroyed
-        while locked. Event service lock is needed for the manageDispatcher which then marks networks.
+        WARNING: GC can be running here in a foreign thread. The locks will ensure that networks and
+        streams are not destroyed while locked. Event service lock is needed for the manageDispatcher
+        which then marks networks.
      */
     stream = 0;
     lock(MPR->eventService);
@@ -23060,19 +23078,6 @@ PUBLIC HttpStream *httpFindStream(uint64 seqno, HttpEventProc proc, void *data)
     unlock(HTTP->networks);
     unlock(MPR->eventService);
     return stream;
-}
-
-
-/*
-    Destructor for Invoke to make sure the callback is always called.
- */
-static void manageInvoke(HttpInvoke *invoke, int flags)
-{
-    if (flags & MPR_MANAGE_FREE) {
-        if (!invoke->hasRun) {
-            invokeWrapper(invoke, NULL);
-        }
-    }
 }
 
 /*
@@ -28431,3 +28436,4 @@ static void traceErrorProc(HttpStream *stream, cchar *fmt, ...)
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
  */
+

@@ -664,6 +664,9 @@ static MprMem *growHeap(size_t required)
 }
 
 
+/*
+    Free a memory block back onto the freelists
+ */
 static void freeBlock(MprMem *mp)
 {
     MprRegion   *region;
@@ -678,6 +681,9 @@ static void freeBlock(MprMem *mp)
 #if ME_MPR_ALLOC_STATS
     heap->stats.freed += mp->size;
 #endif
+    /*
+        If memory block is first in the region, check if the entire region is free
+     */
     if (mp->first) {
         region = GET_REGION(mp);
         if (GET_NEXT(mp) >= region->end) {
@@ -1059,6 +1065,7 @@ PUBLIC void mprYield(int flags)
         assert(!tp->yielded);
         assert(!heap->marking);
     }
+    assert(!tp->waiting);
 }
 
 
@@ -1412,7 +1419,7 @@ static void sweep()
             if (mp->free && joinBlocks) {
                 /*
                     Coalesce already free blocks if the next is also free
-                    This may be needed because the code below only coalesces forward.
+                    This is needed because the code below only coalesces forward.
                  */
                 if (next < region->end && !next->free && next->mark != heap->mark && claim(mp)) {
                     mp->mark = !heap->mark;
@@ -1571,6 +1578,13 @@ PUBLIC void mprRelease(cvoid *ptr)
     if (ptr) {
         mp = GET_MEM(ptr);
         if (!mp->free && VALID_BLK(mp)) {
+            /*
+                For memory allocated in foreign threads, there could be a race where it missed the GC mark phase
+                and the sweeper is or is about to run. We simulate a GC mark here to prevent the sweeper from collecting
+                the block on this sweep. Will be collected on the next if there is no other reference.
+             */
+            mp->mark = heap->mark;
+            mprAtomicBarrier();
             mp->eternal = 0;
         }
     }
@@ -1898,13 +1912,16 @@ PUBLIC void *mprSetAllocName(void *ptr, cchar *name)
 }
 
 
+/*
+    Mark this allocation address as freed (debug only)
+ */
 static void freeLocation(MprMem *mp)
 {
     MprLocationStats    *lp;
     cchar               *name;
     int                 index;
 
-    if (!heap->track) {
+    if (!heap->track || mp->eternal) {
         return;
     }
     name = mp->name;
@@ -11150,7 +11167,6 @@ PUBLIC void mprCreateIOEvent(MprDispatcher *dispatcher, void *proc, void *data, 
     event->handler = wp;
     event->sock = sock;
     wp->event = event;
-    assert(dispatcher);
     mprQueueEvent(dispatcher, event);
 }
 
@@ -11181,7 +11197,10 @@ PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks
         return 0;
     }
     if ((event = createEvent(dispatcher, name, period, proc, data, flags)) != NULL) {
-        mprQueueEvent(dispatcher, event);
+        // DEPRECATE - only for ejscript
+        if (!(flags & MPR_EVENT_DONT_QUEUE)) {
+            mprQueueEvent(dispatcher, event);
+        }
     }
     return event;
 }
@@ -11228,8 +11247,7 @@ static MprEvent *createEvent(MprDispatcher *dispatcher, cchar *name, MprTicks pe
 static void manageEvent(MprEvent *event, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
-        //  Don't mark the dispatcher because events are "held" and may create a leak
-        // mprMark(event->dispatcher);
+        //  Don't mark the dispatcher as it will be marked elsewhere by owners of the dispatcher
         mprMark(event->handler);
         if (!(event->flags & MPR_EVENT_STATIC_DATA)) {
             mprMark(event->data);
@@ -11410,7 +11428,7 @@ static void initEventQ(MprEvent *q, cchar *name)
 
     q->next = q;
     q->prev = q;
-    q->name = sclone(name);
+    q->name = name;
 }
 
 
