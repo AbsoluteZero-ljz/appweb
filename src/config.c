@@ -1060,7 +1060,7 @@ static int errorLogDirective(MaState *state, cchar *key, cchar *value)
         return MPR_ERR_BAD_SYNTAX;
     }
     mprSetLogLevel(level);
-    mprLogHeader();
+    mprLogConfig();
     if (stamp) {
         httpSetTimestamp(stamp);
     }
