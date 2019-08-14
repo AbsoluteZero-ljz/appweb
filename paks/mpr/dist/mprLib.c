@@ -27548,7 +27548,9 @@ static int getNumOrSym(char **token, int sep, int kind, int *isAlpah)
     char    *cp;
     int     num;
 
-    if (!token || *token == '\0') {
+    assert(token && *token);
+
+    if (token == NULL || *token == NULL || **token == '\0') {
         return 0;
     }
     if (isalpha((uchar) **token)) {
