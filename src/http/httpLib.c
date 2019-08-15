@@ -16401,10 +16401,27 @@ static void processParsed(HttpQueue *q)
 
 static void routeRequest(HttpStream *stream)
 {
-    httpRouteRequest(stream);
-    httpCreatePipeline(stream);
-    httpStartPipeline(stream);
-    httpStartHandler(stream);
+    HttpPacket  *packet;
+    HttpRx      *rx;
+
+    rx = stream->rx;
+
+    if (!rx->route) {
+        httpRouteRequest(stream);
+        httpCreatePipeline(stream);
+        httpStartPipeline(stream);
+    }
+
+    if (rx->eof) {
+        while ((packet = httpGetPacket(stream->rxHead)) != 0) {
+            httpPutPacket(stream->readq, packet);
+        }
+        httpPutPacketToNext(stream->readq, httpCreateEndPacket());
+    }
+
+    if (!stream->tx->started) {
+        httpStartHandler(stream);
+    }
 }
 
 
@@ -16437,7 +16454,6 @@ static bool processContent(HttpQueue *q)
 {
     HttpStream  *stream;
     HttpRx      *rx;
-    HttpPacket  *packet;
 
     stream = q->stream;
     rx = stream->rx;
@@ -16449,12 +16465,7 @@ static bool processContent(HttpQueue *q)
                 return 1;
             }
             mapMethod(stream);
-            if (!rx->route) {
-                routeRequest(stream);
-            }
-            while ((packet = httpGetPacket(stream->rxHead)) != 0) {
-                httpPutPacket(stream->readq, packet);
-            }
+            routeRequest(stream);
         }
         httpSetState(stream, HTTP_STATE_READY);
     }
