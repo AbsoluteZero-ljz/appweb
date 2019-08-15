@@ -622,7 +622,7 @@ static MprMem *growHeap(size_t required)
     size_t      size, rsize, spareLen;
 
     if (required < MPR_ALLOC_MAX_BLOCK && (heap->workDone > heap->workQuota)) {
-        triggerGC(0);
+        triggerGC(1);
     }
     if (required >= MPR_ALLOC_MAX) {
         allocException(MPR_MEM_TOO_BIG, required);
@@ -1168,6 +1168,7 @@ static int pauseThreads()
 
     } while (mprGetElapsedTicks(start) < timeout);
 
+    assert(allYielded || noyield);
     return (allYielded) ? 1 : 0;
 }
 
