@@ -16427,7 +16427,7 @@ PUBLIC bool httpPumpOutput(HttpQueue *q)
                 tx->handler->writable(wq);
             }
         }
-        return (wq->count - count) ? 0 : 1;
+        return (wq->count - count) ? 1 : 0;
     }
     return 0;
 }
