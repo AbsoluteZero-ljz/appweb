@@ -79,15 +79,15 @@ static void update() {
 ESP_EXPORT int esp_controller_app_cache(HttpRoute *route, MprModule *module) {
     HttpRoute   *rp;
 
-    espDefineAction(route, "cache-api", api);
-    espDefineAction(route, "cache-big", big);
-    espDefineAction(route, "cache-small", sml);
-    espDefineAction(route, "cache-medium", medium);
-    espDefineAction(route, "cache-clear", clear);
-    espDefineAction(route, "cache-client", client);
-    espDefineAction(route, "cache-huge", huge);
-    espDefineAction(route, "cache-manual", manual);
-    espDefineAction(route, "cache-update", update);
+    espDefineAction(route, "cache/api", api);
+    espDefineAction(route, "cache/big", big);
+    espDefineAction(route, "cache/small", sml);
+    espDefineAction(route, "cache/medium", medium);
+    espDefineAction(route, "cache/clear", clear);
+    espDefineAction(route, "cache/client", client);
+    espDefineAction(route, "cache/huge", huge);
+    espDefineAction(route, "cache/manual", manual);
+    espDefineAction(route, "cache/update", update);
 
     //  This is not required for unit tests
     if ((rp = httpLookupRoute(route->host, "/cache/")) != 0) {
