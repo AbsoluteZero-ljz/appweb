@@ -23145,9 +23145,11 @@ static void incomingTail(HttpQueue *q, HttpPacket *packet)
         return;
     }
     httpPutPacketToNext(q, packet);
+#if MOVED_TO_PROCESS
     if (rx->eof) {
         httpPutPacketToNext(q, httpCreateEndPacket());
     }
+#endif
     if (rx->route && stream->readq->first) {
         HTTP_NOTIFY(stream, HTTP_EVENT_READABLE, 0);
     }
