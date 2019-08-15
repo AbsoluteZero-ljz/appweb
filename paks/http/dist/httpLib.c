@@ -6228,10 +6228,9 @@ PUBLIC int httpGetConnEventMask(HttpConn *conn)
     eventMask = 0;
     if (rx) {
         if (conn->connError || (tx->writeBlocked) ||
-           (conn->connectorq && (conn->connectorq->count > 0 || conn->connectorq->ioCount > 0)) ||
-           (httpQueuesNeedService(conn)) ||
-           (mprSocketHasBufferedWrite(sp)) ||
-           (rx->eof && tx->finalized && conn->state < HTTP_STATE_FINALIZED)) {
+                (conn->connectorq && (conn->connectorq->count > 0 || conn->connectorq->ioCount > 0)) ||
+                httpQueuesNeedService(conn) || mprSocketHasBufferedWrite(sp) ||
+                (rx->eof && tx->finalized && conn->state < HTTP_STATE_FINALIZED)) {
             if (!mprSocketHandshaking(sp)) {
                 /* Must not pollute the data stream if the SSL stack is still doing manual handshaking */
                 eventMask |= MPR_WRITABLE;
@@ -11802,8 +11801,12 @@ PUBLIC void httpInitQueue(HttpConn *conn, HttpQueue *q, cchar *name)
 
 PUBLIC void httpSetQueueLimits(HttpQueue *q, ssize low, ssize max)
 {
-    q->low = low;
-    q->max = max;
+    if (low > 0) {
+        q->low = low;
+    }
+    if (max > 0) {
+        q->max = max;
+    }
 }
 
 
@@ -16852,6 +16855,8 @@ static bool processParsed(HttpConn *conn)
         rx->streaming = httpGetStreaming(conn->host, rx->mimeType, rx->uri);
         if (rx->streaming) {
             httpRouteRequest(conn);
+        } else {
+            httpSetQueueLimits(conn->readq, -1, conn->limits->rxFormSize);
         }
         /*
             Delay testing rxBodySize till after routing for streaming requests. This way, recieveBodySize
@@ -17024,12 +17029,12 @@ static bool processContent(HttpConn *conn)
                     }
                     httpRouteRequest(conn);
                     httpCreatePipeline(conn);
-                    /*
-                        Transfer buffered input body data into the pipeline
-                     */
-                    while ((packet = httpGetPacket(q)) != 0) {
-                        httpPutPacketToNext(q, packet);
-                    }
+                }
+                /*
+                    Transfer buffered input body data into the pipeline
+                 */
+                while ((packet = httpGetPacket(q)) != 0) {
+                    httpPutPacketToNext(q, packet);
                 }
                 httpPutPacketToNext(q, httpCreateEndPacket());
                 if (!tx->started) {
