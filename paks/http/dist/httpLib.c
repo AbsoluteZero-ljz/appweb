@@ -7889,7 +7889,7 @@ static void handlePutRequest(HttpQueue *q)
     MprFile     *file;
     cchar       *path;
 
-    assert(q->pair->queueData == 0);
+    assert(q->queueData == 0);
 
     stream = q->stream;
     tx = stream->tx;
@@ -7922,7 +7922,7 @@ static void handlePutRequest(HttpQueue *q)
         These are both success returns. 204 means already existed.
      */
     httpSetStatus(stream, tx->fileInfo.isReg ? HTTP_CODE_NO_CONTENT : HTTP_CODE_CREATED);
-    q->pair->queueData = (void*) file;
+    q->queueData = (void*) file;
 }
 
 
@@ -15997,7 +15997,7 @@ static void processFirst(HttpQueue *q)
     if (httpTracing(net) && httpIsServer(net)) {
         httpLog(stream->trace, "http.rx.request", "request", "method:'%s', uri:'%s', protocol:'%d'",
             rx->method, rx->uri, stream->net->protocol);
-        httpLog(stream->trace, "http.rx.headers", "headers", "\n%s %s %s\n%s", 
+        httpLog(stream->trace, "http.rx.headers", "headers", "\n%s %s %s\n%s",
             rx->originalMethod, rx->uri, rx->protocol, httpTraceHeaders(q, stream->rx->headers));
     }
 }
@@ -16401,10 +16401,27 @@ static void processParsed(HttpQueue *q)
 
 static void routeRequest(HttpStream *stream)
 {
-    httpRouteRequest(stream);
-    httpCreatePipeline(stream);
-    httpStartPipeline(stream);
-    httpStartHandler(stream);
+    HttpPacket  *packet;
+    HttpRx      *rx;
+
+    rx = stream->rx;
+
+    if (!rx->route) {
+        httpRouteRequest(stream);
+        httpCreatePipeline(stream);
+        httpStartPipeline(stream);
+    }
+
+    if (rx->eof) {
+        while ((packet = httpGetPacket(stream->rxHead)) != 0) {
+            httpPutPacket(stream->readq, packet);
+        }
+        httpPutPacketToNext(stream->readq, httpCreateEndPacket());
+    }
+
+    if (!stream->tx->started) {
+        httpStartHandler(stream);
+    }
 }
 
 
@@ -16427,7 +16444,7 @@ PUBLIC bool httpPumpOutput(HttpQueue *q)
                 tx->handler->writable(wq);
             }
         }
-        return (wq->count - count) ? 0 : 1;
+        return (wq->count - count) ? 1 : 0;
     }
     return 0;
 }
@@ -16437,7 +16454,6 @@ static bool processContent(HttpQueue *q)
 {
     HttpStream  *stream;
     HttpRx      *rx;
-    HttpPacket  *packet;
 
     stream = q->stream;
     rx = stream->rx;
@@ -16449,12 +16465,7 @@ static bool processContent(HttpQueue *q)
                 return 1;
             }
             mapMethod(stream);
-            if (!rx->route) {
-                routeRequest(stream);
-            }
-            while ((packet = httpGetPacket(stream->rxHead)) != 0) {
-                httpPutPacket(stream->readq, packet);
-            }
+            routeRequest(stream);
         }
         httpSetState(stream, HTTP_STATE_READY);
     }
@@ -23145,9 +23156,11 @@ static void incomingTail(HttpQueue *q, HttpPacket *packet)
         return;
     }
     httpPutPacketToNext(q, packet);
+#if MOVED_TO_PROCESS
     if (rx->eof) {
         httpPutPacketToNext(q, httpCreateEndPacket());
     }
+#endif
     if (rx->route && stream->readq->first) {
         HTTP_NOTIFY(stream, HTTP_EVENT_READABLE, 0);
     }
