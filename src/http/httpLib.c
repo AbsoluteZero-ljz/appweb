@@ -7889,7 +7889,7 @@ static void handlePutRequest(HttpQueue *q)
     MprFile     *file;
     cchar       *path;
 
-    assert(q->pair->queueData == 0);
+    assert(q->queueData == 0);
 
     stream = q->stream;
     tx = stream->tx;
@@ -7922,7 +7922,7 @@ static void handlePutRequest(HttpQueue *q)
         These are both success returns. 204 means already existed.
      */
     httpSetStatus(stream, tx->fileInfo.isReg ? HTTP_CODE_NO_CONTENT : HTTP_CODE_CREATED);
-    q->pair->queueData = (void*) file;
+    q->queueData = (void*) file;
 }
 
 
