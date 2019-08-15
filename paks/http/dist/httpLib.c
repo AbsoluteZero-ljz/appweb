@@ -2828,7 +2828,7 @@ static int openChunk(HttpQueue *q)
     Achive this by parseHeaders reversing the input start by 2.
 
     Return number of bytes available to read.
-    NOTE: may set rx->eof and return 0 bytes on EOF.
+    NOTE: may set eof and return 0 bytes on EOF.
  */
 PUBLIC ssize httpFilterChunkData(HttpQueue *q, HttpPacket *packet)
 {
@@ -3334,7 +3334,7 @@ PUBLIC char *httpReadString(HttpConn *conn)
     if (rx->length < 0) {
         return 0;
     }
-    remaining = (rx->length > MAXSSIZE) ? MAXSIZE: rx->length;
+    remaining = (ssize) min(MAXSSIZE, rx->length);
 
     if (remaining > 0) {
         if ((content = mprAlloc(remaining + 1)) == 0) {
@@ -6114,7 +6114,7 @@ static void readPeerData(HttpConn *conn)
         } else if (conn->lastRead < 0 && mprIsSocketEof(conn->sock)) {
             if (conn->state < HTTP_STATE_PARSED) {
                 conn->error = 1;
-                conn->rx->eof = 1;
+                httpSetEof(conn);
             }
             conn->errorMsg = conn->sock->errorMsg ? conn->sock->errorMsg : sclone("Connection reset");
             conn->keepAliveCount = 0;
@@ -6200,9 +6200,6 @@ PUBLIC void httpIO(HttpConn *conn, int eventMask)
     } else if (!mprIsSocketEof(conn->sock) && conn->async && !conn->delay) {
         httpEnableConnEvents(conn);
     }
-#if DEPRECATE
-    conn->io = 0;
-#endif
 }
 
 
