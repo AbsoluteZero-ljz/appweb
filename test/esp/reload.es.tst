@@ -5,7 +5,7 @@
 const HTTP = tget('TM_HTTP') || "127.0.0.1:4100"
 let http: Http = new Http
 
-if (thas('ME_DEBUG') && !App.env['TEST_LOAD']) {
+if (thas('ME_DEBUG') && false) {
     //  First get
     let path = new Path("../web/reload.esp")
     path.write('<html><body><% render("First", -1); %></body></html>')
@@ -27,5 +27,5 @@ if (thas('ME_DEBUG') && !App.env['TEST_LOAD']) {
     path.remove()
 
 } else {
-    tskip("Run only in debug, non-load builds")
+    tskip("Disabled")
 }
