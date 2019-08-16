@@ -2372,6 +2372,15 @@ PUBLIC void httpSetQueueLimits(HttpQueue *q, HttpLimits *limits, ssize packetSiz
  */
 PUBLIC void httpSuspendQueue(HttpQueue *q);
 
+/**
+    Transfer packets from one queue to another and append an END packet
+    @param inq Source queue reference
+    @param outq Destination queue reference
+    @ingroup HttpQueue
+    @stability Prototype
+ */
+PUBLIC void httpTransferPackets(HttpQueue *inq, HttpQueue *outq);
+
 #if ME_DEBUG
 /**
     Verify a queue
@@ -3711,17 +3720,17 @@ PUBLIC void httpError(HttpStream *stream, int status, cchar *fmt, ...) PRINTF_AT
 /**
     Find a stream given a stream sequence number
     @description Find a stream in a thread-safe manner given a stream sequence number. Each stream has a unique 64-bit
-        sequence number that can be used to retrieve a stream object. When using foreign threads, this is preferable 
+        sequence number that can be used to retrieve a stream object. When using foreign threads, this is preferable
         as another thread may disconnect and destroy the stream at any time.
         \n\n
-        A callback may be provided which will be invoked if the stream is found before returning from the API. This 
-        should be used if utilizing this API in a foreign thread. httpFindStream will lock the stream while the callback 
+        A callback may be provided which will be invoked if the stream is found before returning from the API. This
+        should be used if utilizing this API in a foreign thread. httpFindStream will lock the stream while the callback
         is invoked.
     @param seqno HttpStream stream sequence number retrieved from HttpStream.seqno
     @param proc Callback function to invoke with the signature void (*HttpEventProc)(struct HttpStream *stream, void *data);
     @param data Data to pass to the callback
-    @return The steam object reference. Returns NULL if the stream is not found. Only use this value if invoked in an 
-        MPR thread.  While foreign threads using this API may return a stream reference, the stream may be destroyed 
+    @return The steam object reference. Returns NULL if the stream is not found. Only use this value if invoked in an
+        MPR thread.  While foreign threads using this API may return a stream reference, the stream may be destroyed
         before the reference can be used.
     @ingroup HttpStream
     @stability Prototype
@@ -8484,11 +8493,11 @@ PUBLIC HttpDir *httpGetDirObj(HttpRoute *route);
     @description This routine invokes a callback on a stream's event dispatcher in a thread-safe manner. This API
         is the only safe way to invoke APIs on a stream from foreign threads.
     @param streamSeqno HttpStream->seqno identifier extracted when running in an MPR (Appweb) thread.
-    @param callback Callback function to invoke. The callback will always be invoked if the call is successful so that 
-        you can free any allocated resources. If the stream is destroyed before the event is run, the callback will be 
+    @param callback Callback function to invoke. The callback will always be invoked if the call is successful so that
+        you can free any allocated resources. If the stream is destroyed before the event is run, the callback will be
         invoked and the "stream" argument will be set to NULL.
         \n\n
-        If is important to check the HttpStream.error and HttpStream.state in the callback to ensure the Stream is in 
+        If is important to check the HttpStream.error and HttpStream.state in the callback to ensure the Stream is in
         an acceptable state for your logic. Typically you want HttpStream.state to be greater than HTTP_STATE_BEGIN and
         less than HTTP_STATE_COMPLETE. You may also wish to check HttpStream.error incase the stream request has errored.
     @param data Data to pass to the callback.

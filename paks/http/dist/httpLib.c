@@ -2843,7 +2843,7 @@ static void incomingChunk(HttpQueue *q, HttpPacket *packet)
         if (rx->remainingContent <= 0) {
             httpSetEof(stream);
 #if HTTP_PIPELINING
-            /* HTTP/1.1 pipelining is not implemented reliably by modern browsers */
+            /* HTTP/1.1 pipelining is not implemented reliably by all browsers */
             if (nbytes < len && (tail = httpSplitPacket(packet, nbytes)) != 0) {
                 httpPutPacket(stream->inputq, tail);
             }
@@ -16412,26 +16412,22 @@ static void processParsed(HttpQueue *q)
 
 static void routeRequest(HttpStream *stream)
 {
-    HttpPacket  *packet;
     HttpRx      *rx;
+    HttpTx      *tx;
 
     rx = stream->rx;
+    tx = stream->tx;
 
     if (!rx->route) {
         httpRouteRequest(stream);
         httpCreatePipeline(stream);
         httpStartPipeline(stream);
     }
-
-    if (rx->eof) {
-        while ((packet = httpGetPacket(stream->rxHead)) != 0) {
-            httpPutPacket(stream->readq, packet);
-        }
-        httpPutPacketToNext(stream->readq, httpCreateEndPacket());
-    }
-
-    if (!stream->tx->started) {
+    if (!tx->started) {
         httpStartHandler(stream);
+    }
+    if (rx->eof) {
+        httpTransferPackets(stream->rxHead, stream->readq);
     }
 }
 
@@ -17405,6 +17401,22 @@ PUBLIC bool httpWillNextQueueAcceptSize(HttpQueue *q, ssize size)
     return 0;
 }
 
+
+PUBLIC void httpTransferPackets(HttpQueue *inq, HttpQueue *outq)
+{
+    HttpPacket  *packet;
+    bool        ended;
+
+    ended = 0;
+    while ((packet = httpGetPacket(inq)) != 0) {
+        httpPutPacket(outq, packet);
+        ended = ended || (packet->flags & HTTP_PACKET_END);
+    }
+    if (!ended) {
+        //  MOB - is this required -- or will incomingTail do this for us?
+        httpPutPacketToNext(outq, httpCreateEndPacket());
+    }
+}
 
 #if ME_DEBUG
 PUBLIC bool httpVerifyQueue(HttpQueue *q)
@@ -21177,6 +21189,7 @@ PUBLIC HttpRx *httpCreateRx(HttpStream *stream)
     rx->needInputPipeline = httpClientStream(stream);
     rx->headers = mprCreateHash(HTTP_SMALL_HASH_SIZE, MPR_HASH_CASELESS | MPR_HASH_STABLE);
     rx->chunkState = HTTP_CHUNK_UNCHUNKED;
+    rx->remainingContent = 0;
 
     rx->seqno = ++stream->net->totalRequests;
     peer = stream->net->address ? stream->net->address->seqno : 0;
@@ -23167,6 +23180,7 @@ static void incomingTail(HttpQueue *q, HttpPacket *packet)
         return;
     }
     httpPutPacketToNext(q, packet);
+    //  MOB - do we know eof here yet? -- chunk Filter
     if (rx->eof) {
         httpPutPacketToNext(q, httpCreateEndPacket());
     }
