@@ -2372,15 +2372,6 @@ PUBLIC void httpSetQueueLimits(HttpQueue *q, HttpLimits *limits, ssize packetSiz
  */
 PUBLIC void httpSuspendQueue(HttpQueue *q);
 
-/**
-    Transfer packets from one queue to another and append an END packet
-    @param inq Source queue reference
-    @param outq Destination queue reference
-    @ingroup HttpQueue
-    @stability Prototype
- */
-PUBLIC void httpTransferPackets(HttpQueue *inq, HttpQueue *outq);
-
 #if ME_DEBUG
 /**
     Verify a queue
@@ -3625,6 +3616,15 @@ PUBLIC void httpClosePipeline(HttpStream *stream);
 #define HTTP_PARSE_TIMEOUT          3
 
 /**
+    Create the pipeline.
+    @description Create the processing pipeline.
+    @param stream HttpStream object created via #httpCreateStream
+    @ingroup HttpStream
+    @stability Internal
+ */
+PUBLIC void httpCreatePipeline(HttpStream *stream);
+
+/**
     Create a stream object.
     @description Most interactions with the Http library are via a stream object. It is used for server-side
         communications when responding to client requests and it is used to initiate outbound client requests.
@@ -3894,6 +3894,36 @@ PUBLIC void httpResetClientStream(HttpStream *stream, bool keepHeaders);
  */
 PUBLIC void httpReadyHandler(HttpStream *stream);
 
+/**
+    Test if a request has exceeded its timeout limits
+    @description This tests the request against the HttpLimits.requestTimeout and HttpLimits.inactivityTimeout limits.
+    It uses the HttpStream.started and HttpStream.lastActivity time markers.
+    @param stream HttpStream object created via #httpCreateStream
+    @param timeout Overriding timeout in milliseconds. If timeout is zero, override default limits and wait forever.
+        If timeout is < 0, use default connection inactivity and duration timeouts. If timeout is > 0, then use this
+        timeout as an additional timeout.
+    @ingroup HttpStream
+    @stability Stable
+ */
+PUBLIC bool httpRequestExpired(HttpStream *stream, MprTicks timeout);
+
+/**
+    Reset the current security credentials
+    @description Remove any existing security credentials.
+    @param stream HttpStream stream object created via #httpCreateStream
+    @ingroup HttpStream
+    @stability Stable
+ */
+PUBLIC void httpResetCredentials(HttpStream *stream);
+
+/**
+    Route the request and select that matching route and handle to process the request.
+    @param stream HttpStream stream object created via #httpCreateStream
+    @ingroup HttpStream
+    @stability Internal
+  */
+PUBLIC void httpRouteRequest(HttpStream *stream);
+
 #if DOXYGEN
 /**
     Test if the connection is a server-side connection
@@ -3926,36 +3956,6 @@ PUBLIC bool httpClientStream(HttpStream *stream);
     @internal
  */
 PUBLIC bool httpShouldRenderDirListing(HttpStream *stream);
-
-/**
-    Test if a request has exceeded its timeout limits
-    @description This tests the request against the HttpLimits.requestTimeout and HttpLimits.inactivityTimeout limits.
-    It uses the HttpStream.started and HttpStream.lastActivity time markers.
-    @param stream HttpStream object created via #httpCreateStream
-    @param timeout Overriding timeout in milliseconds. If timeout is zero, override default limits and wait forever.
-        If timeout is < 0, use default connection inactivity and duration timeouts. If timeout is > 0, then use this
-        timeout as an additional timeout.
-    @ingroup HttpStream
-    @stability Stable
- */
-PUBLIC bool httpRequestExpired(HttpStream *stream, MprTicks timeout);
-
-/**
-    Reset the current security credentials
-    @description Remove any existing security credentials.
-    @param stream HttpStream stream object created via #httpCreateStream
-    @ingroup HttpStream
-    @stability Stable
- */
-PUBLIC void httpResetCredentials(HttpStream *stream);
-
-/**
-    Route the request and select that matching route and handle to process the request.
-    @param stream HttpStream stream object created via #httpCreateStream
-    @ingroup HttpStream
-    @stability Internal
-  */
-PUBLIC void httpRouteRequest(HttpStream *stream);
 
 /**
     Schedule a connection timeout event on a connection
@@ -4124,17 +4124,16 @@ PUBLIC void httpStartPipeline(HttpStream *stream);
 
 PUBLIC void httpStartHandler(HttpStream *stream);
 
-/**
-    Create the pipeline.
-    @description Create the processing pipeline.
-    @param stream HttpStream object created via #httpCreateStream
-    @ingroup HttpStream
-    @stability Internal
- */
-PUBLIC void httpCreatePipeline(HttpStream *stream);
-
 //  LEGACY
 PUBLIC bool httpTrace(HttpStream *stream, cchar *event, cchar *type, cchar *fmt, ...);
+
+/**
+    Transfer packets from the stream rxHead queue to the readq
+    @param stream Stream object
+    @ingroup HttpQueue
+    @stability Internal
+ */
+PUBLIC void httpTransferPackets(HttpStream *stream);
 
 /**
     Verify the server handshake
@@ -6574,6 +6573,7 @@ typedef struct HttpRx {
     bool            form: 1;                /**< Using mime-type application/x-www-form-urlencoded */
     bool            ifModified: 1;          /**< If-Modified processing requested */
     bool            ifMatch: 1;             /**< If-Match processing requested */
+    bool            inputEnded: 1;          /**< End packet appended to input stream */
     bool            json: 1;                /**< Using a JSON body */
     bool            needInputPipeline: 1;   /**< Input pipeline required to process received data */
     bool            ownParams: 1;           /**< Do own parameter handling */
