@@ -5,7 +5,11 @@
 const HTTP = tget('TM_HTTP') || "127.0.0.1:4100"
 let http: Http = new Http
 
-if (thas('ME_DEBUG')) {
+/*
+    Dont unit test this -- better to test manually
+ */
+
+if (thas('ME_DEBUG') && false) {
     //  First get
     let path = new Path("../web/reload.esp")
     path.write('<html><body><% espRender(conn, "First", -1); %></body></html>')
@@ -27,5 +31,6 @@ if (thas('ME_DEBUG')) {
     path.remove()
 
 } else {
-    tskip("Run only in debug builds")
+    tskip("Disabled")
 }
+

@@ -7,6 +7,7 @@
     version: '0.2.0',
     esp: {
         app: true,
+        update: false,
     },
     http: {
         routes: [
