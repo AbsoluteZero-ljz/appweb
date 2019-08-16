@@ -10128,6 +10128,7 @@ static HttpStream *getStream(HttpQueue *q, HttpPacket *packet)
     rx = stream->rx;
     if (frame->flags & HTTP2_END_STREAM_FLAG) {
         rx->eof = 1;
+        // httpSetEof(stream);
     }
     if (rx->headerPacket) {
         httpJoinPacket(rx->headerPacket, packet);
@@ -10610,6 +10611,7 @@ static void processDataFrame(HttpQueue *q, HttpPacket *packet)
 
     if (frame->flags & HTTP2_END_STREAM_FLAG) {
         stream->rx->eof = 1;
+        // httpSetEof(stream);
     }
     if (httpGetPacketLength(packet) > 0) {
         httpPutPacket(stream->inputq, packet);
@@ -15507,6 +15509,9 @@ PUBLIC void httpCreateRxPipeline(HttpStream *stream, HttpRoute *route)
     if (httpClientStream(stream)) {
         pairQueues(stream->rxHead, stream->txHead);
         httpOpenQueues(stream);
+
+    } else if (!rx->streaming) {
+        q->max = stream->limits->rxFormSize;
     }
     if (q->net->protocol < 2) {
         q->net->inputq->stream = stream;
@@ -16323,6 +16328,7 @@ static void processHeaders(HttpQueue *q)
 
 /*
     Called once the HTTP request/response headers have been parsed
+    Queue is the inputq.
  */
 static void processParsed(HttpQueue *q)
 {
@@ -16343,6 +16349,7 @@ static void processParsed(HttpQueue *q)
         if ((stream->host = httpMatchHost(net, hostname)) == 0) {
             stream->host = mprGetFirstItem(net->endpoint->hosts);
             httpError(stream, HTTP_CODE_NOT_FOUND, "No listening endpoint for request for %s", rx->hostHeader);
+            /* continue */
         }
         if (!rx->originalUri) {
             rx->originalUri = rx->uri;
@@ -16353,6 +16360,7 @@ static void processParsed(HttpQueue *q)
     if (rx->form && rx->length >= stream->limits->rxFormSize && stream->limits->rxFormSize != HTTP_UNLIMITED) {
         httpLimitError(stream, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
             "Request form of %lld bytes is too big. Limit %lld", rx->length, stream->limits->rxFormSize);
+        /* continue */
     }
     if (stream->error) {
         /* Cannot reliably continue with keep-alive as the headers have not been correctly parsed */
@@ -16369,20 +16377,23 @@ static void processParsed(HttpQueue *q)
 
     if (httpIsServer(stream->net)) {
         //  TODO is rx->length getting set for HTTP/2?
+        //  TODO - should this test be earlier?
         if (!rx->upload && rx->length >= stream->limits->rxBodySize && stream->limits->rxBodySize != HTTP_UNLIMITED) {
             httpLimitError(stream, HTTP_ABORT | HTTP_CODE_REQUEST_TOO_LARGE,
                 "Request content length %lld bytes is too big. Limit %lld", rx->length, stream->limits->rxBodySize);
             return;
         }
         httpAddQueryParams(stream);
+
         rx->streaming = httpGetStreaming(stream->host, rx->mimeType, rx->uri);
-        if (rx->streaming && httpServerStream(stream)) {
-            /*
-                Disable upload if streaming, used by PHP to stream input and process file upload in PHP.
-             */
+        if (rx->streaming) {
+            /* Disable upload if streaming, used by PHP to stream input and process file upload in PHP. */
             rx->upload = 0;
             routeRequest(stream);
+        } else {
+            stream->readq->max = stream->limits->rxFormSize;
         }
+
     } else {
 #if ME_HTTP_WEB_SOCKETS
         if (stream->upgraded && !httpVerifyWebSocketsHandshake(stream)) {
@@ -23156,11 +23167,9 @@ static void incomingTail(HttpQueue *q, HttpPacket *packet)
         return;
     }
     httpPutPacketToNext(q, packet);
-#if MOVED_TO_PROCESS
     if (rx->eof) {
         httpPutPacketToNext(q, httpCreateEndPacket());
     }
-#endif
     if (rx->route && stream->readq->first) {
         HTTP_NOTIFY(stream, HTTP_EVENT_READABLE, 0);
     }
