@@ -17030,19 +17030,17 @@ static bool processContent(HttpConn *conn)
                     httpRouteRequest(conn);
                     httpCreatePipeline(conn);
                 }
+                if (!tx->started) {
+                    httpStartPipeline(conn);
+                }
                 /*
                     Transfer buffered input body data into the pipeline
                  */
                 while ((packet = httpGetPacket(q)) != 0) {
                     httpPutPacketToNext(q, packet);
                 }
-                httpPutPacketToNext(q, httpCreateEndPacket());
-                if (!tx->started) {
-                    httpStartPipeline(conn);
-                }
-            } else {
-                httpPutPacketToNext(q, httpCreateEndPacket());
             }
+            httpPutPacketToNext(q, httpCreateEndPacket());
             httpSetState(conn, HTTP_STATE_READY);
         }
         return 1;
