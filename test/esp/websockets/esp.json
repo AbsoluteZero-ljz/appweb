@@ -3,7 +3,8 @@
         controllers: '.'
     },
     esp: {
-        app: true
+        app: true,
+        update: false,
     },
     http: {
         limits: {

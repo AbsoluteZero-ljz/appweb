@@ -5,6 +5,6 @@
         compile: true,
         keep: false,
         optimize: false,
-        update: true
+        update: false,
     }
 }
