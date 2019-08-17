@@ -429,7 +429,7 @@ static void usageError()
         "    --name uniqueName       # Unique name for this instance\n"
         "    --show                  # Show route table\n"
         "    --trace traceFile:level # Trace to file at verbosity level (0-5)\n"
-        "    --verbose               # Same as --log stdout:2\n"
+        "    --verbose               # Same as --log stdout:2 --trace stdout:2\n"
         "    --version               # Output version information\n"
         "    --DIGIT                 # Same as --log stdout:DIGIT\n\n",
         mprGetAppTitle(), name, name, name);
