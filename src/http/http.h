@@ -3611,10 +3611,11 @@ typedef struct HttpStream {
 /**
     Add an END packet to the input queue
     @param stream HttpStream stream object created via #httpCreateStream
+    @param q Queue to receive the packet
     @ingroup HttpStream
     @stability Prototype
  */
-PUBLIC void httpAddEndInputPacket(HttpStream *stream);
+PUBLIC void httpAddEndInputPacket(HttpStream *stream, HttpQueue *q);
 
 /**
     Emit an error message for a badly formatted request
