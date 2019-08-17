@@ -15520,7 +15520,6 @@ PUBLIC void httpCreateRxPipeline(HttpStream *stream, HttpRoute *route)
         q = httpCreateQueue(stream->net, stream, stage, HTTP_QUEUE_RX, q);
         q->flags |= HTTP_QUEUE_REQUEST;
     }
-    httpTransferPackets(stream->readq, q);
     stream->readq = q;
 
     if (httpClientStream(stream)) {
@@ -16440,6 +16439,7 @@ static void routeRequest(HttpStream *stream)
         httpRouteRequest(stream);
         httpCreatePipeline(stream);
         httpStartPipeline(stream);
+        httpTransferPackets(stream->rxHead, stream->readq);
     }
 }
 
