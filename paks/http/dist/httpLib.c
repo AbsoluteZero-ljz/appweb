@@ -14881,10 +14881,11 @@ PUBLIC void httpJoinPacketForService(HttpQueue *q, HttpPacket *packet, bool serv
             Find the last data packet and join with that
          */
         for (p = q->first, last = 0; p && !(p->flags & HTTP_PACKET_END); last = p, p = p->next);
-        assert(last);
         if (last) {
             httpJoinPacket(last, packet);
             q->count += httpGetPacketLength(packet);
+        } else {
+            httpPutBackPacket(q, packet);
         }
     }
     if (serviceQ && !(q->flags & HTTP_QUEUE_SUSPENDED))  {

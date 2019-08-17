@@ -40,3 +40,4 @@ app-macosx-debug.xcodeproj
 Debug/
 samples/*/client
 samples/*/roots.crt
+appweb-php/
