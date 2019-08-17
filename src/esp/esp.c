@@ -2012,7 +2012,6 @@ static void compileCombined(HttpRoute *route)
     app->combineItems = mprCreateList(-1, MPR_LIST_STABLE);
     app->combinePath = mprJoinPath(httpGetDir(route, "CACHE"), sjoin(name, ".c", NULL));
 
-    print("%s", mprJsonToString(app->config, MPR_JSON_PRETTY));
     if ((sourceList = mprGetJsonObj(app->config, "esp.app.source")) != 0) {
         for (ITERATE_JSON(sourceList, source, index)) {
             files = mprGlobPathFiles(".", source->value, 0);
