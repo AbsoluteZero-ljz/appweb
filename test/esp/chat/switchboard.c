@@ -90,7 +90,7 @@ static void chat_callback(HttpStream *stream, int event, int arg)
         /*
             This event is in response to a web sockets close event
          */
-        mprLog("chat info", 0, "Close event. Status status %d, orderly closed %d, reason %s", arg,
+        // mprLog("chat info", 0, "Close event. Status status %d, orderly closed %d, reason %s", arg,
         httpWebSocketOrderlyClosed(stream), httpGetWebSocketCloseReason(stream));
 
     } else if (event == HTTP_EVENT_DESTROY) {
