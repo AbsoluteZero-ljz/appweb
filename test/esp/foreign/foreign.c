@@ -47,7 +47,7 @@ static void finalizeResponse(HttpStream *stream, void *message)
         httpFinalize(stream);
         httpServiceNetQueues(stream->net, 0);
         httpProtocol(stream);
-        print("%ld seqno %ld state %d", ticks, stream->seqno, stream->state);
+        // print("%ld seqno %ld state %d", ticks, stream->seqno, stream->state);
     } else {
         print("NO STREAM");
     }
