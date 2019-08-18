@@ -41,3 +41,4 @@ Debug/
 samples/*/client
 samples/*/roots.crt
 appweb-php/
+cache/
