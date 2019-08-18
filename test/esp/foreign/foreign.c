@@ -18,7 +18,9 @@ static void serviceRequest(HttpStream *stream)
     uint64      seqno;
 
     seqno = stream->seqno;
-    mprStartOsThread("foreign", foreignThread, LTOP(stream->seqno), NULL);
+    if (mprStartOsThread("foreign", foreignThread, LTOP(stream->seqno), NULL) < 0) {
+        print("NO THREAD");
+    }
 }
 
 
@@ -30,6 +32,7 @@ static void foreignThread(uint64 streamSeqno)
 
     message = strdup("Hello World");
     if (httpCreateEvent(streamSeqno, finalizeResponse, message) < 0) {
+        print("NO EVENT");
         free(message);
     }
 }
@@ -37,11 +40,16 @@ static void foreignThread(uint64 streamSeqno)
 
 static void finalizeResponse(HttpStream *stream, void *message)
 {
+    MprTicks ticks = mprGetTicks();
     assert(message);
     if (stream) {
-        httpWrite(stream->writeq, "message: %s\n", message);
+        httpWrite(stream->writeq, "message: %ld\n", ticks);
         httpFinalize(stream);
-        httpProcess(stream->inputq);
+        httpServiceNetQueues(stream->net, 0);
+        httpProtocol(stream);
+        print("%ld seqno %ld state %d", ticks, stream->seqno, stream->state);
+    } else {
+        print("NO STREAM");
     }
     free(message);
 }

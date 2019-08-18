@@ -4,9 +4,9 @@
 #include "appweb.h"
 #include "esp.h"
 
-static void callback(HttpConn *conn, MprEvent *event);
+static void callback(HttpStream *stream, MprEvent *event);
 static void serviceRequest();
-static void secondary(HttpConn *conn, void *data);
+static void secondary(HttpStream *stream, void *data);
 
 
 ESP_EXPORT int esp_controller_app_progressive(HttpRoute *route)
@@ -16,40 +16,40 @@ ESP_EXPORT int esp_controller_app_progressive(HttpRoute *route)
 }
 
 
-static void serviceRequest(HttpConn *conn)
+static void serviceRequest(HttpStream *stream)
 {
-    httpWrite(conn->writeq, "starting\n");
+    httpWrite(stream->writeq, "starting\n");
 
     print("START");
-    if (mprCreateTimerEvent(conn->dispatcher, "progrssive", 50, (MprEventProc) callback, conn, 0) < 0) {
+    if (mprCreateTimerEvent(stream->dispatcher, "progrssive", 50, (MprEventProc) callback, stream, 0) < 0) {
         ;
     }
 }
 
 
-static void callback(HttpConn *conn, MprEvent *event)
+static void callback(HttpStream *stream, MprEvent *event)
 {
-    if (conn->error) {
+    if (stream->error) {
         // print("DISCONNECT");
         mprRemoveEvent(event);
-        httpError(conn, HTTP_CODE_COMMS_ERROR, "Disconnected");
+        httpError(stream, HTTP_CODE_COMMS_ERROR, "Disconnected");
     } else {
-        // print("Call httpCreate Event %ld", conn->seqno);
-        if (httpCreateEvent(conn->seqno, secondary, NULL) < 0) {
+        // print("Call httpCreate Event %ld", stream->seqno);
+        if (httpCreateEvent(stream->seqno, secondary, NULL) < 0) {
             mprRemoveEvent(event);
         }
     }
 }
 
-static void secondary(HttpConn *conn, void *data)
+static void secondary(HttpStream *stream, void *data)
 {
     static int count = 0;
 
     // print("IN SECONDARY");
     // print("WRITE %d", count);
-    if (conn) {
-        httpWrite(conn->writeq, "%s", mprGetDate(NULL));
-        httpFlushQueue(conn->writeq, 0);
+    if (stream) {
+        httpWrite(stream->writeq, "%s", mprGetDate(NULL));
+        httpFlushQueue(stream->writeq, 0);
         if ((count++ % 500) == 0) {
             mprPrintMem(sfmt("Memory at %s", mprGetDate(NULL)), 0);
         }
