@@ -190,6 +190,10 @@ static void startCgi(HttpQueue *q)
 #endif
     mprSetCmdCallback(cmd, cgiCallback, cgi);
 
+    if (route->callback && route->callback(stream, HTTP_ROUTE_HOOK_CGI, &argc, argv, envv) < 0) {
+        httpError(conn, HTTP_CODE_NOT_FOUND, "Route check failed for CGI: %s, URI %s", fileName, rx->uri);
+        return;
+    }
     if (mprStartCmd(cmd, argc, argv, envv, MPR_CMD_IN | MPR_CMD_OUT | MPR_CMD_ERR) < 0) {
         httpError(conn, HTTP_CODE_NOT_FOUND, "Cannot run CGI process: %s, URI %s", fileName, rx->uri);
         return;
@@ -505,9 +509,11 @@ static bool parseCgiHeaders(Cgi *cgi, HttpPacket *packet)
     } else {
         len = 4;
     }
-    if (endHeaders > buf->end) {
-        assert(endHeaders <= buf->end);
-        return 0;
+    if (endHeaders) {
+        if (endHeaders > buf->end) {
+            assert(endHeaders <= buf->end);
+            return 0;
+        }
     }
     if (endHeaders) {
         endHeaders[len - 1] = '\0';

@@ -742,6 +742,7 @@ static int chrootDirective(MaState *state, cchar *key, cchar *value)
                 kp->data = mprGetAbsPath(mprGetRelPath(kp->data, oldConfigDir));
             }
         }
+        httpSetJail(home);
         mprLog("info appweb config", 2, "Chroot to: \"%s\"", home);
     }
     return 0;
@@ -2726,6 +2727,24 @@ static int updateDirective(MaState *state, cchar *key, cchar *value)
 
 
 /*
+    Upload enable
+    This applies globally for all routes.
+
+    Use StreamInput multipart/form-data URI-Prefix to disable upload for a single route
+ */
+static int uploadDirective(MaState *state, cchar *key, cchar *value)
+{
+    bool    on;
+
+    if (!maTokenize(state, value, "%B", &on)) {
+        return MPR_ERR_BAD_SYNTAX;
+    }
+    HTTP->upload = on;
+    return 0;
+}
+
+
+/*
     UploadDir path
  */
 static int uploadDirDirective(MaState *state, cchar *key, cchar *value)
@@ -3371,6 +3390,7 @@ static int parseInit(void)
     maAddDirective("TypesConfig", typesConfigDirective);
     maAddDirective("Update", updateDirective);
     maAddDirective("UnloadModule", unloadModuleDirective);
+    maAddDirective("Upload", uploadDirective);
     maAddDirective("UploadAutoDelete", uploadAutoDeleteDirective);
     maAddDirective("UploadDir", uploadDirDirective);
     maAddDirective("User", userDirective);
@@ -3725,6 +3745,10 @@ static void startCgi(HttpQueue *q)
 #endif
     mprSetCmdCallback(cmd, cgiCallback, cgi);
 
+    if (route->hook && route->hook(stream, HTTP_ROUTE_HOOK_CGI, &argc, argv, envv) < 0) {
+        httpError(conn, HTTP_CODE_NOT_FOUND, "Route check failed for CGI: %s, URI %s", fileName, rx->uri);
+        return;
+    }
     if (mprStartCmd(cmd, argc, argv, envv, MPR_CMD_IN | MPR_CMD_OUT | MPR_CMD_ERR) < 0) {
         httpError(conn, HTTP_CODE_NOT_FOUND, "Cannot run CGI process: %s, URI %s", fileName, rx->uri);
         return;
@@ -4040,9 +4064,11 @@ static bool parseCgiHeaders(Cgi *cgi, HttpPacket *packet)
     } else {
         len = 4;
     }
-    if (endHeaders > buf->end) {
-        assert(endHeaders <= buf->end);
-        return 0;
+    if (endHeaders) {
+        if (endHeaders > buf->end) {
+            assert(endHeaders <= buf->end);
+            return 0;
+        }
     }
     if (endHeaders) {
         endHeaders[len - 1] = '\0';
