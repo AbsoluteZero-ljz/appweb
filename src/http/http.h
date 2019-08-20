@@ -331,6 +331,14 @@ typedef void (*HttpEnvCallback)(struct HttpStream *stream);
 typedef int (*HttpListenCallback)(struct HttpEndpoint *endpoint);
 
 /**
+    Redirect callback. Invoked before processing redirects
+    @return New target Uri and *code to contain the status
+    @ingroup HttpStream
+    @stability Prototype
+ */
+typedef cchar *(*HttpRedirectCallback)(struct HttpStream *stream, int *code, cchar *uri);
+
+/**
     Request completion callback
     @param stream HttpStream object
     @ingroup HttpRx
@@ -1038,6 +1046,7 @@ typedef struct Http {
     cchar           *platform;              /**< Target platform os-arch-profile (lower case) */
     cchar           *platformDir;           /**< Path to platform directory containing binaries */
     cchar           *user;                  /**< O/S application user name */
+    cchar           *jail;                  /**< Chroot jail path */
     int             uid;                    /**< User Id */
     int             gid;                    /**< Group Id */
     int             userChanged;            /**< User name changed */
@@ -1046,14 +1055,16 @@ typedef struct Http {
     int             traceLevel;             /**< Current request trace level */
     int             startLevel;             /**< Start endpoint trace level */
     int             http2;                  /**< Enable http 2 */
+    int             upload;                 /**< Enable upload filter globally */
 
     /*
         Callbacks
      */
-    HttpEnvCallback     envCallback;        /**< SetEnv callback */
-    MprForkCallback     forkCallback;       /**< Callback in child after fork() */
-    HttpListenCallback  listenCallback;     /**< Invoked when creating listeners */
-    HttpRequestCallback requestCallback;    /**< Request completion callback */
+    HttpEnvCallback      envCallback;       /**< SetEnv callback */
+    MprForkCallback      forkCallback;      /**< Callback in child after fork() */
+    HttpListenCallback   listenCallback;    /**< Invoked when creating listeners */
+    HttpRedirectCallback redirectCallback;  /**< Redirect callback */
+    HttpRequestCallback  requestCallback;   /**< Request completion callback */
 
 } Http;
 
@@ -1256,6 +1267,14 @@ PUBLIC void httpSetDefaultClientHost(cchar *host);
 PUBLIC void httpSetDefaultClientPort(int port);
 
 /**
+    Define a callback to invoke after env vars have been defined
+    @param envCallback Callback to invoke
+    @ingroup Http
+    @stability Prototype
+ */
+PUBLIC void httpSetEnvCallback(HttpEnvCallback envCallback);
+
+/**
     Set the group account
     @description Define the group account name under which to run the process
     @param group Group name. Must be defined in the system group database.
@@ -1264,6 +1283,15 @@ PUBLIC void httpSetDefaultClientPort(int port);
     @stability Evolving
  */
 PUBLIC int httpSetGroupAccount(cchar *group);
+
+/**
+    Remember the Chroot jail path
+    @description Store the jail path in HTTP->jail
+    @param path Pathname to remember
+    @ingroup Http
+    @stability Internal
+ */
+PUBLIC void httpSetJail(cchar *path);
 
 /**
     Set platform description
@@ -1295,6 +1323,14 @@ PUBLIC int httpSetPlatformDir(cchar *platform);
     @stability Stable
  */
 PUBLIC void httpSetProxy(cchar *host, int port);
+
+/**
+    Define a callback to invoke on redirect requests
+    @param envCallback Callback to invoke
+    @ingroup Http
+    @stability Prototype
+ */
+PUBLIC void httpSetRedirectCallback(HttpRedirectCallback redirectCallback);
 
 /**
     Set the software description
@@ -4871,6 +4907,7 @@ PUBLIC bool httpGetStreaming(struct HttpHost *host, cchar *mime, cchar *uri);
 
 /**
     Control if input body content should be streamed or buffered for requests with content of a given mime type
+        and a URI path that starts with the specified URI prefix.
     @param host Host to modify
     @param mime Mime type to configure
     @param uri URI prefix to match.
@@ -4908,6 +4945,15 @@ PUBLIC void httpSetStreaming(struct HttpHost *host, cchar *mime, cchar *uri, boo
 #define HTTP_ROUTE_UTILITY              0x100000    /**< Route hosted by a utility */
 #define HTTP_ROUTE_LAX_COOKIE           0x200000    /**< Session cookie is SameSite=lax */
 #define HTTP_ROUTE_STRICT_COOKIE        0x400000    /**< Session cookie is SameSite=strict */
+
+/*
+    Route hook types
+ */
+#define HTTP_ROUTE_HOOK_CGI             1
+#define HTTP_ROUTE_HOOK_ERROR           2
+
+typedef int (*HttpRouteCallback)(struct HttpStream *stream, int type, ...);
+PUBLIC void httpSetRouteCallback(struct HttpRoute *route, HttpRouteCallback proc);
 
 /**
     Route Control
@@ -4971,6 +5017,7 @@ typedef struct HttpRoute {
     HttpAuth        *auth;                  /**< Per route block authentication */
     Http            *http;                  /**< Http service object (copy of appweb->http) */
     struct HttpHost *host;                  /**< Owning host */
+    HttpRouteCallback callback;             /**< Route callback hook */
     int             flags;                  /**< Route flags */
 
     char            *defaultLanguage;       /**< Default language */
@@ -8008,7 +8055,7 @@ typedef struct HttpHost {
     HttpRoute       *defaultRoute;          /**< Default route for the host */
     HttpEndpoint    *defaultEndpoint;       /**< Default endpoint for host */
     HttpEndpoint    *secureEndpoint;        /**< Secure endpoint for host */
-    MprHash         *streams;               /**< Hash of mime-types to stream record */
+    MprHash         *streaming;             /**< Hash of mime-types use streaming instead of buffering */
     void            *nameCompiled;          /**< Compiled name regular expression (not alloced) */
     int             flags;                  /**< Host flags */
 } HttpHost;
@@ -8651,7 +8698,9 @@ PUBLIC bool httpPumpOutput(HttpQueue *q);
 #define httpServerConn(stream) httpServerStream(stream)
 #define httpDisconnect(stream) httpDisconnectStream(stream)
 
+#if UNUSED
 PUBLIC void httpProtocol(HttpStream *stream);
+#endif
 
 #endif
 

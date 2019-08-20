@@ -432,6 +432,13 @@
     </member>
     <member kind="function">
       <type>void</type>
+      <name>httpSetJail</name>
+      <anchorfile>group___http.html</anchorfile>
+      <anchor>gac98ec18038f3269de000711a8afe0d5b</anchor>
+      <arglist>(cchar *path)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
       <name>httpSetOption</name>
       <anchorfile>group___http.html</anchorfile>
       <anchor>ga1b68c24657b6564346e47d0e7521790a</anchor>
@@ -930,6 +937,13 @@
       <arglist>(HttpQueue *q)</arglist>
     </member>
     <member kind="function">
+      <type>void</type>
+      <name>httpTransferPackets</name>
+      <anchorfile>group___http_queue.html</anchorfile>
+      <anchor>gae2bb3f27a089f67d275ca41091c2450f</anchor>
+      <arglist>(HttpQueue *inq, HttpQueue *outq)</arglist>
+    </member>
+    <member kind="function">
       <type>bool</type>
       <name>httpWillNextQueueAcceptPacket</name>
       <anchorfile>group___http_queue.html</anchorfile>
@@ -1335,6 +1349,13 @@
       <anchorfile>group___http_stream.html</anchorfile>
       <anchor>ga0065e552553caf322b18519842a57c66</anchor>
       <arglist>)(struct HttpStream *stream)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>httpAddEndInputPacket</name>
+      <anchorfile>group___http_stream.html</anchorfile>
+      <anchor>ga11ff9e4e0927400b45332cf34fd923fd</anchor>
+      <arglist>(HttpStream *stream, HttpQueue *q)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
