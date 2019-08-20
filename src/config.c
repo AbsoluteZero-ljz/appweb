@@ -731,6 +731,7 @@ static int chrootDirective(MaState *state, cchar *key, cchar *value)
                 kp->data = mprGetAbsPath(mprGetRelPath(kp->data, oldConfigDir));
             }
         }
+        httpSetJail(home);
         mprLog("info appweb config", 2, "Chroot to: \"%s\"", home);
     }
     return 0;
@@ -2715,6 +2716,24 @@ static int updateDirective(MaState *state, cchar *key, cchar *value)
 
 
 /*
+    Upload enable
+    This applies globally for all routes.
+
+    Use StreamInput multipart/form-data URI-Prefix to disable upload for a single route
+ */
+static int uploadDirective(MaState *state, cchar *key, cchar *value)
+{
+    bool    on;
+
+    if (!maTokenize(state, value, "%B", &on)) {
+        return MPR_ERR_BAD_SYNTAX;
+    }
+    HTTP->upload = on;
+    return 0;
+}
+
+
+/*
     UploadDir path
  */
 static int uploadDirDirective(MaState *state, cchar *key, cchar *value)
@@ -3360,6 +3379,7 @@ static int parseInit(void)
     maAddDirective("TypesConfig", typesConfigDirective);
     maAddDirective("Update", updateDirective);
     maAddDirective("UnloadModule", unloadModuleDirective);
+    maAddDirective("Upload", uploadDirective);
     maAddDirective("UploadAutoDelete", uploadAutoDeleteDirective);
     maAddDirective("UploadDir", uploadDirDirective);
     maAddDirective("User", userDirective);
