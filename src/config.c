@@ -3222,7 +3222,7 @@ PUBLIC int maWriteAuthFile(HttpAuth *auth, char *path)
     }
     mprPutFileChar(file, '\n');
     for (ITERATE_KEY_DATA(auth->userCache, kp, user)) {
-        mprWriteFileFmt(file, "User %s %s %s", user->name, user->password, user->roles);
+        mprWriteFileFmt(file, "User %s %s %s", user->name, user->password, mprHashKeysToString(user->roles, ", "));
         mprPutFileChar(file, '\n');
     }
     mprCloseFile(file);
