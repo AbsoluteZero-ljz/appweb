@@ -1326,7 +1326,7 @@ PUBLIC void httpSetProxy(cchar *host, int port);
 
 /**
     Define a callback to invoke on redirect requests
-    @param envCallback Callback to invoke
+    @param redirectCallback Callback to invoke
     @ingroup Http
     @stability Prototype
  */
@@ -4213,7 +4213,7 @@ PUBLIC bool httpServiceQueues(HttpStream *stream, int flags);
     @param password Actual user password
     @return True if the user credentials can validate
     @ingroup HttpAuth
-    @stability Evolving
+    @stability Stable
  */
 typedef bool (*HttpVerifyUser)(HttpStream *stream, cchar *username, cchar *password);
 
@@ -4222,7 +4222,7 @@ typedef bool (*HttpVerifyUser)(HttpStream *stream, cchar *username, cchar *passw
     @ingroup HttpAuth
     @stability Evolving
     @see HttpAskLogin HttpParseAuth httpSetAuthStoreVerify HttpVerifyUser
-    httpCreateAuthStore httpSetAuthStore httpsetAuthStoreSessions
+    httpCreateAuthStore httpGetAuthStore httpSetAuthStore httpSetAuthStoreSessions httpSetAuthStoreVerifyByName
  */
 typedef struct HttpAuthStore {
     char            *name;                  /**< Authentication password store name: 'system', 'file' */
@@ -4232,14 +4232,24 @@ typedef struct HttpAuthStore {
 
 /**
     Add an authorization store for password validation. The pre-supplied types are "config" and "system".
-    @description This creates an AuthType object with the defined name and callbacks.
-    @param name Unique authorization type name
+    @description This creates an AuthStore object with the defined name and callbacks.
+    @param name Unique authorization store name
     @param verifyUser Callback to verify the username and password contained in the HttpStream object passed to the callback.
-    @return Auth store if successful, otherwise zero.
+    @return Auth store if successful, otherwise NULL.
     @ingroup HttpAuth
     @stability Stable
  */
 PUBLIC HttpAuthStore *httpCreateAuthStore(cchar *name, HttpVerifyUser verifyUser);
+
+/**
+    Lookup an authentication store
+    @description This returns a auth store object
+    @param name Unique authorization store name
+    @return Auth store if successful, otherwise NULL.
+    @ingroup HttpAuth
+    @stability Prototype
+ */
+PUBLIC HttpAuthStore *httpGetAuthStore(cchar *name);
 
 /**
     Control whether sessions and session cookies are created for user logins
@@ -4261,9 +4271,21 @@ PUBLIC void httpSetAuthStoreSessions(HttpAuthStore *store, bool noSession);
     @param verifyUser Verification callback
     @ingroup HttpAuth
     @stability Evolving
-    @see httpSetAuthVerify
+    @see httpSetAuthVerify httpSetAuthStoreVerifyByName httpGetAuthStore
   */
 PUBLIC void httpSetAuthStoreVerify(HttpAuthStore *store, HttpVerifyUser verifyUser);
+
+/**
+    Set the global verify callback for an authentication store
+    @description The verification callback is invoked to verify user credentials when authentication is required.
+    The callback has the signature: typedef bool (*HttpVerifyUser)(HttpStream *stream, cchar *username, cchar *password);
+    @param storeName String name of the store
+    @param verifyUser Verification callback
+    @ingroup HttpAuth
+    @stability Prototype
+    @see httpSetAuthVerify httpSetAuthStoreVerify httpGetAuthStore
+  */
+PUBLIC void httpSetAuthStoreVerifyByName(cchar *storeName, HttpVerifyUser verifyUser);
 
 /********************************** HttpAuth *********************************/
 /*
@@ -4404,8 +4426,8 @@ PUBLIC void httpSetAuthSession(HttpAuth *auth, bool noSession);
 typedef struct HttpUser {
     char            *name;                  /**< User name */
     char            *password;              /**< User password for "internal" auth store - (actually the password hash */
-    char            *roles;                 /**< Original list of roles */
-    MprHash         *abilities;             /**< User abilities */
+    MprHash         *roles;                 /**< List of roles */
+    MprHash         *abilities;             /**< User abilities defined by roles */
 } HttpUser;
 
 /**

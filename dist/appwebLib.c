@@ -3233,7 +3233,7 @@ PUBLIC int maWriteAuthFile(HttpAuth *auth, char *path)
     }
     mprPutFileChar(file, '\n');
     for (ITERATE_KEY_DATA(auth->userCache, kp, user)) {
-        mprWriteFileFmt(file, "User %s %s %s", user->name, user->password, user->roles);
+        mprWriteFileFmt(file, "User %s %s %s", user->name, user->password, mprHashKeysToString(user->roles, ", "));
         mprPutFileChar(file, '\n');
     }
     mprCloseFile(file);
@@ -3745,7 +3745,7 @@ static void startCgi(HttpQueue *q)
 #endif
     mprSetCmdCallback(cmd, cgiCallback, cgi);
 
-    if (route->hook && route->hook(stream, HTTP_ROUTE_HOOK_CGI, &argc, argv, envv) < 0) {
+    if (route->callback && route->callback(stream, HTTP_ROUTE_HOOK_CGI, &argc, argv, envv) < 0) {
         httpError(conn, HTTP_CODE_NOT_FOUND, "Route check failed for CGI: %s, URI %s", fileName, rx->uri);
         return;
     }
