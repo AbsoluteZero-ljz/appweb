@@ -207,7 +207,8 @@
                 <li>config &mdash; Configuration Directives in the appweb.conf file</li>
                 <li>system &mdash; System Password Database</li>
             </ul>
-            <p>The "app" store is where passwords are stored by the user application in a database or other custom password store. It is the responsibility of the user application to implement a credential verification callback that will be invoked by Appweb to access the custom password store and compare supplied supplied credentials with the user password. Use the <a href="../ref/api/http.html#group___http_auth_1gaceb42561636cf7ff37c67b167c8df128">httpSetAuthStoreVerify</a> API to register your verification callback. This store is ideal when you need the ability to modify users and passwords at runtime.</p>
+            <p>The "app" store is where passwords are stored by the user application in a database or other custom password store. It is the responsibility of the user application to implement a credential verification callback that will be invoked by Appweb to access the custom password store and compare supplied supplied credentials with the user password.
+            This store is ideal when you need the ability to modify users and passwords at runtime.</p>
 
             <p>The "config" store manages passwords in the Appweb configuration file via "User" directives. Passwords are created via the "authpass" program and defined in the appweb.conf configuration file. This store is suitable if you do not need to dynamically add, remove or modify users or passwords.</p>
 
@@ -220,6 +221,10 @@ AuthStore system
             <p>This selects the Unix system password database. Note: the Windows ActiveDirectory password store is not
             currently supported.</p>
 
+            <a name="verifying"></a>
+            <h2>Verifying Passwords</h2>
+            <p>If using the "app" store, you will need to register a callback that will be used to verify user credentials.
+            Use the <a href="../ref/api/http.html#group___http_auth_1gaceb42561636cf7ff37c67b167c8df128">httpSetAuthStoreVerifyByName</a> API to register your verification callback for all routes using the store. Alternatively, use the <a href="https://www.embedthis.com/appweb/doc/ref/api/http.html#group___http_auth_1ga09beabd2ece2ccf6b7627a4ee73c5b86">httpSetAuthVerify</a> API to define the callback for just one route using the store. </p>
 
             <a name="authpass"></a>
             <h2>Creating Passwords</h2>
