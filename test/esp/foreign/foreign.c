@@ -42,6 +42,7 @@ static void finalizeResponse(HttpConn *conn, void *message)
         httpWrite(conn->writeq, "message: %s\n", message);
         httpFinalize(conn);
         httpIO(conn, 0);
+        /* Warning -- can can be destroyed here */
     }
     free(message);
 }
