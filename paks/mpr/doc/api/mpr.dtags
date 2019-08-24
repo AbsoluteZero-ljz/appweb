@@ -634,6 +634,13 @@
     </member>
     <member kind="define">
       <type>#define</type>
+      <name>MPR_EVENT_ALWAYS</name>
+      <anchorfile>mpr_8h.html</anchorfile>
+      <anchor>a83b40d1c6e1752448e424c3ba1acc3fa</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="define">
+      <type>#define</type>
       <name>MPR_EVENT_ASYNC</name>
       <anchorfile>mpr_8h.html</anchorfile>
       <anchor>aa75b23385a68cbe6d21e4fdb8ca72d1f</anchor>
@@ -648,23 +655,9 @@
     </member>
     <member kind="define">
       <type>#define</type>
-      <name>MPR_EVENT_DONT_QUEUE</name>
-      <anchorfile>mpr_8h.html</anchorfile>
-      <anchor>ac32b25ad7f171f1e1d88f24ac6394b21</anchor>
-      <arglist></arglist>
-    </member>
-    <member kind="define">
-      <type>#define</type>
       <name>MPR_EVENT_EPOLL</name>
       <anchorfile>mpr_8h.html</anchorfile>
       <anchor>a35751841ed0361d40361c375bca122a4</anchor>
-      <arglist></arglist>
-    </member>
-    <member kind="define">
-      <type>#define</type>
-      <name>MPR_EVENT_FOREIGN</name>
-      <anchorfile>mpr_8h.html</anchorfile>
-      <anchor>a3577aee82220ed1403c06b3a510e6c01</anchor>
       <arglist></arglist>
     </member>
     <member kind="define">
@@ -1103,6 +1096,13 @@
     </member>
     <member kind="define">
       <type>#define</type>
+      <name>MPR_MODULE_LOADED</name>
+      <anchorfile>mpr_8h.html</anchorfile>
+      <anchor>a946249df06e7ef237168454c5c0f5041</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="define">
+      <type>#define</type>
       <name>MPR_MODULE_STARTED</name>
       <anchorfile>mpr_8h.html</anchorfile>
       <anchor>a2ea2f3145ba5647efb9d249b64115c25</anchor>
@@ -1225,6 +1225,13 @@
       <name>MPR_PROTO_TLSV1_2</name>
       <anchorfile>mpr_8h.html</anchorfile>
       <anchor>a7216cd86a972299f47f8f450371874c8</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="define">
+      <type>#define</type>
+      <name>MPR_PROTO_TLSV1_3</name>
+      <anchorfile>mpr_8h.html</anchorfile>
+      <anchor>a577cce0164e72e2e631389306bb1d0ce</anchor>
       <arglist></arglist>
     </member>
     <member kind="define">
@@ -5478,6 +5485,13 @@
     </member>
     <member kind="function">
       <type>int</type>
+      <name>mprStartOsThread</name>
+      <anchorfile>group___mpr_thread.html</anchorfile>
+      <anchor>ga3026fd2597352a226c67dcd2f847ed08</anchor>
+      <arglist>(cchar *name, void *proc, void *data, MprThread *tp)</arglist>
+    </member>
+    <member kind="function">
+      <type>int</type>
       <name>mprStartThread</name>
       <anchorfile>group___mpr_thread.html</anchorfile>
       <anchor>ga35c53df918c2f52e2e1f6961e35ee8d1</anchor>
@@ -9113,6 +9127,13 @@
     </member>
     <member kind="function">
       <type>int</type>
+      <name>mprStartOsThread</name>
+      <anchorfile>group___mpr_thread.html</anchorfile>
+      <anchor>ga3026fd2597352a226c67dcd2f847ed08</anchor>
+      <arglist>(cchar *name, void *proc, void *data, MprThread *tp)</arglist>
+    </member>
+    <member kind="function">
+      <type>int</type>
       <name>mprStartThread</name>
       <anchorfile>group___mpr_thread.html</anchorfile>
       <anchor>ga35c53df918c2f52e2e1f6961e35ee8d1</anchor>
@@ -11253,6 +11274,13 @@
       <name>configured</name>
       <anchorfile>struct_mpr_ssl.html</anchorfile>
       <anchor>a30bbb6571b200fe0bdbfda507750ad1c</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>cchar *</type>
+      <name>device</name>
+      <anchorfile>struct_mpr_ssl.html</anchorfile>
+      <anchor>ae37ab3d98a63f79311bfd10572b8a533</anchor>
       <arglist></arglist>
     </member>
     <member kind="variable">

@@ -598,6 +598,13 @@ static int authDigestQopDirective(MaState *state, cchar *key, cchar *value)
 }
 
 
+static int autoFinalize(MaState *state, cchar *key, cchar *value)
+{
+    httpSetRouteAutoFinalize(state->route, scaselessmatch(value, "true"));
+    return 0;
+}
+
+
 /*
     Cache options
     Options:
@@ -2525,6 +2532,10 @@ static int sslProtocolDirective(MaState *state, cchar *key, cchar *value)
             protoMask &= ~(MPR_PROTO_TLSV1 & ~mask);
             protoMask |= (MPR_PROTO_TLSV1 & mask);
 
+        } else if (scaselesscmp(word, "TLSv1.0") == 0) {
+            protoMask &= ~(MPR_PROTO_TLSV1_0 & ~mask);
+            protoMask |= (MPR_PROTO_TLSV1_0 & mask);
+
         } else if (scaselesscmp(word, "TLSv1.1") == 0) {
             protoMask &= ~(MPR_PROTO_TLSV1_1 & ~mask);
             protoMask |= (MPR_PROTO_TLSV1_1 & mask);
@@ -2532,6 +2543,10 @@ static int sslProtocolDirective(MaState *state, cchar *key, cchar *value)
         } else if (scaselesscmp(word, "TLSv1.2") == 0) {
             protoMask &= ~(MPR_PROTO_TLSV1_2 & ~mask);
             protoMask |= (MPR_PROTO_TLSV1_2 & mask);
+
+        } else if (scaselesscmp(word, "TLSv1.3") == 0) {
+            protoMask &= ~(MPR_PROTO_TLSV1_3 & ~mask);
+            protoMask |= (MPR_PROTO_TLSV1_3 & mask);
 
         } else if (scaselesscmp(word, "ALL") == 0) {
             protoMask &= ~(MPR_PROTO_ALL & ~mask);
@@ -3246,6 +3261,7 @@ static int parseInit()
     maAddDirective("AuthType", authTypeDirective);
     maAddDirective("AuthRealm", authRealmDirective);
     maAddDirective("AuthStore", authStoreDirective);
+    maAddDirective("AutoFinalize", autoFinalize);
     maAddDirective("Cache", cacheDirective);
     maAddDirective("CanonicalName", canonicalNameDirective);
     maAddDirective("Chroot", chrootDirective);

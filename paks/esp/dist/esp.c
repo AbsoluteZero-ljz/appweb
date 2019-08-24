@@ -298,7 +298,7 @@ static int parseArgs(int argc, char **argv)
                 if (chdir((char*) argp) < 0) {
                     fail("Cannot change directory to %s", argp);
                 }
-                app->home = sclone(argv[++argind]);
+                app->home = sclone(argp);
             }
 
         } else if (smatch(argp, "cipher")) {
@@ -2031,9 +2031,9 @@ static void compileCombined(HttpRoute *route)
             compileFile(route, kp->key, kind);
         }
         mprWriteFileFmt(app->combineFile,
-            "\nESP_EXPORT int esp_app_%s_combine(HttpRoute *route, MprModule *module) {\n", name);
+            "\nESP_EXPORT int esp_app_%s_combine(HttpRoute *route) {\n", name);
         for (next = 0; (line = mprGetNextItem(app->combineItems, &next)) != 0; ) {
-            mprWriteFileFmt(app->combineFile, "    %s(route, module);\n", line);
+            mprWriteFileFmt(app->combineFile, "    %s(route);\n", line);
         }
         mprWriteFileFmt(app->combineFile, "    return 0;\n}\n");
         mprCloseFile(app->combineFile);

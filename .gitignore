@@ -19,4 +19,12 @@ src/server/certs
 *.guid
 test/exploits/
 cache/
+/start.me
+XCBuildData/
+app-macosx-debug.xcodeproj
+Debug/
+samples/*/client
+samples/*/roots.crt
+.makefile
+test/.test-prepared
 /build
