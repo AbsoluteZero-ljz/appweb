@@ -52,8 +52,8 @@
         "sqlite": "~3"
     },
     "devDependencies": {
-        "makeme": ">=1.0.0",
-        "pak": ">=0.12.4"
+        "makeme": ">=1.0",
+        "pak": ">=1.0"
     },
     "files": [
         "dist/",
