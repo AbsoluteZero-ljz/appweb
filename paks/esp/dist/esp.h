@@ -114,7 +114,7 @@ PUBLIC void ediAddFieldError(struct EdiRec *rec, cchar *field, cchar *fmt, ...);
  */
 #define EDI_TYPE_BINARY     1           /**< Arbitrary binary data */
 #define EDI_TYPE_BOOL       2           /**< Boolean true|false value */
-#define EDI_TYPE_DATE       3           /**< Date type */
+#define EDI_TYPE_DATE       3           /**< Date type (stored as epoch) */
 #define EDI_TYPE_FLOAT      4           /**< Floating point number */
 #define EDI_TYPE_INT        5           /**< Integer number */
 #define EDI_TYPE_STRING     6           /**< String */

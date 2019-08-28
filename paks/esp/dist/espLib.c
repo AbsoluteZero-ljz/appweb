@@ -950,11 +950,19 @@ static void formatFieldForJson(MprBuf *buf, EdiField *fp)
         return;
 
     case EDI_TYPE_DATE:
+#if UNUSED
         if (mprParseTime(&when, fp->value, MPR_UTC_TIMEZONE, 0) == 0) {
             mprPutToBuf(buf, "\"%s\"", mprFormatUniversalTime(MPR_RFC822_DATE, when));
         } else {
             mprPutToBuf(buf, "\"%s\"", value);
         }
+#else
+        if (mprParseTime(&when, fp->value, MPR_UTC_TIMEZONE, 0) == 0) {
+            mprPutToBuf(buf, "%lld", when);
+        } else {
+            mprPutToBuf(buf, "\"%s\"", fp->value);
+        }
+#endif
         return;
 
     default:
@@ -8460,6 +8468,7 @@ static int mdbLoadFromString(Edi *edi, cchar *str)
     Mdb             *mdb;
     MprJson         *obj;
     MprJsonCallback cb;
+    cchar           *errorMsg;
 
     mdb = (Mdb*) edi;
     mdb->edi.flags |= EDI_SUPPRESS_SAVE;
@@ -8471,10 +8480,11 @@ static int mdbLoadFromString(Edi *edi, cchar *str)
     cb.checkBlock = checkMdbState;
     cb.setValue = setMdbValue;
 
-    obj = mprParseJsonEx(str, &cb, mdb, 0, 0);
+    obj = mprParseJsonEx(str, &cb, mdb, 0, &errorMsg);
     mdb->edi.flags &= ~MDB_LOADING;
     mdb->loadStack = 0;
     if (obj == 0) {
+        mprError("Cannot load database %s", errorMsg);
         return MPR_ERR_CANT_LOAD;
     }
     mdb->edi.flags &= ~EDI_SUPPRESS_SAVE;
