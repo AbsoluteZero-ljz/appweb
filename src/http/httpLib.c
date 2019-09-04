@@ -27162,12 +27162,10 @@ static void addParamsFromBuf(HttpStream *stream, cchar *buf, ssize len)
              */
             prior = mprReadJsonObj(params, keyword);
 #if (ME_EJS_PRODUCT || ME_EJSCRIPT_PRODUCT) && (DEPRECATED || 1)
-            /*
-                We allow embedded ".[]" in the keys
-             */
             if (prior && prior->type == MPR_JSON_VALUE) {
                 if (*value) {
                     newValue = sjoin(prior->value, " ", value, NULL);
+                    //  Uses SetJson instead of WriteJson which permits embedded . and []
                     mprSetJson(params, keyword, newValue, MPR_JSON_STRING);
                 }
             } else {
@@ -27262,7 +27260,11 @@ PUBLIC cchar *httpGetParam(HttpStream *stream, cchar *var, cchar *defaultValue)
 {
     cchar       *value;
 
+#if OLD
     value = mprReadJson(httpGetParams(stream), var);
+#else
+    value = mprGetJson(httpGetParams(stream), var);
+#endif
     return (value) ? value : defaultValue;
 }
 
