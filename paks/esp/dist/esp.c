@@ -1032,10 +1032,11 @@ static void migrate(int argc, char **argv)
     if (app->rebuild) {
         ediClose(edi);
         mprDeletePath(edi->path);
-        if ((app->eroute->edi = ediOpen(edi->path, edi->provider->name, edi->flags | EDI_CREATE)) == 0) {
+        if ((edi = ediOpen(edi->path, edi->provider->name, edi->flags | EDI_CREATE)) == 0) {
             fail("Cannot open database %s", edi->path);
             return;
         }
+        app->eroute->edi = edi;
     }
     /*
         Each database has a _EspMigrations table which has a record for each migration applied
