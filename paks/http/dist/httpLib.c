@@ -27151,7 +27151,7 @@ static void addParamsFromBuf(HttpStream *stream, cchar *buf, ssize len)
         mprParseJsonInto(value, params);
         return;
     }
-    
+
     decoded = mprAlloc(len + 1);
     decoded[len] = '\0';
     memcpy(decoded, buf, len);
@@ -27266,25 +27266,27 @@ PUBLIC int httpTestParam(HttpStream *stream, cchar *var)
 }
 
 
-PUBLIC cchar *httpGetParam(HttpStream *stream, cchar *var, cchar *defaultValue)
+PUBLIC MprJson *httpGetParamObj(HttpStream *stream, cchar *var)
 {
-    cchar       *value;
-
-#if OLD
-    value = mprReadJson(httpGetParams(stream), var);
-#else
-    value = mprGetJson(httpGetParams(stream), var);
-#endif
-    return (value) ? value : defaultValue;
+    return mprGetJsonObj(httpGetParams(stream), var);
 }
 
 
-PUBLIC int httpGetIntParam(HttpStream *stream, cchar *var, int defaultValue)
+PUBLIC int httpGetParamInt(HttpStream *stream, cchar *var, int defaultValue)
 {
     cchar       *value;
 
     value = mprReadJson(httpGetParams(stream), var);
     return (value) ? (int) stoi(value) : defaultValue;
+}
+
+
+PUBLIC cchar *httpGetParam(HttpStream *stream, cchar *var, cchar *defaultValue)
+{
+    cchar       *value;
+
+    value = mprGetJson(httpGetParams(stream), var);
+    return (value) ? value : defaultValue;
 }
 
 

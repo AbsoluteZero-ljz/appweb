@@ -6617,8 +6617,8 @@ typedef struct HttpUploadFile {
     @defgroup HttpRx HttpRx
     @see HttpStream HttpRx HttpTx httpAddBodyVars httpAddParamsFromBuf httpContentNotModified
         httpCreateCGIParams httpGetContentLength httpGetCookies httpGetParam httpGetParams httpGetHeader
-        httpGetHeaderHash httpGetHeaders httpGetIntParam httpGetLanguage httpGetQueryString httpGetReadCount httpGetStatus
-        httpGetStatusMessage httpMatchParam httpRead httpReadString httpSetParam httpSetIntParam httpSetUri
+        httpGetHeaderHash httpGetHeaders httpGetParamInt httpGetLanguage httpGetQueryString httpGetReadCount httpGetStatus
+        httpGetStatusMessage httpMatchParam httpRead httpReadString httpSetParam httpSetParamInt httpSetUri
         httpTestParam httpTrimExtraPath
     @stability Internal
  */
@@ -6762,8 +6762,7 @@ PUBLIC bool httpContentNotModified(HttpStream *stream);
     Create CGI parameters
     @description This call creates request params corresponding to the standard CGI/1.1 environment variables.
     This is used by the CGI and PHP handlers. It may also be useful to handlers that wish to expose CGI style
-    environment variables
-    through the form vars interface.
+    environment variables through the form vars interface.
     @param stream HttpStream stream object
     @ingroup HttpRx
     @stability Stable
@@ -6805,8 +6804,8 @@ PUBLIC cchar *httpGetCookies(HttpStream *stream);
 
 /**
     Get a request param
-    @description Get the value of a named request param. Form variables are define via www-urlencoded query or post
-        data contained in the request.
+    @description Get the value of a named request param. Request parameters are define via POST data or
+        www-urlencoded query data.
     @param stream HttpStream stream object
     @param var Name of the request param to retrieve
     @param defaultValue Default value to return if the variable is not defined. Can be null.
@@ -6816,6 +6815,33 @@ PUBLIC cchar *httpGetCookies(HttpStream *stream);
     @stability Stable
  */
 PUBLIC cchar *httpGetParam(HttpStream *stream, cchar *var, cchar *defaultValue);
+
+/**
+    Get a request parm as an integer
+    @description Get the value of a named form variable as an integer. Form variables are define via
+        www-urlencoded query or post data contained in the request.
+    @param stream HttpStream stream object
+    @param var Name of the parameter to retrieve
+    @param defaultValue Default value to return if the variable is not defined. Can be null.
+    @return Integer containing the parameter variable's value
+    @ingroup HttpRx
+    @stability Stable
+ */
+PUBLIC int httpGetParamInt(HttpStream *stream, cchar *var, int defaultValue);
+#define httpGetIntParam httpGetParamInt
+
+/**
+    Get a parameter as a JSON object
+    @description Get the JSON object value of a named parameter. Form variables are define via
+        www-urlencoded query or post data contained in the request.
+    @param stream HttpStream stream object
+    @param var Name of the parameter to retrieve
+    @param defaultValue Default value to return if the variable is not defined. Can be null.
+    @return Integer containing the form variable's value
+    @ingroup HttpRx
+    @stability Stable
+ */
+PUBLIC MprJson *httpGetParamObj(HttpStream *stream, cchar *var);
 
 /**
     Get the request params table
@@ -6882,19 +6908,6 @@ PUBLIC char *httpGetHeaders(HttpStream *stream);
     @internal
  */
 PUBLIC char *httpGetHeadersFromHash(MprHash *hash);
-
-/**
-    Get a form variable as an integer
-    @description Get the value of a named form variable as an integer. Form variables are define via
-        www-urlencoded query or post data contained in the request.
-    @param stream HttpStream stream object
-    @param var Name of the form variable to retrieve
-    @param defaultValue Default value to return if the variable is not defined. Can be null.
-    @return Integer containing the form variable's value
-    @ingroup HttpRx
-    @stability Stable
- */
-PUBLIC int httpGetIntParam(HttpStream *stream, cchar *var, int defaultValue);
 
 /**
     Get the language to use for the request
@@ -7090,7 +7103,8 @@ PUBLIC void httpSetParam(HttpStream *stream, cchar *var, cchar *value);
     @ingroup HttpRx
     @stability Stable
  */
-PUBLIC void httpSetIntParam(HttpStream *stream, cchar *var, int value);
+PUBLIC void httpSetParamInt(HttpStream *stream, cchar *var, int value);
+#define httpSetIntParam httpSetParamInt
 
 /**
     Set a new HTTP method for processing

@@ -627,8 +627,9 @@ PUBLIC cchar *ediReadFieldValue(Edi *edi, cchar *fmt, cchar *tableName, cchar *k
 
 PUBLIC EdiField ediReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName)
 {
+    EdiField    field;
+
     if (!edi || !edi->provider) {
-        EdiField    field;
         memset(&field, 0, sizeof(EdiField));
         return field;
     }
@@ -636,12 +637,30 @@ PUBLIC EdiField ediReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fiel
 }
 
 
-PUBLIC EdiGrid *ediReadGrid(Edi *edi, cchar *tableName, cchar *where, int offset, int limit)
+PUBLIC EdiGrid *ediFindGrid(Edi *edi, cchar *tableName, int offset, int limit, cchar *select)
 {
     if (!edi || !edi->provider) {
         return 0;
     }
-    return edi->provider->readWhere(edi, tableName, where, offset, limit);
+    return edi->provider->findGrid(edi, tableName, offset, limit, select);
+}
+
+
+PUBLIC EdiRec *ediFindRec(Edi *edi, cchar *tableName, cchar *select)
+{
+    EdiGrid     *grid;
+
+    if (!edi || !edi->provider) {
+        return 0;
+    }
+    if ((grid = edi->provider->findGrid(edi, tableName, 0, MAXINT, select)) == 0) {
+        return 0;
+
+    }
+    if (grid->nrecords > 0) {
+        return grid->records[0];
+    }
+    return 0;
 }
 
 
@@ -673,7 +692,7 @@ PUBLIC EdiGrid *ediReadWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar
     if (!edi || !edi->provider) {
         return 0;
     }
-    return edi->provider->readWhere(edi, tableName, sfmt("%s %s %s", fieldName, operation, value), 0, MAXINT);
+    return edi->provider->findGrid(edi, tableName, 0, MAXINT, sfmt("%s %s %s", fieldName, operation, value));
 }
 #endif
 
@@ -683,7 +702,7 @@ PUBLIC EdiGrid *ediReadTable(Edi *edi, cchar *tableName)
     if (!edi || !edi->provider) {
         return 0;
     }
-    return edi->provider->readWhere(edi, tableName, 0, 0, 0);
+    return edi->provider->findGrid(edi, tableName, 0, 0, 0);
 }
 
 
@@ -1115,6 +1134,7 @@ PUBLIC EdiGrid *ediJoin(Edi *edi, ...)
         result->records[r] = mprGetItem(rows, r);
     }
     result->nrecords = nrows;
+    result->count = nrows;
     return result;
 }
 
@@ -1217,6 +1237,7 @@ PUBLIC EdiGrid *ediMakeGrid(cchar *json)
 }
 
 
+#if UNUSED
 PUBLIC MprHash *ediMakeHash(cchar *fmt, ...)
 {
     MprHash     *obj;
@@ -1227,6 +1248,7 @@ PUBLIC MprHash *ediMakeHash(cchar *fmt, ...)
     va_end(args);
     return obj;
 }
+#endif
 
 
 PUBLIC MprJson *ediMakeJson(cchar *fmt, ...)
@@ -1730,10 +1752,17 @@ PUBLIC EdiRec *createRec(cchar *tableName, MprJson *params)
 }
 
 
+PUBLIC bool createRecByParams(cchar *table)
+{
+    return updateRec(createRec(table, params("fields")));
+}
+
+#if DEPRECATED || 1
 PUBLIC bool createRecFromParams(cchar *table)
 {
-    return updateRec(createRec(table, params()));
+    return updateRec(createRec(table, params(NULL)));
 }
+#endif
 
 
 /*
@@ -1763,7 +1792,7 @@ PUBLIC void dontAutoFinalize()
 
 PUBLIC void dumpParams()
 {
-    mprLog("info esp edi", 0, "Params: %s", mprJsonToString(params(), MPR_JSON_PRETTY));
+    mprLog("info esp edi", 0, "Params: %s", mprJsonToString(params(NULL), MPR_JSON_PRETTY));
 }
 
 
@@ -2031,7 +2060,7 @@ PUBLIC bool hasRec()
 }
 
 
-PUBLIC int intParam(cchar *key)
+PUBLIC int paramInt(cchar *key)
 {
     return (int) stoi(param(key));
 }
@@ -2128,18 +2157,14 @@ PUBLIC cchar *param(cchar *key)
 }
 
 
-PUBLIC MprJson *params(void)
+PUBLIC MprJson *params(cchar *var)
 {
-    return espGetParams(getStream());
+    if (var) {
+        return mprGetJsonObj(espGetParams(getStream()), var);
+    } else {
+        return espGetParams(getStream());
+    }
 }
-
-
-#if KEEP
-PUBLIC MprJson *bodyParams(void)
-{
-    return mprGetJsonObj(params(), "body");
-}
-#endif
 
 
 PUBLIC ssize receive(char *buf, ssize len)
@@ -2148,9 +2173,66 @@ PUBLIC ssize receive(char *buf, ssize len)
 }
 
 
-PUBLIC EdiGrid *readGrid(cchar *tableName, cchar *where, int offset, int limit)
+PUBLIC EdiGrid *findGrid(cchar *tableName, int offset, int limit, cchar *select, ...)
 {
-    return setGrid(ediReadGrid(getDatabase(), tableName, where, offset, limit));
+    va_list     ap;
+
+    va_start(ap, select);
+    select = sfmtv(select, ap);
+    va_end(ap);
+    return setGrid(ediFindGrid(getDatabase(), tableName, offset, limit, select));
+}
+
+
+PUBLIC EdiGrid *findGridByParams(cchar *tableName)
+{
+    HttpStream  *stream;
+    MprJson     *fields, *key;
+    MprBuf      *buf;
+    cchar       *filter;
+    int         index, limit, offset;
+
+    stream = getStream();
+    offset = paramInt("options.offset");
+    limit = paramInt("options.limit");
+    buf = mprCreateBuf(0, 0);
+
+    if ((fields = params("fields")) != 0) {
+        for (ITERATE_JSON(fields, key, index)) {
+            mprPutToBuf(buf, "%s == %s", key->name, key->value);
+            //  FUTURE - permit multiple select
+            break;
+        }
+    }
+    if ((filter = param("options.filter")) != 0) {
+        if (mprGetBufLength(buf) > 0) {
+            mprPutStringToBuf(buf, " AND ");
+        }
+        mprPutToBuf(buf, "* >< %s", filter);
+    }
+    return setGrid(ediFindGrid(getDatabase(), tableName, offset, limit, mprBufToString(buf)));
+}
+
+
+PUBLIC EdiRec *findRec(cchar *tableName, cchar *select, ...)
+{
+    va_list     ap;
+
+    va_start(ap, select);
+    select = sfmtv(select, ap);
+    va_end(ap);
+    return setRec(ediFindRec(getDatabase(), tableName, select));
+}
+
+
+PUBLIC EdiRec *findRecByParams(cchar *tableName)
+{
+    EdiGrid     *grid;
+
+    if ((grid = findGridByParams(tableName)) != 0 && grid->nrecords > 0) {
+        return grid->records[0];
+    }
+    return 0;
 }
 
 
@@ -2159,15 +2241,7 @@ PUBLIC EdiRec *readRec(cchar *tableName, cchar *key)
     if (key == 0 || *key == 0) {
         key = "1";
     }
-    return setRec(ediReadRec(getDatabase(), tableName, key));
-}
-
-
-#if DEPRECATE || 1
-PUBLIC EdiRec *readRecByKey(cchar *tableName, cchar *key)
-{
-    return readRec(tableName, key);
-}
+    return setRec(ediReadRec(getDatabase(), tableName, key));}
 
 
 PUBLIC EdiRec *readRecWhere(cchar *tableName, cchar *fieldName, cchar *operation, cchar *value)
@@ -2180,26 +2254,11 @@ PUBLIC EdiGrid *readWhere(cchar *tableName, cchar *fieldName, cchar *operation, 
 {
     return setGrid(ediReadWhere(getDatabase(), tableName, fieldName, operation, value));
 }
-#endif
 
 
 PUBLIC EdiGrid *readTable(cchar *tableName)
 {
     return setGrid(ediReadTable(getDatabase(), tableName));
-}
-
-
-PUBLIC EdiGrid *readGridFromParams(cchar *tableName)
-{
-    HttpStream  *stream;
-    cchar       *where;
-    int         limit, offset;
-
-    stream = getStream();
-    offset = intParam("_options_.offset");
-    limit = intParam("_options_.limit");
-    where = param("_options_.where");
-    return setGrid(ediReadGrid(getDatabase(), tableName, where, offset, limit));
 }
 
 
@@ -2506,10 +2565,18 @@ PUBLIC bool updateRec(EdiRec *rec)
 }
 
 
+PUBLIC bool updateRecByParams(cchar *table)
+{
+    return updateRec(setFields(readRec(table, param("fields.id")), params("fields")));
+}
+
+
+#if DEPRECATED || 1
 PUBLIC bool updateRecFromParams(cchar *table)
 {
-    return updateRec(setFields(readRec(table, param("id")), params()));
+    return updateRec(setFields(readRec(table, param("id")), params(NULL)));
 }
+#endif
 
 
 PUBLIC cchar *uri(cchar *target, ...)
@@ -7484,7 +7551,7 @@ static void manageContext(CompileContext *context, int flags)
 #define MDB_LOAD_FIELD   7      /* Parsing fields */
 
 /*
-    Operations for mdbReadWhere
+    Operations for mdbFindGrid
  */
 #define OP_ERR      -1          /* Illegal operation */
 #define OP_EQ       0           /* "==" Equal operation */
@@ -7533,7 +7600,7 @@ static Edi *mdbOpen(cchar *path, int flags);
 static EdiGrid *mdbQuery(Edi *edi, cchar *cmd, int argc, cchar **argv, va_list vargs);
 static EdiField mdbReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName);
 static EdiRec *mdbReadRec(Edi *edi, cchar *tableName, cchar *key);
-static EdiGrid *mdbReadWhere(Edi *edi, cchar *tableName, cchar *where, int offset, int limit);
+static EdiGrid *mdbFindGrid(Edi *edi, cchar *tableName, int offset, int limit, cchar *select);
 static int mdbRemoveColumn(Edi *edi, cchar *tableName, cchar *columnName);
 static int mdbRemoveIndex(Edi *edi, cchar *tableName, cchar *indexName);
 static int mdbRemoveRec(Edi *edi, cchar *tableName, cchar *key);
@@ -7546,9 +7613,9 @@ static int mdbUpdateRec(Edi *edi, EdiRec *rec);
 
 static EdiProvider MdbProvider = {
     "mdb",
-    mdbAddColumn, mdbAddIndex, mdbAddTable, mdbChangeColumn, mdbClose, mdbCreateRec, mdbDelete,
+    mdbAddColumn, mdbAddIndex, mdbAddTable, mdbChangeColumn, mdbClose, mdbCreateRec, mdbDelete, mdbFindGrid,
     mdbGetColumns, mdbGetColumnSchema, mdbGetTables, mdbGetTableDimensions, mdbLoad, mdbLookupField, mdbOpen, mdbQuery,
-    mdbReadField, mdbReadRec, mdbReadWhere, mdbRemoveColumn, mdbRemoveIndex, mdbRemoveRec, mdbRemoveTable,
+    mdbReadField, mdbReadRec, mdbRemoveColumn, mdbRemoveIndex, mdbRemoveRec, mdbRemoveTable,
     mdbRenameTable, mdbRenameColumn, mdbSave, mdbUpdateField, mdbUpdateRec,
 };
 
@@ -8050,7 +8117,7 @@ static EdiRec *mdbReadRec(Edi *edi, cchar *tableName, cchar *key)
 }
 
 
-static bool matchRow(MdbCol *col, cchar *existing, int op, cchar *value)
+static bool matchCell(MdbCol *col, cchar *existing, int op, cchar *value)
 {
     if (value == 0 || *value == '\0') {
         return 0;
@@ -8071,12 +8138,26 @@ static bool matchRow(MdbCol *col, cchar *existing, int op, cchar *value)
             return 1;
         }
         break;
-#if FUTURE
     case OP_LT:
+        if (scmp(existing, value) < 0) {
+            return 1;
+        }
+        break;
     case OP_GT:
+        if (scmp(existing, value) > 0) {
+            return 1;
+        }
+        break;
     case OP_LTE:
+        if (scmp(existing, value) <= 0) {
+            return 1;
+        }
+        break;
     case OP_GTE:
-#endif
+        if (scmp(existing, value) >= 0) {
+            return 1;
+        }
+        break;
     default:
         assert(0);
     }
@@ -8084,17 +8165,57 @@ static bool matchRow(MdbCol *col, cchar *existing, int op, cchar *value)
 }
 
 
-static EdiGrid *mdbReadWhere(Edi *edi, cchar *tableName, cchar *where, int offset, int limit)
+static bool matchRow(MdbTable *table, MdbRow *row, int op, cchar *value)
+{
+    MdbCol      *col;
+    MdbSchema   *schema;
+
+    schema = table->schema;
+    for (col = schema->cols; col < &schema->cols[schema->ncols]; col++) {
+        if (matchCell(col, row->fields[col->cid], op, value)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
+/*
+    Split a select expression of the form: "field OP value AND field OP value..." into a list of "field OP value" expressions.
+    WARNING: no quoting is handled
+ */
+static MprList *getExpressions(cchar *select)
+{
+    MprList     *expressions;
+    char        *cp, *tok;
+
+    expressions = mprCreateList(0, 0);
+
+    tok = sclone(select);
+    for (tok = sclone(select); *tok && (cp = scontains(tok, " AND ")) != 0; ) {
+        *cp = '\0';
+        cp += 5;
+        mprAddItem(expressions, tok);
+        tok = cp;
+    }
+    if (tok && *tok) {
+        mprAddItem(expressions, tok);
+    }
+    return expressions;
+}
+
+
+static EdiGrid *mdbFindGrid(Edi *edi, cchar *tableName, int offset, int limit, cchar *select)
 {
     Mdb         *mdb;
     EdiGrid     *grid;
     MdbTable    *table;
     MdbCol      *col;
     MdbRow      *row;
-    MdbSchema   *schema;
-    cchar       *columnName, *operation;
+    MprList     *expressions;
+    cchar       *columnName, *expression, *operation;
     char        *tok, *value;
-    int         matched, nrows, next, op, r, index, count;
+    int         matched, nrows, next, op, r, index, count, nextExpression;
 
     assert(edi);
     assert(tableName && *tableName);
@@ -8105,10 +8226,6 @@ static EdiGrid *mdbReadWhere(Edi *edi, cchar *tableName, cchar *where, int offse
     }
     if (offset < 0) {
         offset = 0;
-    }
-    if (where) {
-        columnName = stok(sclone(where), " ", &tok);
-        operation = stok(tok, " ", &value);
     }
     mdb = (Mdb*) edi;
     lock(edi);
@@ -8124,72 +8241,67 @@ static EdiGrid *mdbReadWhere(Edi *edi, cchar *tableName, cchar *where, int offse
     grid->flags = EDI_GRID_READ_ONLY;
     grid->nrecords = 0;
     grid->count = table->rows->length;
+    expressions = getExpressions(select);
+    count = index = 0;
 
-    if (offset < table->rows->length) {
-        if (columnName && operation && value) {
+    /*
+        Optimized path for solo indexed lookup on "id"
+     */
+    if (mprGetListLength(expressions) == 1) {
+        expression = mprGetItem(expressions, 0);
+        columnName = stok(sclone(expression), " ", &tok);
+        operation = stok(tok, " ", &value);
+        if (smatch(columnName, "id") && smatch(operation, "==")) {
+            if ((col = lookupField(table, columnName)) == 0) {
+                unlock(edi);
+                return 0;
+            }
+            if (col->flags & EDI_INDEX) {
+                if ((r = lookupRow(table, value)) >= 0) {
+                    row = getRow(table, r);
+                    grid->records[0] = createRecFromRow(edi, row);
+                    grid->nrecords = 1;
+                }
+                unlock(edi);
+                return grid;
+            }
+        }
+    }
+
+    /*
+        Linear search
+     */
+    for (ITERATE_ITEMS(table->rows, row, next)) {
+        matched = 1;
+        for (ITERATE_ITEMS(expressions, expression, nextExpression)) {
+            columnName = stok(sclone(expression), " ", &tok);
+            operation = stok(tok, " ", &value);
             if ((op = parseOperation(operation)) < 0) {
                 unlock(edi);
                 return 0;
             }
-            if (op == OP_IN && smatch(columnName, "*")) {
-                count = index = 0;
-                for (ITERATE_ITEMS(table->rows, row, next)) {
-                    schema = table->schema;
+            if (smatch(columnName, "*")) {
+                if (!matchRow(table, row, op, value)) {
                     matched = 0;
-                    for (col = schema->cols; col < &schema->cols[schema->ncols]; col++) {
-                        if (matchRow(col, row->fields[col->cid], op, value)) {
-                            matched = 1;
-                            break;
-                        }
-                    }
-                    if (matched) {
-                        if (count++ >= offset) {
-                            grid->records[index++] = createRecFromRow(edi, row);
-                            grid->nrecords = index;
-                            if (--limit <= 0) {
-                                break;
-                            }
-                        }
-                    }
+                    break;
                 }
             } else {
                 if ((col = lookupField(table, columnName)) == 0) {
                     unlock(edi);
                     return 0;
                 }
-                if (col->flags & EDI_INDEX && (op == OP_EQ)) {
-                    if ((r = lookupRow(table, value)) >= 0) {
-                        row = getRow(table, r);
-                        grid->records[0] = createRecFromRow(edi, row);
-                        grid->nrecords = 1;
-                    }
-                } else {
-                    count = index = 0;
-                    for (ITERATE_ITEMS(table->rows, row, next)) {
-                        if (!matchRow(col, row->fields[col->cid], op, value)) {
-                            continue;
-                        }
-                        if (count++ >= offset) {
-                            grid->records[index++] = createRecFromRow(edi, row);
-                            grid->nrecords = index;
-                            if (--limit <= 0) {
-                                break;
-                            }
-                        }
-                    }
+                if (!matchCell(col, row->fields[col->cid], op, value)) {
+                    matched = 0;
+                    break;
                 }
             }
-        } else {
-            count = index = 0;
-            for (ITERATE_ITEMS(table->rows, row, next)) {
-                if (count++ >= offset) {
-                    grid->records[index++] = createRecFromRow(edi, row);
-                    if (--limit <= 0) {
-                        break;
-                    }
-                }
-            }
+        }
+        if (matched && count++ >= offset) {
+            grid->records[index++] = createRecFromRow(edi, row);
             grid->nrecords = index;
+            if (--limit <= 0) {
+                break;
+            }
         }
     }
     unlock(edi);
@@ -9164,6 +9276,7 @@ static void sdbClose(Edi *edi);
 static EdiRec *sdbCreateRec(Edi *edi, cchar *tableName);
 static int sdbDelete(cchar *path);
 static void sdbError(Edi *edi, cchar *fmt, ...);
+static EdiGrid *sdbFindGrid(Edi *edi, cchar *tableName, int offset, int limit, cchar *select);
 static int sdbRemoveRec(Edi *edi, cchar *tableName, cchar *key);
 static MprList *sdbGetColumns(Edi *edi, cchar *tableName);
 static int sdbGetColumnSchema(Edi *edi, cchar *tableName, cchar *columnName, int *type, int *flags, int *cid);
@@ -9174,7 +9287,6 @@ static Edi *sdbOpen(cchar *path, int flags);
 PUBLIC EdiGrid *sdbQuery(Edi *edi, cchar *cmd, int argc, cchar **argv, va_list vargs);
 static EdiField sdbReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName);
 static EdiRec *sdbReadRec(Edi *edi, cchar *tableName, cchar *key);
-static EdiGrid *sdbReadWhere(Edi *edi, cchar *tableName, cchar *query, int offset, int limit);
 static int sdbRemoveColumn(Edi *edi, cchar *tableName, cchar *columnName);
 static int sdbRemoveIndex(Edi *edi, cchar *tableName, cchar *indexName);
 static int sdbRemoveTable(Edi *edi, cchar *tableName);
@@ -9188,9 +9300,9 @@ static bool validName(cchar *str);
 
 static EdiProvider SdbProvider = {
     "sdb",
-    sdbAddColumn, sdbAddIndex, sdbAddTable, sdbChangeColumn, sdbClose, sdbCreateRec, sdbDelete,
+    sdbAddColumn, sdbAddIndex, sdbAddTable, sdbChangeColumn, sdbClose, sdbCreateRec, sdbDelete, sdbFindGrid,
     sdbGetColumns, sdbGetColumnSchema, sdbGetTables, sdbGetTableDimensions, NULL, sdbLookupField, sdbOpen, sdbQuery,
-    sdbReadField, sdbReadRec, sdbReadWhere, sdbRemoveColumn, sdbRemoveIndex, sdbRemoveRec, sdbRemoveTable,
+    sdbReadField, sdbReadRec, sdbRemoveColumn, sdbRemoveIndex, sdbRemoveRec, sdbRemoveTable,
     sdbRenameTable, sdbRenameColumn, sdbSave, sdbUpdateField, sdbUpdateRec,
 };
 
@@ -9595,7 +9707,7 @@ static EdiGrid *setTableName(EdiGrid *grid, cchar *tableName)
 }
 
 
-static EdiGrid *sdbReadWhere(Edi *edi, cchar *tableName, cchar *where, int offset, int limit)
+static EdiGrid *sdbFindGrid(Edi *edi, cchar *tableName, int offset, int limit, cchar *select)
 {
     EdiGrid     *grid;
     EdiRec      *schema;
@@ -9613,8 +9725,8 @@ static EdiGrid *sdbReadWhere(Edi *edi, cchar *tableName, cchar *where, int offse
     if (offset < 0) {
         offset = 0;
     }
-    if (where) {
-        columnName = stok(sclone(where), " ", &tok);
+    if (select) {
+        columnName = stok(sclone(select), " ", &tok);
         operation = stok(tok, " ", &value);
         if (smatch(operation, "><")) {
             operation = "LIKE";
@@ -9853,7 +9965,7 @@ static EdiGrid *query(Edi *edi, cchar *cmd, ...)
 
 
 /*
-    Vars are ignored. Just to satisify old compilers
+    Vars are ignored in queryv if argc != 0. Defined here just to satisify old compilers.
  */
 static EdiGrid *queryArgv(Edi *edi, cchar *cmd, int argc, cchar **argv, ...)
 {
