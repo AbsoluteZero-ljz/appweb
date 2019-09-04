@@ -14351,6 +14351,7 @@ PUBLIC cchar *mprGetJson(MprJson *obj, cchar *key)
 }
 
 
+
 PUBLIC int mprSetJsonObj(MprJson *obj, cchar *key, MprJson *value)
 {
     if (key && !strpbrk(key, ".[]*")) {
@@ -17440,6 +17441,9 @@ PUBLIC MprModule *mprCreateModule(cchar *name, cchar *path, cchar *entry, void *
     if (entry && *entry) {
         mp->entry = sclone(entry);
     }
+    /*
+        Not managed by default unless MPR_MODULE_DATA_MANAGED is set
+     */
     mp->moduleData = data;
     mp->lastActivity = mprGetTicks();
     index = mprAddItem(ms->modules, mp);
@@ -17456,6 +17460,9 @@ static void manageModule(MprModule *mp, int flags)
         mprMark(mp->name);
         mprMark(mp->path);
         mprMark(mp->entry);
+        if (mp->flags & MPR_MODULE_DATA_MANAGED) {
+            mprMark(mp->moduleData);
+        }
     }
 }
 

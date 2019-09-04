@@ -5600,9 +5600,10 @@ typedef int (*MprModuleProc)(struct MprModule *mp);
 /*
     Module flags
  */
-#define MPR_MODULE_STARTED     0x1     /**< Module stared **/
-#define MPR_MODULE_STOPPED     0x2     /**< Module stopped */
-#define MPR_MODULE_LOADED      0x4     /**< Dynamic module loaded */
+#define MPR_MODULE_STARTED          0x1     /**< Module stared **/
+#define MPR_MODULE_STOPPED          0x2     /**< Module stopped */
+#define MPR_MODULE_LOADED           0x4     /**< Dynamic module loaded */
+#define MPR_MODULE_DATA_MANAGED     0x8     /**< Module.moduleData is managed */
 
 /**
     Loadable Module Service
@@ -5618,7 +5619,7 @@ typedef struct MprModule {
     char            *name;              /**< Unique module name */
     char            *path;              /**< Module library filename */
     char            *entry;             /**< Module library init entry point */
-    void            *moduleData;        /**< Module specific data - not managed */
+    void            *moduleData;        /**< Module specific data - not managed unless MPR_MODULE_DATA_MANAGED */
     void            *handle;            /**< O/S shared library load handle */
     MprTime         modified;           /**< When the module file was last modified */
     MprTicks        lastActivity;       /**< When the module was last used */
