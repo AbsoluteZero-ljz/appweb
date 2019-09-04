@@ -131,6 +131,11 @@ PUBLIC void ediAddFieldError(struct EdiRec *rec, cchar *field, cchar *fmt, ...);
 #define EDI_NOT_NULL        0x10        /**< Field flag -- Column must not be null (not implemented) */
 #define EDI_READ_ONLY       0x20        /**< Field flag -- Field is read-only (not implemented) */
 
+/*
+    Encodings
+ */
+#define EDI_ENCODE_PREFIX   0x
+
 /**
     EDI Record field structure
     @description The EdiField stores record field data and minimal schema information such as the data type and
@@ -173,6 +178,7 @@ typedef struct EdiGrid {
     struct Edi      *edi;               /**< Database handle */
     cchar           *tableName;         /**< Base table name for grid */
     int             flags;              /**< Grid flags */
+    int             count;              /**< Total count of available records matching query */
     int             nrecords;           /**< Number of records in grid */
     EdiRec          *records[ARRAY_FLEX];/**< Grid records */
 } EdiGrid;
@@ -244,7 +250,7 @@ typedef struct EdiProvider {
     EdiGrid   *(*query)(Edi *edi, cchar *cmd, int argc, cchar **argv, va_list vargs);
     EdiField  (*readField)(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName);
     EdiRec    *(*readRec)(Edi *edi, cchar *tableName, cchar *key);
-    EdiGrid   *(*readWhere)(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value);
+    EdiGrid   *(*readWhere)(Edi *edi, cchar *tableName, cchar *where, int offset, int limit);
     int       (*removeColumn)(Edi *edi, cchar *tableName, cchar *columnName);
     int       (*removeIndex)(Edi *edi, cchar *tableName, cchar *indexName);
     int       (*removeRec)(Edi *edi, cchar *tableName, cchar *key);
@@ -563,7 +569,7 @@ PUBLIC Edi *ediClone(Edi *edi);
     Run a query.
     @description This runs a provider dependant query. For the SDB SQLite provider, this runs an SQL statement.
     The "mdb" provider does not implement this API. To do queries using the "mdb" provider, use:
-        #ediReadRec, #ediReadRecWhere, #ediReadWhere, #ediReadField and #ediReadTable.
+        #ediReadRec, #ediReadTable, #ediReadField and #ediReadTable.
     The query may contain positional parameters via argc/argv or via a va_list. These are recommended to mitigate
     SQL injection risk.
     @param edi Database handle
@@ -606,20 +612,21 @@ PUBLIC cchar *ediReadFieldValue(Edi *edi, cchar *fmt, cchar *tableName, cchar *k
  */
 PUBLIC EdiField ediReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName);
 
+//  MOB - improve doc
 /**
-    Read one record.
-    @description This runs a simple query on the database and selects the first matching record. The query selects
-        a row that has a "field" that matches the given "value".
+    Read matching records in a table
+    @description This runs a simple query on the database and returns matching records in a grid. The query selects
+        all rows that have a "field" that matches the given "value".
     @param edi Database handle
     @param tableName Database table name
-    @param fieldName Database field name to evaluate
-    @param operation Comparision operation. Set to "==", "!=", "<", ">", "<=" or ">=".
-    @param value Data value to compare with the field values.
-    @return First matching record. Returns NULL if no matching records.
+    @param where Filter comparision operation. Set to Field OP value, where OP is "==", "!=", "<", ">", "<=", ">=" or "><".
+    @param offset Integer offset of the first row returned.
+    @param limit Integer Count of the number of rows returned.
+    @return A grid containing all matching records. Returns NULL if no matching records.
     @ingroup Edi
     @stability Evolving
  */
-PUBLIC EdiRec *ediReadRecWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value);
+PUBLIC EdiGrid *ediReadGrid(Edi *edi, cchar *tableName, cchar *where, int offset, int limit);
 
 /**
     Read a record.
@@ -633,20 +640,23 @@ PUBLIC EdiRec *ediReadRecWhere(Edi *edi, cchar *tableName, cchar *fieldName, cch
  */
 PUBLIC EdiRec *ediReadRec(Edi *edi, cchar *tableName, cchar *key);
 
+#if DEPRECATED || 1
 /**
-    Read matching records.
-    @description This runs a simple query on the database and returns matching records in a grid. The query selects
-        all rows that have a "field" that matches the given "value".
+    Read one record.
+    @description This runs a simple query on the database and selects the first matching record. The query selects
+        a row that has a "field" that matches the given "value".
+        This API is deprecated, use ediReadGrid instead.
     @param edi Database handle
     @param tableName Database table name
     @param fieldName Database field name to evaluate
     @param operation Comparision operation. Set to "==", "!=", "<", ">", "<=" or ">=".
     @param value Data value to compare with the field values.
-    @return A grid containing all matching records. Returns NULL if no matching records.
+    @return First matching record. Returns NULL if no matching records.
     @ingroup Edi
-    @stability Evolving
+    @stability Deprecated
  */
-PUBLIC EdiGrid *ediReadWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value);
+PUBLIC EdiRec *ediReadRecWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value);
+#endif
 
 /**
     Read a table.
@@ -658,6 +668,24 @@ PUBLIC EdiGrid *ediReadWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar
     @stability Evolving
  */
 PUBLIC EdiGrid *ediReadTable(Edi *edi, cchar *tableName);
+
+#if DEPRECATED || 1
+/**
+    Read matching records.
+    @description This runs a simple query on the database and returns matching records in a grid. The query selects
+        all rows that have a "field" that matches the given "value".
+        This API is deprecated, use ediReadGrid instead.
+    @param edi Database handle
+    @param tableName Database table name
+    @param fieldName Database field name to evaluate
+    @param operation Comparision operation. Set to "==", "!=", "<", ">", "<=" or ">=".
+    @param value Data value to compare with the field values.
+    @return A grid containing all matching records. Returns NULL if no matching records.
+    @ingroup Edi
+    @stability Deprecated
+ */
+PUBLIC EdiGrid *ediReadWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value);
+#endif
 
 /**
     Convert an EDI database record into a JSON string.
@@ -1411,8 +1439,9 @@ typedef struct EspRoute {
     uint            combine: 1;             /**< Combine C source into a single file */
     uint            compileMode: 1;         /**< Compile the application debug or release mode */
     uint            compile: 1;             /**< Enable recompiling the application or esp page */
-    uint            update: 1;              /**< Enable dynamically updating the application */
+    uint            encodeTypes: 1;         /**< Encode data types in JSON API request/response */
     uint            keep: 1;                /**< Keep intermediate source code after compiling */
+    uint            update: 1;              /**< Enable dynamically updating the application */
 
     Edi             *edi;                   /**< Default database for this route */
 
@@ -1430,7 +1459,7 @@ typedef struct EspRoute {
     @param version Pack version string.
     @returns Zero if successful, otherwise a negative MPR error code.
     @ingroup EspRoute
-    @stability Prototype
+    @stability Deprecated
  */
 PUBLIC void espAddPak(HttpRoute *route, cchar *name, cchar *version);
 #endif
@@ -1692,7 +1721,7 @@ PUBLIC cchar *espGetConfig(HttpRoute *route, cchar *key, cchar *defaultValue);
     @param name Desired pak name. For example: "angular-mvc"
     @returns True if the specified pak is supported
     @ingroup EspRoute
-    @stability Prototype
+    @stability Deprecated
  */
 PUBLIC bool espHasPak(HttpRoute *route, cchar *name);
 #endif
@@ -1713,7 +1742,7 @@ PUBLIC int espLoadCompilerRules(HttpRoute *route);
     @param route HttpRoute defining the ESP application
     @returns Zero if successful, otherwise a negative MPR error code.
     @ingroup EspRoute
-    @stability Evolving
+    @stability Deprecated
  */
 PUBLIC int espSaveConfig(HttpRoute *route);
 #endif
@@ -2993,6 +3022,20 @@ PUBLIC void addHeader(cchar *key, cchar *fmt, ...);
  */
 PUBLIC void addParam(cchar *name, cchar *value);
 
+#if KEEP
+/**
+    Get a request body parameter
+    @description Get the value of a named request parameter.
+        Body form are defined via post data contained in the request.
+    @param name Name of the request parameter to retrieve
+    @return String containing the request parameter's value. Caller should not free.
+        Returns NULL if the parameter is not defined.
+    @ingroup EspAbbrev
+    @stability Prototype
+ */
+PUBLIC cchar *body(cchar *name);
+#endif
+
 /**
     Test if a user has the required abilities
     @param abilities Comma separated list of abilities to test for. If null, then use the required abilities defined
@@ -3064,13 +3107,19 @@ PUBLIC void dontAutoFinalize(void);
 PUBLIC void dumpGrid(EdiGrid *grid);
 
 /**
+    Display request parameters to the debug log
+    @ingroup EspAbbrev
+    @stability Prototype
+ */
+PUBLIC void dumpParams();
+
+/**
     Display a record to the debug log
     @param rec Record to log
     @ingroup EspAbbrev
     @stability Prototype
  */
 PUBLIC void dumpRec(EdiRec *rec);
-
 
 /**
     Finalize the response.
@@ -3411,6 +3460,18 @@ PUBLIC bool hasRec(void);
 PUBLIC void input(cchar *field, cchar *options);
 
 /**
+    Get an integer request parameter
+    @description Get the value of a named request parameter. Form variables are defined via www-urlencoded query or post
+        data contained in the request.
+        This routine calls #espGetParam
+    @param name Name of the request parameter to retrieve
+    @return Integer containing the request parameter's value. Returns zero if not found.
+    @ingroup EspAbbrev
+    @stability Evolving
+ */
+PUBLIC int intParam(cchar *name);
+
+/**
     Test if the user is authenticated
     @return True if the username and password have been authenticated.
     @ingroup EspAbbrev
@@ -3586,27 +3647,76 @@ PUBLIC cchar *param(cchar *name);
 
 /**
     Get the request parameter hash table
-    @description This call gets the params hash table for the current request.
-        Route tokens, request query data, and www-url encoded form data are all entered into the params table after decoding.
-        Use #mprLookupKey to retrieve data from the table.
-        This routine calls #espGetParams
+    @description This call gets the params JSON table for the current request.
+        Route tokens, request query data, and www-url encoded form data are all entered into the params table
+        after decoding. This routine calls #espGetParams
     @return MprJson instance containing the request parameters
     @ingroup EspAbbrev
     @stability Evolving
  */
 PUBLIC MprJson *params(void);
 
+#if KEEP
 /**
-    Read the identified record
-    @description Read the record identified by the request param("id") from the nominated table.
+    Get the request JSON body parameters
+    @description This call gets the "body" property from the params JSON table for the current request.
+    @return MprJson instance containing the request parameters
+    @ingroup EspAbbrev
+    @stability Prototype
+ */
+PUBLIC MprJson *bodyParams(void);
+#endif
+
+/**
+    Read matching records in table from the database
+    @description This reads a table and returns a grid containing the table data.
+    The grid of records is remembered for this request as the "current" grid and can be retrieved via: getGrid().
+    @param tableName Database table name
+    @param where Comparision operation. Set to "Field OP value", where OP is "==", "!=", "<", ">", "<=" or ">=".
+    @param offset Integer offset of the first row returned.
+    @param limit Integer Count of the number of rows returned.
+    @return A grid containing all table rows. Returns NULL if the table cannot be found.
+    @ingroup EspAbbrev
+    @stability Evolving
+ */
+PUBLIC EdiGrid *readGrid(cchar *tableName, cchar *where, int offset, int limit);
+
+/**
+    Read all the records in table from the database using arguments from the request params.
+    @description This reads a table and returns a grid containing the table data.
+    The grid of records is remembered for this request as the "current" grid and can be retrieved via: getGrid().
+    The parameters "query", "offset" and "limit" select the rows to return.
+    @param tableName Database table name
+    @return A grid containing all table rows. Returns NULL if the table cannot be found.
+    @ingroup EspAbbrev
+    @stability Evolving
+ */
+PUBLIC EdiGrid *readGridFromParams(cchar *tableName);
+
+/**
+    Read a record identified by key value
+    @description Read a record from the given table as identified by the key value.
     The record is remembered for this request as the "current" record and can be retrieved via: getRec().
     @param tableName Database table name
     @param key Key value of the record to read
-    @return The identified record. Returns NULL if the table or record cannot be found.
+    @return Record instance of EdiRec.
     @ingroup EspAbbrev
     @stability Evolving
  */
 PUBLIC EdiRec *readRec(cchar *tableName, cchar *key);
+
+#if DEPRECATED || 1
+/**
+    Read a record identified by key value
+    @description Read a record from the given table as identified by the key value.
+    The record is remembered for this request as the "current" record and can be retrieved via: getRec().
+    @param tableName Database table name
+    @param key Key value of the record to read
+    @return Record instance of EdiRec.
+    @ingroup EspAbbrev
+    @stability Deprecated
+ */
+PUBLIC EdiRec *readRecByKey(cchar *tableName, cchar *key);
 
 /**
     Read matching records
@@ -3619,7 +3729,7 @@ PUBLIC EdiRec *readRec(cchar *tableName, cchar *key);
     @param value Data value to compare with the field values.
     @return A grid containing all matching records. Returns NULL if no matching records.
     @ingroup EspAbbrev
-    @stability Evolving
+    @stability Deprecated
  */
 PUBLIC EdiGrid *readWhere(cchar *tableName, cchar *fieldName, cchar *operation, cchar *value);
 
@@ -3634,21 +3744,10 @@ PUBLIC EdiGrid *readWhere(cchar *tableName, cchar *fieldName, cchar *operation, 
     @param value Data value to compare with the field values.
     @return First matching record. Returns NULL if no matching records.
     @ingroup EspAbbrev
-    @stability Evolving
+    @stability Deprecated
  */
 PUBLIC EdiRec *readRecWhere(cchar *tableName, cchar *fieldName, cchar *operation, cchar *value);
-
-/**
-    Read a record identified by key value
-    @description Read a record from the given table as identified by the key value.
-    The record is remembered for this request as the "current" record and can be retrieved via: getRec().
-    @param tableName Database table name
-    @param key Key value of the record to read
-    @return Record instance of EdiRec.
-    @ingroup EspAbbrev
-    @stability Evolving
- */
-PUBLIC EdiRec *readRecByKey(cchar *tableName, cchar *key);
+#endif
 
 /**
     Read all the records in table from the database
