@@ -27140,14 +27140,24 @@ static void addParamsFromBuf(HttpStream *stream, cchar *buf, ssize len)
 {
     MprJson     *params, *prior;
     char        *newValue, *decoded, *keyword, *value, *tok;
+    bool        json;
 
     assert(stream);
     params = httpGetParams(stream);
+
+    json = scontains(buf, "_encoded_json_") ? 1 : 0;
+    if (json) {
+        value = mprUriDecode(buf);
+        mprParseJsonInto(value, params);
+        return;
+    }
+    
     decoded = mprAlloc(len + 1);
     decoded[len] = '\0';
     memcpy(decoded, buf, len);
 
     keyword = stok(decoded, "&", &tok);
+
     while (keyword != 0) {
         if ((value = strchr(keyword, '=')) != 0) {
             *value++ = '\0';
