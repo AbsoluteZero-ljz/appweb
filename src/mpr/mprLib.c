@@ -27061,6 +27061,12 @@ PUBLIC char *mprFormatTm(cchar *format, struct tm *tp)
                 cp++;
                 goto again;
 
+            case 'f':
+                strcpy(--dp, "000");
+                dp += slen(dp);
+                cp++;
+                break;
+
             case 'F':
                 strcpy(dp, "Y-%m-%d");
                 dp += 7;
@@ -27353,6 +27359,10 @@ PUBLIC char *mprFormatTm(cchar *format, struct tm *tp)
 
         case 'e':                                       /* day of month (1-31). Single digits preceeded by a blank */
             digits(buf, 2, ' ', tp->tm_mday);
+            break;
+
+        case 'f':                                       /* milliseconds */
+            mprPutStringToBuf(buf, "000");
             break;
 
         case 'F':                                       /* %m/%d/%y */
