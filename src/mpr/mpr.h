@@ -4539,7 +4539,7 @@ PUBLIC MprRomFileSystem *mprCreateRomFileSystem(cchar *path, MprRomInode *inodes
     Get the ROM file system data
     @return Returns a pointer to the list of ROM inodes.
     @ingroup MprFileSystem
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC MprRomInode *mprGetRomFiles(void);
 #endif /* ME_ROM */
@@ -6111,7 +6111,7 @@ PUBLIC MprEvent *mprCreateTimerEvent(MprDispatcher *dispatcher, cchar *name, Mpr
     @param dispatcher Dispatcher object created via mprCreateDispatcher
     @param event Event object to queue
     @ingroup MprEvent
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void mprQueueEvent(MprDispatcher *dispatcher, MprEvent *event);
 
@@ -7069,7 +7069,7 @@ PUBLIC cchar *mprGetThreadName(MprThread *thread);
     @param tp Thread object returned by #mprCreateThread. Set to NULL for the current thread.
     @param on Set to true to enable yielding
     @ingroup MprThread
-    @stability Prototype
+    @stability Evolving
 */
 PUBLIC bool mprSetThreadYield(MprThread *tp, bool on);
 
@@ -8256,7 +8256,7 @@ PUBLIC void mprSetSslKeyFile(struct MprSsl *ssl, cchar *keyFile);
     @param ssl SSL instance returned from #mprCreateSsl
     @param hostname Name of the host when using SNI
     @ingroup MprSsl
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void mprSetSslHostname(MprSsl *ssl, cchar *hostname);
 

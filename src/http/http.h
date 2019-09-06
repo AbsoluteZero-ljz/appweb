@@ -1088,7 +1088,7 @@ typedef struct Http {
     Callback procedure for HttpConfigure
     @param arg User definable data. May be managed or unmanaged.
     @ingroup Http
-    @stability Evolving
+    @stability Stable
  */
 typedef void (*HttpConfigureProc)(void *arg);
 
@@ -1097,7 +1097,7 @@ typedef void (*HttpConfigureProc)(void *arg);
     @description Apply configuration changes and actually change the group id
     @return Zero if successful, otherwise a negative Mpr error code. See the Appweb log for diagnostics.
     @ingroup Http
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int httpApplyChangedGroup(void);
 
@@ -1105,7 +1105,7 @@ PUBLIC int httpApplyChangedGroup(void);
     Apply the changed user ID
     @description Apply configuration changes and actually change the user id
     @ingroup Http
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int httpApplyChangedUser(void);
 
@@ -1114,7 +1114,7 @@ PUBLIC int httpApplyChangedUser(void);
     @description Apply configuration changes and actually change the user and group id
     @return Zero if successful, otherwise a negative Mpr error code. See the Appweb log for diagnostics.
     @ingroup Http
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int httpApplyUserGroup(void);
 
@@ -1195,7 +1195,7 @@ PUBLIC void httpGetUserGroup(void);
     Initialize the Http configuration parser
     @return Zero if successful, otherwise a negative Mpr error code. See the Appweb log for diagnostics.
     @ingroup Http
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int httpInitParser(void);
 
@@ -1236,7 +1236,7 @@ PUBLIC struct HttpEndpoint *httpLookupEndpoint(cchar *ip, int port);
     @param profile Parsed profile portion
     @return Zero if successful, otherwise a negative Mpr error code.
     @ingroup Http
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int httpParsePlatform(cchar *platform, cchar **os, cchar **arch, cchar **profile);
 
@@ -1280,7 +1280,7 @@ PUBLIC void httpSetEnvCallback(HttpEnvCallback envCallback);
     @param group Group name. Must be defined in the system group database.
     @return Zero if successful, otherwise a negative Mpr error code.
     @ingroup Http
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int httpSetGroupAccount(cchar *group);
 
@@ -1300,7 +1300,7 @@ PUBLIC void httpSetJail(cchar *path);
     @param platform Platform string of the form: OS-ARCH-PROFILE.
     @return Zero if the platform string parses, otherwise a negative Mpr error code.
     @ingroup Http
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int httpSetPlatform(cchar *platform);
 
@@ -1310,7 +1310,7 @@ PUBLIC int httpSetPlatform(cchar *platform);
     @param platform Path to the platform directory.
     @return Zero if successful, otherwise a negative Mpr error code.
     @ingroup Http
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int httpSetPlatformDir(cchar *platform);
 
@@ -1346,7 +1346,7 @@ PUBLIC void httpSetSoftware(cchar *description);
     @param user User name. Must be defined in the system password database.
     @return Zero if successful, otherwise a negative Mpr error code.
     @ingroup Http
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int httpSetUserAccount(cchar *user);
 
@@ -1756,7 +1756,7 @@ PUBLIC char *httpLink(struct HttpStream *stream, cchar *target);
     @param target The URI target. See #httpLink for details of the target parameter.
     @return A normalized Uri string.
     @ingroup HttpUri
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC char *httpLinkAbs(struct HttpStream *stream, cchar *target);
 
@@ -2402,7 +2402,7 @@ PUBLIC void httpScheduleQueue(HttpQueue *q);
     @param max The high water mark. Set by default to packetSize * 4.
     @param window HTTP/2 flow control window size. Must be at least HTTP_DEFAULT_WINDOW_SIZE.
     @ingroup HttpQueue
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetQueueLimits(HttpQueue *q, HttpLimits *limits, ssize packetSize, ssize low, ssize max, ssize window);
 
@@ -3303,7 +3303,7 @@ PUBLIC bool httpReadIO(HttpNet *net);
     @param net HttpNet Network object created via #httpCreateNet
     @return true if the network is client-side
     @ingroup HttpNet
-    @stability Prototype
+    @stability Evolving
   */
 #define httpIsClient(net) (net && !net->endpoint)
 
@@ -3312,7 +3312,7 @@ PUBLIC bool httpReadIO(HttpNet *net);
     @param net HttpNet Network object created via #httpCreateNet
     @return true if the network is server-side
     @ingroup HttpNet
-    @stability Prototype
+    @stability Evolving
   */
 #define httpIsServer(net) (net && net->endpoint)
 
@@ -4247,7 +4247,7 @@ PUBLIC HttpAuthStore *httpCreateAuthStore(cchar *name, HttpVerifyUser verifyUser
     @param name Unique authorization store name
     @return Auth store if successful, otherwise NULL.
     @ingroup HttpAuth
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC HttpAuthStore *httpGetAuthStore(cchar *name);
 
@@ -5886,7 +5886,7 @@ PUBLIC void httpSetRouteAutoDelete(HttpRoute *route, bool on);
     @param route Route to modify
     @param on Set to true to enable auto-finalize. Auto-finalize is enabled by default for frameworks that use it.
     @ingroup HttpRoute
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC void httpSetRouteAutoFinalize(HttpRoute *route, bool on);
 
@@ -5895,7 +5895,7 @@ PUBLIC void httpSetRouteAutoFinalize(HttpRoute *route, bool on);
     @param route Route to modify
     @param on Set to true to enable
     @ingroup HttpRoute
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC void httpSetRouteCompile(HttpRoute *route, bool on);
 
@@ -6818,8 +6818,8 @@ PUBLIC cchar *httpGetParam(HttpStream *stream, cchar *var, cchar *defaultValue);
 
 /**
     Get a request parm as an integer
-    @description Get the value of a named form variable as an integer. Form variables are define via
-        www-urlencoded query or post data contained in the request.
+    @description Get the value of a named form variable as an integer. Request parameters are define via
+        www-urlencoded query or post data contained in the request and route parameters.
     @param stream HttpStream stream object
     @param var Name of the parameter to retrieve
     @param defaultValue Default value to return if the variable is not defined. Can be null.
@@ -6832,12 +6832,11 @@ PUBLIC int httpGetParamInt(HttpStream *stream, cchar *var, int defaultValue);
 
 /**
     Get a parameter as a JSON object
-    @description Get the JSON object value of a named parameter. Form variables are define via
-        www-urlencoded query or post data contained in the request.
+    @description Get a JSON subtree for a named parameter from the request parameters. Request parameters are define via
+        www-urlencoded query, post data contained in the request or route parameters.
     @param stream HttpStream stream object
     @param var Name of the parameter to retrieve
-    @param defaultValue Default value to return if the variable is not defined. Can be null.
-    @return Integer containing the form variable's value
+    @return JSON object containing the selected subtree.
     @ingroup HttpRx
     @stability Stable
  */
@@ -7083,8 +7082,8 @@ PUBLIC void httpSetEof(HttpStream *stream);
 
 /**
     Set a request param value
-    @description Set the value of a named request param to a string value. Form variables are define via
-        www-urlencoded query or post data contained in the request.
+    @description Set the value of a named request param to a string value. Request parameters are define via
+        www-urlencoded query or post data contained in the request and route parameters.
     @param stream HttpStream stream object
     @param var Name of the request param to retrieve
     @param value Default value to return if the variable is not defined. Can be null.
@@ -7095,8 +7094,8 @@ PUBLIC void httpSetParam(HttpStream *stream, cchar *var, cchar *value);
 
 /**
     Set an integer request param value
-    @description Set the value of a named request param to an integer value. Form variables are define via
-        www-urlencoded query or post data contained in the request.
+    @description Set the value of a named request param to an integer value. Request parameters are define via
+        www-urlencoded query or post data contained in the request and route parameters.
     @param stream HttpStream stream object
     @param var Name of the request param to retrieve
     @param value Default value to return if the variable is not defined. Can be null.
@@ -7189,7 +7188,7 @@ PUBLIC void httpProcess(HttpQueue *q);
     httpProcessHeaders is invoked by the HTTP/1 and HTTP/2 filters after they have decoded input packets and whenever the network socket becomes newly writable and can absorb more output data.
     @param q HttpQueue queue object
     @ingroup HttpRx
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC bool httpProcessHeaders(HttpQueue *q);
 
@@ -7527,7 +7526,7 @@ PUBLIC ssize httpFormatResponseBody(HttpStream *stream, cchar *title, cchar *fmt
     @param key Name of the header to retrieve.
     @return Value associated with the header key or null if the key did not exist in the response.
     @ingroup HttpTx
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC cchar *httpGetTxHeader(HttpStream *stream, cchar *key);
 
