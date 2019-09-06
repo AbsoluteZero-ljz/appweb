@@ -1041,7 +1041,7 @@ static void migrate(int argc, char **argv)
     /*
         Each database has a _EspMigrations table which has a record for each migration applied
      */
-    if ((app->migrations = ediReadTable(edi, ESP_MIGRATIONS)) == 0) {
+    if ((app->migrations = ediReadGrid(edi, ESP_MIGRATIONS, NULL)) == 0) {
         rc = ediAddTable(edi, ESP_MIGRATIONS);
         rc += ediAddColumn(edi, ESP_MIGRATIONS, "id", EDI_TYPE_INT, EDI_AUTO_INC | EDI_INDEX | EDI_KEY);
         rc += ediAddColumn(edi, ESP_MIGRATIONS, "version", EDI_TYPE_STRING, 0);
@@ -1049,7 +1049,7 @@ static void migrate(int argc, char **argv)
             fail("Cannot add migration");
             return;
         }
-        app->migrations = ediReadTable(edi, ESP_MIGRATIONS);
+        app->migrations = ediReadGrid(edi, ESP_MIGRATIONS, NULL);
     }
     if (app->migrations->nrecords > 0) {
         mig = app->migrations->records[app->migrations->nrecords - 1];
@@ -1942,7 +1942,7 @@ static void compileItems(HttpRoute *route)
 #endif
     if ((sourceList = mprGetJsonObj(app->config, "esp.app.source")) != 0) {
         for (ITERATE_JSON(sourceList, source, index)) {
-            files = mprGlobPathFiles(".", source->value, 0);
+            files = mprGlobPathFiles(route->home, source->value, 0);
             if (mprGetListLength(files) == 0) {
                 fail("ESP source pattern does not match any files \"%s\"", source->value);
             }
