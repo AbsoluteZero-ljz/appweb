@@ -8,7 +8,7 @@
 #include "osdep.h"
 
 #ifndef ESP_VERSION
-    #define ESP_VERSION "8.0.3"
+    #define ESP_VERSION "8.1.0"
 #endif
 
 /*
@@ -3743,19 +3743,6 @@ PUBLIC cchar *param(cchar *name);
     @stability Evolving
  */
 PUBLIC MprJson *params(cchar *var);
-
-//  MOB - DOC
-//  MOB - who uses?
-/**
-    Get a property from the request parameters.
-    @description This call gets a request parameter from the request parameters for the current request.
-        Route tokens, request query data, and www-url encoded form data are all entered into the params table
-        after decoding. This routine calls #espGetParams.
-    @return MprJson instance containing the request parameters
-    @ingroup EspAbbrev
-    @stability Evolving
- */
-PUBLIC MprJson *paramsObj(cchar *var);
 
 /**
     Read matching records in table from the database
