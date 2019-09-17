@@ -2176,13 +2176,8 @@ PUBLIC MprMemStats *mprGetMemStats()
 #if ME_BSD_LIKE
     size_t      len;
     int         mib[2];
-#if FREEBSD
-    size_t      ram, usermem;
-    mib[1] = HW_MEMSIZE;
-#else
-    int64 ram, usermem;
+    int64       ram, usermem;
     mib[1] = HW_PHYSMEM;
-#endif
 #if MACOSX
     sysctlbyname("hw.memsize", &ram, &len, NULL, 0);
 #else
@@ -9884,7 +9879,7 @@ PUBLIC int mprWaitForEvent(MprDispatcher *dispatcher, MprTicks timeout, int64 ma
     if (changed) {
         return 0;
     }
-    if (!ownedDispatcher(dispatcher)) {
+    if (!ownedDispatcher(dispatcher) || dispatchEvents(dispatcher) == 0) {
         mprYield(MPR_YIELD_STICKY);
         mprWaitForCond(dispatcher->cond, delay);
         mprResetYield();
@@ -9893,10 +9888,6 @@ PUBLIC int mprWaitForEvent(MprDispatcher *dispatcher, MprTicks timeout, int64 ma
     lock(es);
     dispatcher->flags &= ~MPR_DISPATCHER_WAITING;
     unlock(es);
-
-    if (ownedDispatcher(dispatcher)) {
-        dispatchEvents(dispatcher);
-    }
     return 0;
 }
 
@@ -11224,10 +11215,12 @@ PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks
         return 0;
     }
     if ((event = createEvent(dispatcher, name, period, proc, data, flags)) != NULL) {
-        // DEPRECATE - only for ejscript
+#if DEPRECATE || 1
+        // only for ejscript
         if (!(flags & MPR_EVENT_DONT_QUEUE)) {
             mprQueueEvent(dispatcher, event);
         }
+#endif
     }
     return event;
 }
