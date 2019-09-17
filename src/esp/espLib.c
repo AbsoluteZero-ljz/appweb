@@ -2183,7 +2183,8 @@ PUBLIC MprJson *params(cchar *var)
 }
 
 
-PUBLIC cchar *makeQuery()
+//  MOB - move
+PUBLIC cchar *findParams()
 {
     MprJson     *fields, *key;
     MprBuf      *buf;
@@ -2222,24 +2223,28 @@ PUBLIC ssize receive(char *buf, ssize len)
 }
 
 
-PUBLIC EdiGrid *findGrid(cchar *tableName, cchar *select, ...)
+PUBLIC EdiGrid *findGrid(cchar *tableName, cchar *select)
 {
+#if UNUSED
     va_list     ap;
 
     va_start(ap, select);
     select = sfmtv(select, ap);
     va_end(ap);
+#endif
     return setGrid(ediFindGrid(getDatabase(), tableName, select));
 }
 
 
-PUBLIC EdiRec *findRec(cchar *tableName, cchar *select, ...)
+PUBLIC EdiRec *findRec(cchar *tableName, cchar *select)
 {
+#if UNUSED
     va_list     ap;
 
     va_start(ap, select);
     select = sfmtv(select, ap);
     va_end(ap);
+#endif
     return setRec(ediFindRec(getDatabase(), tableName, select));
 }
 

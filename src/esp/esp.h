@@ -3605,6 +3605,7 @@ PUBLIC MprHash *makeHash(cchar *fmt, ...);
  */
 PUBLIC MprJson *makeJson(cchar *fmt, ...);
 
+//  MOB - move
 /**
     Build an EDI selection query from the request parameters for use by SPA applications.
     @description This call creates an EDI "SQL style" query from the request parameters.
@@ -3615,7 +3616,7 @@ PUBLIC MprJson *makeJson(cchar *fmt, ...);
     @ingroup EspAbbrev
     @stability Prototype
  */
-PUBLIC cchar *makeQuery();
+PUBLIC cchar *findParams();
 
 /**
     Make a free-standing record
@@ -3756,7 +3757,7 @@ PUBLIC MprJson *params(cchar *var);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC EdiGrid *findGrid(cchar *tableName, cchar *select, ...);
+PUBLIC EdiGrid *findGrid(cchar *tableName, cchar *select);
 
 /**
     Read a record identified by SQL style query expression
@@ -3770,7 +3771,7 @@ PUBLIC EdiGrid *findGrid(cchar *tableName, cchar *select, ...);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC EdiRec *findRec(cchar *tableName, cchar *query, ...);
+PUBLIC EdiRec *findRec(cchar *tableName, cchar *query);
 
 /**
     Read a record identified by key value
