@@ -24155,6 +24155,40 @@ PUBLIC char *scontains(cchar *str, cchar *pattern)
 }
 
 
+PUBLIC char *sncaselesscontains(cchar *str, cchar *pattern, ssize limit)
+{
+    cchar   *cp, *s1, *s2;
+    ssize   lim;
+
+    if (limit < 0) {
+        limit = MAXINT;
+    }
+    if (str == 0) {
+        return 0;
+    }
+    if (pattern == 0 || *pattern == '\0') {
+        return 0;
+    }
+    for (cp = str; limit > 0 && *cp; cp++, limit--) {
+        s1 = cp;
+        s2 = pattern;
+        for (lim = limit; lim > 0 && *s1 && *s2 && (tolower((uchar) *s1) == tolower((uchar) *s2)); lim--) {
+            s1++;
+            s2++;
+        }
+        if (*s2 == '\0') {
+            return (char*) cp;
+        }
+    }
+    return 0;
+}
+
+
+PUBLIC char *scaselesscontains(cchar *str, cchar *pattern)
+{
+    return sncaselesscontains(str, pattern, -1);
+}
+
 /*
     Copy a string into a buffer. Always ensure it is null terminated
  */
