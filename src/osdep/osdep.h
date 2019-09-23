@@ -1019,11 +1019,12 @@ typedef int64 Ticks;
 
 #if ME_UNIX_LIKE
     #define closesocket(x)  close(x)
-    #ifndef PTHREAD_MUTEX_RECURSIVE_NP
+    #if !defined(PTHREAD_MUTEX_RECURSIVE_NP) || FREEBSD
         #define PTHREAD_MUTEX_RECURSIVE_NP PTHREAD_MUTEX_RECURSIVE
-    #endif
-    #ifndef PTHREAD_MUTEX_RECURSIVE
-        #define PTHREAD_MUTEX_RECURSIVE PTHREAD_MUTEX_RECURSIVE_NP
+    #else
+        #ifndef PTHREAD_MUTEX_RECURSIVE
+            #define PTHREAD_MUTEX_RECURSIVE PTHREAD_MUTEX_RECURSIVE_NP
+        #endif
     #endif
 #endif
 
