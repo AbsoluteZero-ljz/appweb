@@ -194,12 +194,14 @@ struct  MprXml;
         #define ME_EVENT_NOTIFIER MPR_EVENT_ASYNC
     #elif VXWORKS
         #define ME_EVENT_NOTIFIER MPR_EVENT_SELECT
-    #elif (LINUX || ME_BSD_LIKE)
+    #elif LINUX
         #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
             #define ME_EVENT_NOTIFIER MPR_EVENT_EPOLL
         #else
             #define ME_EVENT_NOTIFIER MPR_EVENT_SELECT
         #endif
+    #elif ME_BSD_LIKE
+        #define ME_EVENT_NOTIFIER MPR_EVENT_EPOLL
     #else
         #define ME_EVENT_NOTIFIER MPR_EVENT_SELECT
     #endif

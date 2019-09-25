@@ -1044,7 +1044,7 @@ typedef int64 Ticks;
     #endif
 #endif
 
-#if MACOSX
+#if ME_BSD_LIKE
     /*
         Fix for MAC OS X - getenv
      */
