@@ -200,8 +200,6 @@ struct  MprXml;
         #else
             #define ME_EVENT_NOTIFIER MPR_EVENT_SELECT
         #endif
-    #elif ME_BSD_LIKE
-        #define ME_EVENT_NOTIFIER MPR_EVENT_EPOLL
     #else
         #define ME_EVENT_NOTIFIER MPR_EVENT_SELECT
     #endif
