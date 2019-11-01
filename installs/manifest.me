@@ -81,7 +81,7 @@ Me.load({
                     to:         '${etc}/sample.conf',
 
                 }, {
-                    write:      'set LOG_DIR "${prefixes.log}"\nset CACHE_DIR "${prefixes.cache}"\nDocuments "${prefixes.web}\nListen 80\n<if SSL_MODULE>\nListenSecure 443\n</if>\n'
+                    write:      'set LOG_DIR "${prefixes.log}"\nset CACHE_DIR "${prefixes.cache}"\nDocuments "${prefixes.web}"\nListen 80\n<if SSL_MODULE>\nListenSecure 443\n</if>\n'
                     to:         '${etc}/install.conf'
 
                 }
