@@ -4,7 +4,7 @@ Threaded Client Sample
 This sample shows how to use the Http library to issue Http client requests .
 This is a fuller sample suitable for applications that need to issue multiple HTTP requests.
 
-If you only need to issue one HTTP request, consult the simple-client or the non-blocking-client sample.
+If you only need to issue one HTTP request, consult the non-blocking-client sample.
 
 Requirements
 ---
@@ -38,5 +38,4 @@ Documentation:
 
 See Also:
 ---
-* [simple-client - Simple client and embedding API](../simple-client/README.md)
 * [non-blocking-client - Simple client and embedding API](../non-blocking-client/README.md)

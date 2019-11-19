@@ -2,7 +2,7 @@
     "name": "appweb",
     "description": "Embedthis Appweb Community Edition",
     "title": "Embedthis Appweb Community Edition",
-    "version": "7.1.1",
+    "version": "7.2.1",
     "keywords": [
         "appweb",
         "http",
@@ -44,7 +44,6 @@
     },
     "optionalDependencies": {
         "appweb-ejscript": "~0.2",
-        "appweb-php": "~0.2",
         "certs": "~0.1",
         "ejscript": "~2.7",
         "esp": "~7",

@@ -3164,7 +3164,7 @@ PUBLIC void espDefineView(HttpRoute *route, cchar *path, void *view)
     if (route->eroute) {
         eroute = ((EspRoute*) route->eroute)->top;
     } else {
-        if ((eroute = espRoute(route)) == 0) {
+        if ((eroute = espRoute(route, 1)) == 0) {
             /* Should never happen */
             return;
         }
@@ -4547,7 +4547,7 @@ static int openEsp(HttpQueue *q)
     }
     req->esp = esp;
     req->route = route;
-    req->autoFinalize = 1;
+    req->autoFinalize = route->autoFinalize;
 
     /*
         If a cookie is not explicitly set, use the application name for the session cookie so that
@@ -5033,8 +5033,7 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
     }
 #endif
 
-    httpTrace(conn, "esp.handler", "context", "msg: 'Relay to the fileHandler'");
-    conn->rx->target = &conn->rx->pathInfo[1];
+    conn->rx->target = sclone(&conn->rx->pathInfo[1]);
     httpMapFile(conn);
     if (conn->tx->fileInfo.isDir) {
         httpHandleDirectory(conn);
@@ -5095,7 +5094,7 @@ static int cloneDatabase(HttpConn *conn)
      */
     httpGetSession(conn, 1);
     id = httpGetSessionID(conn);
-    if ((req->edi = mprLookupKey(esp->databases, id)) == 0) {
+    if (id && (req->edi = mprLookupKey(esp->databases, id)) == 0) {
         if ((req->edi = ediClone(eroute->edi)) == 0) {
             mprLog("error esp", 0, "Cannot clone database: %s", eroute->edi->path);
             return MPR_ERR_CANT_OPEN;
@@ -5433,7 +5432,7 @@ static EspRoute *cloneEspRoute(HttpRoute *route, EspRoute *parent)
     Get an EspRoute. Allocate if required.
     It is expected that the caller will modify the EspRoute.
  */
-PUBLIC EspRoute *espRoute(HttpRoute *route)
+PUBLIC EspRoute *espRoute(HttpRoute *route, bool create)
 {
     HttpRoute   *rp;
 
@@ -5447,7 +5446,7 @@ PUBLIC EspRoute *espRoute(HttpRoute *route)
         if (rp->eroute) {
             return cloneEspRoute(route, rp->eroute);
         }
-        if (rp->parent == 0) {
+        if (rp->parent == 0 && create) {
             /*
                 Create an ESP configuration on the top level parent so others can inherit
                 Load the compiler rules once for all
@@ -5459,7 +5458,10 @@ PUBLIC EspRoute *espRoute(HttpRoute *route)
             break;
         }
     }
-    return cloneEspRoute(route, rp->eroute);
+    if (rp) {
+        return cloneEspRoute(route, rp->eroute);
+    }
+    return 0;
 }
 
 
@@ -5614,9 +5616,8 @@ PUBLIC int espInit(HttpRoute *route, cchar *prefix, cchar *path)
         return MPR_ERR_BAD_ARGS;
     }
     lock(esp);
-    if ((eroute = espRoute(route)) == 0) {
-        unlock(esp);
-        return MPR_ERR_MEMORY;
+    if ((eroute = espRoute(route, 0)) == 0) {
+        eroute = espCreateRoute(route);
     }
     if (prefix) {
         if (*prefix != '/') {
@@ -5633,8 +5634,9 @@ PUBLIC int espInit(HttpRoute *route, cchar *prefix, cchar *path)
         httpSetRouteHome(route, mprGetPathDir(path));
         eroute->configFile = sclone(path);
     }
-    httpAddRouteHandler(route, "espHandler", "esp");
-
+    if (!route->handler) {
+        httpAddRouteHandler(route, "espHandler", "esp");
+    }
     /*
         Loading config may run commands. To make it easier for parsing code, we disable GC by not consenting to
         yield for this section. This should only happen on application load.
@@ -6602,7 +6604,7 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
             "static void %s(HttpConn *conn) {\n"\
             "%s%s%s"\
             "}\n\n"\
-            "%s int esp_%s(HttpRoute *route, MprModule *module) {\n"\
+            "%s int esp_%s(HttpRoute *route) {\n"\
             "   espDefineView(route, \"%s\", %s);\n"\
             "   return 0;\n"\
             "}\n",

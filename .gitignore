@@ -1,6 +1,7 @@
 *.cgi
 test/web/huge.txt
 test/web/tmp/
+src/server/cache/
 test/app/
 test/cache/
 test/cgi-bin/*cgi*
@@ -17,8 +18,6 @@ src/server/certs
 .port.log
 *.guid
 test/exploits/
-/cache/
-/build
 /start.me
 XCBuildData/
 app-macosx-debug.xcodeproj
@@ -26,3 +25,6 @@ Debug/
 samples/*/client
 samples/*/roots.crt
 .makefile
+test/.test-prepared
+/cache/
+/build
