@@ -8,6 +8,7 @@
         "http",
         "webserver"
     ],
+    "version": "7.2.1",
     "homepage": "https://www.embedthis.com/appweb/",
     "author": {
         "name": "Embedthis Software",
