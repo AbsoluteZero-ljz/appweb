@@ -2176,13 +2176,8 @@ PUBLIC MprMemStats *mprGetMemStats()
 #if ME_BSD_LIKE
     size_t      len;
     int         mib[2];
-#if FREEBSD
-    size_t      ram, usermem;
-    mib[1] = HW_MEMSIZE;
-#else
-    int64 ram, usermem;
+    int64       ram, usermem;
     mib[1] = HW_PHYSMEM;
-#endif
 #if MACOSX
     sysctlbyname("hw.memsize", &ram, &len, NULL, 0);
 #else
@@ -2963,6 +2958,8 @@ PUBLIC bool mprDestroy()
 
 static void setArgs(Mpr *mpr, int argc, char **argv)
 {
+    cchar   *appPath;
+
     if (argv) {
 #if ME_WIN_LIKE
         if (argc >= 2 && strstr(argv[1], "--cygroot") != 0) {
@@ -2989,10 +2986,14 @@ static void setArgs(Mpr *mpr, int argc, char **argv)
         memcpy((char*) mpr->argv, argv, sizeof(void*) * argc);
 #endif
         mpr->argc = argc;
-        if (!mprIsPathAbs(mpr->argv[0])) {
-            mpr->argv[0] = mprGetAppPath();
-        } else {
+
+        appPath = mprGetAppPath();
+        if (smatch(appPath, ".")) {
+            mpr->argv[0] = sclone(ME_NAME);
+        } else if (mprIsPathAbs(mpr->argv[0])) {
             mpr->argv[0] = sclone(mprGetAppPath());
+        } else {
+            mpr->argv[0] = mprGetAppPath();
         }
     } else {
         mpr->name = sclone(ME_NAME);
@@ -11224,10 +11225,12 @@ PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks
         return 0;
     }
     if ((event = createEvent(dispatcher, name, period, proc, data, flags)) != NULL) {
-        // DEPRECATE - only for ejscript
+#if DEPRECATE || 1
+        // only for ejscript
         if (!(flags & MPR_EVENT_DONT_QUEUE)) {
             mprQueueEvent(dispatcher, event);
         }
+#endif
     }
     return event;
 }
@@ -17440,6 +17443,9 @@ PUBLIC MprModule *mprCreateModule(cchar *name, cchar *path, cchar *entry, void *
     if (entry && *entry) {
         mp->entry = sclone(entry);
     }
+    /*
+        Not managed by default unless MPR_MODULE_DATA_MANAGED is set
+     */
     mp->moduleData = data;
     mp->lastActivity = mprGetTicks();
     index = mprAddItem(ms->modules, mp);
@@ -17456,6 +17462,9 @@ static void manageModule(MprModule *mp, int flags)
         mprMark(mp->name);
         mprMark(mp->path);
         mprMark(mp->entry);
+        if (mp->flags & MPR_MODULE_DATA_MANAGED) {
+            mprMark(mp->moduleData);
+        }
     }
 }
 
@@ -18017,7 +18026,7 @@ PUBLIC cchar *mprGetAppPath()
     int     len;
 
     len = readlink("/proc/curproc/file", pbuf, sizeof(pbuf) - 1);
-    if (len < 0) {
+    if (len < 0 || smatch(pbuf, "unknown")) {
         return mprGetAbsPath(".");
      }
      pbuf[len] = '\0';
