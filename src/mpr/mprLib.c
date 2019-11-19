@@ -9885,7 +9885,7 @@ PUBLIC int mprWaitForEvent(MprDispatcher *dispatcher, MprTicks timeout, int64 ma
     if (changed) {
         return 0;
     }
-    if (!ownedDispatcher(dispatcher)) {
+    if (!ownedDispatcher(dispatcher) || dispatchEvents(dispatcher) == 0) {
         mprYield(MPR_YIELD_STICKY);
         mprWaitForCond(dispatcher->cond, delay);
         mprResetYield();
@@ -9894,10 +9894,6 @@ PUBLIC int mprWaitForEvent(MprDispatcher *dispatcher, MprTicks timeout, int64 ma
     lock(es);
     dispatcher->flags &= ~MPR_DISPATCHER_WAITING;
     unlock(es);
-
-    if (ownedDispatcher(dispatcher)) {
-        dispatchEvents(dispatcher);
-    }
     return 0;
 }
 
@@ -27097,6 +27093,12 @@ PUBLIC char *mprFormatTm(cchar *format, struct tm *tp)
                 cp++;
                 goto again;
 
+            case 'f':
+                strcpy(--dp, "000");
+                dp += slen(dp);
+                cp++;
+                break;
+
             case 'F':
                 strcpy(dp, "Y-%m-%d");
                 dp += 7;
@@ -27389,6 +27391,10 @@ PUBLIC char *mprFormatTm(cchar *format, struct tm *tp)
 
         case 'e':                                       /* day of month (1-31). Single digits preceeded by a blank */
             digits(buf, 2, ' ', tp->tm_mday);
+            break;
+
+        case 'f':                                       /* milliseconds */
+            mprPutStringToBuf(buf, "000");
             break;
 
         case 'F':                                       /* %m/%d/%y */
