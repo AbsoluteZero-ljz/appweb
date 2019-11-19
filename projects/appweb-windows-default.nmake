@@ -3,7 +3,7 @@
 #
 
 NAME                  = appweb
-VERSION               = 7.1.1
+VERSION               = 7.2.1
 
 OS                    = windows
 PA                    = $(PROCESSOR_ARCHITECTURE)
@@ -125,11 +125,16 @@ ME_COM_MDB            = 1
 
 CC                    = cl
 LD                    = link
+AR                    = lib
 RC                    = rc
 CFLAGS                = -nologo -GR- -W3 -Zi -Od -MDd
 DFLAGS                = -DME_DEBUG=1 -DME_COM_CGI=$(ME_COM_CGI) -DME_COM_COMPILER=$(ME_COM_COMPILER) -DME_COM_DIR=$(ME_COM_DIR) -DME_COM_EJS=$(ME_COM_EJS) -DME_COM_ESP=$(ME_COM_ESP) -DME_COM_HTTP=$(ME_COM_HTTP) -DME_COM_LIB=$(ME_COM_LIB) -DME_COM_LINK=$(ME_COM_LINK) -DME_COM_MATRIXSSL=$(ME_COM_MATRIXSSL) -DME_COM_MBEDTLS=$(ME_COM_MBEDTLS) -DME_COM_MDB=$(ME_COM_MDB) -DME_COM_MPR=$(ME_COM_MPR) -DME_COM_NANOSSL=$(ME_COM_NANOSSL) -DME_COM_OPENSSL=$(ME_COM_OPENSSL) -DME_COM_OSDEP=$(ME_COM_OSDEP) -DME_COM_PCRE=$(ME_COM_PCRE) -DME_COM_PHP=$(ME_COM_PHP) -DME_COM_RC=$(ME_COM_RC) -DME_COM_SSL=$(ME_COM_SSL) -DME_COM_VXWORKS=$(ME_COM_VXWORKS) -DME_COM_WATCHDOG=$(ME_COM_WATCHDOG) 
 IFLAGS                = -Ibuild\$(CONFIG)\inc
+<<<<<<< HEAD
 LDFLAGS               = -nologo -incremental:no -dynamicbase -highentropyva -nxcompat -debug -machine:x64
+=======
+LDFLAGS               = -nologo -incremental:no -dynamicbase -nxcompat -debug -machine:x64
+>>>>>>> 7.X
 LIBPATHS              = "-libpath:$(BUILD)\bin"
 LIBS                  = ws2_32.lib advapi32.lib user32.lib kernel32.lib oldnames.lib shell32.lib
 
@@ -348,11 +353,17 @@ build\$(CONFIG)\inc\appwebMonitor.h: $(DEPS_6)
 	copy /Y /B src\server\windows\appwebMonitor.h+modified build\$(CONFIG)\inc\appwebMonitor.h $(LOG)
 
 #
+#   server.c
+#
+
+build\$(CONFIG)\inc\cache\server.c: $(DEPS_7)
+
+#
 #   customize.h
 #
-DEPS_7 = $(DEPS_7) src\customize.h
+DEPS_8 = $(DEPS_8) src\customize.h
 
-build\$(CONFIG)\inc\customize.h: $(DEPS_7)
+build\$(CONFIG)\inc\customize.h: $(DEPS_8)
 	@echo ..... [Copy] build\$(CONFIG)\inc\customize.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\customize.h+modified build\$(CONFIG)\inc\customize.h $(LOG)
@@ -360,9 +371,9 @@ build\$(CONFIG)\inc\customize.h: $(DEPS_7)
 #
 #   embedtls.h
 #
-DEPS_8 = $(DEPS_8) src\mbedtls\embedtls.h
+DEPS_9 = $(DEPS_9) src\mbedtls\embedtls.h
 
-build\$(CONFIG)\inc\embedtls.h: $(DEPS_8)
+build\$(CONFIG)\inc\embedtls.h: $(DEPS_9)
 	@echo ..... [Copy] build\$(CONFIG)\inc\embedtls.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\mbedtls\embedtls.h+modified build\$(CONFIG)\inc\embedtls.h $(LOG)
@@ -370,12 +381,12 @@ build\$(CONFIG)\inc\embedtls.h: $(DEPS_8)
 #
 #   esp.h
 #
-DEPS_9 = $(DEPS_9) src\esp\esp.h
-DEPS_9 = $(DEPS_9) build\$(CONFIG)\inc\me.h
-DEPS_9 = $(DEPS_9) build\$(CONFIG)\inc\osdep.h
-DEPS_9 = $(DEPS_9) build\$(CONFIG)\inc\http.h
+DEPS_10 = $(DEPS_10) src\esp\esp.h
+DEPS_10 = $(DEPS_10) build\$(CONFIG)\inc\me.h
+DEPS_10 = $(DEPS_10) build\$(CONFIG)\inc\osdep.h
+DEPS_10 = $(DEPS_10) build\$(CONFIG)\inc\http.h
 
-build\$(CONFIG)\inc\esp.h: $(DEPS_9)
+build\$(CONFIG)\inc\esp.h: $(DEPS_10)
 	@echo ..... [Copy] build\$(CONFIG)\inc\esp.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\esp\esp.h+modified build\$(CONFIG)\inc\esp.h $(LOG)
@@ -383,9 +394,9 @@ build\$(CONFIG)\inc\esp.h: $(DEPS_9)
 #
 #   mbedtls.h
 #
-DEPS_10 = $(DEPS_10) src\mbedtls\mbedtls.h
+DEPS_11 = $(DEPS_11) src\mbedtls\mbedtls.h
 
-build\$(CONFIG)\inc\mbedtls.h: $(DEPS_10)
+build\$(CONFIG)\inc\mbedtls.h: $(DEPS_11)
 	@echo ..... [Copy] build\$(CONFIG)\inc\mbedtls.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\mbedtls\mbedtls.h+modified build\$(CONFIG)\inc\mbedtls.h $(LOG)
@@ -393,9 +404,9 @@ build\$(CONFIG)\inc\mbedtls.h: $(DEPS_10)
 #
 #   monitorResources.h
 #
-DEPS_11 = $(DEPS_11) src\server\windows\monitorResources.h
+DEPS_12 = $(DEPS_12) src\server\windows\monitorResources.h
 
-build\$(CONFIG)\inc\monitorResources.h: $(DEPS_11)
+build\$(CONFIG)\inc\monitorResources.h: $(DEPS_12)
 	@echo ..... [Copy] build\$(CONFIG)\inc\monitorResources.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\server\windows\monitorResources.h+modified build\$(CONFIG)\inc\monitorResources.h $(LOG)
@@ -403,10 +414,10 @@ build\$(CONFIG)\inc\monitorResources.h: $(DEPS_11)
 #
 #   mpr-version.h
 #
-DEPS_12 = $(DEPS_12) src\mpr-version\mpr-version.h
-DEPS_12 = $(DEPS_12) build\$(CONFIG)\inc\mpr.h
+DEPS_13 = $(DEPS_13) src\mpr-version\mpr-version.h
+DEPS_13 = $(DEPS_13) build\$(CONFIG)\inc\mpr.h
 
-build\$(CONFIG)\inc\mpr-version.h: $(DEPS_12)
+build\$(CONFIG)\inc\mpr-version.h: $(DEPS_13)
 	@echo ..... [Copy] build\$(CONFIG)\inc\mpr-version.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\mpr-version\mpr-version.h+modified build\$(CONFIG)\inc\mpr-version.h $(LOG)
@@ -414,24 +425,18 @@ build\$(CONFIG)\inc\mpr-version.h: $(DEPS_12)
 #
 #   pcre.h
 #
-DEPS_13 = $(DEPS_13) src\pcre\pcre.h
+DEPS_14 = $(DEPS_14) src\pcre\pcre.h
 
-build\$(CONFIG)\inc\pcre.h: $(DEPS_13)
+build\$(CONFIG)\inc\pcre.h: $(DEPS_14)
 	@echo ..... [Copy] build\$(CONFIG)\inc\pcre.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\pcre\pcre.h+modified build\$(CONFIG)\inc\pcre.h $(LOG)
 
 #
-#   server.c
-#
-
-src\server\cache\server.c: $(DEPS_14)
-
-#
 #   appweb.obj
 #
 DEPS_15 = $(DEPS_15) build\$(CONFIG)\inc\appweb.h
-DEPS_15 = $(DEPS_15) src\server\cache\server.c
+DEPS_15 = $(DEPS_15) build\$(CONFIG)\inc\cache\server.c
 
 build\$(CONFIG)\obj\appweb.obj: \
     src\server\appweb.c $(DEPS_15)
@@ -1583,7 +1588,7 @@ installBinary: $(DEPS_69)
 	copy /Y /B src\server\esp.json+modified "$(ME_VAPP_PREFIX)\esp.json" $(LOG)
 	if not exist "$(ME_VAPP_PREFIX)" md "$(ME_VAPP_PREFIX)"
 	copy /Y /B src\server\sample.conf+modified "$(ME_VAPP_PREFIX)\sample.conf" $(LOG)
-	echo -e 'set LOG_DIR "$(ME_VAPP_PREFIX)/log"\nset CACHE_DIR "$(ME_VAPP_PREFIX)/cache"\nDocuments "$(ME_VAPP_PREFIX)/web\nListen 80\n<if SSL_MODULE>\nListenSecure 443\n</if>\n' >$(ME_VAPP_PREFIX)/install.conf
+	echo 'set LOG_DIR "$(ME_VAPP_PREFIX)/log"\nset CACHE_DIR "$(ME_VAPP_PREFIX)/cache"\nDocuments "$(ME_VAPP_PREFIX)/web\nListen 80\n<if SSL_MODULE>\nListenSecure 443\n</if>\n' >$(ME_VAPP_PREFIX)/install.conf
 	if not exist "$(ME_VAPP_PREFIX)\bin" md "$(ME_VAPP_PREFIX)\bin"
 	copy /Y /B build\$(CONFIG)\bin\libappweb.dll+modified "$(ME_VAPP_PREFIX)\bin\libappweb.dll" $(LOG)
 	copy /Y /B build\$(CONFIG)\bin\libesp.dll+modified "$(ME_VAPP_PREFIX)\bin\libesp.dll" $(LOG)

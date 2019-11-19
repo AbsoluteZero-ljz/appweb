@@ -8,7 +8,7 @@
 #include "osdep.h"
 
 #ifndef ESP_VERSION
-    #define ESP_VERSION "7.1.0"
+    #define ESP_VERSION "7.2.0"
 #endif
 
 /*
@@ -1442,12 +1442,13 @@ PUBLIC int espLoadConfig(HttpRoute *route);
     Return the corresponding EspRoute for the given Route.
     @description Returns the defined EspRoute for the given Route. Creates a new EspRoute if required.
     @param route Parent route from which to inherit configuration.
+    @param create Set to true to create an EspRoute if a suitable one cannot be found.
     @returns The EspRoute object.
     @ingroup EspRoute
     @stability Prototype
     @param route
  */
-PUBLIC EspRoute *espRoute(HttpRoute *route);
+PUBLIC EspRoute *espRoute(HttpRoute *route, bool create);
 
 /**
     Add caching for response content.

@@ -634,6 +634,13 @@
     </member>
     <member kind="define">
       <type>#define</type>
+      <name>MPR_EVENT_ALWAYS</name>
+      <anchorfile>mpr_8h.html</anchorfile>
+      <anchor>a83b40d1c6e1752448e424c3ba1acc3fa</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="define">
+      <type>#define</type>
       <name>MPR_EVENT_ASYNC</name>
       <anchorfile>mpr_8h.html</anchorfile>
       <anchor>aa75b23385a68cbe6d21e4fdb8ca72d1f</anchor>
@@ -658,13 +665,6 @@
       <name>MPR_EVENT_EPOLL</name>
       <anchorfile>mpr_8h.html</anchorfile>
       <anchor>a35751841ed0361d40361c375bca122a4</anchor>
-      <arglist></arglist>
-    </member>
-    <member kind="define">
-      <type>#define</type>
-      <name>MPR_EVENT_FOREIGN</name>
-      <anchorfile>mpr_8h.html</anchorfile>
-      <anchor>a3577aee82220ed1403c06b3a510e6c01</anchor>
       <arglist></arglist>
     </member>
     <member kind="define">
@@ -868,6 +868,13 @@
       <name>MPR_JSON_DATA_TYPE</name>
       <anchorfile>mpr_8h.html</anchorfile>
       <anchor>a65f48ffcfcc5efa8d1b20c29dd2bd562</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="define">
+      <type>#define</type>
+      <name>MPR_JSON_ENCODE_TYPES</name>
+      <anchorfile>mpr_8h.html</anchorfile>
+      <anchor>a249d8f79212a5fe73b73d00073a504d2</anchor>
       <arglist></arglist>
     </member>
     <member kind="define">
@@ -1099,6 +1106,13 @@
       <name>MPR_MIN_TIME_FOR_GC</name>
       <anchorfile>mpr_8h.html</anchorfile>
       <anchor>a4cf2a91622343c0e368ba022e64d1b87</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="define">
+      <type>#define</type>
+      <name>MPR_MODULE_DATA_MANAGED</name>
+      <anchorfile>mpr_8h.html</anchorfile>
+      <anchor>ac17fc4ade4e707a6d59f79f513ff43a8</anchor>
       <arglist></arglist>
     </member>
     <member kind="define">
@@ -5492,6 +5506,13 @@
     </member>
     <member kind="function">
       <type>int</type>
+      <name>mprStartOsThread</name>
+      <anchorfile>group___mpr_thread.html</anchorfile>
+      <anchor>ga3026fd2597352a226c67dcd2f847ed08</anchor>
+      <arglist>(cchar *name, void *proc, void *data, MprThread *tp)</arglist>
+    </member>
+    <member kind="function">
+      <type>int</type>
       <name>mprStartThread</name>
       <anchorfile>group___mpr_thread.html</anchorfile>
       <anchor>ga35c53df918c2f52e2e1f6961e35ee8d1</anchor>
@@ -5953,6 +5974,13 @@
       <arglist>(cchar *s1, cchar *s2)</arglist>
     </member>
     <member kind="function">
+      <type>char *</type>
+      <name>scaselesscontains</name>
+      <anchorfile>group___mpr_string.html</anchorfile>
+      <anchor>gafe482207f5185e19ee5a155dbfa7991d</anchor>
+      <arglist>(cchar *str, cchar *pattern)</arglist>
+    </member>
+    <member kind="function">
       <type>bool</type>
       <name>scaselessmatch</name>
       <anchorfile>group___mpr_string.html</anchorfile>
@@ -6084,6 +6112,13 @@
       <anchorfile>group___mpr_string.html</anchorfile>
       <anchor>ga30d6259caa94ed51abd25be83c0c4972</anchor>
       <arglist>(cchar *s1, cchar *s2, ssize len)</arglist>
+    </member>
+    <member kind="function">
+      <type>char *</type>
+      <name>sncaselesscontains</name>
+      <anchorfile>group___mpr_string.html</anchorfile>
+      <anchor>ga96f89ab40c17b973f6dbd4b72d7edb98</anchor>
+      <arglist>(cchar *str, cchar *pattern, ssize limit)</arglist>
     </member>
     <member kind="function">
       <type>char *</type>
@@ -6794,6 +6829,13 @@
       <arglist>(cchar *s1, cchar *s2)</arglist>
     </member>
     <member kind="function">
+      <type>char *</type>
+      <name>scaselesscontains</name>
+      <anchorfile>group___mpr_string.html</anchorfile>
+      <anchor>gafe482207f5185e19ee5a155dbfa7991d</anchor>
+      <arglist>(cchar *str, cchar *pattern)</arglist>
+    </member>
+    <member kind="function">
       <type>bool</type>
       <name>scaselessmatch</name>
       <anchorfile>group___mpr_string.html</anchorfile>
@@ -6925,6 +6967,13 @@
       <anchorfile>group___mpr_string.html</anchorfile>
       <anchor>ga30d6259caa94ed51abd25be83c0c4972</anchor>
       <arglist>(cchar *s1, cchar *s2, ssize len)</arglist>
+    </member>
+    <member kind="function">
+      <type>char *</type>
+      <name>sncaselesscontains</name>
+      <anchorfile>group___mpr_string.html</anchorfile>
+      <anchor>ga96f89ab40c17b973f6dbd4b72d7edb98</anchor>
+      <arglist>(cchar *str, cchar *pattern, ssize limit)</arglist>
     </member>
     <member kind="function">
       <type>char *</type>
@@ -9124,6 +9173,13 @@
       <anchorfile>group___mpr_thread.html</anchorfile>
       <anchor>ga57f5e86ffcf2cabdb1c778131ac84b7e</anchor>
       <arglist>(MprThread *tp, bool on)</arglist>
+    </member>
+    <member kind="function">
+      <type>int</type>
+      <name>mprStartOsThread</name>
+      <anchorfile>group___mpr_thread.html</anchorfile>
+      <anchor>ga3026fd2597352a226c67dcd2f847ed08</anchor>
+      <arglist>(cchar *name, void *proc, void *data, MprThread *tp)</arglist>
     </member>
     <member kind="function">
       <type>int</type>

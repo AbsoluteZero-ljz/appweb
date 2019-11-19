@@ -13,7 +13,7 @@ Please consult the GPL license for license details. Contact Embedthis at [licens
 
 ## Commercial License
 
-An enhanced version of Appweb is available called Embedthis Appweb Enterprise Edition. This edition uses a commercial license and provides a royalty free, license to embed the software into your products with options for ongoing maintenance and support. Contact [sales@embedthis.com](mailto:dev@embdthis.com) for details.
+An enhanced version of Appweb is available called Embedthis Appweb Enterprise Edition. This edition uses a commercial license and provides a royalty free, license to embed the software into your products with options for ongoing maintenance and support. Contact [sales@embedthis.com](mailto:dev@embdthis.com) for details.  
 
 Third Party Licenses
 ---
