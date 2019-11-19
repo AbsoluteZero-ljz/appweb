@@ -3,7 +3,7 @@
 #
 
 NAME                  = appweb
-VERSION               = 7.2.0
+VERSION               = 7.2.1
 
 OS                    = windows
 PA                    = $(PROCESSOR_ARCHITECTURE)
@@ -1339,7 +1339,7 @@ installBinary: $(DEPS_69)
 	copy /Y /B src\server\esp.json+modified "$(ME_VAPP_PREFIX)\esp.json" $(LOG)
 	if not exist "$(ME_VAPP_PREFIX)" md "$(ME_VAPP_PREFIX)"
 	copy /Y /B src\server\sample.conf+modified "$(ME_VAPP_PREFIX)\sample.conf" $(LOG)
-	echo -e 'set LOG_DIR "$(ME_VAPP_PREFIX)/log"\nset CACHE_DIR "$(ME_VAPP_PREFIX)/cache"\nDocuments "$(ME_VAPP_PREFIX)/web\nListen 80\n<if SSL_MODULE>\nListenSecure 443\n</if>\n' >$(ME_VAPP_PREFIX)/install.conf
+	echo 'set LOG_DIR "$(ME_VAPP_PREFIX)/log"\nset CACHE_DIR "$(ME_VAPP_PREFIX)/cache"\nDocuments "$(ME_VAPP_PREFIX)/web\nListen 80\n<if SSL_MODULE>\nListenSecure 443\n</if>\n' >$(ME_VAPP_PREFIX)/install.conf
 	if not exist "$(ME_VAPP_PREFIX)\web" md "$(ME_VAPP_PREFIX)\web"
 	if not exist "$(ME_VAPP_PREFIX)\web\bench" md "$(ME_VAPP_PREFIX)\web\bench"
 	copy /Y /B src\server\web\bench\1b.html+modified "$(ME_VAPP_PREFIX)\web\bench\1b.html" $(LOG)
