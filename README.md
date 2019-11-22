@@ -1,14 +1,15 @@
 Embedthis Appweb Community Edition
 ===
 
-Appweb is a compact, fast and secure web server for embedded applications. It supports HTTP/1 and HTTP/2 with a web server   and HTTP client utility.
+Appweb is a compact, fast and secure web server for embedded applications. It supports HTTP with a web server and HTTP client utility.
+
+This repository does not contain the Appweb Enterprise Edition source code, but it is the repository for issues and bug reports for both the Appweb Community and Enterprise editions. Contact dev@embedthis.com for access to the Enterprise Edition source code. 
 
 Branches
 ---
 The repository has several branches:
 
 * master - Most recent release of the software.
-* dev - Current ongoing development.
 * X.X - Archived prior release branches for maintenance.
 
 Licensing
