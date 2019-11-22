@@ -1,4 +1,4 @@
-ESP WebSockets Thread Sample
+Foreign Thread Communications
 ===
 
 This samples demonstrates how to interact from a foreign thread with Appweb.
