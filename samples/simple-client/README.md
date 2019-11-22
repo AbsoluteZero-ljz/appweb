@@ -38,3 +38,5 @@ Documentation:
 See Also:
 ---
 * [simple-client - Simple client and embedding API](../simple-client/README.md)
+* [threaded-client - Threaded client and embedding API](../threaded-client/README.md)
+* [non-blocking-client - Non-Blocking I/O client and embedding API](../non-blocking-client/README.md)
