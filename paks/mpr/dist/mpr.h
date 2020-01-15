@@ -2320,8 +2320,8 @@ PUBLIC int64 stoiradix(cchar *str, int radix, int *err);
     @description Split a string into tokens using a character set as delimiters.
     @param str String to tokenize.
     @param delim Set of characters that are used as token separators.
-    @param last Last token pointer.
-    @return Returns a pointer to the next token.
+    @param last Last token pointer. This is a pointer inside the original string.
+    @return Returns a pointer to the next token. The pointer is inside the original string and is not allocated.
     @ingroup MprString
     @stability Stable
  */
