@@ -2320,8 +2320,8 @@ PUBLIC int64 stoiradix(cchar *str, int radix, int *err);
     @description Split a string into tokens using a character set as delimiters.
     @param str String to tokenize.
     @param delim Set of characters that are used as token separators.
-    @param last Last token pointer.
-    @return Returns a pointer to the next token.
+    @param last Last token pointer. This is a pointer inside the original string.
+    @return Returns a pointer to the next token. The pointer is inside the original string and is not allocated.
     @ingroup MprString
     @stability Stable
  */
@@ -6660,6 +6660,17 @@ PUBLIC ssize mprGetJsonLength(MprJson *obj);
     @stability Stable
  */
 PUBLIC MprJson *mprHashToJson(MprHash *hash);
+
+/**
+    Convert a JSON object to a string of environment variables
+    @param json JSON object tree
+    @prefix prefix String prefix for environment substrings
+    @prefix list MprList to hold environment strings. Set to NULL and this routine will create a list.
+    @return A list of environment strings
+    @ingroup MprJson
+    @stability Prototype
+ */
+PUBLIC MprList *mprJsonToEnv(MprJson *json, cchar *prefix, MprList *list);
 
 /**
     Convert a JSON object into a Hash object

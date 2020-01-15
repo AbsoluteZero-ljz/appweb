@@ -11,5 +11,5 @@
         "export": "contents/lib"
     },
     "import": true,
-    "profile": "release"
+    "profile": "debug"
 }
