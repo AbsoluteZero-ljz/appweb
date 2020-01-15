@@ -123,6 +123,9 @@
 #ifndef ME_MPR_SSL_TIMEOUT
     #define ME_MPR_SSL_TIMEOUT 86400
 #endif
+#ifndef ME_MPR_THREAD_LIMIT_BY_CORES
+    #define ME_MPR_THREAD_LIMIT_BY_CORES 1
+#endif
 #ifndef ME_MPR_THREAD_STACK
     #define ME_MPR_THREAD_STACK 0
 #endif
