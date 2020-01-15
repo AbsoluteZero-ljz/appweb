@@ -28,3 +28,4 @@ samples/*/roots.crt
 test/.test-prepared
 /cache/
 /build
+.local.mk
