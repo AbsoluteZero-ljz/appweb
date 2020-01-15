@@ -2,19 +2,20 @@
 <html lang="en">
 <head>
     <title>Handlers</title>
-    
+    <!-- Copyright Embedthis Software. All Rights Reserved. -->
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-    <meta name="description" content="Handlers">
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="description" content="Handlers" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
+        rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     
-    <link href="../images/favicon.ico" rel="shortcut icon">
-    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css">
-    <link href="../css/all.min.css" rel="stylesheet" type="text/css">
-    <link href="../css/api.min.css" rel="stylesheet" type="text/css">
+    <link href="../images/favicon.ico" rel="shortcut icon" />
+    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css" />
+    <link href="../css/all.min.css" rel="stylesheet" type="text/css" />
+    <link href="../css/api.min.css" rel="stylesheet" type="text/css" />
     
 
 </head>
@@ -191,7 +192,8 @@
             creating your own custom handler to process Http requests and perform any processing you desire.</p> 
             
             <p>Handlers are typically packaged as <a href="modules.html">modules</a> and are configured in the
-            <em>appweb.conf</em> configuration file. Modules are loaded by the <a href="../users/dir/module.html#loadModule">LoadModule</a> directive. A handler
+            <em>appweb.conf</em> configuration file. Modules are loaded by the <a
+                href="../users/dir/module.html#loadModule">LoadModule</a> directive. A handler
             is specified to service requests for a route by either the 
             <a href="../users/dir/route.html#addHandler">AddHandler</a> or 
             <a href="../users/dir/route.html#setHandler">SetHandler</a> directives. For example:</p>
@@ -211,7 +213,7 @@
             downstream. Data flows inbound from the network connector, optionally through filters and terminates that the
             handler. Response data starts with the handler, optionally through output filters and is finally sent by the 
             network connector to the client.</p>
-            <img src="../images/pipeline.jpg" alt="pipeline" class="centered">
+            <img src="../images/pipeline.jpg" alt="pipeline" class="centered"/>
             <p>The request pipeline consists of a sequence of processing stages. The first stage is the handler followed by
             zero or more filters and a finally a network connector. Each stage has two queues, one for outgoing data and one
             for incoming. A queue also has two links to refer to the upstream and downstream queues in the pipeline.</p>
@@ -232,24 +234,24 @@
             <p>The full set of stage callbacks is:</p>
             <table title="callbacks" class="ui table segment">
                 <thead>
-                <tr><th>Callback<th>Purpose</tr>
+                <tr><th>Callback</th><th>Purpose</th></tr>
                 </thead>
                 <tbody>
-                <tr><td>match<td>Callback to test if the stage is required by this request.</tr>
-                <tr><td>rewrite<td>Handler callback to rewrite or redirect the request.</tr>
-                <tr><td>open<td>Open a new request instance for the handler. Corresponds to the queue open
-                        callback.</tr>
-                <tr><td>start<td>Handler callback to start the request.</tr>
-                <tr><td>incoming<td>Accept a packet of incoming data. Corresponds to the receive queue put
-                        callback.</tr>
-                <tr><td>incomingService<td>Implement deferred processing on incoming data. callback.</tr>
-                <tr><td>ready<td>Handler callback once the request is fully parsed and all incoming data 
-                    has been received.</tr>
-                <tr><td>outgoing<td>Accept a packet of outgoing data.</tr>
-                <tr><td>outgoingService<td>Implement deferred processing for outgoing data. 
-                   Used primarily for non-blocking output and flow control.</tr>
-                <tr><td>writable<td>Handler callback to supply the outgoing pipeline with more data.</tr>
-                <tr><td>close<td>Close the stage for the current request. Corresponds to the queue close callback.</tr>
+                <tr><td>match</td><td>Callback to test if the stage is required by this request.</td></tr>
+                <tr><td>rewrite</td><td>Handler callback to rewrite or redirect the request.</td></tr>
+                <tr><td>open</td><td>Open a new request instance for the handler. Corresponds to the queue open
+                        callback.</td></tr>
+                <tr><td>start</td><td>Handler callback to start the request.</td></tr>
+                <tr><td>incoming</td><td>Accept a packet of incoming data. Corresponds to the receive queue put
+                        callback.</td></tr>
+                <tr><td>incomingService</td><td>Implement deferred processing on incoming data. callback.</td></tr>
+                <tr><td>ready</td><td>Handler callback once the request is fully parsed and all incoming data 
+                    has been received.</td></tr>
+                <tr><td>outgoing</td><td>Accept a packet of outgoing data.</td></tr>
+                <tr><td>outgoingService</td><td>Implement deferred processing for outgoing data. 
+                   Used primarily for non-blocking output and flow control.</td></tr>
+                <tr><td>writable</td><td>Handler callback to supply the outgoing pipeline with more data.</td></tr>
+                <tr><td>close</td><td>Close the stage for the current request. Corresponds to the queue close callback.</td></tr>
                 </tbody>
             </table>
 
@@ -274,8 +276,10 @@
             which buffers output and creates packets as required that may be queued handlers output service queue. 
             These packets will be flushed downstream if the queue becomes full or if 
             <a href="../ref/api/http.html#group___http_tx_1ga23c2dd9ef6d1b76a146bb93731fa7b7d">httpFlush</a> is called.
-            Alternatively, the handler can create its own packets via <a href="../ref/api/http.html#group___http_packet_1gad491733e89bee8b1b64b47fa0e798931">httpCreateDataPacket</a>,
-            fill with data and then send downstream by calling <a href="../ref/api/http.html#group___http_queue_1ga15c957cd47313affb413d681767a4763">httpPutPackToNext</a>.</p>
+            Alternatively, the handler can create its own packets via <a
+                href="../ref/api/http.html#group___http_packet_1gad491733e89bee8b1b64b47fa0e798931">httpCreateDataPacket</a>,
+            fill with data and then send downstream by calling <a
+                href="../ref/api/http.html#group___http_queue_1ga15c957cd47313affb413d681767a4763">httpPutPackToNext</a>.</p>
             <p>The 
                 <a href="../ref/api/http.html#group___http_queue_1ga5599a178a2bab73929795952231d6e6a">httpWrite</a> 
                 routine will always accept and buffer the data so callers must take care not to overflow
@@ -506,9 +510,11 @@ void myEvent(HttpConn *conn, MprEvent *event) {
         time a request can perform no input or output before being terminated. If either of these timeouts are violated,
         the request will be terminated and the connection will be closed by Appweb. 
         
-        <p>A handler can modify these timeouts via the <a href="../ref/api/http.html#group___http_conn_1ga62a6f4aec1892bd682d7a661d1aae4ee">httpSetTimeout</a>
+        <p>A handler can modify these timeouts via the <a
+            href="../ref/api/http.html#group___http_conn_1ga62a6f4aec1892bd682d7a661d1aae4ee">httpSetTimeout</a>
         API. Alternatively, the handler can <em>steal</em> the socket handle from Appweb and assume responsibility for 
-        the connection via: <a href="../ref/api/http.html#group___http_conn_1ga2dabae1fcd13e8f482399d43133f4a69">httpStealSocketHandle</a>. 
+        the connection via: <a
+            href="../ref/api/http.html#group___http_conn_1ga2dabae1fcd13e8f482399d43133f4a69">httpStealSocketHandle</a>. 
             This terminates the request and connection, but preserves the open socket handle. This is useful for 
             upgrading from HTTP to a custom protocols after an initial HTTP connection is established.</p>
 
@@ -536,7 +542,8 @@ void myEvent(HttpConn *conn, MprEvent *event) {
         <p>To define an Appweb handler, you must do three things:
         <ol>
             <li>Package as a module (see <a href="modules.html">Creating Modules</a>).</li>
-            <li>Call <a href="../ref/api/http.html#group___http_stage_1gac2637a927981b3338c86a27f7ebd5f19">httpCreateHandler</a>
+            <li>Call <a
+                href="../ref/api/http.html#group___http_stage_1gac2637a927981b3338c86a27f7ebd5f19">httpCreateHandler</a>
             in your module initialization code to define the handler when the module is loaded</li>
             <li>Define the handler in the appweb.conf configuration file via the
             <a href="../users/dir/route.html#addHandler">AddHandler</a> or 
@@ -561,26 +568,26 @@ int maMyModuleInit(Http *http, MprModule *mp)
             request or underlying connection. Appweb provides a set of object fields that can be examined.
             <table title="fields" class="ui table segment">
                 <thead>
-                    <tr><th>Field<th>Purpose</tr>
+                    <tr><th>Field</th><th>Purpose</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td>HttpConn.error<td>is set whenever there is an error with the request. i.e. httpError is
-                            called.</tr>
-                    <tr><td>HttpConn.connError<td>is set whenever HTTP_ABORT is supplied to httpError. This is
+                    <tr><td>HttpConn.error</td><td>is set whenever there is an error with the request. i.e. httpError is
+                            called.</td></tr>
+                    <tr><td>HttpConn.connError</td><td>is set whenever HTTP_ABORT is supplied to httpError. This is
                         used when the HTTP/1.1 protocol is compromised, corrupted or otherwise unlikely to be
-                        able to handle a subsequent keep-alive request.</tr>
-                    <tr><td>HttpConn.state<td> defines the connection state and is often the best thing to
+                        able to handle a subsequent keep-alive request.</td></tr>
+                    <tr><td>HttpConn.state</td><td> defines the connection state and is often the best thing to
                         test. States are: HTTP_STATE_BEGIN, HTTP_STATE_CONNECTED, HTTP_STATE_FIRST,
                         HTTP_STATE_CONTENT, HTTP_STATE_READY, HTTP_STATE_RUNNING, HTTP_STATE_FINALIZED and
-                        HTTP_STATE_COMPLETE.</tr>
-                    <tr><td>HttpTx.finalized<td>is set by the handler when httpFinalize is called. This means the
-                        request is complete. httpFinalize calls httpFinalizeOutput.</tr>
-                    <tr><td>HttpTx.finalizedOutput<td>is set by the handler when all response data has been written,
-                        there may still be processing to complete.</tr>
-                    <tr><td>HttpTx.finalizedConnector<td>is set by the connector when it has fully transmitted the
-                        response data to the network socket.</tr>
-                    <tr><td> HttpTx.responded<td>is set by various routines when any part of a
-                        response has been initiated httpWrite, httpSetStatus etc.</tr>
+                        HTTP_STATE_COMPLETE.</td></tr>
+                    <tr><td>HttpTx.finalized</td><td>is set by the handler when httpFinalize is called. This means the
+                        request is complete. httpFinalize calls httpFinalizeOutput.</td></tr>
+                    <tr><td>HttpTx.finalizedOutput</td><td>is set by the handler when all response data has been written,
+                        there may still be processing to complete.</td></tr>
+                    <tr><td>HttpTx.finalizedConnector</td><td>is set by the connector when it has fully transmitted the
+                        response data to the network socket.</td></tr>
+                    <tr><td> HttpTx.responded</td><td>is set by various routines when any part of a
+                        response has been initiated httpWrite, httpSetStatus etc.</td></tr>
                 </tbody>
             </table>
 
@@ -625,7 +632,8 @@ int maMyModuleInit(Http *http, MprModule *mp)
             </ul>
             <a id="more"></a>
             <h2>More Info</h2>
-            <p>See the <a href="https://github.com/embedthis/appweb/tree/master/samples/simple-handler">simple-handler</a> for a
+            <p>See the <a
+                href="https://github.com/embedthis/appweb/tree/master/samples/simple-handler">simple-handler</a> for a
                 working handler example.</p>
 
             <p>Here are links to some of the Appweb supplied handlers: </p>
@@ -667,6 +675,5 @@ int maMyModuleInit(Http *http, MprModule *mp)
 
     
 
-
-
-
+</body>
+</html>

@@ -2,19 +2,20 @@
 <html lang="en">
 <head>
     <title>Server</title>
-    
+    <!-- Copyright Embedthis Software. All Rights Reserved. -->
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-    <meta name="description" content="Server">
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="description" content="Server" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
+        rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     
-    <link href="../../images/favicon.ico" rel="shortcut icon">
-    <link href="../../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css">
-    <link href="../../css/all.min.css" rel="stylesheet" type="text/css">
-    <link href="../../css/api.min.css" rel="stylesheet" type="text/css">
+    <link href="../../images/favicon.ico" rel="shortcut icon" />
+    <link href="../../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css" />
+    <link href="../../css/all.min.css" rel="stylesheet" type="text/css" />
+    <link href="../../css/api.min.css" rel="stylesheet" type="text/css" />
     
 
 </head>
@@ -310,7 +311,7 @@
                         <td><p>Escape environment variables passed to CGI programs for special shell characters.
                         If using shell scripts as CGI programs, this directive will escape all special
                             shell characters to make scripting easier and more secure. This will escape
-                           (with \) the following characters: &amp;;`'\"|*?~&lt;&gt;^()[]{}$\\\n and also on windows \r%. The default value is "on". <p>Note: this will escape the QUERY_STRING and "&" characters will be converted to "\&".</td>
+                           (with \) the following characters: &amp;;`'\"|*?~&lt;&gt;^()[]{}$\\\n and also on windows \r%. The default value is "on". </p><p>Note: this will escape the QUERY_STRING and "&" characters will be converted to "\&".</p></td>
                     </tr>
                     <tr>
                         <td class="pivot">Synopsis</td>
@@ -427,7 +428,7 @@
                     </tr>
                     <tr>
                         <td class="pivot">Example</td>
-                        <td>GroupAccount nobody<br>
+                        <td>GroupAccount nobody<br/>
                         GroupAccount APPWEB</td>
                     </tr>
                     <tr>
@@ -502,8 +503,8 @@
                     </tr>
                     <tr>
                         <td class="pivot">Examples</td>
-                        <td>Listen 80<br>
-                            Listen 205.162.77.64:7777<br>
+                        <td>Listen 80<br />
+                            Listen 205.162.77.64:7777<br/>
                             Listen [::]
                         </td>
                     </tr>
@@ -525,7 +526,42 @@
                 </tbody>
             </table>
 
-            
+            <!-- UNUSED
+            <a id="protocol"></a>
+            <h2>Protocol</h2>
+            <table class="directive" title="directive">
+                <tbody>
+                    <tr>
+                        <td class="pivot">Description</td>
+                        <td>HTTP protocol version to use</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Synopsis</td>
+                        <td>Protocol [HTTP/1.0 | HTTP/1.1]</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Context</td>
+                        <td>Default server</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Example</td>
+                        <td>Protocol HTTP/1.0</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Notes</td>
+                        <td>
+                            <p>The Protocol directive specifies the HTTP protocol version to respond with. If the
+                            Protocol directive specifies HTTP/1.0, a browser may issue requests using either HTTP/1.0
+                            or HTTP/1.1. However, the response will always be downgraded to use HTTP/1.0 without
+                            Keep-Alive support.</p>
+                            <p>If the Protocol directive specifies HTTP/1.1 and a browser makes a request using
+                            HTTP/1.0 it will not be processed and the client will receive an error.</p>
+                            <p>NOTE: this directive is proprietary to Appweb and is not an Apache directive.</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            -->
 
             <a id="serverName"></a>
             <h2>ServerName</h2>
@@ -537,11 +573,11 @@
                     </tr>
                     <tr>
                         <td class="pivot">Synopsis</td>
-                        <td>ServerName hostName<br>
-                            ServerName *hostName<br>
-                            ServerName *hostName<br>
-                            ServerName hostName*<br>
-                            ServerName /hostName|hostname/<br>
+                        <td>ServerName hostName<br/>
+                            ServerName *hostName<br/>
+                            ServerName *hostName<br/>
+                            ServerName hostName*<br/>
+                            ServerName /hostName|hostname/<br/>
                     </tr>
                     <tr>
                         <td class="pivot">Context</td>
@@ -549,10 +585,10 @@
                     </tr>
                     <tr>
                         <td class="pivot">Examples</td>
-                        <td>ServerName www.acme.com:4100<br>
-                            ServerName *.acme.com<br>
-                            ServerName www.acme.*<br>
-                            ServerName /acme.com|^www.roadrunner.org$/<br>
+                        <td>ServerName www.acme.com:4100<br/>
+                            ServerName *.acme.com<br/>
+                            ServerName www.acme.*<br/>
+                            ServerName /acme.com|^www.roadrunner.org$/<br/>
                     </tr>
                     <tr>
                         <td class="pivot">Notes</td>
@@ -672,7 +708,7 @@
                     </tr>
                     <tr>
                         <td class="pivot">Example</td>
-                        <td>UserAccount nobody<br>
+                        <td>UserAccount nobody<br/>
                         UserAccount APPWEB</td>
                     </tr>
                     <tr>
@@ -689,7 +725,7 @@
                             No supplemental groups.</p>
                             <p>If UserAccount is set and GroupAccount is not set, then Appweb will run with group membership set
                             to include all groups to which the user account is a member of.</p>
-                            <p>The UserAccount directive can only be used if Appweb is started using a privileged
+                            <P>The UserAccount directive can only be used if Appweb is started using a privileged
                             account such as root. Normally Appweb is started using the account root or administrator
                             and thereafter it changes to run with less privilege using the specified accountName.</p>
                         </td>
@@ -714,6 +750,5 @@
 
     
 
-
-
-
+</body>
+</html>
