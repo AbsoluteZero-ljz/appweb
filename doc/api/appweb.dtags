@@ -5,11 +5,11 @@
     <title>MaState</title>
     <filename>group___ma_state.html</filename>
     <member kind="typedef">
-      <type>int(</type>
+      <type>int()</type>
       <name>MaDirective</name>
       <anchorfile>group___ma_state.html</anchorfile>
-      <anchor>ga6a437d214b5963248c0985eb1bc2a096</anchor>
-      <arglist>)(MaState *state, cchar *key, cchar *value)</arglist>
+      <anchor>ga77e98d350eaa12e72d0caee671b4d0d2</anchor>
+      <arglist>(MaState *state, cchar *key, cchar *value)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -95,11 +95,5 @@
       <anchor>gabb856e86d408307d5e31ad0ff2d2f69a</anchor>
       <arglist>(MaState *state, cchar *str, cchar *fmt,...)</arglist>
     </member>
-  </compound>
-  <compound kind="dir">
-    <name>src</name>
-    <path>/Users/mob/dev/appweb-7/src/</path>
-    <filename>dir_68267d1309a1af8e8297ef4c3efbcdba.html</filename>
-    <file>appweb.h</file>
   </compound>
 </tagfile>
