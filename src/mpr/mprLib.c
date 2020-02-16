@@ -2459,6 +2459,9 @@ PUBLIC int mprIsValid(cvoid *ptr)
 {
     MprMem      *mp;
 
+    if (ptr == NULL) {
+        return 0;
+    }
     mp = GET_MEM(ptr);
     if (mp->free) {
         return 0;
@@ -5812,6 +5815,9 @@ PUBLIC int mprRunCmdV(MprCmd *cmd, int argc, cchar **argv, cchar **envp, cchar *
     }
     if (rc < 0) {
         if (err) {
+            if (!cmd->program && argv && argc) {
+                cmd->program = argv[0];
+            }
             if (rc == MPR_ERR_CANT_ACCESS) {
                 *err = sfmt("Cannot access command %s", cmd->program);
             } else if (rc == MPR_ERR_CANT_OPEN) {
@@ -13487,6 +13493,26 @@ static void setValue(MprJson *obj, cchar *value, int type)
 }
 
 
+PUBLIC MprList *mprJsonToEnv(MprJson *json, cchar *prefix, MprList *list)
+{
+    MprJson     *jp;
+    int         ji;
+
+    if (!list) {
+        list = mprCreateList(0, 0);
+    }
+    for (ITERATE_JSON(json, jp, ji)) {
+        if (jp->type & MPR_JSON_VALUE) {
+            mprAddItem(list, sfmt("%s_%s=%s", prefix, jp->name, jp->value));
+        } else if (jp->type & (MPR_JSON_OBJ | MPR_JSON_ARRAY)) {
+            list = mprJsonToEnv(jp, sfmt("%s_%s", prefix, jp->name), list);
+        }
+    }
+    mprAddNullItem(list);
+    return list;
+}
+
+
 PUBLIC void mprFormatJsonName(MprBuf *buf, cchar *name, int flags)
 {
     cchar   *cp;
@@ -17940,8 +17966,8 @@ PUBLIC char *mprGetAbsPath(cchar *path)
             Get the full path with a drive spec
          */
         wchar buf[ME_MAX_PATH];
-        GetFullPathName(wide(path), sizeof(buf) - 1, buf, NULL);
-        buf[sizeof(buf) - 1] = '\0';
+        GetFullPathName(wide(path), (sizeof(buf) / sizeof(wchar)) - 1, buf, NULL);
+        buf[((sizeof(buf) / sizeof(wchar)) - 1] = '\0';
         result = mprNormalizePath(multi(buf));
 #elif VXWORKS
         if (hasDrive(fs, path)) {
@@ -23226,7 +23252,7 @@ PUBLIC int mprSetSocketBlockingMode(MprSocket *sp, bool on)
 #elif VXWORKS
 {
     int flag = (sp->flags & MPR_SOCKET_BLOCK) ? 0 : 1;
-    ioctl(sp->fd, FIONBIO, (int) &flag);
+    ioctl(sp->fd, FIONBIO, &flag);
 }
 #else
     if (on) {
@@ -27889,14 +27915,15 @@ static void validateTime(struct tm *tp, struct tm *defaults)
 
     /*
         Check for overflow. Underflow validated below.
+        tm_sec can be 61 for leap seconds.
      */
-    if (tp->tm_sec > 60) {
+    if (tp->tm_sec > 61) {
         tp->tm_sec = -1;
     }
-    if (tp->tm_min > 60) {
+    if (tp->tm_min > 59) {
         tp->tm_sec = -1;
     }
-    if (tp->tm_hour > 24) {
+    if (tp->tm_hour > 23) {
         tp->tm_sec = -1;
     }
     if (tp->tm_mday > 31) {

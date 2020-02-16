@@ -18,7 +18,6 @@ src/server/certs
 .port.log
 *.guid
 test/exploits/
-cache/
 /start.me
 XCBuildData/
 app-macosx-debug.xcodeproj
@@ -27,4 +26,6 @@ samples/*/client
 samples/*/roots.crt
 .makefile
 test/.test-prepared
+/cache/
 /build
+.local.mk

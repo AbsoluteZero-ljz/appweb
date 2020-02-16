@@ -1,7 +1,7 @@
 Non-blocking Client Sample
 ===
 
-This sample shows how to efficiently use the Http library to issue Http client requests using non-blocking I/O.
+This sample shows how to efficiently use the Http library to issue Http client requests using non-blockin I/O.
 This is a fuller sample suitable for applications that need to issue multiple HTTP requests.
 If you only need to issue one HTTP request, consult the simple-client sample.
 

@@ -5887,7 +5887,7 @@ static void connTimeout(HttpConn *conn, MprEvent *mprEvent)
                 httpTrace(conn, event, "error", "msg:'%s'", msg);
             }
         } else {
-            httpError(conn, HTTP_CODE_REQUEST_TIMEOUT, "%s", msg);
+            httpError(conn, HTTP_CODE_REQUEST_TIMEOUT | HTTP_CLOSE, "%s", msg);
         }
     }
     if (httpClientConn(conn)) {
@@ -24139,3 +24139,4 @@ static void traceErrorProc(HttpConn *conn, cchar *fmt, ...)
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
  */
+

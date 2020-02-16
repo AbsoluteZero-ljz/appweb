@@ -85,7 +85,7 @@
     #define ME_DEPTH 1
 #endif
 #ifndef ME_DESCRIPTION
-    #define ME_DESCRIPTION "Embedthis Appweb Embedded Web Server"
+    #define ME_DESCRIPTION "Embedthis Appweb Community Edition"
 #endif
 #ifndef ME_ESP_CMD
     #define ME_ESP_CMD 1
@@ -137,6 +137,9 @@
 #endif
 #ifndef ME_MPR_SSL_TIMEOUT
     #define ME_MPR_SSL_TIMEOUT 86400
+#endif
+#ifndef ME_MPR_THREAD_LIMIT_BY_CORES
+    #define ME_MPR_THREAD_LIMIT_BY_CORES 1
 #endif
 #ifndef ME_MPR_THREAD_STACK
     #define ME_MPR_THREAD_STACK 0
