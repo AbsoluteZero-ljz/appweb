@@ -21,8 +21,11 @@
 #ifndef ME_COMPANY
     #define ME_COMPANY "embedthis"
 #endif
+#ifndef ME_COMPAT
+    #define ME_COMPAT 1
+#endif
 #ifndef ME_COMPATIBLE
-    #define ME_COMPATIBLE "7.2"
+    #define ME_COMPATIBLE "8.0"
 #endif
 #ifndef ME_COMPILER_FORTIFY
     #define ME_COMPILER_FORTIFY 1
@@ -66,11 +69,14 @@
 #ifndef ME_DEBUG
     #define ME_DEBUG 1
 #endif
+#ifndef ME_DEPRECATED_WARNINGS
+    #define ME_DEPRECATED_WARNINGS 0
+#endif
 #ifndef ME_DEPTH
     #define ME_DEPTH 1
 #endif
 #ifndef ME_DESCRIPTION
-    #define ME_DESCRIPTION "Embedthis Appweb Community Edition"
+    #define ME_DESCRIPTION "Embedthis Appweb Enterprise Edition"
 #endif
 #ifndef ME_ESP_CMD
     #define ME_ESP_CMD 1
@@ -81,8 +87,14 @@
 #ifndef ME_ESP_MODULE
     #define ME_ESP_MODULE 0
 #endif
+#ifndef ME_ESP_NAME
+    #define ME_ESP_NAME "appweb-esp"
+#endif
 #ifndef ME_HTTP_CMD
     #define ME_HTTP_CMD 1
+#endif
+#ifndef ME_HTTP_HTTP2
+    #define ME_HTTP_HTTP2 1
 #endif
 #ifndef ME_HTTP_PAM
     #define ME_HTTP_PAM 1
@@ -115,7 +127,7 @@
     #define ME_MPR_SSL_HANDSHAKES 3
 #endif
 #ifndef ME_MPR_SSL_LOG_LEVEL
-    #define ME_MPR_SSL_LOG_LEVEL 5
+    #define ME_MPR_SSL_LOG_LEVEL 6
 #endif
 #ifndef ME_MPR_SSL_TICKET
     #define ME_MPR_SSL_TICKET 1
@@ -154,13 +166,13 @@
     #define ME_SERVER_ROOT "."
 #endif
 #ifndef ME_TITLE
-    #define ME_TITLE "Embedthis Appweb Community Edition"
+    #define ME_TITLE "Embedthis Appweb Enterprise Edition"
 #endif
 #ifndef ME_TUNE
     #define ME_TUNE "size"
 #endif
 #ifndef ME_VERSION
-    #define ME_VERSION "7.2.1"
+    #define ME_VERSION "8.0.2"
 #endif
 #ifndef ME_WATCHDOG_NAME
     #define ME_WATCHDOG_NAME "appman"
@@ -186,46 +198,46 @@
     #define ME_BASE_PREFIX "C:/Program Files"
 #endif
 #ifndef ME_APP_PREFIX
-    #define ME_APP_PREFIX "C:/Program Files/Embedthis Appweb Community Edition"
+    #define ME_APP_PREFIX "C:/Program Files/Embedthis Appweb Enterprise Edition"
 #endif
 #ifndef ME_VAPP_PREFIX
-    #define ME_VAPP_PREFIX "C:/Program Files/Embedthis Appweb Community Edition"
+    #define ME_VAPP_PREFIX "C:/Program Files/Embedthis Appweb Enterprise Edition"
 #endif
 #ifndef ME_DATA_PREFIX
-    #define ME_DATA_PREFIX "C:/Program Files/Embedthis Appweb Community Edition"
+    #define ME_DATA_PREFIX "C:/Program Files/Embedthis Appweb Enterprise Edition"
 #endif
 #ifndef ME_STATE_PREFIX
-    #define ME_STATE_PREFIX "C:/Program Files/Embedthis Appweb Community Edition"
+    #define ME_STATE_PREFIX "C:/Program Files/Embedthis Appweb Enterprise Edition"
 #endif
 #ifndef ME_BIN_PREFIX
-    #define ME_BIN_PREFIX "C:/Program Files/Embedthis Appweb Community Edition/bin"
+    #define ME_BIN_PREFIX "C:/Program Files/Embedthis Appweb Enterprise Edition/bin"
 #endif
 #ifndef ME_INC_PREFIX
-    #define ME_INC_PREFIX "C:/Program Files/Embedthis Appweb Community Edition/inc"
+    #define ME_INC_PREFIX "C:/Program Files/Embedthis Appweb Enterprise Edition/inc"
 #endif
 #ifndef ME_LIB_PREFIX
-    #define ME_LIB_PREFIX "C:/Program Files/Embedthis Appweb Community Edition/lib"
+    #define ME_LIB_PREFIX "C:/Program Files/Embedthis Appweb Enterprise Edition/lib"
 #endif
 #ifndef ME_MAN_PREFIX
-    #define ME_MAN_PREFIX "C:/Program Files/Embedthis Appweb Community Edition/man"
+    #define ME_MAN_PREFIX "C:/Program Files/Embedthis Appweb Enterprise Edition/man"
 #endif
 #ifndef ME_ETC_PREFIX
-    #define ME_ETC_PREFIX "C:/Program Files/Embedthis Appweb Community Edition"
+    #define ME_ETC_PREFIX "C:/Program Files/Embedthis Appweb Enterprise Edition"
 #endif
 #ifndef ME_WEB_PREFIX
-    #define ME_WEB_PREFIX "C:/Program Files/Embedthis Appweb Community Edition/web"
+    #define ME_WEB_PREFIX "C:/Program Files/Embedthis Appweb Enterprise Edition/web"
 #endif
 #ifndef ME_LOG_PREFIX
-    #define ME_LOG_PREFIX "C:/Program Files/Embedthis Appweb Community Edition/log"
+    #define ME_LOG_PREFIX "C:/Program Files/Embedthis Appweb Enterprise Edition/log"
 #endif
 #ifndef ME_SPOOL_PREFIX
-    #define ME_SPOOL_PREFIX "C:/Program Files/Embedthis Appweb Community Edition/tmp"
+    #define ME_SPOOL_PREFIX "C:/Program Files/Embedthis Appweb Enterprise Edition/tmp"
 #endif
 #ifndef ME_CACHE_PREFIX
-    #define ME_CACHE_PREFIX "C:/Program Files/Embedthis Appweb Community Edition/cache"
+    #define ME_CACHE_PREFIX "C:/Program Files/Embedthis Appweb Enterprise Edition/cache"
 #endif
 #ifndef ME_SRC_PREFIX
-    #define ME_SRC_PREFIX "C:/Program Files/Embedthis Appweb Community Edition/src"
+    #define ME_SRC_PREFIX "C:/Program Files/Embedthis Appweb Enterprise Edition/src"
 #endif
 
 /* Suffixes */
@@ -261,16 +273,16 @@
 
 /* Miscellaneous */
 #ifndef ME_MAJOR_VERSION
-    #define ME_MAJOR_VERSION 7
+    #define ME_MAJOR_VERSION 8
 #endif
 #ifndef ME_MINOR_VERSION
-    #define ME_MINOR_VERSION 2
+    #define ME_MINOR_VERSION 0
 #endif
 #ifndef ME_PATCH_VERSION
-    #define ME_PATCH_VERSION 1
+    #define ME_PATCH_VERSION 2
 #endif
 #ifndef ME_VNUM
-    #define ME_VNUM 700020001
+    #define ME_VNUM 800000002
 #endif
 
 /* Components */
@@ -327,6 +339,9 @@
 #endif
 #ifndef ME_COM_RC
     #define ME_COM_RC 1
+#endif
+#ifndef ME_COM_SQLITE
+    #define ME_COM_SQLITE 0
 #endif
 #ifndef ME_COM_SSL
     #define ME_COM_SSL 1
