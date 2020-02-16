@@ -43,8 +43,8 @@
       <type>int</type>
       <name>maLoadModules</name>
       <anchorfile>group___ma_state.html</anchorfile>
-      <anchor>gac80272b7427e26d90bcc32570ca2aff5</anchor>
-      <arglist>()</arglist>
+      <anchor>gaa70fb4c9b9835739719c049af17180ef</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>int</type>

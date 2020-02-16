@@ -14,7 +14,7 @@
 MAIN(simpleClient, int argc, char **argv, char **envp)
 {
     Http        *http;
-    HttpConn    *conn;
+    HttpStream  *conn;
     char        *err;
     int         status;
 
@@ -46,7 +46,6 @@ MAIN(simpleClient, int argc, char **argv, char **envp)
         exit(1);
     }
     mprPrintf("Server responded with: %s\n", httpReadString(conn));
-    httpDestroyConn(conn);
     mprDestroy();
     return 0;
 }

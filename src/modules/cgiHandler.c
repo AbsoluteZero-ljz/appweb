@@ -15,7 +15,7 @@
 /************************************ Locals ***********************************/
 
 typedef struct Cgi {
-    HttpConn    *conn;                  /**< Client connection object */
+    HttpStream  *conn;                  /**< Client connection object */
     MprCmd      *cmd;                   /**< CGI command object */
     HttpQueue   *writeq;                /**< Queue to write to the CGI */
     HttpQueue   *readq;                 /**< Queue to read from the CGI */
@@ -60,13 +60,13 @@ static void readFromCgi(Cgi *cgi, int channel);
  */
 static int openCgi(HttpQueue *q)
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
     Cgi         *cgi;
     int         nproc;
 
     conn = q->conn;
     if ((nproc = (int) httpMonitorEvent(conn, HTTP_COUNTER_ACTIVE_PROCESSES, 1)) >= conn->limits->processMax) {
-        httpTrace(conn, "cgi.limit.error", "error",
+        httpLog(conn->trace, "cgi.limit.error", "error",
             "msg=\"Too many concurrent processes\", activeProcesses=%d, maxProcesses=%d",
             nproc, conn->limits->processMax);
         httpError(conn, HTTP_CODE_SERVICE_UNAVAILABLE, "Server overloaded");
@@ -83,8 +83,8 @@ static int openCgi(HttpQueue *q)
 
     q->queueData = q->pair->queueData = cgi;
     cgi->conn = conn;
-    cgi->readq = httpCreateQueue(conn, conn->http->cgiConnector, HTTP_QUEUE_RX, 0);
-    cgi->writeq = httpCreateQueue(conn, conn->http->cgiConnector, HTTP_QUEUE_TX, 0);
+    cgi->readq = httpCreateQueue(conn->net, conn, conn->http->cgiConnector, HTTP_QUEUE_RX, 0);
+    cgi->writeq = httpCreateQueue(conn->net, conn, conn->http->cgiConnector, HTTP_QUEUE_TX, 0);
     cgi->readq->pair = cgi->writeq;
     cgi->writeq->pair = cgi->readq;
     cgi->writeq->queueData = cgi->readq->queueData = cgi;
@@ -131,7 +131,7 @@ static void startCgi(HttpQueue *q)
     HttpRx          *rx;
     HttpTx          *tx;
     HttpRoute       *route;
-    HttpConn        *conn;
+    HttpStream      *conn;
     MprCmd          *cmd;
     Cgi             *cgi;
     cchar           *baseName, **argv, *fileName, **envv;
@@ -190,6 +190,10 @@ static void startCgi(HttpQueue *q)
 #endif
     mprSetCmdCallback(cmd, cgiCallback, cgi);
 
+    if (route->callback && route->callback(stream, HTTP_ROUTE_HOOK_CGI, &argc, argv, envv) < 0) {
+        httpError(conn, HTTP_CODE_NOT_FOUND, "Route check failed for CGI: %s, URI %s", fileName, rx->uri);
+        return;
+    }
     if (mprStartCmd(cmd, argc, argv, envv, MPR_CMD_IN | MPR_CMD_OUT | MPR_CMD_ERR) < 0) {
         httpError(conn, HTTP_CODE_NOT_FOUND, "Cannot run CGI process: %s, URI %s", fileName, rx->uri);
         return;
@@ -203,7 +207,7 @@ static void startCgi(HttpQueue *q)
 #if ME_WIN_LIKE
 static void waitForCgi(Cgi *cgi, MprEvent *event)
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
     MprCmd      *cmd;
 
     conn = cgi->conn;
@@ -226,7 +230,7 @@ static void waitForCgi(Cgi *cgi, MprEvent *event)
  */
 static void browserToCgiData(HttpQueue *q, HttpPacket *packet)
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
     Cgi         *cgi;
 
     assert(q);
@@ -253,7 +257,7 @@ static void browserToCgiData(HttpQueue *q, HttpPacket *packet)
 
 static void browserToCgiService(HttpQueue *q)
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
     HttpPacket  *packet;
     Cgi         *cgi;
     MprCmd      *cmd;
@@ -265,7 +269,10 @@ static void browserToCgiService(HttpQueue *q)
         return;
     }
     assert(q == cgi->writeq);
-    cmd = cgi->cmd;
+    if ((cmd = cgi->cmd) == 0) {
+        /* CGI not yet started */
+        return;
+    }
     conn = cgi->conn;
 
     for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
@@ -284,7 +291,7 @@ static void browserToCgiService(HttpQueue *q)
                     httpPutBackPacket(q, packet);
                     break;
                 }
-                httpTrace(conn, "cgi.error", "error", "msg=\"Cannot write to CGI gateway\", errno=%d", mprGetOsError());
+                httpLog(conn->trace, "cgi.error", "error", "msg=\"Cannot write to CGI gateway\", errno=%d", mprGetOsError());
                 mprCloseCmdFd(cmd, MPR_CMD_STDIN);
                 httpDiscardQueueData(q, 1);
                 httpError(conn, HTTP_CODE_BAD_GATEWAY, "Cannot write body data to CGI gateway");
@@ -318,7 +325,7 @@ static void cgiToBrowserData(HttpQueue *q, HttpPacket *packet)
 
 static void cgiToBrowserService(HttpQueue *q)
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
     MprCmd      *cmd;
     Cgi         *cgi;
 
@@ -339,7 +346,7 @@ static void cgiToBrowserService(HttpQueue *q)
     httpDefaultOutgoingServiceStage(q);
     if (q->count < q->low) {
         mprEnableCmdOutputEvents(cmd, 1);
-    } else if (q->count > q->max && conn->tx->writeBlocked) {
+    } else if (q->count > q->max && conn->net->writeBlocked) {
         httpSuspendQueue(conn->writeq);
     }
 }
@@ -352,7 +359,7 @@ static void cgiToBrowserService(HttpQueue *q)
  */
 static void cgiCallback(MprCmd *cmd, int channel, void *data)
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
     Cgi         *cgi;
     int         suspended;
 
@@ -388,19 +395,19 @@ static void cgiCallback(MprCmd *cmd, int channel, void *data)
     if (cmd->complete || cgi->location) {
         cgi->location = 0;
         httpFinalize(conn);
-        mprCreateEvent(conn->dispatcher, "cgiComplete", 0, httpIOEvent, conn, 0);
+        mprCreateEvent(conn->dispatcher, "cgiComplete", 0, httpIOEvent, conn->net, 0);
         return;
     }
     suspended = httpIsQueueSuspended(conn->writeq);
-    assert(!suspended || conn->tx->writeBlocked);
+    assert(!suspended || conn->net->writeBlocked);
     mprEnableCmdOutputEvents(cmd, !suspended);
-    mprCreateEvent(conn->dispatcher, "cgi", 0, httpIOEvent, conn, 0);
+    mprCreateEvent(conn->dispatcher, "cgi", 0, httpIOEvent, conn->net, 0);
 }
 
 
 static void readFromCgi(Cgi *cgi, int channel)
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
     HttpPacket  *packet;
     HttpTx      *tx;
     HttpQueue   *q, *writeq;
@@ -421,13 +428,13 @@ static void readFromCgi(Cgi *cgi, int channel)
     }
     while (mprGetCmdFd(cmd, channel) >= 0 && !tx->finalized && writeq->count < writeq->max) {
         if ((packet = cgi->headers) != 0) {
-            if (mprGetBufSpace(packet->content) < ME_MAX_BUFFER && mprGrowBuf(packet->content, ME_MAX_BUFFER) < 0) {
+            if (mprGetBufSpace(packet->content) < ME_BUFSIZE && mprGrowBuf(packet->content, ME_BUFSIZE) < 0) {
                 break;
             }
-        } else if ((packet = httpCreateDataPacket(ME_MAX_BUFFER)) == 0) {
+        } else if ((packet = httpCreateDataPacket(ME_BUFSIZE)) == 0) {
             break;
         }
-        nbytes = mprReadCmd(cmd, channel, mprGetBufEnd(packet->content), ME_MAX_BUFFER);
+        nbytes = mprReadCmd(cmd, channel, mprGetBufEnd(packet->content), ME_BUFSIZE);
         if (nbytes < 0) {
             err = mprGetError();
             if (err == EINTR) {
@@ -475,7 +482,7 @@ static void readFromCgi(Cgi *cgi, int channel)
  */
 static bool parseCgiHeaders(Cgi *cgi, HttpPacket *packet)
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
     MprBuf      *buf;
     char        *endHeaders, *headers, *key, *value;
     ssize       blen;
@@ -502,9 +509,11 @@ static bool parseCgiHeaders(Cgi *cgi, HttpPacket *packet)
     } else {
         len = 4;
     }
-    if (endHeaders > buf->end) {
-        assert(endHeaders <= buf->end);
-        return 0;
+    if (endHeaders) {
+        if (endHeaders > buf->end) {
+            assert(endHeaders <= buf->end);
+            return 0;
+        }
     }
     if (endHeaders) {
         endHeaders[len - 1] = '\0';
@@ -597,10 +606,9 @@ static void buildArgs(HttpConn *conn, MprCmd *cmd, int *argcp, cchar ***argvp)
 {
     HttpRx      *rx;
     HttpTx      *tx;
-    char        **argv;
-    char        *indexQuery, *cp, *tok;
-    cchar       *actionProgram, *fileName;
-    size_t      len;
+    cchar       *actionProgram, *cp, *fileName, *query;
+    char        **argv, *tok;
+    ssize       len;
     int         argc, argind, i;
 
     rx = conn->rx;
@@ -627,16 +635,16 @@ static void buildArgs(HttpConn *conn, MprCmd *cmd, int *argcp, cchar ***argvp)
         Count the args for ISINDEX queries. Only valid if there is not a "=" in the query.
         If this is so, then we must not have these args in the query env also?
      */
-    indexQuery = rx->parsedUri->query;
-    if (indexQuery && !strchr(indexQuery, '=')) {
+    query = (char*) rx->parsedUri->query;
+    if (query && !schr(query, '=')) {
         argc++;
-        for (cp = indexQuery; *cp; cp++) {
+        for (cp = query; *cp; cp++) {
             if (*cp == '+') {
                 argc++;
             }
         }
     } else {
-        indexQuery = 0;
+        query = 0;
     }
     len = (argc + 1) * sizeof(char*);
     argv = mprAlloc(len);
@@ -651,9 +659,8 @@ static void buildArgs(HttpConn *conn, MprCmd *cmd, int *argcp, cchar ***argvp)
         have these args in the query env also?
         FUTURE - should query vars be set in the env?
      */
-    if (indexQuery) {
-        indexQuery = sclone(indexQuery);
-        cp = stok(indexQuery, "+", &tok);
+    if (query) {
+        cp = stok(sclone(query), "+", &tok);
         while (cp) {
             argv[argind++] = mprEscapeCmd(mprUriDecode(cp), 0);
             cp = stok(NULL, "+", &tok);
@@ -846,7 +853,7 @@ PUBLIC int httpCgiInit(Http *http, MprModule *module)
     handler->open = openCgi;
     handler->start = startCgi;
 
-    if ((connector = httpCreateConnector("cgiConnector", module)) == 0) {
+    if ((connector = httpCreateStage("cgiConnector", HTTP_STAGE_CONNECTOR, module)) == 0) {
         return MPR_ERR_CANT_CREATE;
     }
     http->cgiConnector = connector;

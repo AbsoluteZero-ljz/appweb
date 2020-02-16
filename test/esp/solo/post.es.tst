@@ -19,7 +19,7 @@ for (i in 64) {
 }
 
 //  Scale the count by the test depth
-count = sizes[tdepth()] * 1024
+count = sizes[tdepth()] * 16
 
 function postTest(url: String) {
     http.post(HTTP + url)

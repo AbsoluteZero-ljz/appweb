@@ -32,8 +32,8 @@ typedef struct Context {
 
 /******************************* Forwards *****************************/
 
-static void callback(HttpConn *conn, int event, int arg);
-static int startRequest(HttpConn *conn, cchar *method, cchar *uri, cchar *data);
+static void callback(HttpStream *stream, int event, int arg);
+static int startRequest(HttpStream *stream, cchar *method, cchar *uri, cchar *data);
 static void manageContext(Context *context, int flags);
 static int setupRequest(MprDispatcher *dispatcher, cchar *method, cchar *uri, cchar *data);
 
@@ -53,7 +53,7 @@ MAIN(simpleClient, int argc, char **argv, char **envp)
 
     /*
         Enable if you would like logging and request tracing
-
+        
         mprStartLogging("stdout:6", 0);
         httpStartTracing("stdout:6");
      */
@@ -86,41 +86,42 @@ MAIN(simpleClient, int argc, char **argv, char **envp)
 
 
 /*
-    Setup a HTTP request. This will create a network object and conn. Events will be serialized on the dispatcher.
+    Setup a HTTP request. This will create a network object and stream. Events will be serialized on the dispatcher.
     But requests will be run in parallel without blocking.
  */
 static int setupRequest(MprDispatcher *dispatcher, cchar *method, cchar *uri, cchar *data)
 {
-    HttpConn    *conn;
+    HttpNet         *net;
+    HttpStream      *stream;
 
     /*
         This sample creates a new network connection for each request. NOTE: HTTP/2 can issue
         multiple overlapping requests on multiple straems using a single HTTP connection (net).
         However, here we could create multiple network connections so it will work over HTTP/1.
      */
-    if ((conn = httpCreateConn(NULL, dispatcher)) == 0) {
+    net = httpCreateNet(dispatcher, NULL, 1, 0);
+    httpSetAsync(net, 1);
+
+    if ((stream = httpCreateStream(net, 0)) == 0) {
+        httpDestroyNet(net);
         return MPR_ERR_CANT_CREATE;
     }
     /*
         Disable timeouts incase you are debugging. Otherwise, you should utilize the standard timeouts
      */
-    httpSetTimeout(conn, 0, 0);
-    httpSetAsync(conn, 1);
+    httpSetTimeout(stream, 0, 0);
     
     /*
         Setup the callback to be notified on readable, writable and state change events.
         We write the post data, if any, in the callback. If no post data, the request will be finalized when the
         first WRITABLE event is triggered.
      */
-    httpSetConnNotifier(conn, callback);
+    httpSetStreamNotifier(stream, callback);
 
-    if (startRequest(conn, method, uri, data) < 0) {
-        httpDestroyConn(conn);
+    if (startRequest(stream, method, uri, data) < 0) {
+        httpDestroyNet(net);
         return MPR_ERR_CANT_WRITE;
     }
-    HTTP_NOTIFY(conn, HTTP_EVENT_WRITABLE, 0);
-    httpServiceQueues(conn, 0);
-    httpEnableConnEvents(conn);
     return 0;
 }
 
@@ -128,7 +129,7 @@ static int setupRequest(MprDispatcher *dispatcher, cchar *method, cchar *uri, cc
 /*
     Issue a client http request. This will not block or wait for the request to complete.
  */
-static int startRequest(HttpConn *conn, cchar *method, cchar *uri, cchar *postData)
+static int startRequest(HttpStream *stream, cchar *method, cchar *uri, cchar *postData)
 {
     Context *context;
 
@@ -137,7 +138,7 @@ static int startRequest(HttpConn *conn, cchar *method, cchar *uri, cchar *postDa
         structure. If memory is allocated by the MPR, ensure it is marked in manageContext.
         Read: https://www.embedthis.com/appweb/doc/ref/memory.html for more details.
      */
-    context = conn->data = mprAllocObj(Context, manageContext);
+    context = stream->data = mprAllocObj(Context, manageContext);
     if (context) {
         context->buf = postData;
         context->len = slen(postData);
@@ -149,7 +150,7 @@ static int startRequest(HttpConn *conn, cchar *method, cchar *uri, cchar *postDa
         Open a connection to issue the request. This will not block. It won't even wait for the connection to be
         established to the server.
      */
-    if (httpConnect(conn, method, uri, NULL) < 0) {
+    if (httpConnect(stream, method, uri, NULL) < 0) {
         mprError("Cannot connect to %s", uri);
         return MPR_ERR_CANT_CONNECT;
     }
@@ -161,28 +162,29 @@ static int startRequest(HttpConn *conn, cchar *method, cchar *uri, cchar *postDa
     HTTP event callback notifier. The callback notifier is invoked for READABLE, WRITABLE and
     state change events. This routine must never block.
  */
-static void callback(HttpConn *conn, int event, int arg)
+static void callback(HttpStream *stream, int event, int arg)
 {
     HttpPacket  *packet;
     Context     *context;
     ssize       len;
     int         status;
 
-    context = conn->data;
+    context = stream->data;
 
     if (event == HTTP_EVENT_STATE) {
         /*
             The request state has changed. Only interested in the "parsed" and "complete" states.
          */
-        if (conn->state == HTTP_STATE_PARSED) {
-            status = httpGetStatus(conn);
+        if (stream->state == HTTP_STATE_PARSED) {
+            status = httpGetStatus(stream);
             if (status != 200) {
-                httpError(conn, 0, "Got bad status %d", status);
+                httpError(stream, 0, "Got bad status %d", status);
             }
 
-        } else if (conn->state == HTTP_STATE_COMPLETE) {
+        } else if (stream->state == HTTP_STATE_COMPLETE) {
             mprPrintf("Request complete\n");
-            httpDestroyConn(conn);
+            httpDestroyStream(stream);
+            httpDestroyNet(stream->net);
             if (--outstanding <= 0) {
                 mprShutdown(MPR_EXIT_NORMAL, 0, 0);
             }
@@ -193,7 +195,7 @@ static void callback(HttpConn *conn, int event, int arg)
         /*
             The server has responded with some data. Just print it out.
          */
-        packet = httpGetPacket(conn->readq);
+        packet = httpGetPacket(stream->readq);
         if (packet->flags & HTTP_PACKET_DATA) {
             print("Got data: %s", packet->content->start);
         }
@@ -204,24 +206,24 @@ static void callback(HttpConn *conn, int event, int arg)
             Note: this will not block.
          */
         while (context->written < context->len) {
-            len = httpWriteBlock(conn->writeq,
+            len = httpWriteBlock(stream->writeq,
                 &context->buf[context->written], context->len - context->written, HTTP_NON_BLOCK);
             if (len < 0) {
-                httpError(conn, 0, "Cannot write request body postData");
+                httpError(stream, 0, "Cannot write request body postData");
             } else if (len == 0) {
                 break;
             }
             context->written += len;
         }
         if (context->written >= context->len) {
-            httpFinalizeOutput(conn);
+            httpFinalizeOutput(stream);
         }
 
     } else if (event == HTTP_EVENT_ERROR) {
-        mprError("conn encountered an error: %s", conn->errorMsg);
+        mprError("Stream encountered an error: %s", stream->errorMsg);
 
     } else if (event == HTTP_EVENT_DESTROY) {
-        /* conn destroyed */
+        /* Stream destroyed */
     }
 }
 

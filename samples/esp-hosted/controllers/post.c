@@ -5,13 +5,13 @@
 
 /*
     Create a new resource in the database
- */ 
-static void createPost() { 
+ */
+static void createPost() {
     if (updateRec(createRec("post", params()))) {
-        flash("info", "New post Created");
+        feedback("info", "New post Created");
         renderView("post/list");
     } else {
-        flash("error", "Cannot Create Post");
+        feedback("error", "Cannot Create Post");
         renderView("post/edit");
     }
 }
@@ -19,14 +19,14 @@ static void createPost() {
 /*
     Prepare an edit template with the resource
  */
-static void editPost() { 
+static void editPost() {
     readRec("post", param("id"));
 }
 
 /*
     Get a resource
- */ 
-static void getPost() { 
+ */
+static void getPost() {
     readRec("post", param("id"));
     renderView("post/edit");
 }
@@ -34,24 +34,24 @@ static void getPost() {
 /*
     Initialize a new resource for the client to complete
  */
-static void initPost() { 
+static void initPost() {
     createRec("post", 0);
     renderView("post/edit");
 }
 
 /*
     List the resources in this group
- */ 
-static void listPost() { 
+ */
+static void listPost() {
     renderView("post/list");
 }
 
 /*
     Remove a resource identified by the "id" parameter
  */
-static void removePost() { 
+static void removePost() {
     if (removeRec("post", param("id"))) {
-        flash("info", "Post Removed");
+        feedback("info", "Post Removed");
     }
     redirect(".");
 }
@@ -61,15 +61,15 @@ static void removePost() {
     If "id" is not defined, this is the same as a create
     Also we tunnel delete here if the user clicked delete
  */
-static void updatePost() { 
+static void updatePost() {
     if (smatch(param("submit"), "Delete")) {
         removePost();
     } else {
         if (updateFields("post", params())) {
-            flash("info", "Post Updated Successfully");
+            feedback("info", "Post Updated Successfully");
             redirect(".");
         } else {
-            flash("error", "Cannot Update Post");
+            feedback("error", "Cannot Update Post");
             renderView("post/edit");
         }
     }
@@ -82,14 +82,14 @@ static void redirectPost() {
     redirect(sjoin(getUri(), "/", NULL));
 }
 
-static void common(HttpConn *conn) {
+static void commonPost(HttpStream *stream) {
 }
 
 /*
     Dynamic module initialization
  */
-ESP_EXPORT int esp_controller_espapp_post(HttpRoute *route, MprModule *module) {
-    espDefineBase(route, common);
+ESP_EXPORT int esp_controller_demo_post(HttpRoute *route, MprModule *module) {
+    espDefineBase(route, commonPost);
     espDefineAction(route, "post/create", createPost);
     espDefineAction(route, "post/remove", removePost);
     espDefineAction(route, "post/edit", editPost);
@@ -99,7 +99,7 @@ ESP_EXPORT int esp_controller_espapp_post(HttpRoute *route, MprModule *module) {
     espDefineAction(route, "post/update", updatePost);
     espDefineAction(route, "post/", listPost);
     espDefineAction(route, "post", redirectPost);
-    
+
 #if SAMPLE_VALIDATIONS
     Edi *edi = espGetRouteDatabase(route);
     ediAddValidation(edi, "present", "post", "title", 0);

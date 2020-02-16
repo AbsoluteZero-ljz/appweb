@@ -16,11 +16,11 @@
  */
 static void readySimple(HttpQueue *q)
 {
-    HttpConn    *conn;
+    HttpStream  *stream;
 
-    conn = q->conn;
-    httpSetHeaderString(conn, "Custom-Date", conn->http->currentDate);
-    httpSetStatus(conn, 200);
+    stream = q->stream;
+    httpSetHeaderString(stream, "Custom-Date", stream->http->currentDate);
+    httpSetStatus(stream, 200);
 
     /*
         Generate some dynamic data. If you generate a lot, this will buffer up to a configured maximum.
@@ -31,7 +31,7 @@ static void readySimple(HttpQueue *q)
         Call finalize when the response to the client is complete. Call httpFlushOutput if the response is
         incomplete and you wish to immediately send any buffered output.
     */
-    httpFinalize(conn);
+    httpFinalize(stream);
 }
 
 

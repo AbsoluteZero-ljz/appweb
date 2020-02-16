@@ -18,7 +18,7 @@ static cchar        *programName;
 
 /********************************* Forwards ***********************************/
 
-static char *getPassword();
+static char *getPassword(void);
 static void printUsage(cchar *programName);
 
 #if ME_WIN_LIKE || VXWORKS
@@ -141,7 +141,7 @@ PUBLIC int main(int argc, char *argv[])
 }
 
 
-static char *getPassword()
+static char *getPassword(void)
 {
     char    *password, *confirm;
 

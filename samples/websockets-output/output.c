@@ -18,7 +18,7 @@ typedef struct Output {
     Event callback. Invoked for incoming web socket messages and other events of interest.
     We're interested in the WRITABLE event.
  */
-static void output_callback(HttpConn *conn, int event, int arg)
+static void output_callback(HttpConn *stream, int event, int arg)
 {
     Output      *output;
     ssize       len, wrote;
@@ -47,8 +47,8 @@ static void output_callback(HttpConn *conn, int event, int arg)
                     Send the next chunk as a WebSockets frame using a non-blocking write.
                     This may return having written only a portion of the requested data.
                  */
-                if ((wrote = httpSendBlock(conn, type, buf, len, flags)) < 0) {
-                    httpError(conn, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot send message of %d bytes", len);
+                if ((wrote = httpSendBlock(stream, type, buf, len, flags)) < 0) {
+                    httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot send message of %d bytes", len);
                     return;
                 }
                 output->written += wrote;
@@ -58,14 +58,14 @@ static void output_callback(HttpConn *conn, int event, int arg)
                     break;
                 }
             } else {
-                httpSendClose(conn, WS_STATUS_OK, "OK");
+                httpSendClose(stream, WS_STATUS_OK, "OK");
                 break;
             }
         } while (len > 0);
 
     } else if (event == HTTP_EVENT_APP_CLOSE) {
         mprLog("info output", 0, "close event. Status status %d, orderly closed %d, reason %s", arg,
-        httpWebSocketOrderlyClosed(conn), httpGetWebSocketCloseReason(conn));
+        httpWebSocketOrderlyClosed(stream), httpGetWebSocketCloseReason(stream));
 
     } else if (event == HTTP_EVENT_ERROR) {
         mprLog("info output", 0, "error event");

@@ -17,11 +17,11 @@ if (tphase() == 'Setup') {
     tset('TM_HTTP_PORT',  conf.replace(/.*Listen *([\.:0-9]+) *# <HTTPv4>.*/ms, '$1').split(':')[1])
 
     /*
-        This will remove cache/.  If Appweb is running outside of this script, you must restart it otherwise
+        This will remove all files in cache/.  If Appweb is running outside of this script, you must restart it otherwise
         Appweb espHandler will need to unload modules which is slow.
      */
-    if (!Path('cgi-bin/cgiProgram').exists) {
-        Cmd.run('me test-prep')
+    if (!Path('.test-prepared').exists) {
+        Cmd.run('me prep-test')
     }
 }
 

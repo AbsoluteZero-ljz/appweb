@@ -39,6 +39,9 @@ main.container {
   line-height: 20px;
   color: #999999;
 }
+.navbar .navbar-right {
+  margin-right: 0;
+}
 .btn {
   display: inline-block;
   padding: 6px 12px;
@@ -82,17 +85,14 @@ main.container {
   border: 1px solid #cccccc;
   border-radius: 4px;
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075) rgba(0, 0, 0, 0.1);
-  -webkit-transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
-  -webkit-transition: all border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s ease-out;
   transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
-  -webkit-transition: all border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s ease-out;
-          transition: all border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s ease-out;
+  transition: all border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s ease-out;
 }
 .has-error .form-control {
-  border: 2px solid #ff0000 !important;
+  border: 2px solid #FF0000 !important;
 }
 .has-error .field-error {
-  color: #ff0000;
+  color: #FF0000;
   background-color: #FFF;
   position: relative;
   top: -35px;
@@ -188,24 +188,6 @@ table {
 }
 table th {
   text-align: left;
-}
-@-webkit-keyframes feedback-transition {
-  0% {
-    opacity: 1.0;
-    top: 0px;
-  }
-  80% {
-    opacity: 1.0;
-    top: 0px;
-  }
-  90% {
-    opacity: 0.5;
-    top: 0px;
-  }
-  100% {
-    opacity: 0.0;
-    top: -100px;
-  }
 }
 [ng-click],
 [esp-click],

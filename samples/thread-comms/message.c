@@ -9,7 +9,7 @@
  */
 #include "esp.h"
 
-static void finalizeResponse(HttpConn *conn, void *message);
+static void finalizeResponse(HttpStream *stream, void *message);
 static void serviceRequest();
 static void foreignThread(uint64 seqno);
 
@@ -28,19 +28,19 @@ ESP_EXPORT int esp_controller_app_message(HttpRoute *route)
 /*
     Start servicing a HTTP request
  */
-static void serviceRequest(HttpConn *conn)
+static void serviceRequest(HttpStream *stream)
 {
     uint64      seqno;
 
     /*
-        Create an O/S (non-mpr) thread and pass the current HttpConn sequence number.
+        Create an O/S (non-mpr) thread and pass the current HttpStream sequence number.
      */
-    seqno = conn->seqno;
-    mprStartOsThread("foreign", foreignThread, LTOP(conn->seqno), NULL);
+    seqno = stream->seqno;
+    mprStartOsThread("foreign", foreignThread, LTOP(stream->seqno), NULL);
 }
 
 
-static void foreignThread(uint64 connSeqno)
+static void foreignThread(uint64 streamSeqno)
 {
     char    *message;
 
@@ -50,7 +50,7 @@ static void foreignThread(uint64 connSeqno)
         Invoke the finalizeResponse callback on the Stream identified by the sequence number and pass in a message to write.
      */
     message = strdup("Hello World");
-    if (httpCreateEvent(connSeqno, finalizeResponse, message) < 0) {
+    if (httpCreateEvent(streamSeqno, finalizeResponse, message) < 0) {
         /* Stream destroyed and create event failed */
         free(message);
     }
@@ -58,15 +58,15 @@ static void foreignThread(uint64 connSeqno)
 
 
 /*
-    Finalize a response to the Http request. This runs on the conn's dispatcher, thread-safe inside Appweb.
-    If the conn has already been destroyed, conn will be NULL.
+    Finalize a response to the Http request. This runs on the stream's dispatcher, thread-safe inside Appweb.
+    If the stream has already been destroyed, stream will be NULL.
  */
-static void finalizeResponse(HttpConn *conn, void *message)
+static void finalizeResponse(HttpStream *stream, void *message)
 {
-    if (conn) {
-        httpWrite(conn->writeq, "message: %s\n", message);
-        httpFinalize(conn);
-        httpProtocol(conn);
+    if (stream) {
+        httpWrite(stream->writeq, "message: %s\n", message);
+        httpFinalize(stream);
+        httpProcess(stream->inputq);
     }
     /*
         Free the "hello World" memory allocated via strdup in foreignThread

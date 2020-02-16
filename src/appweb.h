@@ -99,16 +99,16 @@ typedef int (MaDirective)(MaState *state, cchar *key, cchar *value);
     @description The appweb configuration file parse is extensible. New directives can be registered by this call. When
         encountered in the config file, the given callback proc will be invoked to parse.
     @param directive Directive name
-    @param proc Directive callback procedure of the type #MaDirective. 
+    @param proc Directive callback procedure of the type #MaDirective.
     @ingroup MaState
     @stability Evolving
  */
 PUBLIC void maAddDirective(cchar *directive, MaDirective proc);
 
-/** 
+/**
     Configure a web server
     @description This will configure a web server based on either a configuration file or using the supplied
-        IP address and port. 
+        IP address and port.
     @param configFile File name of the Appweb configuration file (appweb.conf) that defines the web server configuration.
     @param home Admin directory for the server. This overrides the value in the config file.
     @param documents Default directory for web documents to serve. This overrides the value in the config file.
@@ -149,7 +149,7 @@ PUBLIC int maLoadModule(cchar *name, cchar *libname);
     @ingroup MaState
     @stability Prototype
  */
-PUBLIC int maLoadModules();
+PUBLIC int maLoadModules(void);
 
 /**
     Parse an Appweb configuration file
@@ -173,7 +173,7 @@ PUBLIC int maParseConfig(cchar *path);
 PUBLIC int maParseFile(MaState *state, cchar *path);
 
 /**
-    Pop the state 
+    Pop the state
     @description This is used when parsing config files to handle nested include files and block level directives
     @param state Current state
     @return The next lower level state object
@@ -183,7 +183,7 @@ PUBLIC int maParseFile(MaState *state, cchar *path);
 PUBLIC MaState *maPopState(MaState *state);
 
 /**
-    Push the state 
+    Push the state
     @description This is used when parsing config files to handle nested include files and block level directives
     @param state Current state
     @return The state passed as a parameter which becomes the new top level state
@@ -194,8 +194,8 @@ PUBLIC MaState *maPushState(MaState *state);
 
 /**
     Tokenize a string based on route data
-    @description This is a utility routine to parse a string into tokens given a format specifier. 
-    Mandatory tokens can be specified with "%" format specifier. Optional tokens are specified with "?" format. 
+    @description This is a utility routine to parse a string into tokens given a format specifier.
+    Mandatory tokens can be specified with "%" format specifier. Optional tokens are specified with "?" format.
     Values wrapped in quotes will have the outermost quotes trimmed.
     @param state Current config parsing state
     @param str String to expand
@@ -215,11 +215,11 @@ PUBLIC MaState *maPushState(MaState *state);
  */
 PUBLIC bool maTokenize(MaState *state, cchar *str, cchar *fmt, ...);
 
-/** 
+/**
     Create and run a simple web server listening on a single IP address.
     @description Create a simple web server without using a configuration file. The server is created to listen on
-        the specified IP address and port. This routine provides a one-line embedding of Appweb. If you want to 
-        use a config file, try the #maRunWebServer instead. 
+        the specified IP address and port. This routine provides a one-line embedding of Appweb. If you want to
+        use a config file, try the #maRunWebServer instead.
     @param ip IP address on which to listen. Set to "0.0.0.0" to listen on all interfaces.
     @param port Port number to listen to
     @param home Home directory for the web server
@@ -230,11 +230,11 @@ PUBLIC bool maTokenize(MaState *state, cchar *str, cchar *fmt, ...);
  */
 PUBLIC int maRunSimpleWebServer(cchar *ip, int port, cchar *home, cchar *documents);
 
-/** 
+/**
     Create and run a web server based on a configuration file
-    @description Create a web server configuration based on the supplied config file. This routine provides 
-        a one-line embedding of Appweb. If you don't want to use a config file, try the #maRunSimpleWebServer 
-        instead. 
+    @description Create a web server configuration based on the supplied config file. This routine provides
+        a one-line embedding of Appweb. If you don't want to use a config file, try the #maRunSimpleWebServer
+        instead.
     @param configFile File name of the Appweb configuration file (appweb.conf) that defines the web server configuration.
     @return Zero if successful, otherwise a negative Mpr error code. See the Appweb log for diagnostics.
     @ingroup MaState
@@ -252,7 +252,7 @@ PUBLIC int maRunWebServer(cchar *configFile);
     @return "Zero" if successful, otherwise a negative MPR error code
     @ingroup HttpAuth
     @stability Internal
-    @internal 
+    @internal
  */
 PUBLIC int maWriteAuthFile(HttpAuth *auth, char *path);
 
@@ -278,7 +278,7 @@ PUBLIC int httpEspInit(Http *http, MprModule *mp);
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
     This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a 
+    You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.

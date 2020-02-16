@@ -9,7 +9,6 @@ if (Config.OS == 'linux' && tdepth() >= 4 && valgrind) {
 
     let httpCmd = Cmd.locate('http').portable + " -q --zero "
     let appweb = Cmd.locate('appweb').portable + " --config appweb.conf --name api.valgrind"
-    //  Add --vgdb-error=0 to invoke gdb
     valgrind += " -q --tool=memcheck --leak-check=yes --suppressions=../../../build/bin/mpr.supp " + appweb
 
     //  Run http

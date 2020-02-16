@@ -18,8 +18,8 @@
 
 /************************************* Local **********************************/
 
-static void addValidations();
-static void formatFieldForJson(MprBuf *buf, EdiField *fp);
+static void addValidations(void);
+static void formatFieldForJson(MprBuf *buf, EdiField *fp, int flags);
 static void manageEdiService(EdiService *es, int flags);
 static void manageEdiGrid(EdiGrid *grid, int flags);
 static bool validateField(Edi *edi, EdiRec *rec, cchar *columnName, cchar *value);
@@ -95,7 +95,7 @@ PUBLIC int ediAddTable(Edi *edi, cchar *tableName)
 }
 
 
-static void manageValidation(EdiValidation *vp, int flags) 
+static void manageValidation(EdiValidation *vp, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
         mprMark(vp->name);
@@ -107,7 +107,7 @@ static void manageValidation(EdiValidation *vp, int flags)
 PUBLIC int ediAddValidation(Edi *edi, cchar *name, cchar *tableName, cchar *columnName, cvoid *data)
 {
     EdiService          *es;
-    EdiValidation       *prior, *vp; 
+    EdiValidation       *prior, *vp;
     MprList             *validations;
     cchar               *errMsg, *vkey;
     int                 column, next;
@@ -128,7 +128,7 @@ PUBLIC int ediAddValidation(Edi *edi, cchar *name, cchar *tableName, cchar *colu
             return MPR_ERR_BAD_SYNTAX;
         }
         if ((vp->mdata = pcre_compile2(data, 0, 0, &errMsg, &column, NULL)) == 0) {
-            mprLog("error esp edi", 0, "Cannot compile validation pattern. Error %s at column %d", errMsg, column); 
+            mprLog("error esp edi", 0, "Cannot compile validation pattern. Error %s at column %d", errMsg, column);
             return MPR_ERR_BAD_SYNTAX;
         }
         data = 0;
@@ -195,13 +195,17 @@ PUBLIC int ediChangeColumn(Edi *edi, cchar *tableName, cchar *columnName, int ty
 
 PUBLIC void ediClose(Edi *edi)
 {
-    if (!edi || !edi->provider) {
+    if (!edi || !edi->provider || !edi->path) {
         return;
     }
     edi->provider->close(edi);
+    edi->path = NULL;
 }
 
 
+/*
+    Create a record based on the table's schema. Not saved to the database.
+ */
 PUBLIC EdiRec *ediCreateRec(Edi *edi, cchar *tableName)
 {
     if (!edi || !edi->provider) {
@@ -220,11 +224,16 @@ PUBLIC int ediDelete(Edi *edi, cchar *path)
 }
 
 
-//  FUTURE - rename edi
-PUBLIC void espDumpGrid(EdiGrid *grid)
+PUBLIC void ediDumpGrid(cchar *message, EdiGrid *grid)
 {
-    mprLog("info esp edi", 0, "Grid: %s\nschema: %s,\ndata: %s", grid->tableName, 
+    mprLog("info esp edi", 0, "%s: Grid: %s\nschema: %s,\ndata: %s", message, grid->tableName,
         ediGetTableSchemaAsJson(grid->edi, grid->tableName), ediGridAsJson(grid, MPR_JSON_PRETTY));
+}
+
+
+PUBLIC void ediDumpRec(cchar *message, EdiRec *rec)
+{
+    mprLog("info esp edi", 0, "%s: Rec: %s", message, ediRecAsJson(rec, MPR_JSON_PRETTY));
 }
 
 
@@ -260,21 +269,22 @@ PUBLIC EdiGrid *ediFilterGridFields(EdiGrid *grid, cchar *fields, int include)
 
 PUBLIC EdiRec *ediFilterRecFields(EdiRec *rec, cchar *fields, int include)
 {
-    EdiField    *fp;
     MprList     *fieldList;
-    int         inlist;
+    int         f, inlist;
 
     if (rec == 0 || rec->nfields == 0) {
         return rec;
     }
     fieldList = mprCreateListFromWords(fields);
 
-    for (fp = rec->fields; fp < &rec->fields[rec->nfields]; fp++) {
-        inlist = mprLookupStringItem(fieldList, fp->name) >= 0;
+    for (f = 0; f < rec->nfields; f++) {
+        inlist = mprLookupStringItem(fieldList, rec->fields[f].name) >= 0;
         if ((inlist && !include) || (!inlist && include)) {
-            fp[0] = fp[1];
+            memmove(&rec->fields[f], &rec->fields[f+1], (rec->nfields - f - 1) * sizeof(EdiField));
             rec->nfields--;
-            fp--;
+            /* Ensure never saved to database */
+            rec->id = 0;
+            f--;
         }
     }
     /*
@@ -315,7 +325,7 @@ PUBLIC EdiField *ediGetNextField(EdiRec *rec, EdiField *fp, int offset)
         fp = &rec->fields[offset];
     } else {
         if (++fp >= &rec->fields[rec->nfields]) {
-            fp = 0;  
+            fp = 0;
         }
     }
     return fp;
@@ -335,7 +345,7 @@ PUBLIC EdiRec *ediGetNextRec(EdiGrid *grid, EdiRec *rec)
     } else {
         index = rec->index + 1;
         if (index >= grid->nrecords) {
-            rec = 0;  
+            rec = 0;
         } else {
             rec = grid->records[index];
             rec->index = index;
@@ -364,7 +374,7 @@ PUBLIC cchar *ediGetTableSchemaAsJson(Edi *edi, cchar *tableName)
     mprPutStringToBuf(buf, "{\n    \"types\": {\n");
     for (c = 0; c < ncols; c++) {
         ediGetColumnSchema(edi, tableName, mprGetItem(columns, c), &type, &flags, &cid);
-        mprPutToBuf(buf, "      \"%s\": {\n        \"type\": \"%s\"\n      },\n", 
+        mprPutToBuf(buf, "      \"%s\": {\n        \"type\": \"%s\"\n      },\n",
             (char*) mprGetItem(columns, c), ediGetTypeString(type));
     }
     if (ncols > 0) {
@@ -457,7 +467,7 @@ PUBLIC cchar *ediGetFieldValue(EdiRec *rec, cchar *fieldName)
 PUBLIC int ediGetFieldType(EdiRec *rec, cchar *fieldName)
 {
     int     type;
-    
+
     if (ediGetColumnSchema(rec->edi, rec->tableName, fieldName, &type, NULL, NULL) < 0) {
         return 0;
     }
@@ -530,7 +540,7 @@ PUBLIC cchar *ediGridAsJson(EdiGrid *grid, int flags)
                 } else {
                     mprPutCharToBuf(buf, ':');
                 }
-                formatFieldForJson(buf, fp);
+                formatFieldForJson(buf, fp, flags);
                 if ((f+1) < rec->nfields) {
                     mprPutStringToBuf(buf, ",");
                 }
@@ -576,12 +586,16 @@ PUBLIC EdiProvider *ediLookupProvider(cchar *providerName)
 PUBLIC Edi *ediOpen(cchar *path, cchar *providerName, int flags)
 {
     EdiProvider     *provider;
+    Edi             *edi;
 
     if ((provider = lookupProvider(providerName)) == 0) {
         mprLog("error esp edi", 0, "Cannot find EDI provider '%s'", providerName);
         return 0;
     }
-    return provider->open(path, flags);
+    if ((edi = provider->open(path, flags)) != 0) {
+        edi->path = sclone(path);
+    }
+    return edi;
 }
 
 
@@ -620,29 +634,42 @@ PUBLIC cchar *ediReadFieldValue(Edi *edi, cchar *fmt, cchar *tableName, cchar *k
 }
 
 
-PUBLIC EdiRec *ediReadRecWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value)
+PUBLIC EdiField ediReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName)
 {
-    EdiGrid *grid;
-    
-    /* OPT - slow to read entire table. Need optimized query in providers */
-    if ((grid = ediReadWhere(edi, tableName, fieldName, operation, value)) == 0) {
+    EdiField    field;
+
+    if (!edi || !edi->provider) {
+        memset(&field, 0, sizeof(EdiField));
+        return field;
+    }
+    return edi->provider->readField(edi, tableName, key, fieldName);
+}
+
+
+PUBLIC EdiGrid *ediFindGrid(Edi *edi, cchar *tableName, cchar *select)
+{
+    if (!edi || !edi->provider) {
         return 0;
+    }
+    return edi->provider->findGrid(edi, tableName, select);
+}
+
+
+PUBLIC EdiRec *ediFindRec(Edi *edi, cchar *tableName, cchar *select)
+{
+    EdiGrid     *grid;
+
+    if (!edi || !edi->provider) {
+        return 0;
+    }
+    if ((grid = edi->provider->findGrid(edi, tableName, select)) == 0) {
+        return 0;
+
     }
     if (grid->nrecords > 0) {
         return grid->records[0];
     }
     return 0;
-}
-
-
-PUBLIC EdiField ediReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName)
-{
-    if (!edi || !edi->provider) {
-        EdiField    field;
-        memset(&field, 0, sizeof(EdiField));
-        return field;
-    }
-    return edi->provider->readField(edi, tableName, key, fieldName);
 }
 
 
@@ -655,12 +682,27 @@ PUBLIC EdiRec *ediReadRec(Edi *edi, cchar *tableName, cchar *key)
 }
 
 
+#if DEPRECATED || 1
+PUBLIC EdiRec *ediFindRecWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value)
+{
+    EdiGrid *grid;
+
+    if ((grid = ediReadWhere(edi, tableName, fieldName, operation, value)) == 0) {
+        return 0;
+    }
+    if (grid->nrecords > 0) {
+        return grid->records[0];
+    }
+    return 0;
+}
+
+
 PUBLIC EdiGrid *ediReadWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value)
 {
     if (!edi || !edi->provider) {
         return 0;
     }
-    return edi->provider->readWhere(edi, tableName, fieldName, operation, value);
+    return edi->provider->findGrid(edi, tableName, sfmt("%s %s %s", fieldName, operation, value));
 }
 
 
@@ -669,8 +711,9 @@ PUBLIC EdiGrid *ediReadTable(Edi *edi, cchar *tableName)
     if (!edi || !edi->provider) {
         return 0;
     }
-    return edi->provider->readWhere(edi, tableName, 0, 0, 0);
+    return edi->provider->findGrid(edi, tableName, NULL);
 }
+#endif
 
 
 PUBLIC cchar *ediRecAsJson(EdiRec *rec, int flags)
@@ -692,7 +735,7 @@ PUBLIC cchar *ediRecAsJson(EdiRec *rec, int flags)
             } else {
                 mprPutCharToBuf(buf, ':');
             }
-            formatFieldForJson(buf, fp);
+            formatFieldForJson(buf, fp, flags);
             if ((f+1) < rec->nfields) {
                 mprPutStringToBuf(buf, ",");
             }
@@ -722,6 +765,22 @@ PUBLIC int ediRemoveIndex(Edi *edi, cchar *tableName, cchar *indexName)
     }
     return edi->provider->removeIndex(edi, tableName, indexName);
 }
+
+
+#if KEEP
+PUBLIC int ediRemoveRec(Edi *edi, cchar *tableName, cchar *query)
+{
+    EdiRec  *rec;
+
+    if (!edi || !edi->provider) {
+        return MPR_ERR_BAD_STATE;
+    }
+    if ((rec = ediFindRec(edi, tableName, query)) == 0) {
+        return MPR_ERR_CANT_READ;
+    }
+    return edi->provider->removeRecByKey(edi, tableName, rec->id);
+}
+#endif
 
 
 PUBLIC int ediRemoveRec(Edi *edi, cchar *tableName, cchar *key)
@@ -780,6 +839,21 @@ PUBLIC int ediUpdateField(Edi *edi, cchar *tableName, cchar *key, cchar *fieldNa
     if (!edi || !edi->provider) {
         return MPR_ERR_BAD_STATE;
     }
+    return edi->provider->updateField(edi, tableName, key, fieldName, value);
+}
+
+
+PUBLIC int ediUpdateFieldFmt(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName, cchar *fmt, ...)
+{
+    va_list     ap;
+    cchar       *value;
+
+    if (!edi || !edi->provider) {
+        return MPR_ERR_BAD_STATE;
+    }
+    va_start(ap, fmt);
+    value = sfmtv(fmt, ap);
+    va_end(ap);
     return edi->provider->updateField(edi, tableName, key, fieldName, value);
 }
 
@@ -902,7 +976,7 @@ PUBLIC cchar *ediFormatField(cchar *fmt, EdiField *fp)
 }
 
 
-static void formatFieldForJson(MprBuf *buf, EdiField *fp)
+static void formatFieldForJson(MprBuf *buf, EdiField *fp, int flags)
 {
     MprTime     when;
     cchar       *value;
@@ -912,7 +986,7 @@ static void formatFieldForJson(MprBuf *buf, EdiField *fp)
     if (value == 0) {
         mprPutStringToBuf(buf, "null");
         return;
-    } 
+    }
     switch (fp->type) {
     case EDI_TYPE_BINARY:
         mprPutToBuf(buf, "-binary-");
@@ -930,10 +1004,14 @@ static void formatFieldForJson(MprBuf *buf, EdiField *fp)
         return;
 
     case EDI_TYPE_DATE:
-        if (mprParseTime(&when, fp->value, MPR_UTC_TIMEZONE, 0) == 0) {
-            mprPutToBuf(buf, "\"%s\"", mprFormatUniversalTime(MPR_RFC822_DATE, when));
+        if (flags & MPR_JSON_ENCODE_TYPES) {
+            if (mprParseTime(&when, fp->value, MPR_UTC_TIMEZONE, 0) == 0) {
+                mprPutToBuf(buf, "\"{type:date}%s\"", mprFormatUniversalTime(MPR_ISO_DATE, when));
+            } else {
+                mprPutToBuf(buf, "%s", fp->value);
+            }
         } else {
-            mprPutToBuf(buf, "\"%s\"", value);
+            mprPutToBuf(buf, "%s", fp->value);
         }
         return;
 
@@ -963,7 +1041,7 @@ static MprList *joinColumns(MprList *cols, EdiGrid *grid, MprHash *grids, int jo
     EdiField    *fp;
     Col         *col;
     cchar       *tableName;
-    
+
     if (grid->nrecords == 0) {
         return cols;
     }
@@ -972,7 +1050,7 @@ static MprList *joinColumns(MprList *cols, EdiGrid *grid, MprHash *grids, int jo
 #if KEEP
         if (fp->flags & EDI_FOREIGN && follow)
 #else
-        if (sends(fp->name, "Id") && follow) 
+        if (sends(fp->name, "Id") && follow)
 #endif
         {
             tableName = strim(fp->name, "Id", MPR_TRIM_END);
@@ -1006,8 +1084,7 @@ static MprList *joinColumns(MprList *cols, EdiGrid *grid, MprHash *grids, int jo
 
 
 /*
-    Join grids using an INNER JOIN. All rows are returned.
-    List of grids to join must be null terminated.
+    Join grids using an INNER JOIN. All rows are returned. List of grids to join must be null terminated.
  */
 PUBLIC EdiGrid *ediJoin(Edi *edi, ...)
 {
@@ -1055,14 +1132,14 @@ PUBLIC EdiGrid *ediJoin(Edi *edi, ...)
         mprAddItem(rows, rec);
         dest = rec->fields;
         current = 0;
-        for (ITERATE_ITEMS(cols, col, next)) { 
+        for (ITERATE_ITEMS(cols, col, next)) {
             if (col->grid == primary) {
                 *dest = primary->records[r]->fields[col->field];
             } else {
                 if (col->grid != current) {
                     current = col->grid;
                     keyValue = primary->records[r]->fields[col->joinField].value;
-                    rec = ediReadRecWhere(edi, col->grid->tableName, "id", "==", keyValue);
+                    rec = ediReadRec(edi, col->grid->tableName, keyValue);
                 }
                 if (rec) {
                     fp = &rec->fields[col->field];
@@ -1083,6 +1160,7 @@ PUBLIC EdiGrid *ediJoin(Edi *edi, ...)
         result->records[r] = mprGetItem(rows, r);
     }
     result->nrecords = nrows;
+    result->count = nrows;
     return result;
 }
 
@@ -1185,18 +1263,6 @@ PUBLIC EdiGrid *ediMakeGrid(cchar *json)
 }
 
 
-PUBLIC MprHash *ediMakeHash(cchar *fmt, ...)
-{
-    MprHash     *obj;
-    va_list     args;
-
-    va_start(args, fmt);
-    obj = mprDeserialize(sfmtv(fmt, args));
-    va_end(args);
-    return obj;
-}
-
-
 PUBLIC MprJson *ediMakeJson(cchar *fmt, ...)
 {
     MprJson     *obj;
@@ -1242,6 +1308,35 @@ PUBLIC EdiRec *ediMakeRec(cchar *json)
 }
 
 
+PUBLIC EdiRec *ediMakeRecFromJson(cchar *tableName, MprJson *fields)
+{
+    MprJson     *field;
+    EdiRec      *rec;
+    EdiField    *fp;
+    int         f, fid;
+
+    if ((rec = ediCreateBareRec(NULL, tableName, (int) mprGetJsonLength(fields))) == 0) {
+        return 0;
+    }
+    for (f = 0, ITERATE_JSON(fields, field, fid)) {
+        print("Table %s column %s value %s", tableName, field->name, field->value);
+        if ((field->type & MPR_JSON_VALUE) == 0) {
+            mprLog("error dlc", 0, "Bad field type %x", field->type);
+        }
+        fp = &rec->fields[f++];
+        fp->valid = 1;
+        fp->name = field->name;
+        fp->value = field->value;
+        fp->type = field->type & MPR_JSON_DATA_TYPE;
+        fp->flags = 0;
+        if (smatch(field->name, "id")) {
+            rec->id = field->value;
+        }
+    }
+    return rec;
+}
+
+
 PUBLIC int ediParseTypeString(cchar *type)
 {
     if (smatch(type, "binary")) {
@@ -1281,7 +1376,7 @@ PUBLIC EdiGrid *ediPivotGrid(EdiGrid *grid, int flags)
     nrows = first->nfields;
     nfields = grid->nrecords;
     result = ediCreateBareGrid(grid->edi, grid->tableName, nrows);
-    
+
     for (c = 0; c < nrows; c++) {
         result->records[c] = rec = ediCreateBareRec(grid->edi, grid->tableName, nfields);
         fp = rec->fields;
@@ -1344,8 +1439,15 @@ static cchar *mapEdiValue(cchar *value, int type)
         }
         break;
 
-    case EDI_TYPE_BINARY:
     case EDI_TYPE_BOOL:
+        if (smatch(value, "false")) {
+            value = "0";
+        } else if (smatch(value, "true")) {
+            value = "1";
+        }
+        break;
+
+    case EDI_TYPE_BINARY:
     case EDI_TYPE_FLOAT:
     case EDI_TYPE_INT:
     case EDI_TYPE_STRING:
@@ -1373,6 +1475,17 @@ PUBLIC EdiRec *ediSetField(EdiRec *rec, cchar *fieldName, cchar *value)
             return rec;
         }
     }
+    return rec;
+}
+
+
+PUBLIC EdiRec *ediSetFieldFmt(EdiRec *rec, cchar *fieldName, cchar *fmt, ...)
+{
+    va_list     ap;
+
+    va_start(ap, fmt);
+    ediSetField(rec, fieldName, sfmtv(fmt, ap));
+    va_end(ap);
     return rec;
 }
 
@@ -1540,8 +1653,7 @@ static cchar *checkUnique(EdiValidation *vp, EdiRec *rec, cchar *fieldName, ccha
 {
     EdiRec  *other;
 
-    //  OPT Could require an index to enforce this.
-    if ((other = ediReadRecWhere(rec->edi, rec->tableName, fieldName, "==", value)) == 0) {
+    if ((other = ediReadRec(rec->edi, rec->tableName, sfmt("%s == %s", fieldName, value))) == 0) {
         return 0;
     }
     if (smatch(other->id, rec->id)) {
@@ -1635,6 +1747,7 @@ static void addValidations()
 
 
 
+#if ME_ESP_ABBREV
 /*************************************** Code *********************************/
 
 PUBLIC void addHeader(cchar *key, cchar *fmt, ...)
@@ -1644,7 +1757,7 @@ PUBLIC void addHeader(cchar *key, cchar *fmt, ...)
 
     va_start(args, fmt);
     value = sfmtv(fmt, args);
-    espAddHeaderString(getConn(), key, value);
+    espAddHeaderString(getStream(), key, value);
     va_end(args);
 }
 
@@ -1657,12 +1770,20 @@ PUBLIC void addParam(cchar *key, cchar *value)
 }
 
 
+#if KEEP
+PUBLIC cchar *body(cchar *key)
+{
+    return espGetParam(getStream(), sfmt("body.%s", key), 0);
+}
+#endif
+
+
 PUBLIC bool canUser(cchar *abilities, bool warn)
 {
-    HttpConn    *conn;
+    HttpStream    *stream;
 
-    conn = getConn();
-    if (httpCanUser(conn, abilities)) {
+    stream = getStream();
+    if (httpCanUser(stream, abilities)) {
         return 1;
     }
     if (warn) {
@@ -1675,14 +1796,16 @@ PUBLIC bool canUser(cchar *abilities, bool warn)
 
 PUBLIC EdiRec *createRec(cchar *tableName, MprJson *params)
 {
-    return setRec(ediSetFields(ediCreateRec(getDatabase(), tableName), params));
+    return setRec(setFields(ediCreateRec(getDatabase(), tableName), params));
 }
 
 
+#if DEPRECATED || 1
 PUBLIC bool createRecFromParams(cchar *table)
 {
-    return updateRec(createRec(table, params()));
+    return updateRec(createRec(table, params(NULL)));
 }
+#endif
 
 
 /*
@@ -1690,7 +1813,7 @@ PUBLIC bool createRecFromParams(cchar *table)
  */
 PUBLIC cchar *createSession()
 {
-    return espCreateSession(getConn());
+    return espCreateSession(getStream());
 }
 
 
@@ -1700,13 +1823,31 @@ PUBLIC cchar *createSession()
  */
 PUBLIC void destroySession()
 {
-    httpDestroySession(getConn());
+    httpDestroySession(getStream());
 }
 
 
 PUBLIC void dontAutoFinalize()
 {
-    espSetAutoFinalizing(getConn(), 0);
+    espSetAutoFinalizing(getStream(), 0);
+}
+
+
+PUBLIC void dumpParams(cchar *message)
+{
+    mprLog("info esp edi", 0, "%s: %s", message, mprJsonToString(params(NULL), MPR_JSON_PRETTY));
+}
+
+
+PUBLIC void dumpGrid(cchar *message, EdiGrid *grid)
+{
+    ediDumpGrid(message, grid);
+}
+
+
+PUBLIC void dumpRec(cchar *message, EdiRec *rec)
+{
+    ediDumpRec(message, rec);
 }
 
 
@@ -1715,7 +1856,7 @@ PUBLIC bool feedback(cchar *kind, cchar *fmt, ...)
     va_list     args;
 
     va_start(args, fmt);
-    espSetFeedbackv(getConn(), kind, fmt, args);
+    espSetFeedbackv(getStream(), kind, fmt, args);
     va_end(args);
 
     /*
@@ -1727,17 +1868,49 @@ PUBLIC bool feedback(cchar *kind, cchar *fmt, ...)
 
 PUBLIC void finalize()
 {
-    espFinalize(getConn());
+    espFinalize(getStream());
 }
 
 
-#if DEPRECATED || 1
+PUBLIC cchar *findParams()
+{
+    MprJson     *fields, *key;
+    MprBuf      *buf;
+    cchar       *filter, *limit, *offset;
+    int         index;
+
+    buf = mprCreateBuf(0, 0);
+
+    if ((fields = params("fields")) != 0) {
+        for (ITERATE_JSON(fields, key, index)) {
+            mprPutToBuf(buf, "%s == %s", key->name, key->value);
+            if ((index + 1) < fields->length) {
+                mprPutStringToBuf(buf, " AND ");
+            }
+        }
+    }
+    if ((filter = param("options.filter")) != 0) {
+        if (mprGetBufLength(buf) > 0) {
+            mprPutStringToBuf(buf, " AND ");
+        }
+        mprPutToBuf(buf, "* >< %s", filter);
+    }
+    offset = param("options.offset");
+    limit = param("options.limit");
+    if (offset && limit) {
+        mprPutToBuf(buf, " LIMIT %d, %d", (int) stoi(offset), (int) stoi(limit));
+    }
+    return mprBufToString(buf);
+}
+
+
+#if DEPRECATED
 PUBLIC void flash(cchar *kind, cchar *fmt, ...)
 {
     va_list     args;
 
     va_start(args, fmt);
-    espSetFeedbackv(getConn(), kind, fmt, args);
+    espSetFeedbackv(getStream(), kind, fmt, args);
     va_end(args);
 }
 #endif
@@ -1745,13 +1918,13 @@ PUBLIC void flash(cchar *kind, cchar *fmt, ...)
 
 PUBLIC void flush()
 {
-    espFlush(getConn());
+    espFlush(getStream());
 }
 
 
 PUBLIC HttpAuth *getAuth()
 {
-    return espGetAuth(getConn());
+    return espGetAuth(getStream());
 }
 
 
@@ -1771,7 +1944,7 @@ PUBLIC cchar *getConfig(cchar *field)
     HttpRoute   *route;
     cchar       *value;
 
-    route = getConn()->rx->route;
+    route = getStream()->rx->route;
     if ((value = mprGetJson(route->config, field)) == 0) {
         return "";
     }
@@ -1779,75 +1952,75 @@ PUBLIC cchar *getConfig(cchar *field)
 }
 
 
-PUBLIC HttpConn *getConn()
+PUBLIC HttpStream *getStream()
 {
-    HttpConn    *conn;
+    HttpStream    *stream;
 
-    conn = mprGetThreadData(((Esp*) MPR->espService)->local);
-    if (conn == 0) {
-        mprLog("error esp", 0, "Connection is not defined in thread local storage.\n"
-        "If using a callback, make sure you invoke espSetConn with the connection before using the ESP abbreviated API");
+    stream = mprGetThreadData(((Esp*) MPR->espService)->local);
+    if (stream == 0) {
+        mprLog("error esp", 0, "Stream is not defined in thread local storage.\n"
+        "If using a callback, make sure you invoke espSetStream with the connection before using the ESP abbreviated API");
     }
-    return conn;
+    return stream;
 }
 
 
 PUBLIC cchar *getCookies()
 {
-    return espGetCookies(getConn());
+    return espGetCookies(getStream());
 }
 
 
 PUBLIC MprOff getContentLength()
 {
-    return espGetContentLength(getConn());
+    return espGetContentLength(getStream());
 }
 
 
 PUBLIC cchar *getContentType()
 {
-    return getConn()->rx->mimeType;
+    return getStream()->rx->mimeType;
 }
 
 
 PUBLIC void *getData()
 {
-    return espGetData(getConn());
+    return espGetData(getStream());
 }
 
 
 PUBLIC Edi *getDatabase()
 {
-    return espGetDatabase(getConn());
+    return espGetDatabase(getStream());
 }
 
 
 PUBLIC MprDispatcher *getDispatcher()
 {
-    HttpConn    *conn;
+    HttpStream    *stream;
 
-    if ((conn = getConn()) == 0) {
+    if ((stream = getStream()) == 0) {
         return 0;
     }
-    return conn->dispatcher;
+    return stream->dispatcher;
 }
 
 
 PUBLIC cchar *getDocuments()
 {
-    return getConn()->rx->route->documents;
+    return getStream()->rx->route->documents;
 }
 
 
 PUBLIC EspRoute *getEspRoute()
 {
-    return espGetEspRoute(getConn());
+    return espGetEspRoute(getStream());
 }
 
 
 PUBLIC cchar *getFeedback(cchar *kind)
 {
-    return espGetFeedback(getConn(), kind);
+    return espGetFeedback(getStream(), kind);
 }
 
 
@@ -1865,55 +2038,55 @@ PUBLIC cchar *getFieldError(cchar *field)
 
 PUBLIC EdiGrid *getGrid()
 {
-    return getConn()->grid;
+    return getStream()->grid;
 }
 
 
 PUBLIC cchar *getHeader(cchar *key)
 {
-    return espGetHeader(getConn(), key);
+    return espGetHeader(getStream(), key);
 }
 
 
 PUBLIC cchar *getMethod()
 {
-    return espGetMethod(getConn());
+    return espGetMethod(getStream());
 }
 
 
 PUBLIC cchar *getQuery()
 {
-    return getConn()->rx->parsedUri->query;
+    return getStream()->rx->parsedUri->query;
 }
 
 
 PUBLIC EdiRec *getRec()
 {
-    return getConn()->record;
+    return getStream()->record;
 }
 
 
 PUBLIC cchar *getReferrer()
 {
-    return espGetReferrer(getConn());
+    return espGetReferrer(getStream());
 }
 
 
 PUBLIC EspReq *getReq()
 {
-    return getConn()->data;
+    return getStream()->data;
 }
 
 
 PUBLIC HttpRoute *getRoute()
 {
-    return espGetRoute(getConn());
+    return espGetRoute(getStream());
 }
 
 
 PUBLIC cchar *getSecurityToken()
 {
-    return httpGetSecurityToken(getConn(), 0);
+    return httpGetSecurityToken(getStream(), 0);
 }
 
 
@@ -1922,61 +2095,71 @@ PUBLIC cchar *getSecurityToken()
  */
 PUBLIC cchar *getSessionID()
 {
-    return espGetSessionID(getConn(), 1);
+    return espGetSessionID(getStream(), 1);
 }
 
 
 PUBLIC cchar *getSessionVar(cchar *key)
 {
-    return httpGetSessionVar(getConn(), key, 0);
+    return httpGetSessionVar(getStream(), key, 0);
 }
 
 
 PUBLIC cchar *getPath()
 {
-    return espGetPath(getConn());
+    return espGetPath(getStream());
 }
 
 
 PUBLIC MprList *getUploads()
 {
-    return espGetUploads(getConn());
+    return espGetUploads(getStream());
 }
 
 
 PUBLIC cchar *getUri()
 {
-    return espGetUri(getConn());
+    return espGetUri(getStream());
 }
 
 
 PUBLIC bool hasGrid()
 {
-    return espHasGrid(getConn());
+    return espHasGrid(getStream());
 }
 
 
 PUBLIC bool hasRec()
 {
-    return espHasRec(getConn());
+    return espHasRec(getStream());
 }
 
+
+PUBLIC int intParam(cchar *key)
+{
+    return (int) stoi(param(key));
+}
+
+
+PUBLIC bool isAuthenticated()
+{
+    return httpIsAuthenticated(getStream());
+}
 
 PUBLIC bool isEof()
 {
-    return httpIsEof(getConn());
+    return httpIsEof(getStream());
 }
-
 
 PUBLIC bool isFinalized()
 {
-    return espIsFinalized(getConn());
+    return espIsFinalized(getStream());
 }
 
 
 PUBLIC bool isSecure()
 {
-    return espIsSecure(getConn());
+    return espIsSecure(getStream());
 }
 
 
@@ -2018,7 +2201,7 @@ PUBLIC EdiRec *makeRec(cchar *contents)
 
 PUBLIC cchar *makeUri(cchar *target)
 {
-    return espUri(getConn(), target);
+    return espUri(getStream(), target);
 }
 
 
@@ -2032,7 +2215,7 @@ PUBLIC bool modeIs(cchar *kind)
 {
     HttpRoute   *route;
 
-    route = getConn()->rx->route;
+    route = getStream()->rx->route;
     return smatch(route->mode, kind);
 }
 
@@ -2045,25 +2228,35 @@ PUBLIC cchar *nonce()
 
 PUBLIC cchar *param(cchar *key)
 {
-    return espGetParam(getConn(), key, 0);
+    return espGetParam(getStream(), key, 0);
 }
 
 
-PUBLIC MprJson *params()
+PUBLIC MprJson *params(cchar *var)
 {
-    return espGetParams(getConn());
+    if (var) {
+        return mprGetJsonObj(espGetParams(getStream()), var);
+    } else {
+        return espGetParams(getStream());
+    }
 }
 
 
 PUBLIC ssize receive(char *buf, ssize len)
 {
-    return httpRead(getConn(), buf, len);
+    return httpRead(getStream(), buf, len);
 }
 
 
-PUBLIC EdiRec *readRecWhere(cchar *tableName, cchar *fieldName, cchar *operation, cchar *value)
+PUBLIC EdiGrid *findGrid(cchar *tableName, cchar *select)
 {
-    return setRec(ediReadRecWhere(getDatabase(), tableName, fieldName, operation, value));
+    return setGrid(ediFindGrid(getDatabase(), tableName, select));
+}
+
+
+PUBLIC EdiRec *findRec(cchar *tableName, cchar *select)
+{
+    return setRec(ediFindRec(getDatabase(), tableName, select));
 }
 
 
@@ -2076,9 +2269,10 @@ PUBLIC EdiRec *readRec(cchar *tableName, cchar *key)
 }
 
 
-PUBLIC EdiRec *readRecByKey(cchar *tableName, cchar *key)
+#if DEPRECATE || 1
+PUBLIC EdiRec *findRecWhere(cchar *tableName, cchar *fieldName, cchar *operation, cchar *value)
 {
-    return setRec(ediReadRec(getDatabase(), tableName, key));
+    return setRec(ediFindRecWhere(getDatabase(), tableName, fieldName, operation, value));
 }
 
 
@@ -2090,26 +2284,40 @@ PUBLIC EdiGrid *readWhere(cchar *tableName, cchar *fieldName, cchar *operation, 
 
 PUBLIC EdiGrid *readTable(cchar *tableName)
 {
-    return setGrid(ediReadWhere(getDatabase(), tableName, 0, 0, 0));
+    return setGrid(ediReadTable(getDatabase(), tableName));
 }
+#endif
 
 
 PUBLIC void redirect(cchar *target)
 {
-    espRedirect(getConn(), 302, target);
+    espRedirect(getStream(), 302, target);
 }
 
 
 PUBLIC void redirectBack()
 {
-    espRedirectBack(getConn());
+    espRedirectBack(getStream());
 }
 
 
 PUBLIC void removeCookie(cchar *name)
 {
-    espRemoveCookie(getConn(), name);
+    espRemoveCookie(getStream(), name);
 }
+
+
+#if KEEP
+PUBLIC bool removeRec(cchar *tableName, cchar *query)
+{
+    if (ediRemoveRec(getDatabase(), tableName, query) < 0) {
+        feedback("error", "Cannot delete %s", stitle(tableName));
+        return 0;
+    }
+    feedback("info", "Deleted %s", stitle(tableName));
+    return 1;
+}
+#endif
 
 
 PUBLIC bool removeRec(cchar *tableName, cchar *key)
@@ -2125,7 +2333,7 @@ PUBLIC bool removeRec(cchar *tableName, cchar *key)
 
 PUBLIC void removeSessionVar(cchar *key)
 {
-    httpRemoveSessionVar(getConn(), key);
+    httpRemoveSessionVar(getStream(), key);
 }
 
 
@@ -2137,7 +2345,7 @@ PUBLIC ssize render(cchar *fmt, ...)
 
     va_start(args, fmt);
     msg = sfmtv(fmt, args);
-    count = espRenderString(getConn(), msg);
+    count = espRenderString(getStream(), msg);
     va_end(args);
     return count;
 }
@@ -2145,13 +2353,13 @@ PUBLIC ssize render(cchar *fmt, ...)
 
 PUBLIC ssize renderCached()
 {
-    return espRenderCached(getConn());;
+    return espRenderCached(getStream());;
 }
 
 
 PUBLIC ssize renderConfig()
 {
-    return espRenderConfig(getConn());;
+    return espRenderConfig(getStream());;
 }
 
 
@@ -2162,20 +2370,20 @@ PUBLIC void renderError(int status, cchar *fmt, ...)
 
     va_start(args, fmt);
     msg = sfmt(fmt, args);
-    espRenderError(getConn(), status, "%s", msg);
+    espRenderError(getStream(), status, "%s", msg);
     va_end(args);
 }
 
 
 PUBLIC ssize renderFile(cchar *path)
 {
-    return espRenderFile(getConn(), path);
+    return espRenderFile(getStream(), path);
 }
 
 
 PUBLIC void renderFeedback(cchar *kind)
 {
-    espRenderFeedback(getConn(), kind);
+    espRenderFeedback(getStream(), kind);
 }
 
 
@@ -2187,7 +2395,7 @@ PUBLIC ssize renderSafe(cchar *fmt, ...)
 
     va_start(args, fmt);
     msg = sfmtv(fmt, args);
-    count = espRenderSafeString(getConn(), msg);
+    count = espRenderSafeString(getStream(), msg);
     va_end(args);
     return count;
 }
@@ -2195,22 +2403,14 @@ PUBLIC ssize renderSafe(cchar *fmt, ...)
 
 PUBLIC ssize renderString(cchar *s)
 {
-    return espRenderString(getConn(), s);
+    return espRenderString(getStream(), s);
 }
 
 
 PUBLIC void renderView(cchar *view)
 {
-    espRenderDocument(getConn(), view);
+    espRenderDocument(getStream(), view);
 }
-
-
-#if KEEP
-PUBLIC int runCmd(cchar *command, char *input, char **output, char **error, MprTime timeout, int flags)
-{
-    return mprRun(getDispatcher(), command, input, output, error, timeout, MPR_CMD_IN  | MPR_CMD_OUT | MPR_CMD_ERR | flags);
-}
-#endif
 
 
 PUBLIC int runCmd(cchar *command, char *input, char **output, char **error, MprTime timeout, int flags)
@@ -2227,49 +2427,49 @@ PUBLIC int runCmd(cchar *command, char *input, char **output, char **error, MprT
  */
 PUBLIC void securityToken()
 {
-    httpAddSecurityToken(getConn(), 0);
+    httpAddSecurityToken(getStream(), 0);
 }
 
 
 PUBLIC ssize sendGrid(EdiGrid *grid)
 {
-    return espSendGrid(getConn(), grid, 0);
+    return espSendGrid(getStream(), grid, 0);
 }
 
 
 PUBLIC ssize sendRec(EdiRec *rec)
 {
-    return espSendRec(getConn(), rec, 0);
+    return espSendRec(getStream(), rec, 0);
 }
 
 
 PUBLIC void sendResult(bool status)
 {
-    espSendResult(getConn(), status);
+    espSendResult(getStream(), status);
 }
 
 
-PUBLIC void setConn(HttpConn *conn)
+PUBLIC void setStream(HttpStream *stream)
 {
-    espSetConn(conn);
+    espSetStream(stream);
 }
 
 
 PUBLIC void setContentType(cchar *mimeType)
 {
-    espSetContentType(getConn(), mimeType);
+    espSetContentType(getStream(), mimeType);
 }
 
 
 PUBLIC void setCookie(cchar *name, cchar *value, cchar *path, cchar *cookieDomain, MprTicks lifespan, bool isSecure)
 {
-    espSetCookie(getConn(), name, value, path, cookieDomain, lifespan, isSecure);
+    espSetCookie(getStream(), name, value, path, cookieDomain, lifespan, isSecure);
 }
 
 
 PUBLIC void setData(void *data)
 {
-    espSetData(getConn(), data);
+    espSetData(getStream(), data);
 }
 
 
@@ -2287,7 +2487,7 @@ PUBLIC EdiRec *setFields(EdiRec *rec, MprJson *params)
 
 PUBLIC EdiGrid *setGrid(EdiGrid *grid)
 {
-    getConn()->grid = grid;
+    getStream()->grid = grid;
     return grid;
 }
 
@@ -2299,44 +2499,44 @@ PUBLIC void setHeader(cchar *key, cchar *fmt, ...)
 
     va_start(args, fmt);
     value = sfmtv(fmt, args);
-    espSetHeaderString(getConn(), key, value);
+    espSetHeaderString(getStream(), key, value);
     va_end(args);
 }
 
 
 PUBLIC void setIntParam(cchar *key, int value)
 {
-    espSetIntParam(getConn(), key, value);
+    espSetIntParam(getStream(), key, value);
 }
 
 
 PUBLIC void setNotifier(HttpNotifier notifier)
 {
-    espSetNotifier(getConn(), notifier);
+    espSetNotifier(getStream(), notifier);
 }
 
 
 PUBLIC void setParam(cchar *key, cchar *value)
 {
-    espSetParam(getConn(), key, value);
+    espSetParam(getStream(), key, value);
 }
 
 
 PUBLIC EdiRec *setRec(EdiRec *rec)
 {
-    return espSetRec(getConn(), rec);
+    return espSetRec(getStream(), rec);
 }
 
 
 PUBLIC void setSessionVar(cchar *key, cchar *value)
 {
-    httpSetSessionVar(getConn(), key, value);
+    httpSetSessionVar(getStream(), key, value);
 }
 
 
 PUBLIC void setStatus(int status)
 {
-    espSetStatus(getConn(), status);
+    espSetStatus(getStream(), status);
 }
 
 
@@ -2348,13 +2548,13 @@ PUBLIC cchar *session(cchar *key)
 
 PUBLIC void setTimeout(void *proc, MprTicks timeout, void *data)
 {
-    mprCreateEvent(getConn()->dispatcher, "setTimeout", (int) timeout, proc, data, 0);
+    mprCreateEvent(getStream()->dispatcher, "setTimeout", (int) timeout, proc, data, 0);
 }
 
 
 PUBLIC void showRequest()
 {
-    espShowRequest(getConn());
+    espShowRequest(getStream());
 }
 
 
@@ -2366,7 +2566,7 @@ PUBLIC EdiGrid *sortGrid(EdiGrid *grid, cchar *sortColumn, int sortOrder)
 
 PUBLIC void updateCache(cchar *uri, cchar *data, int lifesecs)
 {
-    espUpdateCache(getConn(), uri, data, lifesecs);
+    espUpdateCache(getStream(), uri, data, lifesecs);
 }
 
 
@@ -2405,10 +2605,12 @@ PUBLIC bool updateRec(EdiRec *rec)
 }
 
 
+#if DEPRECATED || 1
 PUBLIC bool updateRecFromParams(cchar *table)
 {
-    return updateRec(setFields(readRec(table, param("id")), params()));
+    return updateRec(setFields(findRec(table, param("id")), params(NULL)));
 }
+#endif
 
 
 PUBLIC cchar *uri(cchar *target, ...)
@@ -2419,7 +2621,7 @@ PUBLIC cchar *uri(cchar *target, ...)
     va_start(args, target);
     uri = sfmtv(target, args);
     va_end(args);
-    return httpLink(getConn(), uri);
+    return httpLink(getStream(), uri);
 }
 
 
@@ -2431,11 +2633,11 @@ PUBLIC cchar *absuri(cchar *target, ...)
     va_start(args, target);
     uri = sfmtv(target, args);
     va_end(args);
-    return httpLinkAbs(getConn(), uri);
+    return httpLinkAbs(getStream(), uri);
 }
 
 
-#if DEPRECATED || 1
+#if DEPRECATED
 /*
     <% stylesheets(patterns); %>
 
@@ -2443,7 +2645,7 @@ PUBLIC cchar *absuri(cchar *target, ...)
  */
 PUBLIC void stylesheets(cchar *patterns)
 {
-    HttpConn    *conn;
+    HttpStream  *stream;
     HttpRx      *rx;
     HttpRoute   *route;
     EspRoute    *eroute;
@@ -2451,8 +2653,8 @@ PUBLIC void stylesheets(cchar *patterns)
     cchar       *filename, *ext, *uri, *path, *kind, *version, *clientDir;
     int         next;
 
-    conn = getConn();
-    rx = conn->rx;
+    stream = getStream();
+    rx = stream->rx;
     route = rx->route;
     eroute = route->eroute;
     patterns = httpExpandRouteVars(route, patterns);
@@ -2502,12 +2704,12 @@ PUBLIC void stylesheets(cchar *patterns)
         }
         for (ITERATE_ITEMS(files, path, next)) {
             path = sjoin("~/", strim(path, ".gz", MPR_TRIM_END), NULL);
-            uri = httpLink(conn, path);
+            uri = httpLink(stream, path);
             kind = mprGetPathExt(path);
             if (smatch(kind, "css")) {
-                espRender(conn, "<link rel='stylesheet' type='text/css' href='%s' />\n", uri);
+                espRender(stream, "<link rel='stylesheet' type='text/css' href='%s' />\n", uri);
             } else {
-                espRender(conn, "<link rel='stylesheet/%s' type='text/css' href='%s' />\n", kind, uri);
+                espRender(stream, "<link rel='stylesheet/%s' type='text/css' href='%s' />\n", kind, uri);
             }
         }
     }
@@ -2521,7 +2723,7 @@ PUBLIC void stylesheets(cchar *patterns)
  */
 PUBLIC void scripts(cchar *patterns)
 {
-    HttpConn    *conn;
+    HttpStream  *stream;
     HttpRx      *rx;
     HttpRoute   *route;
     EspRoute    *eroute;
@@ -2530,8 +2732,8 @@ PUBLIC void scripts(cchar *patterns)
     cchar       *uri, *path, *version;
     int         next, ci;
 
-    conn = getConn();
-    rx = conn->rx;
+    stream = getStream();
+    rx = stream->rx;
     route = rx->route;
     eroute = route->eroute;
     patterns = httpExpandRouteVars(route, patterns);
@@ -2556,7 +2758,7 @@ PUBLIC void scripts(cchar *patterns)
         }
         return;
     }
-    if ((files = mprGlobPathFiles(httpGetDir(route, "client"), patterns, MPR_PATH_RELATIVE)) == 0 || 
+    if ((files = mprGlobPathFiles(httpGetDir(route, "client"), patterns, MPR_PATH_RELATIVE)) == 0 ||
             mprGetListLength(files) == 0) {
         files = mprCreateList(0, 0);
         mprAddItem(files, patterns);
@@ -2566,13 +2768,13 @@ PUBLIC void scripts(cchar *patterns)
             path = stemplateJson(path, route->config);
         }
         path = sjoin("~/", strim(path, ".gz", MPR_TRIM_END), NULL);
-        uri = httpLink(conn, path);
-        espRender(conn, "<script src='%s' type='text/javascript'></script>\n", uri);
+        uri = httpLink(stream, path);
+        espRender(stream, "<script src='%s' type='text/javascript'></script>\n", uri);
     }
 }
-
-
 #endif
+
+#endif /* ME_ESP_ABBREV */
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
     This software is distributed under commercial and open source licenses.
@@ -2637,19 +2839,6 @@ static void parseEsp(HttpRoute *route, cchar *key, MprJson *prop)
     EspRoute    *eroute;
 
     eroute = route->eroute;
-
-    if (smatch(mprGetJson(prop, "app"), "true")) {
-        eroute->app = 1;
-    }
-    if (eroute->app) {
-        /*
-            Set some defaults before parsing "esp". This permits user overrides.
-         */
-        httpSetRouteXsrf(route, 1);
-        httpAddRouteHandler(route, "espHandler", "");
-        eroute->keep = smatch(route->mode, "release") == 0;
-    }
-    espSetDefaultDirs(route, eroute->app);
     httpParseAll(route, key, prop);
 
     /*
@@ -2666,6 +2855,43 @@ static void parseEsp(HttpRoute *route, cchar *key, MprJson *prop)
         if (!mprLookupStringItem(route->indexes, "index.html")) {
             httpAddRouteIndex(route, "index.html");
         }
+    }
+}
+
+/*
+    app: {
+        source: [
+            'patterns/ *.c',
+        ],
+        tokens: [
+            CFLAGS: '-DMY=42'
+        ],
+    }
+ */
+static void parseApp(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    EspRoute    *eroute;
+
+    eroute = route->eroute;
+
+    if (!(prop->type & MPR_JSON_OBJ)) {
+        if (prop->type & MPR_JSON_TRUE) {
+            eroute->app = 1;
+        }
+    } else {
+        eroute->app = 1;
+    }
+    if (eroute->app) {
+        /*
+            Set some defaults before parsing "esp". This permits user overrides.
+         */
+        httpSetRouteXsrf(route, 1);
+        httpAddRouteHandler(route, "espHandler", "");
+        eroute->keep = smatch(route->mode, "release") == 0;
+        espSetDefaultDirs(route, eroute->app);
+    }
+    if (prop->type & MPR_JSON_OBJ) {
+        httpParseAll(route, key, prop);
     }
 }
 
@@ -2949,7 +3175,17 @@ static void restfulRouteSet(HttpRoute *route, cchar *set)
 }
 
 
-#if DEPRECATED || 1
+static void postRouteSet(HttpRoute *route, cchar *set)
+{
+    httpAddPostGroup(route, "{controller}");
+}
+
+static void spaRouteSet(HttpRoute *route, cchar *set)
+{
+    httpAddSpaGroup(route, "{controller}");
+}
+
+#if DEPRECATED && REMOVE
 static void legacyRouteSet(HttpRoute *route, cchar *set)
 {
     restfulRouteSet(route, "restful");
@@ -2961,11 +3197,13 @@ PUBLIC int espInitParser()
 {
     httpDefineRouteSet("esp-server", serverRouteSet);
     httpDefineRouteSet("esp-restful", restfulRouteSet);
-#if DEPRECATED || 1
-    httpDefineRouteSet("esp-angular-mvc", legacyRouteSet);
+    httpDefineRouteSet("esp-spa", spaRouteSet);
+    httpDefineRouteSet("esp-post", postRouteSet);
+#if DEPRECATE && REMOVE
     httpDefineRouteSet("esp-html-mvc", legacyRouteSet);
 #endif
     httpAddConfig("esp", parseEsp);
+    httpAddConfig("esp.app", parseApp);
     httpAddConfig("esp.apps", parseApps);
     httpAddConfig("esp.build", parseBuild);
     httpAddConfig("esp.combine", parseCombine);
@@ -3000,9 +3238,13 @@ PUBLIC int espInitParser()
 #define ITERATE_CONFIG(route, obj, child, index) \
     index = 0, child = obj ? obj->children: 0; obj && index < obj->length && !route->error; child = child->next, index++
 
+/*********************************** Fowards **********************************/
+
+static EspAction *createAction(cchar *target, cchar *abilities, void *callback);
+
 /************************************* Code ***********************************/
 
-#if DEPRECATED || 1
+#if DEPRECATED
 PUBLIC void espAddPak(HttpRoute *route, cchar *name, cchar *version)
 {
     if (!version || !*version || smatch(version, "0.0.0")) {
@@ -3016,7 +3258,7 @@ PUBLIC void espAddPak(HttpRoute *route, cchar *name, cchar *version)
 /*
     Add a http header if not already defined
  */
-PUBLIC void espAddHeader(HttpConn *conn, cchar *key, cchar *fmt, ...)
+PUBLIC void espAddHeader(HttpStream *stream, cchar *key, cchar *fmt, ...)
 {
     va_list     vargs;
 
@@ -3024,7 +3266,7 @@ PUBLIC void espAddHeader(HttpConn *conn, cchar *key, cchar *fmt, ...)
     assert(fmt && *fmt);
 
     va_start(vargs, fmt);
-    httpAddHeaderString(conn, key, sfmt(fmt, vargs));
+    httpAddHeaderString(stream, key, sfmt(fmt, vargs));
     va_end(vargs);
 }
 
@@ -3032,16 +3274,16 @@ PUBLIC void espAddHeader(HttpConn *conn, cchar *key, cchar *fmt, ...)
 /*
     Add a header string if not already defined
  */
-PUBLIC void espAddHeaderString(HttpConn *conn, cchar *key, cchar *value)
+PUBLIC void espAddHeaderString(HttpStream *stream, cchar *key, cchar *value)
 {
-    httpAddHeaderString(conn, key, value);
+    httpAddHeaderString(stream, key, value);
 }
 
 
-PUBLIC void espAddParam(HttpConn *conn, cchar *var, cchar *value)
+PUBLIC void espAddParam(HttpStream *stream, cchar *var, cchar *value)
 {
-    if (!httpGetParam(conn, var, 0)) {
-        httpSetParam(conn, var, value);
+    if (!httpGetParam(stream, var, 0)) {
+        httpSetParam(stream, var, value);
     }
 }
 
@@ -3050,7 +3292,7 @@ PUBLIC void espAddParam(HttpConn *conn, cchar *var, cchar *value)
    Append a header. If already defined, the value is catenated to the pre-existing value after a ", " separator.
    As per the HTTP/1.1 spec.
  */
-PUBLIC void espAppendHeader(HttpConn *conn, cchar *key, cchar *fmt, ...)
+PUBLIC void espAppendHeader(HttpStream *stream, cchar *key, cchar *fmt, ...)
 {
     va_list     vargs;
 
@@ -3058,7 +3300,7 @@ PUBLIC void espAppendHeader(HttpConn *conn, cchar *key, cchar *fmt, ...)
     assert(fmt && *fmt);
 
     va_start(vargs, fmt);
-    httpAppendHeaderString(conn, key, sfmt(fmt, vargs));
+    httpAppendHeaderString(stream, key, sfmt(fmt, vargs));
     va_end(vargs);
 }
 
@@ -3067,19 +3309,19 @@ PUBLIC void espAppendHeader(HttpConn *conn, cchar *key, cchar *fmt, ...)
    Append a header string. If already defined, the value is catenated to the pre-existing value after a ", " separator.
    As per the HTTP/1.1 spec.
  */
-PUBLIC void espAppendHeaderString(HttpConn *conn, cchar *key, cchar *value)
+PUBLIC void espAppendHeaderString(HttpStream *stream, cchar *key, cchar *value)
 {
-    httpAppendHeaderString(conn, key, value);
+    httpAppendHeaderString(stream, key, value);
 }
 
 
-PUBLIC void espAutoFinalize(HttpConn *conn)
+PUBLIC void espAutoFinalize(HttpStream *stream)
 {
     EspReq  *req;
 
-    req = conn->reqData;
+    req = stream->reqData;
     if (req->autoFinalize) {
-        httpFinalize(conn);
+        httpFinalize(stream);
     }
 }
 
@@ -3091,21 +3333,29 @@ PUBLIC int espCache(HttpRoute *route, cchar *uri, int lifesecs, int flags)
 }
 
 
-PUBLIC cchar *espCreateSession(HttpConn *conn)
+PUBLIC cchar *espCreateSession(HttpStream *stream)
 {
     HttpSession *session;
 
-    if ((session = httpCreateSession(getConn())) != 0) {
+    if ((session = httpCreateSession(getStream())) != 0) {
         return session->id;
     }
     return 0;
 }
 
 
-PUBLIC void espDefineAction(HttpRoute *route, cchar *target, void *callback)
+#if DEPRECATED || 1
+PUBLIC void espDefineAction(HttpRoute *route, cchar *target, EspProc callback)
+{
+    espAction(route, target, NULL, callback);
+}
+#endif
+
+
+PUBLIC void espAction(HttpRoute *route, cchar *target, cchar *abilities, EspProc callback)
 {
     EspRoute    *eroute;
-    char        *action, *controller;
+    EspAction   *action;
 
     assert(route);
     assert(target && *target);
@@ -3113,10 +3363,8 @@ PUBLIC void espDefineAction(HttpRoute *route, cchar *target, void *callback)
 
     eroute = ((EspRoute*) route->eroute)->top;
     if (target) {
-#if DEPRECATED || 1 
-        /* 
-            Keep till version 6
-         */
+#if DEPRECATED
+        /* Keep till version 6 */
         if (scontains(target, "-cmd-")) {
             target = sreplace(target, "-cmd-", "/");
         } else if (schr(target, '-')) {
@@ -3125,17 +3373,65 @@ PUBLIC void espDefineAction(HttpRoute *route, cchar *target, void *callback)
         }
 #endif
         if (!eroute->actions) {
-            eroute->actions = mprCreateHash(-1, MPR_HASH_STATIC_VALUES);
+            eroute->actions = mprCreateHash(-1, 0);
         }
-        mprAddKey(eroute->actions, target, callback);
+        if ((action = createAction(target, abilities, callback)) == 0) {
+            /* Memory errors centrally reported */
+            return;
+        }
+        mprAddKey(eroute->actions, target, action);
     }
 }
 
 
+static void manageAction(EspAction *action, int flags)
+{
+    if (flags & MPR_MANAGE_MARK) {
+        mprMark(action->target);
+        mprMark(action->abilities);
+    }
+}
+
+
+static EspAction *createAction(cchar *target, cchar *abilities, void *callback)
+{
+    EspAction   *action;
+
+    if ((action = mprAllocObj(EspAction, manageAction)) == 0) {
+        return NULL;
+    }
+    action->target = sclone(target);
+    action->abilities = abilities ? sclone(abilities) : NULL;
+    action->callback = callback;
+    return action;
+}
+
+
+#if DEPRECATED || 1
 /*
     The base procedure is invoked prior to calling any and all actions on this route
  */
-PUBLIC void espDefineBase(HttpRoute *route, EspProc baseProc)
+PUBLIC void espDefineBase(HttpRoute *route, EspLegacyProc baseProc)
+{
+    HttpRoute   *rp;
+    EspRoute    *eroute;
+    int         next;
+
+    for (ITERATE_ITEMS(route->host->routes, rp, next)) {
+        if ((eroute = rp->eroute) != 0) {
+            if (smatch(httpGetDir(rp, "CONTROLLERS"), httpGetDir(route, "CONTROLLERS"))) {
+                eroute->commonController = (EspProc) baseProc;
+            }
+        }
+    }
+}
+#endif
+
+
+/*
+    Define a common base controller to invoke prior to calling any and all actions on this route
+ */
+PUBLIC void espController(HttpRoute *route, EspProc baseProc)
 {
     HttpRoute   *rp;
     EspRoute    *eroute;
@@ -3180,27 +3476,27 @@ PUBLIC void espDefineView(HttpRoute *route, cchar *path, void *view)
 }
 
 
-PUBLIC void espDestroySession(HttpConn *conn)
+PUBLIC void espDestroySession(HttpStream *stream)
 {
-    httpDestroySession(conn);
+    httpDestroySession(stream);
 }
 
 
-PUBLIC void espFinalize(HttpConn *conn)
+PUBLIC void espFinalize(HttpStream *stream)
 {
-    httpFinalize(conn);
+    httpFinalize(stream);
 }
 
 
-PUBLIC void espFlush(HttpConn *conn)
+PUBLIC void espFlush(HttpStream *stream)
 {
-    httpFlush(conn);
+    httpFlush(stream);
 }
 
 
-PUBLIC HttpAuth *espGetAuth(HttpConn *conn)
+PUBLIC HttpAuth *espGetAuth(HttpStream *stream)
 {
-    return conn->rx->route->auth;
+    return stream->rx->route->auth;
 }
 
 
@@ -3218,48 +3514,48 @@ PUBLIC cchar *espGetConfig(HttpRoute *route, cchar *key, cchar *defaultValue)
 }
 
 
-PUBLIC MprOff espGetContentLength(HttpConn *conn)
+PUBLIC MprOff espGetContentLength(HttpStream *stream)
 {
-    return httpGetContentLength(conn);
+    return httpGetContentLength(stream);
 }
 
 
-PUBLIC cchar *espGetContentType(HttpConn *conn)
+PUBLIC cchar *espGetContentType(HttpStream *stream)
 {
-    return conn->rx->mimeType;
+    return stream->rx->mimeType;
 }
 
 
-PUBLIC cchar *espGetCookie(HttpConn *conn, cchar *name)
+PUBLIC cchar *espGetCookie(HttpStream *stream, cchar *name)
 {
-    return httpGetCookie(conn, name);
+    return httpGetCookie(stream, name);
 }
 
 
-PUBLIC cchar *espGetCookies(HttpConn *conn)
+PUBLIC cchar *espGetCookies(HttpStream *stream)
 {
-    return httpGetCookies(conn);
+    return httpGetCookies(stream);
 }
 
 
-PUBLIC void *espGetData(HttpConn *conn)
+PUBLIC void *espGetData(HttpStream *stream)
 {
     EspReq  *req;
 
-    req = conn->reqData;
+    req = stream->reqData;
     return req->data;
 }
 
 
-PUBLIC Edi *espGetDatabase(HttpConn *conn)
+PUBLIC Edi *espGetDatabase(HttpStream *stream)
 {
     HttpRx      *rx;
     EspReq      *req;
     EspRoute    *eroute;
     Edi         *edi;
 
-    rx = conn->rx;
-    req = conn->reqData;
+    rx = stream->rx;
+    req = stream->reqData;
     edi = req ? req->edi : 0;
     if (edi == 0 && rx && rx->route) {
         if ((eroute = rx->route->eroute) != 0) {
@@ -3267,32 +3563,32 @@ PUBLIC Edi *espGetDatabase(HttpConn *conn)
         }
     }
     if (edi == 0) {
-        httpError(conn, 0, "Cannot get database instance");
+        httpError(stream, 0, "Cannot get database instance");
         return 0;
     }
     return edi;
 }
 
 
-PUBLIC cchar *espGetDocuments(HttpConn *conn)
+PUBLIC cchar *espGetDocuments(HttpStream *stream)
 {
-    return conn->rx->route->documents;
+    return stream->rx->route->documents;
 }
 
 
-PUBLIC EspRoute *espGetEspRoute(HttpConn *conn)
+PUBLIC EspRoute *espGetEspRoute(HttpStream *stream)
 {
-    return conn->rx->route->eroute;
+    return stream->rx->route->eroute;
 }
 
 
-PUBLIC cchar *espGetFeedback(HttpConn *conn, cchar *kind)
+PUBLIC cchar *espGetFeedback(HttpStream *stream, cchar *kind)
 {
     EspReq      *req;
     MprKey      *kp;
     cchar       *msg;
 
-    req = conn->reqData;
+    req = stream->reqData;
     if (kind == 0 || req == 0 || req->feedback == 0 || mprGetHashLength(req->feedback) == 0) {
         return 0;
     }
@@ -3307,78 +3603,78 @@ PUBLIC cchar *espGetFeedback(HttpConn *conn, cchar *kind)
 }
 
 
-PUBLIC EdiGrid *espGetGrid(HttpConn *conn)
+PUBLIC EdiGrid *espGetGrid(HttpStream *stream)
 {
-    return conn->grid;
+    return stream->grid;
 }
 
 
-PUBLIC cchar *espGetHeader(HttpConn *conn, cchar *key)
+PUBLIC cchar *espGetHeader(HttpStream *stream, cchar *key)
 {
-    return httpGetHeader(conn, key);
+    return httpGetHeader(stream, key);
 }
 
 
-PUBLIC MprHash *espGetHeaderHash(HttpConn *conn)
+PUBLIC MprHash *espGetHeaderHash(HttpStream *stream)
 {
-    return httpGetHeaderHash(conn);
+    return httpGetHeaderHash(stream);
 }
 
 
-PUBLIC char *espGetHeaders(HttpConn *conn)
+PUBLIC char *espGetHeaders(HttpStream *stream)
 {
-    return httpGetHeaders(conn);
+    return httpGetHeaders(stream);
 }
 
 
-PUBLIC int espGetIntParam(HttpConn *conn, cchar *var, int defaultValue)
+PUBLIC int espGetIntParam(HttpStream *stream, cchar *var, int defaultValue)
 {
-    return httpGetIntParam(conn, var, defaultValue);
+    return httpGetIntParam(stream, var, defaultValue);
 }
 
 
-PUBLIC cchar *espGetMethod(HttpConn *conn)
+PUBLIC cchar *espGetMethod(HttpStream *stream)
 {
-    return conn->rx->method;
+    return stream->rx->method;
 }
 
 
-PUBLIC cchar *espGetParam(HttpConn *conn, cchar *var, cchar *defaultValue)
+PUBLIC cchar *espGetParam(HttpStream *stream, cchar *var, cchar *defaultValue)
 {
-    return httpGetParam(conn, var, defaultValue);
+    return httpGetParam(stream, var, defaultValue);
 }
 
 
-PUBLIC MprJson *espGetParams(HttpConn *conn)
+PUBLIC MprJson *espGetParams(HttpStream *stream)
 {
-    return httpGetParams(conn);
+    return httpGetParams(stream);
 }
 
 
-PUBLIC cchar *espGetPath(HttpConn *conn)
+PUBLIC cchar *espGetPath(HttpStream *stream)
 {
-    return conn->rx->pathInfo;
+    return stream->rx->pathInfo;
 }
 
 
-PUBLIC cchar *espGetQueryString(HttpConn *conn)
+PUBLIC cchar *espGetQueryString(HttpStream *stream)
 {
-    return httpGetQueryString(conn);
+    return httpGetQueryString(stream);
 }
 
 
-PUBLIC char *espGetReferrer(HttpConn *conn)
+PUBLIC cchar *espGetReferrer(HttpStream *stream)
 {
-    if (conn->rx->referrer) {
-        return conn->rx->referrer;
+    if (stream->rx->referrer) {
+        return stream->rx->referrer;
     }
-    return httpLink(conn, "~");
+    return httpLink(stream, "~");
 }
 
 
-PUBLIC HttpRoute *espGetRoute(HttpConn *conn)
+PUBLIC HttpRoute *espGetRoute(HttpStream *stream)
 {
-    return conn->rx->route;
+    return stream->rx->route;
 }
 
 
@@ -3394,48 +3690,48 @@ PUBLIC Edi *espGetRouteDatabase(HttpRoute *route)
 }
 
 
-PUBLIC cchar *espGetRouteVar(HttpConn *conn, cchar *var)
+PUBLIC cchar *espGetRouteVar(HttpStream *stream, cchar *var)
 {
-    return httpGetRouteVar(conn->rx->route, var);
+    return httpGetRouteVar(stream->rx->route, var);
 }
 
 
-PUBLIC cchar *espGetSessionID(HttpConn *conn, int create)
+PUBLIC cchar *espGetSessionID(HttpStream *stream, int create)
 {
     HttpSession *session;
 
-    if ((session = httpGetSession(getConn(), create)) != 0) {
+    if ((session = httpGetSession(getStream(), create)) != 0) {
         return session->id;
     }
     return 0;
 }
 
 
-PUBLIC int espGetStatus(HttpConn *conn)
+PUBLIC int espGetStatus(HttpStream *stream)
 {
-    return httpGetStatus(conn);
+    return httpGetStatus(stream);
 }
 
 
-PUBLIC char *espGetStatusMessage(HttpConn *conn)
+PUBLIC cchar *espGetStatusMessage(HttpStream *stream)
 {
-    return httpGetStatusMessage(conn);
+    return httpGetStatusMessage(stream);
 }
 
 
-PUBLIC MprList *espGetUploads(HttpConn *conn)
+PUBLIC MprList *espGetUploads(HttpStream *stream)
 {
-    return conn->rx->files;
+    return stream->rx->files;
 }
 
 
-PUBLIC cchar *espGetUri(HttpConn *conn)
+PUBLIC cchar *espGetUri(HttpStream *stream)
 {
-    return conn->rx->uri;
+    return stream->rx->uri;
 }
 
 
-#if DEPRECATED || 1
+#if DEPRECATED
 
 PUBLIC bool espHasPak(HttpRoute *route, cchar *name)
 {
@@ -3444,69 +3740,75 @@ PUBLIC bool espHasPak(HttpRoute *route, cchar *name)
 #endif
 
 
-PUBLIC bool espHasGrid(HttpConn *conn)
+PUBLIC bool espHasGrid(HttpStream *stream)
 {
-    return conn->grid != 0;
+    return stream->grid != 0;
 }
 
 
-PUBLIC bool espHasRec(HttpConn *conn)
+PUBLIC bool espHasRec(HttpStream *stream)
 {
     EdiRec  *rec;
 
-    rec = conn->record;
+    rec = stream->record;
     return (rec && rec->id) ? 1 : 0;
 }
 
 
-PUBLIC bool espIsEof(HttpConn *conn)
+PUBLIC bool espIsAuthenticated(HttpStream *stream)
 {
-    return httpIsEof(conn);
+    return httpIsAuthenticated(stream);
 }
 
 
-PUBLIC bool espIsFinalized(HttpConn *conn)
+PUBLIC bool espIsEof(HttpStream *stream)
 {
-    return httpIsFinalized(conn);
+    return httpIsEof(stream);
 }
 
 
-PUBLIC bool espIsSecure(HttpConn *conn)
+PUBLIC bool espIsFinalized(HttpStream *stream)
 {
-    return conn->secure;
+    return httpIsFinalized(stream);
 }
 
 
-PUBLIC bool espMatchParam(HttpConn *conn, cchar *var, cchar *value)
+PUBLIC bool espIsSecure(HttpStream *stream)
 {
-    return httpMatchParam(conn, var, value);
+    return stream->secure;
+}
+
+
+PUBLIC bool espMatchParam(HttpStream *stream, cchar *var, cchar *value)
+{
+    return httpMatchParam(stream, var, value);
 }
 
 
 /*
     Read rx data in non-blocking mode. Use standard connection timeouts.
  */
-PUBLIC ssize espReceive(HttpConn *conn, char *buf, ssize len)
+PUBLIC ssize espReceive(HttpStream *stream, char *buf, ssize len)
 {
-    return httpRead(conn, buf, len);
+    return httpRead(stream, buf, len);
 }
 
 
-PUBLIC void espRedirect(HttpConn *conn, int status, cchar *target)
+PUBLIC void espRedirect(HttpStream *stream, int status, cchar *target)
 {
-    httpRedirect(conn, status, target);
+    httpRedirect(stream, status, target);
 }
 
 
-PUBLIC void espRedirectBack(HttpConn *conn)
+PUBLIC void espRedirectBack(HttpStream *stream)
 {
-    if (conn->rx->referrer) {
-        espRedirect(conn, HTTP_CODE_MOVED_TEMPORARILY, conn->rx->referrer);
+    if (stream->rx->referrer) {
+        espRedirect(stream, HTTP_CODE_MOVED_TEMPORARILY, stream->rx->referrer);
     }
 }
 
 
-PUBLIC ssize espRender(HttpConn *conn, cchar *fmt, ...)
+PUBLIC ssize espRender(HttpStream *stream, cchar *fmt, ...)
 {
     va_list     vargs;
     char        *buf;
@@ -3514,19 +3816,19 @@ PUBLIC ssize espRender(HttpConn *conn, cchar *fmt, ...)
     va_start(vargs, fmt);
     buf = sfmtv(fmt, vargs);
     va_end(vargs);
-    return espRenderString(conn, buf);
+    return espRenderString(stream, buf);
 }
 
 
-PUBLIC ssize espRenderBlock(HttpConn *conn, cchar *buf, ssize size)
+PUBLIC ssize espRenderBlock(HttpStream *stream, cchar *buf, ssize size)
 {
-    return httpWriteBlock(conn->writeq, buf, size, HTTP_BUFFER);
+    return httpWriteBlock(stream->writeq, buf, size, HTTP_BUFFER);
 }
 
 
-PUBLIC ssize espRenderCached(HttpConn *conn)
+PUBLIC ssize espRenderCached(HttpStream *stream)
 {
-    return httpWriteCached(conn);
+    return httpWriteCached(stream);
 }
 
 
@@ -3558,18 +3860,18 @@ static void copyMappings(HttpRoute *route, MprJson *dest, MprJson *obj)
 }
 
 
-static cchar *getClientConfig(HttpConn *conn)
+static cchar *getClientConfig(HttpStream *stream)
 {
     HttpRoute   *route;
     MprJson     *mappings, *obj;
 
-    conn = getConn();
-    for (route = conn->rx->route; route; route = route->parent) {
+    stream = getStream();
+    for (route = stream->rx->route; route; route = route->parent) {
         if (route->clientConfig) {
             return route->clientConfig;
         }
     }
-    route = conn->rx->route;
+    route = stream->rx->route;
     if ((obj = mprGetJsonObj(route->config, "esp.mappings")) != 0) {
         mappings = mprCreateJson(MPR_JSON_OBJ);
         copyMappings(route, mappings, obj);
@@ -3580,18 +3882,18 @@ static cchar *getClientConfig(HttpConn *conn)
 }
 
 
-PUBLIC ssize espRenderConfig(HttpConn *conn)
+PUBLIC ssize espRenderConfig(HttpStream *stream)
 {
     cchar       *config;
 
-    if ((config = getClientConfig(conn)) != 0) {
+    if ((config = getClientConfig(stream)) != 0) {
         return renderString(config);
     }
     return 0;
 }
 
 
-PUBLIC ssize espRenderError(HttpConn *conn, int status, cchar *fmt, ...)
+PUBLIC ssize espRenderError(HttpStream *stream, int status, cchar *fmt, ...)
 {
     va_list     args;
     HttpRx      *rx;
@@ -3600,14 +3902,14 @@ PUBLIC ssize espRenderError(HttpConn *conn, int status, cchar *fmt, ...)
 
     va_start(args, fmt);
 
-    rx = conn->rx;
+    rx = stream->rx;
     if (rx->route->json) {
         mprLog("warn esp", 0, "Calling espRenderFeedback in JSON app");
         return 0 ;
     }
     written = 0;
 
-    if (!httpIsFinalized(conn)) {
+    if (!httpIsFinalized(stream)) {
         if (status == 0) {
             status = HTTP_CODE_INTERNAL_SERVER_ERROR;
         }
@@ -3621,10 +3923,10 @@ PUBLIC ssize espRenderError(HttpConn *conn, int status, cchar *fmt, ...)
                 "    <p>To prevent errors being displayed in the browser, " \
                 "       set <b>http.showErrors off</b> in the JSON configuration file.</p>\r\n" \
                 "</body>\r\n</html>\r\n", title, title, msg);
-            httpSetContentType(conn, "text/html");
-            written += espRenderString(conn, text);
-            espFinalize(conn);
-            httpTrace(conn, "esp.error", "error", "msg=\"%s\", status=%d, uri=\"%s\"", msg, status, rx->pathInfo);
+            httpSetContentType(stream, "text/html");
+            written += espRenderString(stream, text);
+            espFinalize(stream);
+            httpLog(stream->trace, "esp.error", "error", "msg=\"%s\", status=%d, uri=\"%s\"", msg, status, rx->pathInfo);
         }
     }
     va_end(args);
@@ -3632,18 +3934,18 @@ PUBLIC ssize espRenderError(HttpConn *conn, int status, cchar *fmt, ...)
 }
 
 
-PUBLIC ssize espRenderFile(HttpConn *conn, cchar *path)
+PUBLIC ssize espRenderFile(HttpStream *stream, cchar *path)
 {
     MprFile     *from;
     ssize       count, written, nbytes;
-    char        buf[ME_MAX_BUFFER];
+    char        buf[ME_BUFSIZE];
 
     if ((from = mprOpenFile(path, O_RDONLY | O_BINARY, 0)) == 0) {
         return MPR_ERR_CANT_OPEN;
     }
     written = 0;
     while ((count = mprReadFile(from, buf, sizeof(buf))) > 0) {
-        if ((nbytes = espRenderBlock(conn, buf, count)) < 0) {
+        if ((nbytes = espRenderBlock(stream, buf, count)) < 0) {
             return nbytes;
         }
         written += nbytes;
@@ -3653,14 +3955,14 @@ PUBLIC ssize espRenderFile(HttpConn *conn, cchar *path)
 }
 
 
-PUBLIC ssize espRenderFeedback(HttpConn *conn, cchar *kinds)
+PUBLIC ssize espRenderFeedback(HttpStream *stream, cchar *kinds)
 {
     EspReq      *req;
     MprKey      *kp;
     cchar       *msg;
     ssize       written;
 
-    req = conn->reqData;
+    req = stream->reqData;
     if (req->route->json) {
         mprLog("warn esp", 0, "Calling espRenderFeedback in JSON app");
         return 0;
@@ -3673,14 +3975,14 @@ PUBLIC ssize espRenderFeedback(HttpConn *conn, cchar *kinds)
         msg = kp->data;
         //  DEPRECATE "all"
         if (strstr(kinds, kp->key) || strstr(kinds, "all") || strstr(kinds, "*")) {
-            written += espRender(conn, "<span class='feedback-%s animate'>%s</span>", kp->key, msg);
+            written += espRender(stream, "<span class='feedback-%s animate'>%s</span>", kp->key, msg);
         }
     }
     return written;
 }
 
 
-PUBLIC ssize espRenderSafe(HttpConn *conn, cchar *fmt, ...)
+PUBLIC ssize espRenderSafe(HttpStream *stream, cchar *fmt, ...)
 {
     va_list     args;
     cchar       *s;
@@ -3688,93 +3990,93 @@ PUBLIC ssize espRenderSafe(HttpConn *conn, cchar *fmt, ...)
     va_start(args, fmt);
     s = mprEscapeHtml(sfmtv(fmt, args));
     va_end(args);
-    return espRenderBlock(conn, s, slen(s));
+    return espRenderBlock(stream, s, slen(s));
 }
 
 
-PUBLIC ssize espRenderSafeString(HttpConn *conn, cchar *s)
+PUBLIC ssize espRenderSafeString(HttpStream *stream, cchar *s)
 {
     s = mprEscapeHtml(s);
-    return espRenderBlock(conn, s, slen(s));
+    return espRenderBlock(stream, s, slen(s));
 }
 
 
-PUBLIC ssize espRenderString(HttpConn *conn, cchar *s)
+PUBLIC ssize espRenderString(HttpStream *stream, cchar *s)
 {
-    return espRenderBlock(conn, s, slen(s));
+    return espRenderBlock(stream, s, slen(s));
 }
 
 
 /*
     Render a request variable. If a param by the given name is not found, consult the session.
  */
-PUBLIC ssize espRenderVar(HttpConn *conn, cchar *name)
+PUBLIC ssize espRenderVar(HttpStream *stream, cchar *name)
 {
     cchar   *value;
 
-    if ((value = espGetParam(conn, name, 0)) == 0) {
-        value = httpGetSessionVar(conn, name, "");
+    if ((value = espGetParam(stream, name, 0)) == 0) {
+        value = httpGetSessionVar(stream, name, "");
     }
-    return espRenderSafeString(conn, value);
+    return espRenderSafeString(stream, value);
 }
 
 
-PUBLIC int espRemoveHeader(HttpConn *conn, cchar *key)
+PUBLIC int espRemoveHeader(HttpStream *stream, cchar *key)
 {
     assert(key && *key);
-    if (conn->tx == 0) {
+    if (stream->tx == 0) {
         return MPR_ERR_CANT_ACCESS;
     }
-    return mprRemoveKey(conn->tx->headers, key);
+    return mprRemoveKey(stream->tx->headers, key);
 }
 
 
-PUBLIC void espRemoveSessionVar(HttpConn *conn, cchar *var)
+PUBLIC void espRemoveSessionVar(HttpStream *stream, cchar *var)
 {
-    httpRemoveSessionVar(conn, var);
+    httpRemoveSessionVar(stream, var);
 }
 
 
-PUBLIC void espRemoveCookie(HttpConn *conn, cchar *name)
+PUBLIC void espRemoveCookie(HttpStream *stream, cchar *name)
 {
     HttpRoute   *route;
     cchar       *url;
 
-    route = conn->rx->route;
+    route = stream->rx->route;
     url = (route->prefix && *route->prefix) ? route->prefix : "/";
-    httpSetCookie(conn, name, "", url, NULL, 0, 0);
+    httpSetCookie(stream, name, "", url, NULL, 0, 0);
 }
 
 
-PUBLIC void espSetConn(HttpConn *conn)
+PUBLIC void espSetStream(HttpStream *stream)
 {
-    mprSetThreadData(((Esp*) MPR->espService)->local, conn);
+    mprSetThreadData(((Esp*) MPR->espService)->local, stream);
 }
 
 
-static void espNotifier(HttpConn *conn, int event, int arg)
+static void espNotifier(HttpStream *stream, int event, int arg)
 {
     EspReq      *req;
 
-    if ((req = conn->reqData) != 0) {
-        espSetConn(conn);
-        (req->notifier)(conn, event, arg);
+    if ((req = stream->reqData) != 0) {
+        espSetStream(stream);
+        (req->notifier)(stream, event, arg);
     }
 }
 
 
-PUBLIC void espSetNotifier(HttpConn *conn, HttpNotifier notifier)
+PUBLIC void espSetNotifier(HttpStream *stream, HttpNotifier notifier)
 {
     EspReq      *req;
 
-    if ((req = conn->reqData) != 0) {
+    if ((req = stream->reqData) != 0) {
         req->notifier = notifier;
-        httpSetConnNotifier(conn, espNotifier);
+        httpSetStreamNotifier(stream, espNotifier);
     }
 }
 
 
-#if DEPRECATED || 1
+#if DEPRECATED
 PUBLIC int espSaveConfig(HttpRoute *route)
 {
     cchar       *path;
@@ -3788,53 +4090,68 @@ PUBLIC int espSaveConfig(HttpRoute *route)
 #endif
 
 
-PUBLIC ssize espSendGrid(HttpConn *conn, EdiGrid *grid, int flags)
+/*
+    Send a grid with schema
+ */
+PUBLIC ssize espSendGrid(HttpStream *stream, EdiGrid *grid, int flags)
 {
-    if (conn->rx->route->json) {
-        httpSetContentType(conn, "application/json");
+    HttpRoute   *route;
+    EspRoute    *eroute;
+
+    route = stream->rx->route;
+
+    if (route->json) {
+        httpSetContentType(stream, "application/json");
         if (grid) {
-            return espRender(conn, "{\n  \"data\": %s, \"schema\": %s}\n", ediGridAsJson(grid, flags), 
-                ediGetGridSchemaAsJson(grid));
+            eroute = route->eroute;
+            flags = flags | (eroute->encodeTypes ? MPR_JSON_ENCODE_TYPES : 0);
+            return espRender(stream, "{\n  \"data\": %s, \"count\": %d, \"schema\": %s}\n",
+                ediGridAsJson(grid, flags), grid->count, ediGetGridSchemaAsJson(grid));
         }
-        return espRender(conn, "{}");
+        return espRender(stream, "{data:[]}");
     }
     return 0;
 }
 
 
-PUBLIC ssize espSendRec(HttpConn *conn, EdiRec *rec, int flags)
+PUBLIC ssize espSendRec(HttpStream *stream, EdiRec *rec, int flags)
 {
-    if (conn->rx->route->json) {
-        httpSetContentType(conn, "application/json");
+    HttpRoute   *route;
+    EspRoute    *eroute;
+
+    route = stream->rx->route;
+    if (route->json) {
+        httpSetContentType(stream, "application/json");
         if (rec) {
-            return espRender(conn, "{\n  \"data\": %s, \"schema\": %s}\n", 
-                ediRecAsJson(rec, flags), ediGetRecSchemaAsJson(rec));
+            eroute = route->eroute;
+            flags = flags | (eroute->encodeTypes ? MPR_JSON_ENCODE_TYPES : 0);
+            return espRender(stream, "{\n  \"data\": %s, \"schema\": %s}\n", ediRecAsJson(rec, flags), ediGetRecSchemaAsJson(rec));
         }
-        return espRender(conn, "{}");
+        return espRender(stream, "{}");
     }
     return 0;
 }
 
 
-PUBLIC ssize espSendResult(HttpConn *conn, bool success)
+PUBLIC ssize espSendResult(HttpStream *stream, bool success)
 {
     EspReq      *req;
     EdiRec      *rec;
     ssize       written;
 
-    req = conn->reqData;
+    req = stream->reqData;
     written = 0;
     if (req->route->json) {
         rec = getRec();
         if (rec && rec->errors) {
-            written = espRender(conn, "{\"error\": %d, \"feedback\": %s, \"fieldErrors\": %s}", !success,
+            written = espRender(stream, "{\"error\": %d, \"feedback\": %s, \"fieldErrors\": %s}", !success,
                 req->feedback ? mprSerialize(req->feedback, MPR_JSON_QUOTES) : "{}",
                 mprSerialize(rec->errors, MPR_JSON_QUOTES));
         } else {
-            written = espRender(conn, "{\"error\": %d, \"feedback\": %s}", !success,
+            written = espRender(stream, "{\"error\": %d, \"feedback\": %s}", !success,
                 req->feedback ? mprSerialize(req->feedback, MPR_JSON_QUOTES) : "{}");
         }
-        espFinalize(conn);
+        espFinalize(stream);
     } else {
         /* Noop */
     }
@@ -3842,12 +4159,12 @@ PUBLIC ssize espSendResult(HttpConn *conn, bool success)
 }
 
 
-PUBLIC bool espSetAutoFinalizing(HttpConn *conn, bool on)
+PUBLIC bool espSetAutoFinalizing(HttpStream *stream, bool on)
 {
     EspReq  *req;
     bool    old;
 
-    req = conn->reqData;
+    req = stream->reqData;
     old = req->autoFinalize;
     req->autoFinalize = on;
     return old;
@@ -3860,57 +4177,57 @@ PUBLIC int espSetConfig(HttpRoute *route, cchar *key, cchar *value)
 }
 
 
-PUBLIC void espSetContentLength(HttpConn *conn, MprOff length)
+PUBLIC void espSetContentLength(HttpStream *stream, MprOff length)
 {
-    httpSetContentLength(conn, length);
+    httpSetContentLength(stream, length);
 }
 
 
-PUBLIC void espSetCookie(HttpConn *conn, cchar *name, cchar *value, cchar *path, cchar *cookieDomain, MprTicks lifespan,
+PUBLIC void espSetCookie(HttpStream *stream, cchar *name, cchar *value, cchar *path, cchar *cookieDomain, MprTicks lifespan,
         bool isSecure)
 {
-    httpSetCookie(conn, name, value, path, cookieDomain, lifespan, isSecure);
+    httpSetCookie(stream, name, value, path, cookieDomain, lifespan, isSecure);
 }
 
 
-PUBLIC void espSetContentType(HttpConn *conn, cchar *mimeType)
+PUBLIC void espSetContentType(HttpStream *stream, cchar *mimeType)
 {
-    httpSetContentType(conn, mimeType);
+    httpSetContentType(stream, mimeType);
 }
 
 
-PUBLIC void espSetData(HttpConn *conn, void *data)
+PUBLIC void espSetData(HttpStream *stream, void *data)
 {
     EspReq  *req;
 
-    req = conn->reqData;
+    req = stream->reqData;
     req->data = data;
 }
 
 
-PUBLIC void espSetFeedback(HttpConn *conn, cchar *kind, cchar *fmt, ...)
+PUBLIC void espSetFeedback(HttpStream *stream, cchar *kind, cchar *fmt, ...)
 {
     va_list     args;
 
     va_start(args, fmt);
-    espSetFeedbackv(conn, kind, fmt, args);
+    espSetFeedbackv(stream, kind, fmt, args);
     va_end(args);
 }
 
 
-PUBLIC void espSetFeedbackv(HttpConn *conn, cchar *kind, cchar *fmt, va_list args)
+PUBLIC void espSetFeedbackv(HttpStream *stream, cchar *kind, cchar *fmt, va_list args)
 {
     EspReq      *req;
     cchar       *msg;
 
-    if ((req = conn->reqData) == 0) {
+    if ((req = stream->reqData) == 0) {
         return;
     }
     if (!req->route->json) {
         /*
             Create a session as early as possible so a Set-Cookie header can be omitted.
          */
-        httpGetSession(conn, 1);
+        httpGetSession(stream, 1);
     }
     if (req->feedback == 0) {
         req->feedback = mprCreateHash(0, MPR_HASH_STABLE);
@@ -3933,28 +4250,28 @@ PUBLIC void espSetFeedbackv(HttpConn *conn, cchar *kind, cchar *fmt, va_list arg
 }
 
 
-#if DEPRECATED || 1
-PUBLIC void espSetFlash(HttpConn *conn, cchar *kind, cchar *fmt, ...)
+#if DEPRECATED
+PUBLIC void espSetFlash(HttpStream *stream, cchar *kind, cchar *fmt, ...)
 {
     va_list     args;
 
     va_start(args, fmt);
-    espSetFeedbackv(conn, kind, fmt, args);
+    espSetFeedbackv(stream, kind, fmt, args);
     va_end(args);
 }
 #endif
 
 
-PUBLIC EdiGrid *espSetGrid(HttpConn *conn, EdiGrid *grid)
+PUBLIC EdiGrid *espSetGrid(HttpStream *stream, EdiGrid *grid)
 {
-    return conn->grid = grid;
+    return stream->grid = grid;
 }
 
 
 /*
     Set a http header. Overwrite if present.
  */
-PUBLIC void espSetHeader(HttpConn *conn, cchar *key, cchar *fmt, ...)
+PUBLIC void espSetHeader(HttpStream *stream, cchar *key, cchar *fmt, ...)
 {
     va_list     vargs;
 
@@ -3962,48 +4279,48 @@ PUBLIC void espSetHeader(HttpConn *conn, cchar *key, cchar *fmt, ...)
     assert(fmt && *fmt);
 
     va_start(vargs, fmt);
-    httpSetHeaderString(conn, key, sfmtv(fmt, vargs));
+    httpSetHeaderString(stream, key, sfmtv(fmt, vargs));
     va_end(vargs);
 }
 
 
-PUBLIC void espSetHeaderString(HttpConn *conn, cchar *key, cchar *value)
+PUBLIC void espSetHeaderString(HttpStream *stream, cchar *key, cchar *value)
 {
-    httpSetHeaderString(conn, key, value);
+    httpSetHeaderString(stream, key, value);
 }
 
 
-PUBLIC void espSetIntParam(HttpConn *conn, cchar *var, int value)
+PUBLIC void espSetIntParam(HttpStream *stream, cchar *var, int value)
 {
-    httpSetIntParam(conn, var, value);
+    httpSetIntParam(stream, var, value);
 }
 
 
-PUBLIC void espSetParam(HttpConn *conn, cchar *var, cchar *value)
+PUBLIC void espSetParam(HttpStream *stream, cchar *var, cchar *value)
 {
-    httpSetParam(conn, var, value);
+    httpSetParam(stream, var, value);
 }
 
 
-PUBLIC EdiRec *espSetRec(HttpConn *conn, EdiRec *rec)
+PUBLIC EdiRec *espSetRec(HttpStream *stream, EdiRec *rec)
 {
-    return conn->record = rec;
+    return stream->record = rec;
 }
 
 
-PUBLIC int espSetSessionVar(HttpConn *conn, cchar *var, cchar *value)
+PUBLIC int espSetSessionVar(HttpStream *stream, cchar *var, cchar *value)
 {
-    return httpSetSessionVar(conn, var, value);
+    return httpSetSessionVar(stream, var, value);
 }
 
 
-PUBLIC void espSetStatus(HttpConn *conn, int status)
+PUBLIC void espSetStatus(HttpStream *stream, int status)
 {
-    httpSetStatus(conn, status);
+    httpSetStatus(stream, status);
 }
 
 
-PUBLIC void espShowRequest(HttpConn *conn)
+PUBLIC void espShowRequest(HttpStream *stream)
 {
     MprHash     *env;
     MprJson     *params, *param;
@@ -4012,61 +4329,61 @@ PUBLIC void espShowRequest(HttpConn *conn)
     HttpRx      *rx;
     int         i;
 
-    rx = conn->rx;
-    httpAddHeaderString(conn, "Cache-Control", "no-cache");
-    httpCreateCGIParams(conn);
-    espRender(conn, "\r\n");
+    rx = stream->rx;
+    httpAddHeaderString(stream, "Cache-Control", "no-cache");
+    httpCreateCGIParams(stream);
+    espRender(stream, "\r\n");
 
     /*
         Query
      */
     for (ITERATE_JSON(rx->params, jkey, i)) {
-        espRender(conn, "PARAMS %s=%s\r\n", jkey->name, jkey->value ? jkey->value : "null");
+        espRender(stream, "PARAMS %s=%s\r\n", jkey->name, jkey->value ? jkey->value : "null");
     }
-    espRender(conn, "\r\n");
+    espRender(stream, "\r\n");
 
     /*
         Http Headers
      */
-    env = espGetHeaderHash(conn);
+    env = espGetHeaderHash(stream);
     for (ITERATE_KEYS(env, kp)) {
-        espRender(conn, "HEADER %s=%s\r\n", kp->key, kp->data ? kp->data: "null");
+        espRender(stream, "HEADER %s=%s\r\n", kp->key, kp->data ? kp->data: "null");
     }
-    espRender(conn, "\r\n");
+    espRender(stream, "\r\n");
 
     /*
         Server vars
      */
-    for (ITERATE_KEYS(conn->rx->svars, kp)) {
-        espRender(conn, "SERVER %s=%s\r\n", kp->key, kp->data ? kp->data: "null");
+    for (ITERATE_KEYS(stream->rx->svars, kp)) {
+        espRender(stream, "SERVER %s=%s\r\n", kp->key, kp->data ? kp->data: "null");
     }
-    espRender(conn, "\r\n");
+    espRender(stream, "\r\n");
 
     /*
         Form vars
      */
-    if ((params = espGetParams(conn)) != 0) {
+    if ((params = espGetParams(stream)) != 0) {
         for (ITERATE_JSON(params, param, i)) {
-            espRender(conn, "FORM %s=%s\r\n", param->name, param->value);
+            espRender(stream, "FORM %s=%s\r\n", param->name, param->value);
         }
-        espRender(conn, "\r\n");
+        espRender(stream, "\r\n");
     }
 
 #if KEEP
     /*
         Body
      */
-    q = conn->readq;
+    q = stream->readq;
     if (q->first && rx->bytesRead > 0 && scmp(rx->mimeType, "application/x-www-form-urlencoded") == 0) {
         buf = q->first->content;
         mprAddNullToBuf(buf);
         if ((numKeys = getParams(&keys, mprGetBufStart(buf), (int) mprGetBufLength(buf))) > 0) {
             for (i = 0; i < (numKeys * 2); i += 2) {
                 value = keys[i+1];
-                espRender(conn, "BODY %s=%s\r\n", keys[i], value ? value: "null");
+                espRender(stream, "BODY %s=%s\r\n", keys[i], value ? value: "null");
             }
         }
-        espRender(conn, "\r\n");
+        espRender(stream, "\r\n");
     }
 #endif
 }
@@ -4083,19 +4400,19 @@ PUBLIC bool espTestConfig(HttpRoute *route, cchar *key, cchar *desired)
 }
 
 
-PUBLIC void espUpdateCache(HttpConn *conn, cchar *uri, cchar *data, int lifesecs)
+PUBLIC void espUpdateCache(HttpStream *stream, cchar *uri, cchar *data, int lifesecs)
 {
-    httpUpdateCache(conn, uri, data, lifesecs * TPS);
+    httpUpdateCache(stream, uri, data, lifesecs * TPS);
 }
 
 
-PUBLIC cchar *espUri(HttpConn *conn, cchar *target)
+PUBLIC cchar *espUri(HttpStream *stream, cchar *target)
 {
-    return httpLink(conn, target);
+    return httpLink(stream, target);
 }
 
 
-PUBLIC int espEmail(HttpConn *conn, cchar *to, cchar *from, cchar *subject, MprTime date, cchar *mime, 
+PUBLIC int espEmail(HttpStream *stream, cchar *to, cchar *from, cchar *subject, MprTime date, cchar *mime,
     cchar *message, MprList *files)
 {
     MprList         *lines;
@@ -4154,22 +4471,22 @@ PUBLIC int espEmail(HttpConn *conn, cchar *to, cchar *from, cchar *subject, MprT
     mprAddItem(lines, sfmt("%s--", boundary));
 
     body = mprListToString(lines, "\n");
-    httpTraceContent(conn, "esp.email", "context", body, slen(body), 0);
+    httpLog(stream->trace, "esp.email", "context", "%s", body);
 
-    cmd = mprCreateCmd(conn->dispatcher);
+    cmd = mprCreateCmd(stream->dispatcher);
     if (mprRunCmd(cmd, "sendmail -t", NULL, body, &out, &err, -1, 0) < 0) {
         mprDestroyCmd(cmd);
         return MPR_ERR_CANT_OPEN;
     }
     if (mprWaitForCmd(cmd, ME_ESP_EMAIL_TIMEOUT) < 0) {
-        httpTrace(conn, "esp.email.error", "error", 
+        httpLog(stream->trace, "esp.email.error", "error",
             "msg=\"Timeout waiting for command to complete\", timeout=%d, command=\"%s\"",
             ME_ESP_EMAIL_TIMEOUT, cmd->argv[0]);
         mprDestroyCmd(cmd);
         return MPR_ERR_CANT_COMPLETE;
     }
     if ((status = mprGetCmdExitStatus(cmd)) != 0) {
-        httpTrace(conn, "esp.email.error", "error", "msg=\"Sendmail failed\", status=%d, error=\"%s\"", status, err);
+        httpLog(stream->trace, "esp.email.error", "error", "msg=\"Sendmail failed\", status=%d, error=\"%s\"", status, err);
         mprDestroyCmd(cmd);
         return MPR_ERR_CANT_WRITE;
     }
@@ -4178,13 +4495,13 @@ PUBLIC int espEmail(HttpConn *conn, cchar *to, cchar *from, cchar *subject, MprT
 }
 
 
-PUBLIC void espClearCurrentSession(HttpConn *conn)
+PUBLIC void espClearCurrentSession(HttpStream *stream)
 {
     EspRoute    *eroute;
 
-    eroute = conn->rx->route->eroute;
+    eroute = stream->rx->route->eroute;
     if (eroute->currentSession) {
-        httpTrace(conn, "esp.singular.clear", "context", "session=%s", eroute->currentSession);
+        httpLog(stream->trace, "esp.singular.clear", "context", "session=%s", eroute->currentSession);
     }
     eroute->currentSession = 0;
 }
@@ -4193,26 +4510,26 @@ PUBLIC void espClearCurrentSession(HttpConn *conn)
 /*
     Remember this connections session as the current session. Use for single login tracking.
  */
-PUBLIC void espSetCurrentSession(HttpConn *conn)
+PUBLIC void espSetCurrentSession(HttpStream *stream)
 {
     EspRoute    *eroute;
 
-    eroute = conn->rx->route->eroute;
-    eroute->currentSession = httpGetSessionID(conn);
-    httpTrace(conn, "esp.singular.set", "context", "msg=\"Set singluar user\", session=%s", eroute->currentSession);
+    eroute = stream->rx->route->eroute;
+    eroute->currentSession = httpGetSessionID(stream);
+    httpLog(stream->trace, "esp.singular.set", "context", "msg=\"Set singluar user\", session=%s", eroute->currentSession);
 }
 
 
 /*
     Test if this connection is the current session. Use for single login tracking.
  */
-PUBLIC bool espIsCurrentSession(HttpConn *conn)
+PUBLIC bool espIsCurrentSession(HttpStream *stream)
 {
     EspRoute    *eroute;
 
-    eroute = conn->rx->route->eroute;
+    eroute = stream->rx->route->eroute;
     if (eroute->currentSession) {
-        if (smatch(httpGetSessionID(conn), eroute->currentSession)) {
+        if (smatch(httpGetSessionID(stream), eroute->currentSession)) {
             return 1;
         }
         if (httpLookupSessionID(eroute->currentSession)) {
@@ -4248,22 +4565,22 @@ PUBLIC bool espIsCurrentSession(HttpConn *conn)
 
 /************************************* Local **********************************/
 
-static cchar *getValue(HttpConn *conn, cchar *fieldName, MprHash *options);
-static cchar *map(HttpConn *conn, MprHash *options);
+static cchar *getValue(HttpStream *stream, cchar *fieldName, MprHash *options);
+static cchar *map(HttpStream *stream, MprHash *options);
 
 /************************************* Code ***********************************/
 
 PUBLIC void input(cchar *field, cchar *optionString)
 {
-    HttpConn    *conn;
+    HttpStream    *stream;
     MprHash     *choices, *options;
     MprKey      *kp;
     EdiRec      *rec;
     cchar       *rows, *cols, *etype, *value, *checked, *style, *error, *errorMsg;
     int         type, flags;
 
-    conn = getConn();
-    rec = conn->record;
+    stream = getStream();
+    rec = stream->record;
     if (ediGetColumnSchema(rec->edi, rec->tableName, field, &type, &flags, NULL) < 0) {
         type = -1;
     }
@@ -4275,17 +4592,17 @@ PUBLIC void input(cchar *field, cchar *optionString)
     switch (type) {
     case EDI_TYPE_BOOL:
         choices = httpGetOptions("{off: 0, on: 1}");
-        value = getValue(conn, field, options);
+        value = getValue(stream, field, options);
         for (kp = 0; (kp = mprGetNextKey(choices, kp)) != 0; ) {
             checked = (smatch(kp->data, value)) ? " checked" : "";
-            espRender(conn, "%s <input type='radio' name='%s' value='%s'%s%s class='%s'/>\r\n",
-                stitle(kp->key), field, kp->data, checked, map(conn, options), style);
+            espRender(stream, "%s <input type='radio' name='%s' value='%s'%s%s class='%s'/>\r\n",
+                stitle(kp->key), field, kp->data, checked, map(stream, options), style);
         }
         break;
         /* Fall through */
     case EDI_TYPE_BINARY:
     default:
-        httpError(conn, 0, "espInput: unknown field type %d", type);
+        httpError(stream, 0, "espInput: unknown field type %d", type);
         /* Fall through */
     case EDI_TYPE_FLOAT:
     case EDI_TYPE_TEXT:
@@ -4297,9 +4614,9 @@ PUBLIC void input(cchar *field, cchar *optionString)
             httpSetOption(options, "rows", "10");
         }
         etype = "text";
-        value = getValue(conn, field, options);
+        value = getValue(stream, field, options);
         if (value == 0 || *value == '\0') {
-            value = espGetParam(conn, field, "");
+            value = espGetParam(stream, field, "");
         }
         if (httpGetOption(options, "password", 0)) {
             etype = "password";
@@ -4308,14 +4625,14 @@ PUBLIC void input(cchar *field, cchar *optionString)
         }
         if ((rows = httpGetOption(options, "rows", 0)) != 0) {
             cols = httpGetOption(options, "cols", "60");
-            espRender(conn, "<textarea name='%s' type='%s' cols='%s' rows='%s'%s class='%s'>%s</textarea>", 
-                field, etype, cols, rows, map(conn, options), style, value);
+            espRender(stream, "<textarea name='%s' type='%s' cols='%s' rows='%s'%s class='%s'>%s</textarea>", 
+                field, etype, cols, rows, map(stream, options), style, value);
         } else {
-            espRender(conn, "<input name='%s' type='%s' value='%s'%s class='%s'/>", field, etype, value, 
-                map(conn, options), style);
+            espRender(stream, "<input name='%s' type='%s' value='%s'%s class='%s'/>", field, etype, value, 
+                map(stream, options), style);
         }
         if (error) {
-            espRenderString(conn, error);
+            espRenderString(stream, error);
         }
         break;
     }
@@ -4328,21 +4645,21 @@ PUBLIC void input(cchar *field, cchar *optionString)
  */
 PUBLIC void inputSecurityToken()
 {
-    HttpConn    *conn;
+    HttpStream    *stream;
 
-    conn = getConn();
-    espRender(conn, "    <input name='%s' type='hidden' value='%s' />\r\n", ME_XSRF_PARAM, httpGetSecurityToken(conn, 0));
+    stream = getStream();
+    espRender(stream, "    <input name='%s' type='hidden' value='%s' />\r\n", ME_XSRF_PARAM, httpGetSecurityToken(stream, 0));
 }
 
 
 /**************************************** Support *************************************/ 
 
-static cchar *getValue(HttpConn *conn, cchar *fieldName, MprHash *options)
+static cchar *getValue(HttpStream *stream, cchar *fieldName, MprHash *options)
 {
     EdiRec      *record;
     cchar       *value;
 
-    record = conn->record;
+    record = stream->record;
     value = 0;
     if (record) {
         value = ediGetFieldValue(record, fieldName);
@@ -4360,7 +4677,7 @@ static cchar *getValue(HttpConn *conn, cchar *fieldName, MprHash *options)
 /*
     Map options to an attribute string.
  */
-static cchar *map(HttpConn *conn, MprHash *options)
+static cchar *map(HttpStream *stream, MprHash *options)
 {
     MprKey      *kp;
     MprBuf      *buf;
@@ -4408,28 +4725,27 @@ static cchar *map(HttpConn *conn, MprHash *options)
 static Esp *esp;
 
 /*
-    UNUSED. espRenderView flags are reserved
+    espRenderView flags are reserved (UNUSED)
  */
 #define ESP_DONT_RENDER 0x1
 
 /************************************ Forward *********************************/
 
-static int cloneDatabase(HttpConn *conn);
+static int cloneDatabase(HttpStream *stream);
 static void closeEsp(HttpQueue *q);
-static cchar *getCacheName(HttpRoute *route, cchar *kind, cchar *source);
 static void ifConfigModified(HttpRoute *route, cchar *path, bool *modified);
 static void manageEsp(Esp *esp, int flags);
 static void manageReq(EspReq *req, int flags);
 static int openEsp(HttpQueue *q);
-static int runAction(HttpConn *conn);
+static int runAction(HttpStream *stream);
 static void startEsp(HttpQueue *q);
 static int unloadEsp(MprModule *mp);
 
 #if !ME_STATIC
-static int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kind, cchar *source, cchar **errMsg,
-    bool *loaded);
+static cchar *getCacheName(HttpRoute *route, cchar *kind, cchar *source);
+static int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kind, cchar *source, cchar **errMsg, bool *loaded);
 static cchar *getModuleName(HttpRoute *route, cchar *kind, cchar *target);
-static char *getModuleEntry(EspRoute *eroute, cchar *kind, cchar *source, cchar *cacheName);
+static char *getModuleEntry(EspRoute *eroute, cchar *kind, cchar *source, cchar *cache);
 static bool layoutIsStale(EspRoute *eroute, cchar *source, cchar *module);
 #endif
 
@@ -4502,23 +4818,23 @@ static int unloadEsp(MprModule *mp)
  */
 static int openEsp(HttpQueue *q)
 {
-    HttpConn    *conn;
+    HttpStream  *stream;
     HttpRx      *rx;
     HttpRoute   *rp, *route;
     EspRoute    *eroute;
     EspReq      *req;
-    char        *cookie;
+    cchar       *cookie;
     int         next;
 
-    conn = q->conn;
-    rx = conn->rx;
+    stream = q->stream;
+    rx = stream->rx;
     route = rx->route;
 
     if ((req = mprAllocObj(EspReq, manageReq)) == 0) {
-        httpMemoryError(conn);
+        httpMemoryError(stream);
         return MPR_ERR_MEMORY;
     }
-    conn->reqData = req;
+    stream->reqData = req;
 
     /*
         If unloading a module, this lock will cause a wait here while ESP applications are reloaded.
@@ -4553,7 +4869,10 @@ static int openEsp(HttpQueue *q)
         If a cookie is not explicitly set, use the application name for the session cookie so that
         cookies are unique per esp application.
      */
-    cookie = sfmt("esp-%s", eroute->appName);
+    cookie = route->cookie;
+    if (!cookie) {
+        cookie = sfmt("esp-%s", eroute->appName);
+    }
     for (ITERATE_ITEMS(route->host->routes, rp, next)) {
         if (!rp->cookie) {
             httpSetRouteCookie(rp, cookie);
@@ -4611,28 +4930,28 @@ static bool espUnloadModule(cchar *module, MprTicks timeout)
 /*
     Not used
  */
-PUBLIC void espClearFeedback(HttpConn *conn)
+PUBLIC void espClearFeedback(HttpStream *stream)
 {
     EspReq      *req;
 
-    req = conn->reqData;
+    req = stream->reqData;
     req->feedback = 0;
 }
 
 
-static void setupFeedback(HttpConn *conn)
+static void setupFeedback(HttpStream *stream)
 {
     EspReq      *req;
 
-    req = conn->reqData;
+    req = stream->reqData;
     req->lastFeedback = 0;
     if (req->route->json) {
         req->feedback = mprCreateHash(0, MPR_HASH_STABLE);
     } else {
-        if (httpGetSession(conn, 0)) {
-            req->feedback = httpGetSessionObj(conn, ESP_FEEDBACK_VAR);
+        if (httpGetSession(stream, 0)) {
+            req->feedback = httpGetSessionObj(stream, ESP_FEEDBACK_VAR);
             if (req->feedback) {
-                httpRemoveSessionVar(conn, ESP_FEEDBACK_VAR);
+                httpRemoveSessionVar(stream, ESP_FEEDBACK_VAR);
                 req->lastFeedback = mprCloneHash(req->feedback);
             }
         }
@@ -4640,12 +4959,12 @@ static void setupFeedback(HttpConn *conn)
 }
 
 
-static void finalizeFeedback(HttpConn *conn)
+static void finalizeFeedback(HttpStream *stream)
 {
     EspReq  *req;
     MprKey  *kp, *lp;
 
-    req = conn->reqData;
+    req = stream->reqData;
     if (req->feedback) {
         if (req->route->json) {
             if (req->lastFeedback) {
@@ -4660,7 +4979,7 @@ static void finalizeFeedback(HttpConn *conn)
                     If the session does not exist, this will create one. However, must not have
                     emitted the headers, otherwise cannot inform the client of the session cookie.
                 */
-                httpSetSessionObj(conn, ESP_FEEDBACK_VAR, req->feedback);
+                httpSetSessionObj(stream, ESP_FEEDBACK_VAR, req->feedback);
             }
         }
     }
@@ -4675,39 +4994,42 @@ static void finalizeFeedback(HttpConn *conn)
  */
 static void startEsp(HttpQueue *q)
 {
-    HttpConn    *conn;
+    HttpStream  *stream;
     HttpRx      *rx;
     EspReq      *req;
 
-    conn = q->conn;
-    rx = conn->rx;
-    req = conn->reqData;
+    stream = q->stream;
+    rx = stream->rx;
+    req = stream->reqData;
 
 #if ME_WIN_LIKE
     rx->target = mprGetPortablePath(rx->target);
 #endif
 
     if (req) {
-        mprSetThreadData(req->esp->local, conn);
+        mprSetThreadData(req->esp->local, stream);
         /* WARNING: GC yield */
-        if (runAction(conn)) {
-            if (!conn->error && req->autoFinalize) {
-                if (!conn->tx->responded) {
+        if (runAction(stream)) {
+            if (!stream->error && req->autoFinalize) {
+                if (!stream->tx->responded) {
                     /* WARNING: GC yield */
-                    espRenderDocument(conn, rx->target);
+                    espRenderDocument(stream, rx->target);
                 }
                 if (req->autoFinalize) {
-                    espFinalize(conn);
+                    espFinalize(stream);
                 }
             }
         }
-        finalizeFeedback(conn);
+        finalizeFeedback(stream);
         mprSetThreadData(req->esp->local, NULL);
     }
 }
 
 
-static bool loadController(HttpConn *conn)
+/*
+    Yields
+ */
+static bool loadController(HttpStream *stream)
 {
 #if !ME_STATIC
     HttpRx      *rx;
@@ -4716,7 +5038,7 @@ static bool loadController(HttpConn *conn)
     cchar       *errMsg, *controllers, *controller;
     bool        loaded;
 
-    rx = conn->rx;
+    rx = stream->rx;
     route = rx->route;
     eroute = route->eroute;
     if (!eroute->combine && (eroute->update || !mprLookupKey(eroute->actions, rx->target))) {
@@ -4727,13 +5049,17 @@ static bool loadController(HttpConn *conn)
         controller = schr(route->sourceName, '$') ? stemplateJson(route->sourceName, rx->params) : route->sourceName;
         controller = controllers ? mprJoinPath(controllers, controller) : mprJoinPath(route->home, controller);
 
-        if (espLoadModule(route, conn->dispatcher, "controller", controller, &errMsg, &loaded) < 0) {
+        /* May yield */
+        route->source = controller;
+        if (espLoadModule(route, stream->dispatcher, "controller", controller, &errMsg, &loaded) < 0) {
             if (mprPathExists(controller, R_OK)) {
-                httpError(conn, HTTP_CODE_NOT_FOUND, "%s", errMsg);
-                return 0;
+                httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "%s", errMsg);
+            } else {
+                httpError(stream, HTTP_CODE_NOT_FOUND, "%s", errMsg);
             }
+            return 0;
         } else if (loaded) {
-            httpTrace(conn, "esp.handler", "context", "msg: 'Load module %s'", controller);
+            httpLog(stream->trace, "esp.handler", "context", "msg: 'Load module %s'", controller);
         }
     }
 #endif /* !ME_STATIC */
@@ -4741,24 +5067,24 @@ static bool loadController(HttpConn *conn)
 }
 
 
-static bool setToken(HttpConn *conn)
+static bool setToken(HttpStream *stream)
 {
     HttpRx      *rx;
     HttpRoute   *route;
 
-    rx = conn->rx;
+    rx = stream->rx;
     route = rx->route;
 
     if (route->flags & HTTP_ROUTE_XSRF && !(rx->flags & HTTP_GET)) {
-        if (!httpCheckSecurityToken(conn)) {
-            httpSetStatus(conn, HTTP_CODE_UNAUTHORIZED);
+        if (!httpCheckSecurityToken(stream)) {
+            httpSetStatus(stream, HTTP_CODE_UNAUTHORIZED);
             if (route->json) {
-                httpTrace(conn, "esp.xsrf.error", "error", 0);
-                espRenderString(conn,
+                httpLog(stream->trace, "esp.xsrf.error", "error", 0);
+                espRenderString(stream,
                     "{\"retry\": true, \"success\": 0, \"feedback\": {\"error\": \"Security token is stale. Please retry.\"}}");
-                espFinalize(conn);
+                espFinalize(stream);
             } else {
-                httpError(conn, HTTP_CODE_UNAUTHORIZED, "Security token is stale. Please reload page.");
+                httpError(stream, HTTP_CODE_UNAUTHORIZED, "Security token is stale. Please reload page.");
             }
             return 0;
         }
@@ -4770,55 +5096,62 @@ static bool setToken(HttpConn *conn)
 /*
     Run an action (may yield)
  */
-static int runAction(HttpConn *conn)
+static int runAction(HttpStream *stream)
 {
     HttpRx      *rx;
     HttpRoute   *route;
     EspRoute    *eroute;
     EspReq      *req;
-    EspAction   action;
+    EspAction   *action;
 
-    rx = conn->rx;
-    req = conn->reqData;
+    rx = stream->rx;
+    req = stream->reqData;
     route = rx->route;
     eroute = route->eroute;
     assert(eroute);
 
     if (eroute->edi && eroute->edi->flags & EDI_PRIVATE) {
-        cloneDatabase(conn);
+        cloneDatabase(stream);
     } else {
         req->edi = eroute->edi;
     }
     if (route->sourceName == 0 || *route->sourceName == '\0') {
         if (eroute->commonController) {
-            (eroute->commonController)(conn);
+            (eroute->commonController)(stream, NULL);
         }
         return 1;
     }
-    if (!loadController(conn)) {
+    /* May yield */
+    if (!loadController(stream)) {
         return 0;
     }
-    if (!setToken(conn)) {
+    if (!setToken(stream)) {
         return 0;
     }
-    httpAuthenticate(conn);
+    httpAuthenticate(stream);
+
+    action = mprLookupKey(eroute->top->actions, rx->target);
+    httpLog(stream->trace, "esp.handler", "context", "msg: 'Invoke controller action %s'", rx->target);
+
     if (eroute->commonController) {
-        (eroute->commonController)(conn);
+        (eroute->commonController)(stream, action);
+    }
+    if (httpIsFinalized(stream)) {
+        return 1;
     }
     assert(eroute->top);
-    action = mprLookupKey(eroute->top->actions, rx->target);
     if (action) {
-        httpTrace(conn, "esp.handler", "context", "msg: 'Invoke controller action %s'", rx->target);
-        setupFeedback(conn);
-        if (!httpIsFinalized(conn)) {
-            (action)(conn);
-        }
+        setupFeedback(stream);
+        (action->callback)(stream, action);
     }
     return 1;
 }
 
 
-static cchar *loadView(HttpConn *conn, cchar *target)
+/*
+    Load a view ... may yield
+ */
+static bool loadView(HttpStream *stream, cchar *target)
 {
 #if !ME_STATIC
     HttpRx      *rx;
@@ -4827,58 +5160,56 @@ static cchar *loadView(HttpConn *conn, cchar *target)
     bool        loaded;
     cchar       *errMsg, *path;
 
-    rx = conn->rx;
+    rx = stream->rx;
     route = rx->route;
     eroute = route->eroute;
     assert(eroute);
 
     if (!eroute->combine && (eroute->update || !mprLookupKey(eroute->top->views, target))) {
-        /* WARNING: GC yield - need target below */
-        target = sclone(target);
-        mprHold(target);
         path = mprJoinPath(route->documents, target);
-        if (espLoadModule(route, conn->dispatcher, "view", path, &errMsg, &loaded) < 0) {
-            httpError(conn, HTTP_CODE_NOT_FOUND, "%s", errMsg);
-            mprRelease(target);
+        httpLog(stream->trace, "esp.handler", "context", "msg: 'Loading module %s'", path);
+        /* May yield */
+        route->source = path;
+        if (espLoadModule(route, stream->dispatcher, "view", path, &errMsg, &loaded) < 0) {
+            httpError(stream, HTTP_CODE_NOT_FOUND, "%s", errMsg);
             return 0;
         }
-        if (loaded) {
-            httpTrace(conn, "esp.handler", "context", "msg: 'Load module %s'", path);
-        }
-        mprRelease(target);
     }
 #endif
-    return target;
+    return 1;
 }
 
-PUBLIC bool espRenderView(HttpConn *conn, cchar *target, int flags)
+/*
+    WARNING: this can yield
+ */
+PUBLIC bool espRenderView(HttpStream *stream, cchar *target, int flags)
 {
     HttpRx      *rx;
     HttpRoute   *route;
     EspRoute    *eroute;
     EspViewProc viewProc;
 
-    rx = conn->rx;
+    rx = stream->rx;
     route = rx->route;
     eroute = route->eroute;
 
-    if ((target = loadView(conn, target)) == 0) {
+    /* WARNING: may yield */
+    if (!loadView(stream, target)) {
         return 0;
     }
     if ((viewProc = mprLookupKey(eroute->top->views, target)) == 0) {
-        httpError(conn, HTTP_CODE_NOT_FOUND, "Cannot find function %s for %s",
-            getCacheName(route, "view", mprJoinPath(route->documents, target)), target);
+        httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot find view %s", target);
         return 0;
     }
     if (!(flags & ESP_DONT_RENDER)) {
         if (route->flags & HTTP_ROUTE_XSRF) {
             /* Add a new unique security token */
-            httpAddSecurityToken(conn, 1);
+            httpAddSecurityToken(stream, 1);
         }
-        httpSetContentType(conn, "text/html");
-        httpSetFilename(conn, mprJoinPath(route->documents, target), 0);
-        /* WARNING: may GC yield */
-        (viewProc)(conn);
+        httpSetContentType(stream, "text/html");
+        httpSetFilename(stream, mprJoinPath(route->documents, target), 0);
+        /* WARNING: may yield */
+        (viewProc)(stream);
     }
     return 1;
 }
@@ -4887,7 +5218,7 @@ PUBLIC bool espRenderView(HttpConn *conn, cchar *target, int flags)
 /*
     Check if the target/filename.ext is registered as an esp view
  */
-static cchar *checkView(HttpConn *conn, cchar *target, cchar *filename, cchar *ext)
+static cchar *checkView(HttpStream *stream, cchar *target, cchar *filename, cchar *ext)
 {
     HttpRx      *rx;
     HttpRoute   *route;
@@ -4895,7 +5226,7 @@ static cchar *checkView(HttpConn *conn, cchar *target, cchar *filename, cchar *e
 
     assert(target);
 
-    rx = conn->rx;
+    rx = stream->rx;
     route = rx->route;
     eroute = route->eroute;
 
@@ -4940,28 +5271,6 @@ static cchar *checkView(HttpConn *conn, cchar *target, cchar *filename, cchar *e
     if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
         return target;
     }
-
-#if UNUSED
-    /*
-        If target exists as a mapped / compressed view
-     */
-    if (route->map && !(conn->tx->flags & HTTP_TX_NO_MAP)) {
-        path = httpMapContent(conn, path);
-        if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
-            return target;
-        }
-    }
-#endif
-
-#if DEPRECATED || 1
-    /*
-        See if views are under client/app. Remove in version 6.
-     */
-    path = mprJoinPaths(route->documents, "app", target, NULL);
-    if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
-        return mprJoinPath("app", target);
-    }
-#endif
 }
 #endif
     return 0;
@@ -4974,23 +5283,25 @@ static cchar *checkView(HttpConn *conn, cchar *target, cchar *filename, cchar *e
     If target is a directory with an index.esp, return the index.esp without a redirect.
     If target is a directory without a trailing "/" but with an index.esp, do an external redirect to "URI/".
     Otherwise relay to the fileHandler.
+    May yield.
  */
-PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
+PUBLIC void espRenderDocument(HttpStream *stream, cchar *target)
 {
     HttpUri     *up;
     MprKey      *kp;
     cchar       *dest;
 
     if (!target) {
-        httpError(conn, HTTP_CODE_NOT_FOUND, "Cannot find document");
+        httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot find document");
         return;
     }
     if (*target) {
-        for (ITERATE_KEYS(conn->rx->route->extensions, kp)) {
+        for (ITERATE_KEYS(stream->rx->route->extensions, kp)) {
             if (kp->data == HTTP->espHandler && kp->key && kp->key[0]) {
-                if ((dest = checkView(conn, target, 0, kp->key)) != 0) {
-                    httpTrace(conn, "esp.handler", "context", "msg: 'Render view %s'", dest);
-                    espRenderView(conn, dest, 0);
+                if ((dest = checkView(stream, target, 0, kp->key)) != 0) {
+                    httpLog(stream->trace, "esp.handler", "context", "msg: 'Render view %s'", dest);
+                    /* May yield */
+                    espRenderView(stream, dest, 0);
                     return;
                 }
             }
@@ -4999,47 +5310,30 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
     /*
         Check for index
      */
-    if ((dest = checkView(conn, target, "index", "esp")) != 0) {
+    if ((dest = checkView(stream, target, "index", "esp")) != 0) {
         /*
             Must do external redirect first if URL does not end with "/"
          */
-        if (!sends(conn->rx->parsedUri->path, "/")) {
-            up = conn->rx->parsedUri;
-            httpRedirect(conn, HTTP_CODE_MOVED_PERMANENTLY, httpFormatUri(up->scheme, up->host,
+        if (!sends(stream->rx->parsedUri->path, "/")) {
+            up = stream->rx->parsedUri;
+            httpRedirect(stream, HTTP_CODE_MOVED_PERMANENTLY, httpFormatUri(up->scheme, up->host,
                 up->port, sjoin(up->path, "/", NULL), up->reference, up->query, 0));
             return;
         }
-        httpTrace(conn, "esp.handler", "context", "msg: 'Render index %s'", dest);
-        espRenderView(conn, dest, 0);
+        httpLog(stream->trace, "esp.handler", "context", "msg: 'Render index %s'", dest);
+        /* May yield */
+        espRenderView(stream, dest, 0);
         return;
     }
 
-#if UNUSED
-    /*
-        Last chance, forward to the file handler ... not an ESP request. This enables file requests within ESP routes.
-     */
-    path = mprJoinPath(route->documents, target);
-    if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
-        target = path;
+    httpLog(stream->trace, "esp.handler", "context", "msg: 'Relay to the fileHandler'");
+    stream->rx->target = sclone(&stream->rx->pathInfo[1]);
+    httpMapFile(stream);
+    if (stream->tx->fileInfo.isDir) {
+        httpHandleDirectory(stream);
     }
-    /*
-        If target exists as a mapped / compressed document
-     */
-    if (route->map && !(conn->tx->flags & HTTP_TX_NO_MAP)) {
-        path = httpMapContent(conn, path);
-        if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
-            target = path;
-        }
-    }
-#endif
-
-    conn->rx->target = sclone(&conn->rx->pathInfo[1]);
-    httpMapFile(conn);
-    if (conn->tx->fileInfo.isDir) {
-        httpHandleDirectory(conn);
-    }
-    if (!conn->tx->finalized) {
-        httpSetFileHandler(conn, 0);
+    if (!stream->tx->finalized) {
+        httpSetFileHandler(stream, 0);
     }
 }
 
@@ -5068,15 +5362,15 @@ static void pruneDatabases(Esp *esp)
 /*
     This clones a database to give a private view per user.
  */
-static int cloneDatabase(HttpConn *conn)
+static int cloneDatabase(HttpStream *stream)
 {
     Esp         *esp;
     EspRoute    *eroute;
     EspReq      *req;
     cchar       *id;
 
-    req = conn->reqData;
-    eroute = conn->rx->route->eroute;
+    req = stream->reqData;
+    eroute = stream->rx->route->eroute;
     assert(eroute->edi);
     assert(eroute->edi->flags & EDI_PRIVATE);
 
@@ -5092,9 +5386,9 @@ static int cloneDatabase(HttpConn *conn)
     /*
         If the user is logging in or out, this will create a redundant session here.
      */
-    httpGetSession(conn, 1);
-    id = httpGetSessionID(conn);
-    if (id && (req->edi = mprLookupKey(esp->databases, id)) == 0) {
+    httpGetSession(stream, 1);
+    id = httpGetSessionID(stream);
+    if ((req->edi = mprLookupKey(esp->databases, id)) == 0) {
         if ((req->edi = ediClone(eroute->edi)) == 0) {
             mprLog("error esp", 0, "Cannot clone database: %s", eroute->edi->path);
             return MPR_ERR_CANT_OPEN;
@@ -5105,6 +5399,7 @@ static int cloneDatabase(HttpConn *conn)
 }
 
 
+#if !ME_STATIC
 static cchar *getCacheName(HttpRoute *route, cchar *kind, cchar *target)
 {
     EspRoute    *eroute;
@@ -5124,13 +5419,12 @@ static cchar *getCacheName(HttpRoute *route, cchar *kind, cchar *target)
 }
 
 
-#if !ME_STATIC
-static char *getModuleEntry(EspRoute *eroute, cchar *kind, cchar *source, cchar *cacheName)
+static char *getModuleEntry(EspRoute *eroute, cchar *kind, cchar *source, cchar *cache)
 {
     char    *cp, *entry;
 
     if (smatch(kind, "view")) {
-        entry = sfmt("esp_%s", cacheName);
+        entry = sfmt("esp_%s", cache);
 
     } else if (smatch(kind, "app")) {
         if (eroute->combine) {
@@ -5157,39 +5451,41 @@ static char *getModuleEntry(EspRoute *eroute, cchar *kind, cchar *source, cchar 
 
 static cchar *getModuleName(HttpRoute *route, cchar *kind, cchar *target)
 {
-    cchar   *cache, *cacheName;
+    cchar   *cacheDir, *cache;
 
-    cacheName = getCacheName(route, "view", target);
-    if ((cache = httpGetDir(route, "CACHE")) == 0) {
+    cache = getCacheName(route, "view", target);
+    if ((cacheDir = httpGetDir(route, "CACHE")) == 0) {
         /* May not be set for non esp apps */
-        cache = "cache";
+        cacheDir = "cache";
     }
-    return mprJoinPathExt(mprJoinPaths(route->home, cache, cacheName, NULL), ME_SHOBJ);
+    return mprJoinPathExt(mprJoinPaths(route->home, cacheDir, cache, NULL), ME_SHOBJ);
 }
 
 
 /*
-    WARNING: GC yield
+    Load an ESP module. WARNING: this routine may yield. Take precautions to preserve the source argument so callers
+    dont have to.
  */
-static int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kind, cchar *source, cchar **errMsg,
-    bool *loaded)
+static int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kind, cchar *source, cchar **errMsg, bool *loaded)
 {
     EspRoute    *eroute;
     MprModule   *mp;
-    cchar       *cache, *cacheName, *entry, *module;
+    cchar       *cacheDir, *cache, *entry, *module;
     int         isView, recompile;
 
     eroute = route->eroute;
     *errMsg = "";
+    assert(mprIsValid(source));
+    route->source = source;
 
     if (loaded) {
         *loaded = 0;
     }
-    cacheName = getCacheName(route, kind, source);
-    if ((cache = httpGetDir(route, "CACHE")) == 0) {
-        cache = "cache";
+    cache = getCacheName(route, kind, source);
+    if ((cacheDir = httpGetDir(route, "CACHE")) == 0) {
+        cacheDir = "cache";
     }
-    module = mprJoinPathExt(mprJoinPaths(route->home, cache, cacheName, NULL), ME_SHOBJ);
+    module = mprJoinPathExt(mprJoinPaths(route->home, cacheDir, cache, NULL), ME_SHOBJ);
 
     lock(esp);
     if (mprLookupModule(source) == 0 || eroute->update) {
@@ -5198,13 +5494,13 @@ static int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
             isView = smatch(kind, "view");
             if (recompile || (isView && layoutIsStale(eroute, source, module))) {
                 if (recompile) {
-                    mprHoldBlocks(source, module, cacheName, NULL);
-                    if (!espCompile(route, dispatcher, source, module, cacheName, isView, (char**) errMsg)) {
-                        mprReleaseBlocks(source, module, cacheName, NULL);
+                    /*
+                        WARNING: espCompile may yield. espCompile will retain the arguments (source, module, cache) for us.
+                     */
+                    if (!espCompile(route, dispatcher, source, module, cache, isView, (char**) errMsg)) {
                         unlock(esp);
                         return MPR_ERR_CANT_WRITE;
                     }
-                    mprReleaseBlocks(source, module, cacheName, NULL);
                 }
             }
         }
@@ -5215,7 +5511,7 @@ static int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
             unlock(esp);
             return MPR_ERR_CANT_FIND;
         }
-        entry = getModuleEntry(eroute, kind, source, cacheName);
+        entry = getModuleEntry(eroute, kind, source, cache);
         if ((mp = mprCreateModule(source, module, entry, route)) == 0) {
             *errMsg = "Memory allocation error loading module";
             unlock(esp);
@@ -5254,7 +5550,7 @@ PUBLIC bool espModuleIsStale(HttpRoute *route, cchar *source, cchar *module, int
     if (!minfo.valid) {
         if ((mp = mprLookupModule(source)) != 0) {
             if (!espUnloadModule(source, ME_ESP_RELOAD_TIMEOUT)) {
-                mprLog("error esp", 0, "Cannot unload module %s. Connections still open. Continue using old version.",
+                mprLog("error esp", 0, "Cannot unload module %s. Streams still open. Continue using old version.",
                     source);
                 return 0;
             }
@@ -5270,7 +5566,7 @@ PUBLIC bool espModuleIsStale(HttpRoute *route, cchar *source, cchar *module, int
         if (sinfo.valid && sinfo.mtime > minfo.mtime) {
             if ((mp = mprLookupModule(source)) != 0) {
                 if (!espUnloadModule(source, ME_ESP_RELOAD_TIMEOUT)) {
-                    mprLog("warn esp", 4, "Cannot unload module %s. Connections still open. Continue using old version.",
+                    mprLog("warn esp", 4, "Cannot unload module %s. Streams still open. Continue using old version.",
                         source);
                     return 0;
                 }
@@ -5284,7 +5580,7 @@ PUBLIC bool espModuleIsStale(HttpRoute *route, cchar *source, cchar *module, int
         if (minfo.mtime > mp->modified) {
             /* Module file has been updated */
             if (!espUnloadModule(source, ME_ESP_RELOAD_TIMEOUT)) {
-                mprLog("warn esp", 4, "Cannot unload module %s. Connections still open. Continue using old version.",
+                mprLog("warn esp", 4, "Cannot unload module %s. Streams still open. Continue using old version.",
                     source);
                 return 0;
             }
@@ -5357,7 +5653,7 @@ PUBLIC void espManageEspRoute(EspRoute *eroute, int flags)
         mprMark(eroute->top);
         mprMark(eroute->views);
         mprMark(eroute->winsdk);
-#if DEPRECATED || 1
+#if DEPRECATED
         mprMark(eroute->combineScript);
         mprMark(eroute->combineSheet);
 #endif
@@ -5419,7 +5715,7 @@ static EspRoute *cloneEspRoute(HttpRoute *route, EspRoute *parent)
     eroute->compile = parent->compile;
     eroute->keep = parent->keep;
     eroute->update = parent->update;
-#if DEPRECATED || 1
+#if DEPRECATED
     eroute->combineScript = parent->combineScript;
     eroute->combineSheet = parent->combineSheet;
 #endif
@@ -5539,8 +5835,10 @@ PUBLIC int espLoadConfig(HttpRoute *route)
             return MPR_ERR_CANT_LOAD;
         }
         if ((name = espGetConfig(route, "name", 0)) != 0) {
-            eroute->appName = name;
+            eroute->appName = sreplace(name, "-", "_");
         }
+        eroute->encodeTypes = smatch(espGetConfig(route, "esp.encodeTypes", NULL), "true");
+
         cookie = sfmt("esp-%s", eroute->appName);
         for (ITERATE_ITEMS(route->host->routes, rp, next)) {
             if (!rp->cookie) {
@@ -5564,24 +5862,54 @@ static bool preload(HttpRoute *route)
 {
 #if !ME_STATIC
     EspRoute    *eroute;
-    MprJson     *preload, *item;
+    MprJson     *preload, *item, *sources, *si;
+    MprList     *files;
     cchar       *errMsg, *source;
     char        *kind;
-    int         i;
+    int         i, index, next;
 
     eroute = route->eroute;
     if (eroute->app && !(route->flags & HTTP_ROUTE_NO_LISTEN)) {
         if (eroute->combine) {
+            /* Note: source file does not have to be present - the name is used to calculate the module name */
             source = mprJoinPaths(route->home, httpGetDir(route, "CACHE"), sfmt("%s.c", eroute->appName), NULL);
-        } else {
-            source = mprJoinPaths(route->home, httpGetDir(route, "SRC"), "app.c", NULL);
-        }
-        if (espLoadModule(route, NULL, "app", source, &errMsg, NULL) < 0) {
-            if (eroute->combine) {
+            if (espLoadModule(route, NULL, "app", source, &errMsg, NULL) < 0) {
                 mprLog("error esp", 0, "%s", errMsg);
                 return 0;
             }
+        } else {
+            if ((sources = mprGetJsonObj(route->config, "esp.app.source")) != 0) {
+                for (ITERATE_JSON(sources, si, index)) {
+                    files = mprGlobPathFiles(route->home, si->value, 0);
+                    if (mprGetListLength(files) == 0) {
+                        mprLog("error esp", 0, "ESP source pattern does not match any files \"%s\"", si->value);
+                    }
+                    for (ITERATE_ITEMS(files, source, next)) {
+                        /* May yield */
+                        route->source = source;
+                        if (espLoadModule(route, NULL, "app", source, &errMsg, NULL) < 0) {
+                            mprLog("error esp", 0, "%s", errMsg);
+                            return 0;
+                        }
+                    }
+                }
+            } else {
+                /*
+                    DEPRECATE - load a src/app.c
+                 */
+                source = mprJoinPaths(route->home, httpGetDir(route, "SRC"), "app.c", NULL);
+                if (mprPathExists(source, R_OK)) {
+                    /* May yield */
+                    route->source = source;
+                    mprLog("info esp", 0, "Specify app.c in esp.app.source: ['app.c']");
+                    if (espLoadModule(route, NULL, "app", source, &errMsg, NULL) < 0) {
+                        mprLog("error esp", 0, "%s", errMsg);
+                        return 0;
+                    }
+                }
+            }
         }
+
         if (!eroute->combine && (preload = mprGetJsonObj(route->config, "esp.preload")) != 0) {
             for (ITERATE_JSON(preload, item, i)) {
                 source = ssplit(sclone(item->value), ":", &kind);
@@ -5589,12 +5917,16 @@ static bool preload(HttpRoute *route)
                     kind = "controller";
                 }
                 source = mprJoinPaths(route->home, httpGetDir(route, "CONTROLLERS"), source, NULL);
+                /* May yield */
+                route->source = source;
                 if (espLoadModule(route, NULL, kind, source, &errMsg, NULL) < 0) {
                     mprLog("error esp", 0, "Cannot preload esp module %s. %s", source, errMsg);
                     return 0;
                 }
             }
         }
+        mprLog("esp info", 4, "Loaded ESP application \"%s\", profile \"%s\" with options: combine %d, compile %d, compile mode %d, update %d",
+            eroute->appName, route->mode ? route->mode : "unset", eroute->combine, eroute->compile, eroute->compileMode, eroute->update);
     }
 #endif
     return 1;
@@ -5603,8 +5935,8 @@ static bool preload(HttpRoute *route)
 
 /*
     Initialize ESP.
-    Prefix is the URI prefix for the application
-    Path is the path to the esp.json
+    Prefix is the URI prefix for the application.
+    Path is the path to the esp.json.
  */
 PUBLIC int espInit(HttpRoute *route, cchar *prefix, cchar *path)
 {
@@ -5630,9 +5962,14 @@ PUBLIC int espInit(HttpRoute *route, cchar *prefix, cchar *path)
         mprLog("info esp", 3, "Load ESP app: %s%s from %s", hostname, prefix, path);
     }
     eroute->top = eroute;
-    if (path && mprPathExists(path, R_OK)) {
-        httpSetRouteHome(route, mprGetPathDir(path));
-        eroute->configFile = sclone(path);
+    if (path) {
+        if (mprPathExists(path, R_OK)) {
+            httpSetRouteHome(route, mprGetPathDir(path));
+            eroute->configFile = sclone(path);
+        } else {
+            mprLog("error esp", 0, "Cannot locate ESP config file: %s", path);
+            return MPR_ERR_CANT_LOAD;
+        }
     }
     if (!route->handler) {
         httpAddRouteHandler(route, "espHandler", "esp");
@@ -5704,6 +6041,28 @@ PUBLIC int espOpenDatabase(HttpRoute *route, cchar *spec)
 }
 
 
+PUBLIC void espCloseDatabase(HttpRoute *route)
+{
+    EspRoute    *eroute;
+
+    eroute = route->eroute;
+    if (eroute->edi) {
+        ediClose(eroute->edi);
+        eroute->edi = 0;
+    }
+}
+
+
+PUBLIC int espReloadDatabase(HttpRoute *route)
+{
+    if (route->database) {
+        espCloseDatabase(route);
+        return espOpenDatabase(route, route->database);
+    }
+    return 0;
+}
+
+
 static void setDir(HttpRoute *route, cchar *key, cchar *value, bool force)
 {
     if (force) {
@@ -5714,7 +6073,7 @@ static void setDir(HttpRoute *route, cchar *key, cchar *value, bool force)
 }
 
 
-PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app)
+PUBLIC void espSetDefaultDirs(HttpRoute *route, bool force)
 {
     cchar   *controllers, *documents, *path, *migrations;
 
@@ -5770,19 +6129,21 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app)
     if (!mprPathExists(path, X_OK)) {
         migrations = "migrations";
     }
-    setDir(route, "CACHE", 0, app);
-    setDir(route, "CONTROLLERS", controllers, app);
-    setDir(route, "CONTENTS", 0, app);
-    setDir(route, "DB", 0, app);
-    setDir(route, "DOCUMENTS", documents, app);
-    setDir(route, "HOME", route->home, app);
-    setDir(route, "LAYOUTS", 0, app);
-    setDir(route, "LIB", 0, app);
-    setDir(route, "MIGRATIONS", migrations, app);
-    setDir(route, "PAKS", 0, app);
-    setDir(route, "PARTIALS", 0, app);
-    setDir(route, "SRC", 0, app);
-    setDir(route, "UPLOAD", "/tmp", app);
+    force = 0;
+    setDir(route, "DOCUMENTS", documents, force);
+    setDir(route, "HOME", route->home, force);
+    setDir(route, "MIGRATIONS", migrations, force);
+    setDir(route, "UPLOAD", "/tmp", 0);
+
+    setDir(route, "CACHE", 0, force);
+    setDir(route, "CONTROLLERS", controllers, force);
+    setDir(route, "CONTENTS", 0, force);
+    setDir(route, "DB", 0, force);
+    setDir(route, "LAYOUTS", 0, force);
+    setDir(route, "LIB", 0, force);
+    setDir(route, "PAKS", 0, force);
+    setDir(route, "PARTIALS", 0, force);
+    setDir(route, "SRC", 0, force);
 }
 
 
@@ -5810,7 +6171,7 @@ PUBLIC int espBindProc(HttpRoute *parent, cchar *pattern, void *proc)
         return MPR_ERR_CANT_CREATE;
     }
     httpSetRouteHandler(route, "espHandler");
-    espDefineAction(route, pattern, proc);
+    espAction(route, pattern, NULL, proc);
     eroute = route->eroute;
     eroute->update = 0;
     return 0;
@@ -5831,6 +6192,7 @@ static void ifConfigModified(HttpRoute *route, cchar *path, bool *modified)
         }
     }
 }
+
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
@@ -5880,8 +6242,17 @@ typedef struct EspParse {
     MprBuf  *token;                         /**< Input token */
 } EspParse;
 
+
+typedef struct CompileContext {
+    cchar   *csource;
+    cchar   *source;
+    cchar   *module;
+    cchar   *cache;
+} CompileContext;
+
 /************************************ Forwards ********************************/
 
+static CompileContext* allocContext(cchar *source, cchar *csource, cchar *module, cchar *cache);
 static int getEspToken(EspParse *parse);
 static cchar *getDebug(EspRoute *eroute);
 static cchar *getEnvString(HttpRoute *route, cchar *key, cchar *defaultValue);
@@ -5895,6 +6266,7 @@ static cchar *getLibs(cchar *os);
 static cchar *getMappedArch(cchar *arch);
 static cchar *getObjExt(cchar *os);
 static cchar *getVxCPU(cchar *arch);
+static void manageContext(CompileContext *context, int flags);
 static bool matchToken(cchar **str, cchar *token);
 
 #if ME_WIN_LIKE
@@ -5905,13 +6277,14 @@ static cchar *getWinVer(HttpRoute *route);
 /************************************* Code ***********************************/
 /*
     Tokens:
+    APPINC      Application include directory
     AR          Library archiver (ar)
     ARLIB       Archive library extension (.a, .lib)
     ARCH        Build architecture (64)
     CC          Compiler (cc)
     DEBUG       Debug compilation options (-g, -Zi -Od)
     GCC_ARCH    ARCH mapped to gcc -arch switches (x86_64)
-    INC         Include directory out/inc
+    INC         Include directory build/platform/inc
     LIBPATH     Library search path
     LIBS        Libraries required to link with ESP
     OBJ         Name of compiled source (out/lib/view-MD5.o)
@@ -5959,6 +6332,7 @@ PUBLIC char *espExpandCommand(HttpRoute *route, cchar *command, cchar *source, c
                 if ((srcDir = httpGetDir(route, "SRC")) == 0) {
                     srcDir = ".";
                 }
+                srcDir = getEnvString(route, "APPINC", srcDir);
                 mprPutStringToBuf(buf, srcDir);
 
             } else if (matchToken(&cp, "${INC}")) {
@@ -6082,7 +6456,6 @@ static int runCommand(HttpRoute *route, MprDispatcher *dispatcher, cchar *comman
     EspRoute    *eroute;
     cchar       **env, *commandLine;
     char        *err, *out;
-    int         rc;
 
     *errMsg = 0;
     eroute = route->eroute;
@@ -6108,18 +6481,14 @@ static int runCommand(HttpRoute *route, MprDispatcher *dispatcher, cchar *comman
     /*
         WARNING: GC will run here
      */
-    mprHold((void*) commandLine);
-    rc = mprRunCmd(cmd, commandLine, env, NULL, &out, &err, -1, 0);
-    mprRelease((void*) commandLine);
-
-    if (rc != 0) {
+    if (mprRunCmd(cmd, commandLine, env, NULL, &out, &err, -1, 0) != 0) {
         if (err == 0 || *err == '\0') {
             /* Windows puts errors to stdout Ugh! */
             err = out;
         }
-        mprLog("error esp", 0, "Cannot run command: %s, error %s", commandLine, err);
+        mprLog("error esp", 0, "Cannot run command: %s, error %s", command, err);
         if (route->flags & HTTP_ROUTE_SHOW_ERRORS) {
-            *errMsg = sfmt("Cannot run command: %s, error %s", commandLine, err);
+            *errMsg = sfmt("Cannot run command: %s, error %s", command, err);
         } else {
             *errMsg = "Cannot compile view";
         }
@@ -6159,16 +6528,17 @@ PUBLIC int espLoadCompilerRules(HttpRoute *route)
     source      ESP source file name
     module      Module file name
 
-    WARNING: this routine blocks and runs GC. All parameters must be retained.
+    WARNING: this routine yields and runs GC. All parameters must be retained by the caller.
  */
 PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *source, cchar *module, cchar *cacheName,
     int isView, char **errMsg)
 {
-    MprFile     *fp;
-    EspRoute    *eroute;
-    cchar       *csource, *layoutsDir;
-    char        *layout, *script, *page, *err;
-    ssize       len;
+    MprFile         *fp;
+    EspRoute        *eroute;
+    CompileContext  *context;
+    cchar           *csource, *layoutsDir;
+    char            *layout, *script, *page, *err;
+    ssize           len;
 
     eroute = route->eroute;
     assert(eroute->compile);
@@ -6234,15 +6604,20 @@ PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *sourc
         return 0;
     }
 
+    context = allocContext(source, csource, module, cacheName);
+    mprAddRoot(context);
+
     /*
         Run compiler: WARNING: GC yield here
      */
     if (runCommand(route, dispatcher, eroute->compileCmd, csource, module, errMsg) != 0) {
+        mprRemoveRoot(context);
         return 0;
     }
     if (eroute->linkCmd) {
         /* WARNING: GC yield here */
         if (runCommand(route, dispatcher, eroute->linkCmd, csource, module, errMsg) != 0) {
+            mprRemoveRoot(context);
             return 0;
         }
 #if !MACOSX
@@ -6257,8 +6632,7 @@ PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *sourc
         /*
             Windows leaves intermediate object in the current directory
          */
-        cchar   *path;
-        path = mprReplacePathExt(mprGetPathBase(csource), "obj");
+        cchar *path = mprReplacePathExt(mprGetPathBase(csource), "obj");
         if (mprPathExists(path, F_OK)) {
             mprDeletePath(path);
         }
@@ -6267,6 +6641,7 @@ PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *sourc
     if (!eroute->keep && isView) {
         mprDeletePath(csource);
     }
+    mprRemoveRoot(context);
     return 1;
 }
 
@@ -6512,29 +6887,29 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
                 fmt = ssplit(token, ": \t\r\n", &token);
                 /* Default without format is safe. If users want a format and safe, use %S or renderSafe() */
                 token = strim(token, " \t\r\n;", MPR_TRIM_BOTH);
-                mprPutToBuf(body, "  espRender(conn, \"%s\", %s);\n", fmt, token);
+                mprPutToBuf(body, "  espRender(stream, \"%s\", %s);\n", fmt, token);
             } else {
                 token = strim(token, " \t\r\n;", MPR_TRIM_BOTH);
-                mprPutToBuf(body, "  espRenderSafeString(conn, %s);\n", token);
+                mprPutToBuf(body, "  espRenderSafeString(stream, %s);\n", token);
             }
             break;
 
         case ESP_TOK_VAR:
             /* %!var -- string variable */
             token = strim(token, " \t\r\n;", MPR_TRIM_BOTH);
-            mprPutToBuf(body, "  espRenderString(conn, %s);\n", token);
+            mprPutToBuf(body, "  espRenderString(stream, %s);\n", token);
             break;
 
         case ESP_TOK_FIELD:
             /* %#field -- field in the current record */
             token = strim(token, " \t\r\n;", MPR_TRIM_BOTH);
-            mprPutToBuf(body, "  espRenderSafeString(conn, getField(getRec(), \"%s\"));\n", token);
+            mprPutToBuf(body, "  espRenderSafeString(stream, getField(getRec(), \"%s\"));\n", token);
             break;
 
         case ESP_TOK_PARAM:
             /* %$param -- variable in (param || session) - Safe render */
             token = strim(token, " \t\r\n;", MPR_TRIM_BOTH);
-            mprPutToBuf(body, "  espRenderVar(conn, \"%s\");\n", token);
+            mprPutToBuf(body, "  espRenderVar(stream, \"%s\");\n", token);
             break;
 
         case ESP_TOK_HOME:
@@ -6542,7 +6917,7 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
             if (parse.next[0] && parse.next[0] != '/' && parse.next[0] != '\'' && parse.next[0] != '"') {
                 mprLog("esp warn", 0, "Using %%~ without following / in %s\n", path);
             }
-            mprPutToBuf(body, "  espRenderString(conn, httpGetRouteTop(conn));");
+            mprPutToBuf(body, "  espRenderString(stream, httpGetRouteTop(stream));");
             break;
 
 #if DEPRECATED || 1
@@ -6550,13 +6925,13 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
         case ESP_TOK_SERVER:
             /* @| Server URL */
             mprLog("esp warn", 0, "Using deprecated \"|\" server URL directive in esp page: %s", path);
-            mprPutToBuf(body, "  espRenderString(conn, sjoin(conn->rx->route->prefix ? conn->rx->route->prefix : \"\", conn->rx->route->serverPrefix, NULL));");
+            mprPutToBuf(body, "  espRenderString(stream, sjoin(stream->rx->route->prefix ? stream->rx->route->prefix : \"\", stream->rx->route->serverPrefix, NULL));");
             break;
 #endif
 
         case ESP_TOK_LITERAL:
             line = joinLine(token, &len);
-            mprPutToBuf(body, "  espRenderBlock(conn, \"%s\", %zd);\n", line, len);
+            mprPutToBuf(body, "  espRenderBlock(stream, \"%s\", %zd);\n", line, len);
             break;
 
         default:
@@ -6601,7 +6976,7 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
             "/*\n   Generated from %s\n */\n"\
             "#include \"esp.h\"\n"\
             "%s\n"\
-            "static void %s(HttpConn *conn) {\n"\
+            "static void %s(HttpStream *stream) {\n"\
             "%s%s%s"\
             "}\n\n"\
             "%s int esp_%s(HttpRoute *route) {\n"\
@@ -6834,6 +7209,11 @@ static cchar *getEnvString(HttpRoute *route, cchar *key, cchar *defaultValue)
     cchar       *value;
 
     eroute = route->eroute;
+    if (route->config) {
+        if ((value = mprGetJson(route->config, sfmt("esp.app.tokens.%s", key))) != 0) {
+            return value;
+        }
+    }
     if (!eroute || !eroute->env || (value = mprLookupKey(eroute->env, key)) == 0) {
         if ((value = getenv(key)) == 0) {
             if (defaultValue) {
@@ -6951,6 +7331,7 @@ static cchar *getDebug(EspRoute *eroute)
 {
     Http        *http;
     Esp         *esp;
+    cchar       *switches;
     int         symbols;
 
     http = MPR->httpService;
@@ -6969,9 +7350,11 @@ static cchar *getDebug(EspRoute *eroute)
             sends(http->platform, "-mine") || sends(http->platform, "-vsdebug");
     }
     if (scontains(http->platform, "windows-")) {
-        return (symbols) ? "-Zi -Od" : "-Os";
+        switches = (symbols) ? "-Zi -Od" : "-Os";
+    } else {
+        switches = (symbols) ? "-g" : "-O2";
     }
-    return (symbols) ? "-g" : "-O2";
+    return sfmt("%s%s", switches, eroute->combine ? " -DESP_COMBINE=1" : "");
 }
 
 
@@ -7167,6 +7550,35 @@ static cchar *getCompilerPath(cchar *os, cchar *arch)
 #endif
 }
 
+
+static CompileContext* allocContext(cchar *source, cchar *csource, cchar *module, cchar *cache)
+{
+    CompileContext *context;
+
+    if ((context = mprAllocObj(CompileContext, manageContext)) == 0) {
+        return 0;
+    }
+    /*
+        Use actual references to ensure we retain the memory
+     */
+    context->csource = csource;
+    context->source = source;
+    context->module = module;
+    context->cache = cache;
+    return context;
+}
+
+
+static void manageContext(CompileContext *context, int flags)
+{
+    if (flags & MPR_MANAGE_MARK) {
+        mprMark(context->csource);
+        mprMark(context->source);
+        mprMark(context->module);
+        mprMark(context->cache);
+    }
+}
+
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
     This software is distributed under commercial and open source licenses.
@@ -7198,20 +7610,21 @@ static cchar *getCompilerPath(cchar *os, cchar *arch)
 #define MDB_LOAD_TABLE   2      /* Parsing a table */
 #define MDB_LOAD_HINTS   3      /* Parsing hints */
 #define MDB_LOAD_SCHEMA  4      /* Parsing schema */
-#define MDB_LOAD_COL     5      /* Parsing column schema */ 
+#define MDB_LOAD_COL     5      /* Parsing column schema */
 #define MDB_LOAD_DATA    6      /* Parsing data */
 #define MDB_LOAD_FIELD   7      /* Parsing fields */
 
 /*
-    Operations for mdbReadWhere
+    Operations for mdbFindGrid
  */
-#define OP_ERR  -1              /* Illegal operation */
-#define OP_EQ   0               /* "==" Equal operation */
-#define OP_NEQ  0x2             /* "!=" Not equal operation */
-#define OP_LT   0x4             /* "<" Less than operation */
-#define OP_GT   0x8             /* ">" Greater than operation */
-#define OP_LTE  0x10            /* ">=" Less than or equal operation */
-#define OP_GTE  0x20            /* "<=" Greater than or equal operation */
+#define OP_ERR      -1          /* Illegal operation */
+#define OP_EQ       0           /* "==" Equal operation */
+#define OP_NEQ      0x2         /* "!=" Not equal operation */
+#define OP_LT       0x4         /* "<" Less than operation */
+#define OP_GT       0x8         /* ">" Greater than operation */
+#define OP_LTE      0x10        /* ">=" Less than or equal operation */
+#define OP_GTE      0x20        /* "<=" Greater than or equal operation */
+#define OP_IN       0x40        /* Contains */
 
 /************************************ Forwards ********************************/
 
@@ -7240,6 +7653,7 @@ static int mdbChangeColumn(Edi *edi, cchar *tableName, cchar *columnName, int ty
 static void mdbClose(Edi *edi);
 static EdiRec *mdbCreateRec(Edi *edi, cchar *tableName);
 static int mdbDelete(cchar *path);
+static EdiGrid *mdbFindGrid(Edi *edi, cchar *tableName, cchar *query);
 static MprList *mdbGetColumns(Edi *edi, cchar *tableName);
 static int mdbGetColumnSchema(Edi *edi, cchar *tableName, cchar *columnName, int *type, int *flags, int *cid);
 static MprList *mdbGetTables(Edi *edi);
@@ -7250,8 +7664,7 @@ static int mdbLookupField(Edi *edi, cchar *tableName, cchar *fieldName);
 static Edi *mdbOpen(cchar *path, int flags);
 static EdiGrid *mdbQuery(Edi *edi, cchar *cmd, int argc, cchar **argv, va_list vargs);
 static EdiField mdbReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName);
-static EdiRec *mdbReadRec(Edi *edi, cchar *tableName, cchar *key);
-static EdiGrid *mdbReadWhere(Edi *edi, cchar *tableName, cchar *columnName, cchar *operation, cchar *value);
+static EdiRec *mdbReadRecByKey(Edi *edi, cchar *tableName, cchar *key);
 static int mdbRemoveColumn(Edi *edi, cchar *tableName, cchar *columnName);
 static int mdbRemoveIndex(Edi *edi, cchar *tableName, cchar *indexName);
 static int mdbRemoveRec(Edi *edi, cchar *tableName, cchar *key);
@@ -7264,15 +7677,15 @@ static int mdbUpdateRec(Edi *edi, EdiRec *rec);
 
 static EdiProvider MdbProvider = {
     "mdb",
-    mdbAddColumn, mdbAddIndex, mdbAddTable, mdbChangeColumn, mdbClose, mdbCreateRec, mdbDelete, 
-    mdbGetColumns, mdbGetColumnSchema, mdbGetTables, mdbGetTableDimensions, mdbLoad, mdbLookupField, mdbOpen, mdbQuery, 
-    mdbReadField, mdbReadRec, mdbReadWhere, mdbRemoveColumn, mdbRemoveIndex, mdbRemoveRec, mdbRemoveTable, 
+    mdbAddColumn, mdbAddIndex, mdbAddTable, mdbChangeColumn, mdbClose, mdbCreateRec, mdbDelete,
+    mdbGetColumns, mdbGetColumnSchema, mdbGetTables, mdbGetTableDimensions, mdbLoad, mdbLookupField, mdbOpen, mdbQuery,
+    mdbReadField, mdbFindGrid, mdbReadRecByKey, mdbRemoveColumn, mdbRemoveIndex, mdbRemoveRec, mdbRemoveTable,
     mdbRenameTable, mdbRenameColumn, mdbSave, mdbUpdateField, mdbUpdateRec,
 };
 
 /************************************* Code ***********************************/
 
-PUBLIC void mdbInit()
+PUBLIC void mdbInit(void)
 {
     ediAddProvider(&MdbProvider);
 }
@@ -7314,13 +7727,18 @@ static void manageMdb(Mdb *mdb, int flags)
 static void mdbClose(Edi *edi)
 {
     Mdb     *mdb;
-   
+
     mdb = (Mdb*) edi;
-    autoSave(mdb, 0);
-    mdb->tables = 0;
+    if (mdb->tables) {
+        autoSave(mdb, 0);
+        mdb->tables = 0;
+    }
 }
 
 
+/*
+    Create a record based on the table's schema. Not saved to the database.
+ */
 static EdiRec *mdbCreateRec(Edi *edi, cchar *tableName)
 {
     Mdb         *mdb;
@@ -7740,7 +8158,7 @@ static EdiField mdbReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fiel
 }
 
 
-static EdiRec *mdbReadRec(Edi *edi, cchar *tableName, cchar *key)
+static EdiRec *mdbReadRecByKey(Edi *edi, cchar *tableName, cchar *key)
 {
     Mdb         *mdb;
     MdbTable    *table;
@@ -7768,13 +8186,17 @@ static EdiRec *mdbReadRec(Edi *edi, cchar *tableName, cchar *key)
 }
 
 
-
-static bool matchRow(MdbCol *col, cchar *existing, int op, cchar *value)
+static bool matchCell(MdbCol *col, cchar *existing, int op, cchar *value)
 {
     if (value == 0 || *value == '\0') {
         return 0;
     }
     switch (op) {
+    case OP_IN:
+        if (scontains(slower(existing), slower(value))) {
+            return 1;
+        }
+        break;
     case OP_EQ:
         if (smatch(existing, value)) {
             return 1;
@@ -7785,12 +8207,26 @@ static bool matchRow(MdbCol *col, cchar *existing, int op, cchar *value)
             return 1;
         }
         break;
-#if FUTURE
     case OP_LT:
+        if (scmp(existing, value) < 0) {
+            return 1;
+        }
+        break;
     case OP_GT:
+        if (scmp(existing, value) > 0) {
+            return 1;
+        }
+        break;
     case OP_LTE:
+        if (scmp(existing, value) <= 0) {
+            return 1;
+        }
+        break;
     case OP_GTE:
-#endif
+        if (scmp(existing, value) >= 0) {
+            return 1;
+        }
+        break;
     default:
         assert(0);
     }
@@ -7798,18 +8234,71 @@ static bool matchRow(MdbCol *col, cchar *existing, int op, cchar *value)
 }
 
 
-static EdiGrid *mdbReadWhere(Edi *edi, cchar *tableName, cchar *columnName, cchar *operation, cchar *value)
+static bool matchRow(MdbTable *table, MdbRow *row, int op, cchar *value)
+{
+    MdbCol      *col;
+    MdbSchema   *schema;
+
+    schema = table->schema;
+    for (col = schema->cols; col < &schema->cols[schema->ncols]; col++) {
+        if (matchCell(col, row->fields[col->cid], op, value)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
+/*
+    parse a SQL like query expression.
+ */
+static MprList *parseMdbQuery(cchar *query, int *offsetp, int *limitp)
+{
+    MprList     *expressions;
+    char        *cp, *limit, *offset, *tok;
+
+    *offsetp = *limitp = 0;
+    expressions = mprCreateList(0, 0);
+    query = sclone(query);
+    if ((cp = scaselesscontains(query, "LIMIT ")) != 0) {
+        *cp = '\0';
+        cp += 6;
+        offset = stok(cp, ", ", &limit);
+        if (!offset || !limit) {
+            return 0;
+        }
+        *offsetp = (int) stoi(offset);
+        *limitp = (int) stoi(limit);
+    }
+    query = strim(query, " ", 0);
+    for (tok = sclone(query); *tok && (cp = scontains(tok, " AND ")) != 0; ) {
+        *cp = '\0';
+        cp += 5;
+        mprAddItem(expressions, tok);
+        tok = cp;
+    }
+    if (tok && *tok) {
+        mprAddItem(expressions, tok);
+    }
+    return expressions;
+}
+
+
+static EdiGrid *mdbFindGrid(Edi *edi, cchar *tableName, cchar *query)
 {
     Mdb         *mdb;
     EdiGrid     *grid;
     MdbTable    *table;
     MdbCol      *col;
     MdbRow      *row;
-    int         nrows, next, op, r, count;
+    MprList     *expressions;
+    cchar       *columnName, *expression, *operation;
+    char        *tok, *value;
+    int         limit, matched, nrows, next, offset, op, r, index, count, nextExpression;
 
     assert(edi);
     assert(tableName && *tableName);
-
+    columnName = operation = value = 0;
     mdb = (Mdb*) edi;
     lock(edi);
     if ((table = lookupTable(mdb, tableName)) == 0) {
@@ -7822,36 +8311,81 @@ static EdiGrid *mdbReadWhere(Edi *edi, cchar *tableName, cchar *columnName, ccha
         return 0;
     }
     grid->flags = EDI_GRID_READ_ONLY;
-    if (columnName) {
-        if ((col = lookupField(table, columnName)) == 0) {
-            unlock(edi);
-            return 0;
-        }
-        if ((op = parseOperation(operation)) < 0) {
-            unlock(edi);
-            return 0;
-        }
-        if (col->flags & EDI_INDEX && (op == OP_EQ)) {
-            if ((r = lookupRow(table, value)) >= 0) {
-                row = getRow(table, r);
-                grid->records[0] = createRecFromRow(edi, row);
-                grid->nrecords = 1;
+    grid->nrecords = 0;
+    grid->count = table->rows->length;
+
+    if ((expressions = parseMdbQuery(query, &offset, &limit)) == 0) {
+        unlock(edi);
+        return 0;
+    }
+    if (limit <= 0) {
+        limit = MAXINT;
+    }
+    if (offset < 0) {
+        offset = 0;
+    }
+
+    count = index = 0;
+
+    /*
+        Optimized path for solo indexed lookup on "id"
+     */
+    if (mprGetListLength(expressions) == 1) {
+        expression = mprGetItem(expressions, 0);
+        columnName = stok(sclone(expression), " ", &tok);
+        operation = stok(tok, " ", &value);
+        if (smatch(columnName, "id") && smatch(operation, "==")) {
+            if ((col = lookupField(table, columnName)) == 0) {
+                unlock(edi);
+                return 0;
             }
-        } else {
-            grid->nrecords = count = 0;
-            for (ITERATE_ITEMS(table->rows, row, next)) {
-                if (!matchRow(col, row->fields[col->cid], op, value)) {
-                    continue;
+            if (col->flags & EDI_INDEX) {
+                if ((r = lookupRow(table, value)) >= 0) {
+                    row = getRow(table, r);
+                    grid->records[0] = createRecFromRow(edi, row);
+                    grid->nrecords = 1;
                 }
-                grid->records[count++] = createRecFromRow(edi, row);
-                grid->nrecords = count;
+                unlock(edi);
+                return grid;
             }
         }
-    } else {
-        for (ITERATE_ITEMS(table->rows, row, next)) {
-            grid->records[next - 1] = createRecFromRow(edi, row);
+    }
+
+    /*
+        Linear search
+     */
+    for (ITERATE_ITEMS(table->rows, row, next)) {
+        matched = 1;
+        for (ITERATE_ITEMS(expressions, expression, nextExpression)) {
+            columnName = stok(sclone(expression), " ", &tok);
+            operation = stok(tok, " ", &value);
+            if ((op = parseOperation(operation)) < 0) {
+                unlock(edi);
+                return 0;
+            }
+            if (smatch(columnName, "*")) {
+                if (!matchRow(table, row, op, value)) {
+                    matched = 0;
+                    break;
+                }
+            } else {
+                if ((col = lookupField(table, columnName)) == 0) {
+                    unlock(edi);
+                    return 0;
+                }
+                if (!matchCell(col, row->fields[col->cid], op, value)) {
+                    matched = 0;
+                    break;
+                }
+            }
         }
-        grid->nrecords = next;
+        if (matched && count++ >= offset) {
+            grid->records[index++] = createRecFromRow(edi, row);
+            grid->nrecords = index;
+            if (--limit <= 0) {
+                break;
+            }
+        }
     }
     unlock(edi);
     return grid;
@@ -8129,7 +8663,7 @@ static int checkMdbState(MprJsonParser *jp, cchar *name, bool leave)
         clearLoadState(mdb);
         pushState(mdb, MDB_LOAD_TABLE);
         break;
-        
+
     case MDB_LOAD_TABLE:
         if (smatch(name, "hints")) {
             pushState(mdb, MDB_LOAD_HINTS);
@@ -8142,7 +8676,7 @@ static int checkMdbState(MprJsonParser *jp, cchar *name, bool leave)
             return MPR_ERR_BAD_FORMAT;
         }
         break;
-    
+
     case MDB_LOAD_SCHEMA:
         if ((mdb->loadCol = createCol(mdb->loadTable, name)) == 0) {
             mprSetJsonError(jp, "Cannot create '%s' column", name);
@@ -8181,7 +8715,7 @@ static int setMdbValue(MprJsonParser *parser, MprJson *obj, cchar *name, MprJson
 
     mdb = parser->data;
     value = child->value;
-    
+
     switch (mdb->loadState) {
     case MDB_LOAD_BEGIN:
     case MDB_LOAD_TABLE:
@@ -8242,6 +8776,7 @@ static int mdbLoadFromString(Edi *edi, cchar *str)
     Mdb             *mdb;
     MprJson         *obj;
     MprJsonCallback cb;
+    cchar           *errorMsg;
 
     mdb = (Mdb*) edi;
     mdb->edi.flags |= EDI_SUPPRESS_SAVE;
@@ -8253,10 +8788,11 @@ static int mdbLoadFromString(Edi *edi, cchar *str)
     cb.checkBlock = checkMdbState;
     cb.setValue = setMdbValue;
 
-    obj = mprParseJsonEx(str, &cb, mdb, 0, 0);
+    obj = mprParseJsonEx(str, &cb, mdb, 0, &errorMsg);
     mdb->edi.flags &= ~MDB_LOADING;
     mdb->loadStack = 0;
     if (obj == 0) {
+        mprError("Cannot load database %s", errorMsg);
         return MPR_ERR_CANT_LOAD;
     }
     mdb->edi.flags &= ~EDI_SUPPRESS_SAVE;
@@ -8281,9 +8817,6 @@ static void autoSave(Mdb *mdb, MdbTable *table)
 }
 
 
-/*
-    Must be called locked
- */
 static int mdbSave(Edi *edi)
 {
     Mdb         *mdb;
@@ -8302,7 +8835,7 @@ static int mdbSave(Edi *edi)
     }
     path = mdb->edi.path;
     if (path == 0) {
-        mprLog("error esp mdb", 0, "No database path specified");
+        mprLog("error esp mdb", 0, "Cannot save database, no path specified");
         return MPR_ERR_BAD_ARGS;
     }
     npath = mprReplacePathExt(path, "new");
@@ -8457,7 +8990,7 @@ static int lookupRow(MdbTable *table, cchar *key)
     if (table->index) {
         if ((kp = mprLookupKeyEntry(table->index, key)) != 0) {
             return (int) PTOL(kp->data);
-        } 
+        }
     } else {
         nrows = mprGetListLength(table->rows);
         keycol = table->keyCol ? table->keyCol->cid : 0;
@@ -8477,7 +9010,7 @@ static int lookupRow(MdbTable *table, cchar *key)
 static MdbSchema *growSchema(MdbTable *table)
 {
     if (table->schema == 0) {
-        if ((table->schema = mprAllocBlock(sizeof(MdbSchema) + 
+        if ((table->schema = mprAllocBlock(sizeof(MdbSchema) +
                 sizeof(MdbCol) * MDB_INCR, MPR_ALLOC_MANAGER | MPR_ALLOC_ZERO)) == 0) {
             return 0;
         }
@@ -8485,7 +9018,7 @@ static MdbSchema *growSchema(MdbTable *table)
         table->schema->capacity = MDB_INCR;
 
     } else if (table->schema->ncols >= table->schema->capacity) {
-        if ((table->schema = mprRealloc(table->schema, sizeof(MdbSchema) + 
+        if ((table->schema = mprRealloc(table->schema, sizeof(MdbSchema) +
                 (sizeof(MdbCol) * (table->schema->capacity + MDB_INCR)))) == 0) {
             return 0;
         }
@@ -8514,7 +9047,7 @@ static MdbCol *createCol(MdbTable *table, cchar *columnName)
 }
 
 
-static void manageSchema(MdbSchema *schema, int flags) 
+static void manageSchema(MdbSchema *schema, int flags)
 {
     int     i;
 
@@ -8526,7 +9059,7 @@ static void manageSchema(MdbSchema *schema, int flags)
 }
 
 
-static void manageCol(MdbCol *col, int flags) 
+static void manageCol(MdbCol *col, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
         mprMark(col->name);
@@ -8620,8 +9153,15 @@ static cchar *mapMdbValue(cchar *value, int type)
         }
         break;
 
-    case EDI_TYPE_BINARY:
     case EDI_TYPE_BOOL:
+        if (smatch(value, "false")) {
+            value = "0";
+        } else if (smatch(value, "true")) {
+            value = "1";
+        }
+        break;
+
+    case EDI_TYPE_BINARY:
     case EDI_TYPE_FLOAT:
     case EDI_TYPE_INT:
     case EDI_TYPE_STRING:
@@ -8636,7 +9176,7 @@ static int updateFieldValue(MdbRow *row, MdbCol *col, cchar *value)
 {
     MdbTable    *table;
     cchar       *key;
-    
+
     assert(row);
     assert(col);
 
@@ -8692,6 +9232,9 @@ static EdiRec *createRecFromRow(Edi *edi, MdbRow *row)
 
 static int parseOperation(cchar *operation)
 {
+    if (!operation) {
+        return OP_EQ;
+    }
     switch (*operation) {
     case '=':
         if (smatch(operation, "==")) {
@@ -8711,7 +9254,9 @@ static int parseOperation(cchar *operation)
         }
         break;
     case '>':
-        if (smatch(operation, ">")) {
+        if (smatch(operation, "><")) {
+            return OP_IN;
+        } else if (smatch(operation, ">")) {
             return OP_GT;
         } else if (smatch(operation, ">=")) {
             return OP_GTE;
@@ -8720,6 +9265,7 @@ static int parseOperation(cchar *operation)
     mprLog("error esp mdb", 0, "Unknown read operation '%s'", operation);
     return OP_ERR;
 }
+
 
 #else
 /* To prevent ar/ranlib warnings */
@@ -8766,7 +9312,7 @@ typedef struct Sdb {
 } Sdb;
 
 static int sqliteInitialized;
-static void initSqlite();
+static void initSqlite(void);
 
 #if KEEP
 static char *DataTypeToSqlType[] = {
@@ -8782,7 +9328,7 @@ static char *DataTypeToSqlType[] = {
     "text":         "text",
     "time":         "time",
     "timestamp":    "datetime",
-    0, 0, 
+    0, 0,
 };
 #endif
 
@@ -8818,6 +9364,7 @@ static EdiRec *sdbCreateRec(Edi *edi, cchar *tableName);
 static int sdbDelete(cchar *path);
 static void sdbError(Edi *edi, cchar *fmt, ...);
 static int sdbRemoveRec(Edi *edi, cchar *tableName, cchar *key);
+static EdiGrid *sdbFindGrid(Edi *edi, cchar *tableName, cchar *select);
 static MprList *sdbGetColumns(Edi *edi, cchar *tableName);
 static int sdbGetColumnSchema(Edi *edi, cchar *tableName, cchar *columnName, int *type, int *flags, int *cid);
 static MprList *sdbGetTables(Edi *edi);
@@ -8826,8 +9373,7 @@ static int sdbLookupField(Edi *edi, cchar *tableName, cchar *fieldName);
 static Edi *sdbOpen(cchar *path, int flags);
 PUBLIC EdiGrid *sdbQuery(Edi *edi, cchar *cmd, int argc, cchar **argv, va_list vargs);
 static EdiField sdbReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName);
-static EdiRec *sdbReadRec(Edi *edi, cchar *tableName, cchar *key);
-static EdiGrid *sdbReadWhere(Edi *edi, cchar *tableName, cchar *columnName, cchar *operation, cchar *value);
+static EdiRec *sdbReadRecByKey(Edi *edi, cchar *tableName, cchar *key);
 static int sdbRemoveColumn(Edi *edi, cchar *tableName, cchar *columnName);
 static int sdbRemoveIndex(Edi *edi, cchar *tableName, cchar *indexName);
 static int sdbRemoveTable(Edi *edi, cchar *tableName);
@@ -8841,15 +9387,15 @@ static bool validName(cchar *str);
 
 static EdiProvider SdbProvider = {
     "sdb",
-    sdbAddColumn, sdbAddIndex, sdbAddTable, sdbChangeColumn, sdbClose, sdbCreateRec, sdbDelete, 
-    sdbGetColumns, sdbGetColumnSchema, sdbGetTables, sdbGetTableDimensions, NULL, sdbLookupField, sdbOpen, sdbQuery, 
-    sdbReadField, sdbReadRec, sdbReadWhere, sdbRemoveColumn, sdbRemoveIndex, sdbRemoveRec, sdbRemoveTable, 
+    sdbAddColumn, sdbAddIndex, sdbAddTable, sdbChangeColumn, sdbClose, sdbCreateRec, sdbDelete,
+    sdbGetColumns, sdbGetColumnSchema, sdbGetTables, sdbGetTableDimensions, NULL, sdbLookupField, sdbOpen, sdbQuery,
+    sdbReadField, sdbFindGrid, sdbReadRecByKey, sdbRemoveColumn, sdbRemoveIndex, sdbRemoveRec, sdbRemoveTable,
     sdbRenameTable, sdbRenameColumn, sdbSave, sdbUpdateField, sdbUpdateRec,
 };
 
 /************************************* Code ***********************************/
 
-PUBLIC void sdbInit()
+PUBLIC void sdbInit(void)
 {
     ediAddProvider(&SdbProvider);
 }
@@ -8948,6 +9494,9 @@ static EdiRec *getSchema(Edi *edi, cchar *tableName)
 }
 
 
+/*
+    Create a record based on the table's schema. Not saved to the database.
+ */
 static EdiRec *sdbCreateRec(Edi *edi, cchar *tableName)
 {
     EdiRec  *rec, *schema;
@@ -9072,7 +9621,7 @@ static MprList *sdbGetColumns(Edi *edi, cchar *tableName)
 
     assert(edi);
     assert(tableName && *tableName);
-    
+
     if ((schema = getSchema(edi, tableName)) == 0) {
         return 0;
     }
@@ -9160,10 +9709,12 @@ static int sdbGetTableDimensions(Edi *edi, cchar *tableName, int *numRows, int *
         return MPR_ERR_BAD_ARGS;
     }
     if (numRows) {
-        if ((grid = query(edi, sfmt("SELECT COUNT(*) FROM %s;", tableName), NULL)) == 0) { 
+        if ((grid = query(edi, sfmt("SELECT COUNT(*) FROM %s;", tableName), NULL)) == 0) {
             return MPR_ERR_BAD_STATE;
         }
-        *numRows = grid->nrecords;
+        if (grid->nrecords && grid->records[0]->fields->value) {
+            *numRows = (int) stoi(grid->records[0]->fields->value);
+        }
     }
     if (numCols) {
         if ((schema = getSchema(edi, tableName)) == 0) {
@@ -9183,7 +9734,7 @@ static int sdbLookupField(Edi *edi, cchar *tableName, cchar *fieldName)
     assert(edi);
     assert(tableName && *tableName);
     assert(fieldName && *fieldName);
-    
+
     if ((schema = getSchema(edi, tableName)) == 0) {
         return 0;
     }
@@ -9220,7 +9771,7 @@ static EdiField sdbReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fiel
 }
 
 
-static EdiRec *sdbReadRec(Edi *edi, cchar *tableName, cchar *key)
+static EdiRec *sdbReadRecByKey(Edi *edi, cchar *tableName, cchar *key)
 {
     EdiGrid     *grid;
 
@@ -9246,25 +9797,116 @@ static EdiGrid *setTableName(EdiGrid *grid, cchar *tableName)
 }
 
 
-static EdiGrid *sdbReadWhere(Edi *edi, cchar *tableName, cchar *columnName, cchar *operation, cchar *value)
+/*
+    parse a SQL like query expression.
+ */
+static cchar *parseSdbQuery(cchar *query, int *offsetp, int *limitp)
+{
+    MprList     *expressions;
+    char        *cp, *limit, *offset, *tok;
+
+    *offsetp = *limitp = 0;
+    expressions = mprCreateList(0, 0);
+    query = sclone(query);
+    if ((cp = scaselesscontains(query, "LIMIT ")) != 0) {
+        *cp = '\0';
+        cp += 6;
+        offset = stok(cp, ", ", &limit);
+        if (!offset || !limit) {
+            return 0;
+        }
+        *offsetp = (int) stoi(offset);
+        *limitp = (int) stoi(limit);
+    }
+    query = strim(query, " ", 0);
+    for (tok = sclone(query); *tok && (cp = scontains(tok, " AND ")) != 0; ) {
+        *cp = '\0';
+        cp += 5;
+        mprAddItem(expressions, tok);
+        tok = cp;
+    }
+    if (tok && *tok) {
+        mprAddItem(expressions, tok);
+    }
+    return mprListToString(expressions, " ");
+}
+
+
+static EdiGrid *sdbFindGrid(Edi *edi, cchar *tableName, cchar *select)
 {
     EdiGrid     *grid;
-    
-    assert(tableName && *tableName);
+    EdiRec      *schema;
+    MprBuf      *buf;
+    cchar       *columnName, *expressions, *operation, *sql, **values;
+    char        *tok, *value;
+    int         i, limit, offset;
 
+    assert(tableName && *tableName);
+    columnName = operation = value = 0;
+
+    if (select) {
+        if ((expressions = parseSdbQuery(select, &offset, &limit)) == 0) {
+            return 0;
+        }
+        /*
+            Only works for a single query term
+         */
+        columnName = stok(sclone(expressions), " ", &tok);
+        operation = stok(tok, " ", &value);
+        if (smatch(operation, "><")) {
+            operation = "LIKE";
+            value = sfmt("%%%s%%", value);
+        }
+    }
     if (!validName(tableName)) {
         return 0;
     }
+    if (limit <= 0) {
+        limit = MAXINT;
+    }
+    if (offset < 0) {
+        offset = 0;
+    }
     if (columnName) {
-        if (!validName(columnName)) {
-            return 0;
+        if (smatch(columnName, "*")) {
+            schema = getSchema(edi, tableName);
+            if (!schema) {
+                return 0;
+            }
+            values = mprAllocZeroed(sizeof(cchar*) * (schema->nfields + 1));
+            buf = mprCreateBuf(0, 0);
+            if (!values || !buf) {
+                return 0;
+            }
+            mprPutToBuf(buf, "SELECT * FROM %s WHERE ", tableName);
+            for (i = 0; i < schema->nfields; i++) {
+                mprPutToBuf(buf, "(%s %s ?)", schema->fields[i].name, operation);
+                if ((i+1) < schema->nfields) {
+                    mprPutStringToBuf(buf, " OR ");
+                }
+                values[i] = value;
+            }
+            mprPutToBuf(buf, " LIMIT %d, %d;", offset, limit);
+            sql = mprBufToString(buf);
+            grid = queryArgv(edi, sql, schema->nfields, values, NULL);
+
+        } else {
+            if (!validName(columnName)) {
+                return 0;
+            }
+            sql = sfmt("SELECT * FROM %s WHERE %s %s ? LIMIT %d, %d;", tableName, columnName, operation, offset, limit);
+            grid = query(edi, sql, value, NULL);
         }
-        assert(columnName && *columnName);
-        assert(operation && *operation);
-        assert(value);
-        grid = query(edi, sfmt("SELECT * FROM %s WHERE %s %s ?;", tableName, columnName, operation), value, NULL);
     } else {
-        grid = query(edi, sfmt("SELECT * FROM %s;", tableName), NULL);
+        sql = sfmt("SELECT * FROM %s LIMIT %d, %d;", tableName, offset, limit);
+        grid = query(edi, sql, NULL);
+    }
+    if (grid) {
+        if (grid->nrecords == limit) {
+            sdbGetTableDimensions(edi, tableName, &grid->count, NULL);
+        } else {
+            grid->count = grid->nrecords;
+        }
     }
     return setTableName(grid, tableName);
 }
@@ -9426,7 +10068,7 @@ static int sdbUpdateRec(Edi *edi, EdiRec *rec)
     }
     argv[argc] = NULL;
 
-    if (queryArgv(edi, mprGetBufStart(buf), argc, argv) == 0) {
+    if (queryArgv(edi, mprGetBufStart(buf), argc, argv, NULL) == 0) {
         return MPR_ERR_CANT_WRITE;
     }
     return 0;
@@ -9454,7 +10096,7 @@ static EdiGrid *query(Edi *edi, cchar *cmd, ...)
 
 
 /*
-    Vars are ignored. Just to satisify old compilers
+    Vars are ignored in queryv if argc != 0. Defined here just to satisify old compilers.
  */
 static EdiGrid *queryArgv(Edi *edi, cchar *cmd, int argc, cchar **argv, ...)
 {
@@ -9529,7 +10171,7 @@ static EdiGrid *queryv(Edi *edi, cchar *cmd, int argc, cchar **argv, va_list var
                     sdbError(edi, "SDB: cannot bind to arg: %d, %s, error: %s", index + 1, argv[index], sqlite3_errmsg(db));
                     return 0;
                 }
-            } 
+            }
         }
         ncol = sqlite3_column_count(stmt);
         for (nrows = 0; ; nrows++) {
@@ -9624,28 +10266,19 @@ static EdiField makeRecField(cchar *value, cchar *name, int type)
 
 static void *allocBlock(int size)
 {
-    void    *ptr;
-
-    if ((ptr = mprAlloc(size)) != 0) {
-        mprHold(ptr);
-    }
-    return ptr;
+    return palloc(size);
 }
 
 
 static void freeBlock(void *ptr)
 {
-    mprRelease(ptr);
+    pfree(ptr);
 }
 
 
 static void *reallocBlock(void *ptr, int size)
 {
-    mprRelease(ptr);
-    if ((ptr =  mprRealloc(ptr, size)) != 0) {
-        mprHold(ptr);
-    }
-    return ptr;
+    return prealloc(ptr, size);
 }
 
 
@@ -9672,8 +10305,8 @@ static void termAllocator(void *data)
 }
 
 
-struct sqlite3_mem_methods mem = {
-    allocBlock, freeBlock, reallocBlock, blockSize, roundBlockSize, initAllocator, termAllocator, NULL 
+struct sqlite3_mem_methods memMethods = {
+    allocBlock, freeBlock, reallocBlock, blockSize, roundBlockSize, initAllocator, termAllocator, NULL
 };
 
 
@@ -9698,7 +10331,7 @@ static int mapToEdiType(cchar *type)
 }
 
 
-static int mapSqliteTypeToEdiType(int type) 
+static int mapSqliteTypeToEdiType(int type)
 {
     if (type == SQLITE_INTEGER) {
         return EDI_TYPE_INT;
@@ -9755,11 +10388,11 @@ static void sdbDebug(Edi *edi, int level, cchar *fmt, ...)
 
 /*********************************** Factory *******************************/
 
-static void initSqlite()
+static void initSqlite(void)
 {
     mprGlobalLock();
     if (!sqliteInitialized) {
-        sqlite3_config(SQLITE_CONFIG_MALLOC, &mem);
+        sqlite3_config(SQLITE_CONFIG_MALLOC, &memMethods);
         sqlite3_config(SQLITE_CONFIG_MULTITHREAD);
         if (sqlite3_initialize() != SQLITE_OK) {
             mprLog("error esp sdb", 0, "Cannot initialize SQLite");
@@ -9772,7 +10405,7 @@ static void initSqlite()
 
 #else
 /* To prevent ar/ranlib warnings */
-PUBLIC void sdbDummy() {}
+PUBLIC void sdbDummy(void) {}
 #endif /* ME_COM_SQLITE */
 
 /*

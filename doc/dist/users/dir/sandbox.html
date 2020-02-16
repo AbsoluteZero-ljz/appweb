@@ -2,20 +2,19 @@
 <html lang="en">
 <head>
     <title>Sandboxing</title>
-    <!-- Copyright Embedthis Software. All Rights Reserved. -->
+    
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <meta name="description" content="Sandboxing" />
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
-        rel='stylesheet' type='text/css'>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <meta name="description" content="Sandboxing">
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     
-    <link href="../../images/favicon.ico" rel="shortcut icon" />
-    <link href="../../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css" />
-    <link href="../../css/all.min.css" rel="stylesheet" type="text/css" />
-    <link href="../../css/api.min.css" rel="stylesheet" type="text/css" />
+    <link href="../../images/favicon.ico" rel="shortcut icon">
+    <link href="../../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css">
+    <link href="../../css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="../../css/api.min.css" rel="stylesheet" type="text/css">
     
 
 </head>
@@ -80,7 +79,7 @@
                     <a class="item" href="../../developers/action.html">Using the Action Handler</a>
                     <a class="item" href="../../developers/stages.html">Creating Pipeline Stages</a>
                     <a class="item" href="../../developers/rom.html">Serving Pages from ROM</a>
-                    <a class="item" href="../../developers/migrating.html">Upgrading Earlier Releases</a>
+                    <a class="item" href="../../developers/migrating.html">Migrating from Earlier Releases</a>
                 </div>
             </div>
             <div class="item">
@@ -102,7 +101,9 @@
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/cpp-module">cpp-module</a>
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/deploy-server">deploy-server</a>
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/esp-hosted">esp-hosted</a>
+                    <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/esp-upload">esp-upload</a>
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/login-basic">login-basic</a>
+                    <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/login-database">login-database</a>
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/login-form">login-form</a>
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/max-server">max-server</a>
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/min-server">min-server</a>
@@ -221,40 +222,6 @@
                         <td>
                             <p>This directive defines the maximum time to wait for existing requests to complete
                             before exiting or restarting Appweb. </p>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <a id="limitBuffer"></a>
-            <h2>LimitBuffer</h2>
-            <table class="directive" title="directive">
-                <tbody>
-                    <tr>
-                        <td class="pivot">Description</td>
-                        <td>Defines the pipeline stage buffer size</td>
-                    </tr>
-                    <tr>
-                        <td class="pivot">Synopsis</td>
-                        <td>LimitBuffer size</td>
-                    </tr>
-                    <tr>
-                        <td class="pivot">Context</td>
-                        <td>Default server, VirtualHost</td>
-                    </tr>
-                    <tr>
-                        <td class="pivot">Example</td>
-                        <td>LimitBuffer 8192</td>
-                    </tr>
-                    <tr>
-                        <td class="pivot">Notes</td>
-                        <td>
-                            <p>This directive defines the maximum buffer size in bytes for each stage in the request
-                            pipeline. This directive places a limit on the amount of memory consumed by pipeline stages.
-                            <p>NOTE: this does not imply a maximum response size (See LimitResponseBody for that
-                            functionality). It merely limits the memory consumed when trying to buffer the response data.
-                            Appweb handlers will flush the buffers and use HTTP/1.1 chunked output if the amount of
-                            response data exceeds the output buffer size.</p>
                         </td>
                     </tr>
                 </tbody>
@@ -520,6 +487,38 @@
                             the MPR memory allocation primitives.
                             If the memory limit is exceeded, Appweb will invoke the policy specified by the
                             MemoryPolicy directive.</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <a id="limitPacket"></a>
+            <h2>LimitPacket</h2>
+            <table class="directive" title="directive">
+                <tbody>
+                    <tr>
+                        <td class="pivot">Description</td>
+                        <td>Defines the pipeline stage buffer size</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Synopsis</td>
+                        <td>LimitPacket size</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Context</td>
+                        <td>Default server, VirtualHost</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Example</td>
+                        <td>LimitPacket 16K</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Notes</td>
+                        <td>
+                            <p>This directive defines the maximum packet size in bytes for each stage in the request pipeline. This directive places a limit on the amount of memory consumed by pipeline stages.
+                            <p>NOTE: this does not imply a maximum response size (See LimitResponseBody for that functionality). It merely limits the memory consumed when trying to process the response data. Appweb handlers will flush the packets and use HTTP/1.1 chunked output if the amount of response data exceeds the output packet size.</p>
+                            <p>If using HTTP/2, the packet size will never be less than 16K which is the minimum frame size supported by HTTP/2.</p>
+                            <p>This directive was called "LimitBuffer" in earlier versions.</p>
                         </td>
                     </tr>
                 </tbody>
@@ -836,6 +835,35 @@
                 </tbody>
             </table>
 
+            <a id="limitStreams"></a>
+            <h2>LimitStreams</h2>
+            <table class="directive" title="directive">
+                <tbody>
+                    <tr>
+                        <td class="pivot">Description</td>
+                        <td>Sets the maximum number of HTTP/2 streams per client connection. </td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Synopsis</td>
+                        <td>LimitStreams count</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Context</td>
+                        <td>Default server, VirtualHost, Route</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Example</td>
+                        <td>LimitStreams 20</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Notes</td>
+                        <td>
+                            <p>The LimitStreams directive defines the maximum number of simultaneous HTTP/2 streams per client connection for HTTP/2. The default limit is 20.</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
             <a id="limitUri"></a>
             <h2>LimitUri</h2>
             <table class="directive" title="directive">
@@ -992,15 +1020,9 @@
                     <tr>
                         <td class="pivot">Notes</td>
                         <td>
-                            <p>The MinWorkers directive will pre-allocate the specified number of worker threads on startup
-                            and then ensure that the worker pool always has at least this minimum number of workers.</p>
-                            <p>Appweb will automatically adjust the number of workers between the minimum specified
-                            by this directive and the maximum specified by the WorkerLimit directive or via the Appweb
-                            command line. Every ten minutes, Appweb will prune workers that have been idle for five
-                            minutes to reduce resource consumption.</p>
-                            <p>Appweb 4 has two non-worker threads: one for the master event loop and one for the
-                            garbage collector. So the total number of Appweb threads will be two plus the number of
-                            active workers.</p>
+                            <p>The MinWorkers directive will pre-allocate the specified number of worker threads on startup and then ensure that the worker pool always has at least this minimum number of workers.</p>
+                            <p>Appweb will automatically adjust the number of workers between the minimum specified by this directive and the maximum specified by the WorkerLimit directive or via the Appweb command line. Every ten minutes, Appweb will prune workers that have been idle for five minutes to reduce resource consumption.</p>
+                            <p>Appweb has two non-worker threads: one for the master event loop and one for the garbage collector. So the total number of Appweb threads will be two plus the number of active workers.</p>
                         </td>
                     </tr>
                 </tbody>
@@ -1008,7 +1030,7 @@
 
 
             <a id="threadStack"></a>
-            <h2>ThreadStack</h2><br />
+            <h2>ThreadStack</h2><br>
             <table class="directive" title="directive">
                 <tbody>
                     <tr>
@@ -1154,8 +1176,7 @@
                             and scalable architecture with excellent throughput characteristics. Each thread requires a
                             thread stack and thus consumes memory. By limiting the number of threads, memory can be
                             conserved.</p>
-                            <p>If the maximum number of threads is also specified via the <a href=
-                            "../../start/starting.html">Appweb command line</a>, the command line value will take
+                            <p>If the maximum number of threads is also specified via the <a href="../../start/starting.html">Appweb command line</a>, the command line value will take
                             precedence.</p>
                             <p>Appweb will automatically adjust the number of pool threads between the minimum specified
                             by the MinWorkers directive and the maximum specified by this directive. Appweb will
@@ -1177,5 +1198,6 @@
 
     
 
-</body>
-</html>
+
+
+

@@ -12,9 +12,9 @@
 
 /*********************************** Code *************************************/
 
-static int matchSpy(HttpConn *conn, HttpRoute *route, int dir)
+static int matchSpy(HttpStream *stream, HttpRoute *route, int dir)
 {
-    if (conn->rx->form && smatch(conn->rx->pathInfo, "/index.html")) {
+    if (stream->rx->form && smatch(stream->rx->pathInfo, "/index.html")) {
         return HTTP_ROUTE_OK;
     }
     return HTTP_ROUTE_REJECT;
@@ -28,9 +28,9 @@ static void incomingSpy(HttpQueue *q, HttpPacket *packet)
             End of input. Set a greeting response header if the input says hello.
          */
         if (q->first && q->first->content && scontains(q->first->content->start, "hello")) {
-            httpSetHeader(q->conn, "X-Greeting", "found");
+            httpSetHeader(q->stream, "X-Greeting", "found");
         } else {
-            httpSetHeader(q->conn, "X-Greeting", "missing");
+            httpSetHeader(q->stream, "X-Greeting", "missing");
         }
         httpPutPacketToNext(q, packet);
 

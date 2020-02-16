@@ -2,7 +2,7 @@
     "name": "http",
     "description": "Embedthis Http Library",
     "title": "Embedthis Http",
-    "version": "7.2.0",
+    "version": "8.0.3",
     "keywords": [
         "http",
         "webserver"
@@ -30,19 +30,22 @@
         }
     ],
     "dependencies": {
-        "certs": "~0.1",
+        "assist": "~1",
+        "certs": "~1",
+        "mbedtls": "~2.8",
+        "me-win": "~1",
         "mpr": "~8",
         "mpr-mbedtls": "~2",
-        "osdep": "~1.0",
-        "pcre": "~1.0",
+        "osdep": "~1",
+        "pcre": "~1",
         "ssl": "~1"
     },
     "optionalDependencies": {
         "mpr-openssl": "~1"
     },
     "devDependencies": {
-        "makeme": ">=1.0",
-        "pak": ">=1.0"
+        "makeme": ">=0.9.0",
+        "pak": ">=0.11.0"
     },
     "files": [
         "dist/",

@@ -8,11 +8,11 @@
             <p>Appweb releases are available as source code distributions.</p>
             <p>Several build environments are supported:</p>
             <ul>
-                <li><b>Linux</b> &mdash; Linux 2.6 with GNU C/C++</li>
-                <li><b>Windows</b> &mdash; Microsoft Windows 7 with Visual Studio 2010 or later</li>
-                <li><b>Mac OS X</b> &mdash; Mac OS X 10.8 (Mountain Lion) or later</li>
+                <li><b>Linux</b> &mdash; Linux 3 with GNU C/C++</li>
+                <li><b>Windows</b> &mdash; Microsoft Windows 8 with Visual Studio 2017 or later (Professional or Community Edition)</li>
+                <li><b>Mac OS X</b> &mdash; Mac OS X 10.11 (Yosemite) or later</li>
             </ul>
-            <p>For other environments, you will need to cross-compile. The source code has been designed to run on FreeBSD, Linux, Mac OS X, VxWorks and other operating systems. It has been tested under Fedora and Ubuntu Linux based on the Linux 2.6 Kernel, Microsoft Windows 7, 8 (32 and 64-bit), VxWorks 6.X and MAC OS X 10.8. </p>
+            <p>For other environments, you will need to cross-compile. The source code has been designed to run on FreeBSD, Linux, Mac OS X, VxWorks and other operating systems. It has been tested under Fedora and Ubuntu Linux based on the Linux 3 Kernel, Microsoft Windows 8 (32 and 64-bit), VxWorks 7.X and MAC OS X 10.11. </p>
 
             <h2>Accessing the Source Code</h2>
             <p>With each Appweb release, a complete source code snapshot is provided. You can download a source package from the Appweb web site or you can retrieve it from the Appweb GitHub repository. If you download from the repository, please use the <em>master</em> branch for the most recent stable snapshot. For less stable daily builds, use the <em>dev</em> branch.</p>
@@ -27,16 +27,20 @@
             </a>
 
             <h2>Installing Packages</h2>
-            <p>Appweb can be extended via third-party packages that are published in the online
-            <a href="https://embedthis.com/catalog/">Pak Catalog</a>. There are many packages including:</p>
+            <p>Appweb can be extended via third-party packages that can be installed using the
+            <a href="https://embedthis.com/pak/">Pak</a> package manager. Including:</p>
             <ul>
-                <li><a href="https://embedthis.com/catalog/#/?keywords=mpr-openssl">OpenSSL SSL Stack</a></li>
-                <li><a href="https://embedthis.com/catalog/#/?keywords=php">PHP Support</a></li>
-                <li><a href="https://embedthis.com/catalog/#/?keywords=angular">Angular</a></li>
-                <li><a href="https://embedthis.com/catalog/#/?keywords=esp-angular-skeleton">ESP Angular Skeleton</a></li>
+                <li>OpenSSL SSL Stack</li>
+                <li>PHP Support</li>
+                <li>Angular</li>
+                <li>Angular Skeleton</li>
             </ul>
             <p>These can be installed via simple Pak commands. For example:</p>
-            <pre class="ui code segment">pak install esp-angular-skeleton</pre>
+            <pre class="ui code segment">pak install esp-angular-skeleton
+pak install https://github.com/embedthis/appweb-php.git
+pak install npm:jquery
+pak install npm:angular
+</pre>
             <p>See the <a href="https://embedthis.com/pak/">Pak Web Site</a> to read about Pak and to
             <a href="https://embedthis.com/pak/download.html">Download Pak</a>.</p>
 
@@ -44,9 +48,10 @@
             <p>The Appweb source distribution contains all the required source files, headers, and test framework to reconfigure, build, and verify Appweb. The software supports three methods for building from source.</p>
             <ul>
                 <li><a href="http://www.gnu.org/software/make/">Make</a></li>
-                <li><a href="https://embedthis.com/makeme/">MakeMe</a></li>
                 <li>Visual Studio or Xcode</li>
+                <li><a href="https://embedthis.com/makeme/">MakeMe</a></li>
             </ul>
+
             <p>Building via <em>make</em> is the simplest way to build. Use <em>make</em> if you want a default build or if you need to integrate Appweb with an existing make-based build system. Build with <a href="https://embedthis.com/makeme/">MakeMe</a> if you want to customize or configure the software for your system, or if you need to cross-compile for another operating system or architecture. Use the Visual Studio or Xcode if you are most comfortable with these tools and want a default build.</p>
 
             <h2>Building</h2>

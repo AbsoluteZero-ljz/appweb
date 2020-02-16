@@ -1,28 +1,17 @@
 {
     title:  "Appweb Architecture",
-    crumbs: [ 
+    crumbs: [
         { 'Reference': '../ref/' },
     ],
 }
 
-            <h1>Appweb Architecture</h1><!--
-    Diagrams:
-        - Process diagram
-        - Request pipeline
-        - Module Block diagram
-        - Key objects
--->
-            <p>The Appweb HTTP web server is the fastest little web server. It is a high-performance yet compact
-            embeddable webserver that has a modular, secure core.  It supports an extensive feature set including:
-            HTTP/1.1, TLS/SSL, CGI, PHP, ESP, Virtual Hosts, Digest
-            Authentication, Apache style configuration, and logging and security sandboxing. Yet Appweb remains very
-            small (from 1MB) and exceptionally fast (&gt; 7,000 requests per second).</p>
-            <p>Appweb supports dynamic web application frameworks like ESP, and PHP. It also supports older
-            web creation strategies like CGI.</p>
-            <p>Appweb is an event-driven, multi-threaded web server and is able to support many
-            thousands of requests per second but it does not try to scale out like an enterprise class server for 
-            top-tier web sites.
-            Rather, it aims to be robust, secure and blazing fast with low and predictable memory utilization.</p>
+            <h1>Appweb Architecture</h1>
+            <p>The Appweb HTTP web server is the fastest little web server. It is a high-performance yet compact embeddable webserver that has a modular, secure core.  It supports an extensive feature set including: HTTP/1, HTTP/1.1, HTTP/2, WebSockets, TLS/SSL, CGI, PHP, ESP, Virtual Hosts, Digest Authentication, Apache style configuration, and logging and security sandboxing. Yet Appweb remains very small (from 1MB) and exceptionally fast (&gt; 7,000 requests per second).</p>
+
+            <p>Appweb supports dynamic web application frameworks like ESP, and PHP. It also supports older web creation strategies like CGI.</p>
+
+            <p>Appweb is an event-driven, multi-threaded web server and is able to support many thousands of requests per second but it does not try to scale out like an enterprise class server for top-tier web sites. Rather, it aims to be robust, secure and blazing fast with low and predictable memory utilization.</p>
+
             <a id="deployment"></a>
             <h2>Deployment Models</h2>
             <p>Appweb can be deployed in several ways:</p>
@@ -31,6 +20,7 @@
                 <li>Embedded in applications and devices</li>
                 <li>Proxied behind front-end web servers</li>
             </ul>
+
             <h3>Stand-Alone Web Server</h3>
             <p>The Appweb distribution contains a robust, secure, stand-alone web server. The binary installation will
             install this web server to be automatically started as a system daemon/service. It is supervised by a
@@ -43,7 +33,7 @@
             <p>Appweb is an ideal application web server when running behind a reverse proxy. The
             reverse proxy dispatches incoming requests to a set of Appweb instances which can effectively host
             ESP, or PHP applications.</p>
-            
+
             <a id="processing"></a>
             <h2>Processing Architecture</h2>
             <p>Appweb typically runs one, multi-threaded, event driven process. Appweb uses a non-blocking
@@ -54,7 +44,7 @@
             incoming and outgoing I/O, the worker thread is returned to the pool for use by other requests. This
             architecture minimizes memory usage by reusing threads and provides excellent performance due to the thread
             pool. Further, it scales well, as one thread can service many requests.</p>
-            
+
             <a id="modules"></a>
             <h2>Appweb Modules</h2>
             <p>Embeddable web servers have several competing goals:</p>
@@ -90,30 +80,37 @@
                     logging.</td>
                 </tr>
                 <tr>
-                    <td>Appweb HTTP Core Library</td>
-                    <td>Core HTTP server. Includes services for initialization, HTTP protocol handling, socket
-                    connection management, logging, virtual hosts, directory and location blocks, request processing
+                    <td>Secure Sockets Layer (SSL)</td>
+                    <td>Secure Socket Layer protocol stack. This is a virtual interface that can selectively support a
+                    variety of SSL providers including: the MbedTLS and OpenSSL stacks.</td>
+                </tr>
+                <tr>
+                    <td>HTTP/1</td>
+                    <td>Traditional HTTP/1 text based HTTP protocol.</td>
+                </tr>
+                <tr>
+                    <td>HTTP/2</td>
+                    <td>HTTP/2 binary multiplexing HTTP protocol.</td>
+                </tr>
+                <tr>
+                    <td>WebSockets</td>
+                    <td>Binary full-duplex communication protocol.</td>
+                </tr>
+                <tr>
+                    <td>Web Framework Pipeline</td>
+                    <td>Core HTTP server. Includes services for initialization, HTTP protocol handling,
+                    logging, virtual hosts, directory and location blocks, request processing
                     pipeline, and module loading and management.</td>
                 </tr>
                 <tr>
                     <td>File Handler</td>
-                    <td>The File handler serves static content such as HTML pages, images and PDF files. It works
-                    cooperatively with the Send connector to eliminate reading such content into memory. The File
-                    handler sends details of the content name via the processing pipeline to the Send connector which
-                    uses special O/S APIs to directly copy files to the network.</td>
+                    <td>The File handler serves static content such as HTML pages, images and PDF files.</p>
                 </tr>
                 <tr>
                     <td>ESP Handler</td>
-                    <td>The Embedded Server Pages (ESP) web framework is an advanced, Model,View,Controller "C" 
+                    <td>The Embedded Server Pages (ESP) web framework is an advanced, Model,View,Controller "C"
                         language web framework.</td>
                 </tr>
-<!-- KEEP
-                <tr>
-                    <td>Ejscript Handler</td>
-                    <td>Ejscript Web Framework Handler. This is a Server-Side JavaScript web application framework.
-                    Ideal for dynamic web applications.</td>
-                </tr>
--->
                 <tr>
                     <td>PHP Handler</td>
                     <td>In-memory handler module for the PHP web environment.</td>
@@ -130,30 +127,11 @@
                 </tr>
                 <tr>
                     <td>Range Filter</td>
-                    <td>The Range filter selects the requested I/O range by the client. The Range filter works
-                    cooperatively with the File handler and Send connector to eliminate copying and reading static
-                    content for ranged requests.</td>
-                </tr>
-                <tr>
-                    <td>Net Connector</td>
-                    <td>The Net connector is the general purpose transmitter of content to the client. It supports
-                    vectored gather/scatter writes for optimal performance.</td>
-                </tr>
-                <tr>
-                    <td>Send Connector</td>
-                    <td>The Send connector is a special purpose transmitter of static file content to the client. It
-                    uses operating system APIs to send file data to the client without reading the data into Appweb. It
-                    also uses vectored gather/scatter I/O to blend response, chunk, and range headers into the static
-                    data. These strategies dramatically boost the performance of serving static data.</td>
-                </tr>
-                <tr>
-                    <td>Secure Sockets Layer (SSL)</td>
-                    <td>Secure Socket Layer protocol stack. This is a virtual interface that can selectively support a
-                    variety of SSL providers including: the MbedTLS and OpenSSL stacks.</td>
+                    <td>The Range filter selects the requested I/O range by the client.</p>
                 </tr>
                 </tbody>
             </table>
-            
+
             <a id="httpServer"></a>
             <h3>Appweb HTTP Server Core</h3>
             <p>The core Appweb HTTP server is one of the relatively smaller components of the Appweb product when
@@ -168,7 +146,7 @@
             Appweb to be deterministic in its use of system resources and to be a good system citizen. The core Appweb
             server can be configured to execute single or multi-threaded. With appropriate sandbox limits, it can serve
             thousands of requests per second if required.</p>
-            
+
             <a id="configuration"></a>
             <h2>Appweb Configuration</h2>
             <p>Appweb uses an Apache style configuration file. This configuration file is read when Appweb starts and
@@ -178,7 +156,7 @@
             authentication, port binding, aliasing, logging, and request pipeline configuration. It has conditional
             declarations and supports the inclusion of other configuration files. Appweb uses a one-pass traversal of the
             configuration file which means that the order of directives matters.</p>
-            
+
             <a id="requests"></a>
             <h2>Request Processing</h2>
             <p>The Appweb HTTP core manages the processing of requests and the construction of the request processing
@@ -204,7 +182,7 @@ HeaderName: value
             <table title="Headers" class="ui celled table segment">
                 <thead>
                     <tr>
-                        <th>Header</th>
+                        <th nowrap>Header</th>
                         <th>Description</th>
                     </tr>
                 </thead>
@@ -236,7 +214,7 @@ HeaderName: value
                     hosting.</td>
                 </tr>
                 <tr>
-                    <td>If-Modified-Since</td>
+                    <td nowrap="nowrap">If-Modified-Since</td>
                     <td>Only return the content if it has been modified since the date specified. Clients who have
                     cached copies of a document (or graphics) use this header to allow the server to skip copying the
                     document if it has not changed.</td>
@@ -257,15 +235,15 @@ Connection: keep-alive
             matching. This will occur before any associated POST data has been read from the client. POST data may be
             form data submitted by the client or it may be a file upload using the PUT method.</p>
             <h3>Request Routing</h3>
-            <p>Appweb has a powerful request routing engine that processes client HTTP requests. The engine is 
-            configured with a set of routes from the Appweb configuration file. When a request is received, 
-            it tests various routes and selects 
+            <p>Appweb has a powerful request routing engine that processes client HTTP requests. The engine is
+            configured with a set of routes from the Appweb configuration file. When a request is received,
+            it tests various routes and selects
             the best route to handle the request. In the process, routes may redirect or rewrite the request as required.</p>
-            <p>An Appweb configuration will typically have many routes. The configured routes are tested in order 
-            by matching the route regular expression pattern against the request URI. A route may require that 
-            further preconditions 
-            be met before it is suitable to process the request. If the required conditions are not met, the next 
-            route in the configuration will be tested. There is always a catch-all route that will process the 
+            <p>An Appweb configuration will typically have many routes. The configured routes are tested in order
+            by matching the route regular expression pattern against the request URI. A route may require that
+            further preconditions
+            be met before it is suitable to process the request. If the required conditions are not met, the next
+            route in the configuration will be tested. There is always a catch-all route that will process the
             request if all prior routes fail to qualify.</p>
             <p>To define a route, use the <a href=
             "../users/dir/route.html">Route</a> directive. For example:</p>
@@ -283,10 +261,10 @@ AddHandler espHandler myDoc
 </pre>
             <p>This will cause the ejsHandler to respond to any URI that has a "<em>.myDoc</em>" extension.</p>
             <p>Multiple routes may match a URI. In this case they are applied in the order they are specified in the
-            Appweb configuration file. 
+            Appweb configuration file.
             <p>Once the route has been selected, the request pipeline is constructed and the request handler is started
             to create the response for the client.</p>
-            
+
             <a id="pipeline"></a>
             <h2>Request Pipeline</h2>
             <p>The Appweb core uses a bidirectional pipeline to process requests and generate responses. This consists
@@ -312,11 +290,11 @@ AddHandler espHandler myDoc
             the parsed headers for use by the routing engine and creates a new request pipeline to process the request.
             The incoming and outgoing pipelines are constructed separately as each direction may require a different set
             of filters.</p>
-            
+
             <h3>Routing Engine</h3>
-            <p>The routing engine matches the request against the configured request routes and selects the best 
+            <p>The routing engine matches the request against the configured request routes and selects the best
             route for the request. A route specifies the handler to manage the request and other context such as where
-            to find documents to serve. The routing engine may rewrite the request and then reroute. The engine 
+            to find documents to serve. The routing engine may rewrite the request and then reroute. The engine
             also manages HTTP authorization.</p>
             <p>Depending on the request URI and headers, the appropriate handler will be selected.  There are handlers
             for ESP, PHP, CGI and static file data.</p>
@@ -346,41 +324,30 @@ AddHandler espHandler myDoc
             packets representing the data to send to the client. The connector is responsible for requesting the Appweb
             HTTP core to create a packet with the HTTP response headers. It is at this stage that Appweb can determine
             if the TCP/IP connection can be kept alive for subsequent requests on the same connection.</p>
+
             <h4>Delayed Headers</h4>
-            <p>Connectors will receive an empty header packet which must first be filled with the HTTP response
-            headers. By delaying the generation of the HTTP headers until the last possible moment, Appweb maximizes
-            every opportunity to optimize the response and use the HTTP/1.1 Keep-Alive feature even for dynamically
-            generated data.</p>
-            <h4>Send Connector</h4>
-            <p>If the File handler is communicating directly to the Send connector, it will optimize its operation by
-            not reading the static file data. Rather, it will send empty packets to the Send connector which will use
-            the operating system <b>sendfile</b> (or equivalent) primitive. This avoids reading the static file data
-            into the Appweb user process.</p>
+            <p>Connectors will receive an empty header packet which must first be filled with the HTTP response headers. By delaying the generation of the HTTP headers until the last possible moment, Appweb maximizes every opportunity to optimize the response and use the HTTP/1.1 Keep-Alive feature even for dynamically generated data.</p>
+
             <h4>Net Connector</h4>
             <p>The Net connector is a generalized network connector that can transmit content from any handler to the
             client. It supports vectored writes to avoid copying data when interleaving with HTTP, range or chunk
             headers.</p>
-            
+
             <a id="frameworks"></a>
             <h2>Web Frameworks</h2>
             <p>Appweb supports loadable modules for the ESP, and PHP web frameworks.</p>
-            <h3>Embedded Server Pages  Web Framework</h3>
-            <p>The ESP web framework is a high performance, Model/View/Controller web framework. 
-            It uses the "C" language embedded in HTML web pages and for Controllers. It provides 
+
+            <h3>Embedded Server Pages Web Framework</h3>
+            <p>The ESP web framework is a high performance, Model/View/Controller web framework.
+            It uses the "C" language embedded in HTML web pages and for Controllers. It provides
             an application generator, templating and layout engine, a Model/View/Controller framework, extensive caching,
-            and a library of Ajax view controls. It is blazing fast via the use of "C" and caching of 
+            and a library of Ajax view controls. It is blazing fast via the use of "C" and caching of
             compiled web pages and rendered HTML.
-<!-- KEEP
-            <h3>Ejscript Web Framework</h3>
-            <p>The Ejscript Web Framework was designed to make it easier to create dynamic web applications. It uses
-                server-side JavaScript as the application language and provides provides an application generator,
-                templating engine, a powerful Model/View/Controller framework, and a library of Ajax view controls. See
-                the <a href="ejsArchitecture.html">Ejscript Web Framework</a> for more details.</p>
--->
+
             <h3>PHP</h3>
             <p>PHP is a widely-used general-purpose scripting language that is especially suited for Web development
             and can be embedded into HTML. Appweb provides a fast, in-memory handler for the PHP web framework.</p>
-            
+
             <a id="security"></a>
             <h2>Security</h2>
             <p>Appweb provides a suite of measures designed to increase the security of your web server:</p>
@@ -391,24 +358,25 @@ AddHandler espHandler myDoc
                 <li>MPR &mdash; secure portable runtime</li>
                 <li>Manager monitoring process</li>
             </ul>
-            <h4>Secure Sockets</h4>
+            <h3>Secure Sockets</h3>
             <p>Appweb supports the MbedTLS and OpenSSL stacks. You can configure server and/or client
             certificate-based authentication. SSL and TLS are supported.</p>
-            <h4>Authentication</h4>Appweb provides the Digest authentication mechanism and supports both file and
-            PAM-based authentication backends.
-            <h4>Sandboxing</h4>
+            <h3>Authentication</h3>
+            <p>Appweb provides the Digest authentication mechanism and supports both file and
+            PAM-based authentication backends.</p>
+            <h3>Sandboxing</h3>
             <p>Sandboxing is the term applied to running Appweb in a confined environment. Appweb has a set of
             configuration file directives that allow you to define a sandbox which limits the resources that Appweb may
             used for a given request. By using well defined sandbox directives, you can help ensure that your
             application and system will not be compromised by malicious requests.</p>
-            
+
             <a id="mpr"></a>
             <h2>Multithreaded Portable Runtime (MPR)</h2>
             <p>Appweb is built upon a portable runtime layer called the MPR. This layer insulates the rest of the
             product from the underlying platform and allows it to be highly portable to new operating systems or
             hardware.</p>
             <p>The MPR provides a suite of services that facilitate the creation of high performance,
-            multi-threaded management and server applications, including: thread management, dynamic module loading, 
+            multi-threaded management and server applications, including: thread management, dynamic module loading,
             networking, safe string handling, timers, XML parsing and logging.</p>
             <p>The MPR also provides a safer environment in which to program as it replaces 'C' APIs that are prone to
             buffer overflows and other similar security exploits. The MPR includes a high performance, safe string
@@ -417,14 +385,14 @@ AddHandler espHandler myDoc
             single and multi-threaded architectures, polled or async event notification, POSIX select waiting and
             Windows message loops. When coupled with C and C++ APIs, API web can be easily integrated into most C/C++
             applications.</p>
-            <p>The MPR includes a high performance memory allocator and generational garbage collector. 
-            The allocator is a fast, coalescing allocator that exhibits very low fragmentation.  It is optimized 
+            <p>The MPR includes a high performance memory allocator and generational garbage collector.
+            The allocator is a fast, coalescing allocator that exhibits very low fragmentation.  It is optimized
             for frequent allocations of small blocks and uses a background collector for freeing unused memory.</p>
-            <p>The garbage collector is somewhat unusual in a C program. However, garbage collection is 
-            especially well suited for long running applications like a web server as it virtually eliminates 
-            memory leaks. Unlike traditional memory allocation where free must be called, Appweb 4 uses the 
-            opposite approach where memory that must be retained, needs to be actively managed to prevent 
-            garbage collection. This means that a managed reference must be held for all active memory. 
+            <p>The garbage collector is somewhat unusual in a C program. However, garbage collection is
+            especially well suited for long running applications like a web server as it virtually eliminates
+            memory leaks. Unlike traditional memory allocation where free must be called, Appweb 4 uses the
+            opposite approach where memory that must be retained, needs to be actively managed to prevent
+            garbage collection. This means that a managed reference must be held for all active memory.
             See <a href="memory.html">Memory Allocation</a> for more details.</p>
             <a id="misc"></a>
             <h2>Misc Features</h2>
@@ -432,7 +400,7 @@ AddHandler espHandler myDoc
             <p>Appweb fully supports both IPv4 and IPv6 for both server and client operations. You can configure Appweb
             to listen on both IPv4 and IPv6 addresses.</p>
             <h2>Embedding APIs</h2>
-            <p>The Appweb HTTP server library can be embedded in an application to web-enable that application. 
+            <p>The Appweb HTTP server library can be embedded in an application to web-enable that application.
             Appweb provides two levels of embedding:</p>
             <h3>One Line Embedding</h3>
             <p>Appweb can be embedded in one C statement. This will create a web server instance based on the given

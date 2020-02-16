@@ -49,15 +49,15 @@ static void len_callback(HttpConn *conn, int event, int arg)
         /*
             Get and discard the packet. traceEvent will have traced it for us.
          */
-        packet = httpGetPacket(conn->readq);
-        assert(packet);
-        /* 
-            Ignore precedding packets and just respond and echo the last 
-         */
-        if (packet->last) {
-            ws = conn->rx->webSocket;
-            httpSend(conn, "{type: %d, last: %d, length: %d, data: \"%s\"}\n", packet->type, packet->last,
-                ws->messageLength, snclone(mprGetBufStart(packet->content), 10));
+        for (packet = httpGetPacket(conn->readq); packet; packet = httpGetPacket(conn->readq)) {
+            /* 
+                Ignore precedding packets and just respond and echo the last 
+             */
+            if (packet->last) {
+                ws = conn->rx->webSocket;
+                httpSend(conn, "{type: %d, last: %d, length: %d, data: \"%s\"}\n", packet->type, packet->last,
+                    ws->messageLength, snclone(mprGetBufStart(packet->content), 10));
+            }
         }
     }
 }
@@ -78,9 +78,10 @@ static void echo_callback(HttpConn *conn, int event, int arg)
     HttpPacket  *packet;
 
     if (event == HTTP_EVENT_READABLE) {
-        packet = httpGetPacket(conn->readq);
-        if (packet->type == WS_MSG_TEXT || packet->type == WS_MSG_BINARY) {
-            httpSendBlock(conn, packet->type, httpGetPacketStart(packet), httpGetPacketLength(packet), 0);
+        for (packet = httpGetPacket(conn->readq); packet; packet = httpGetPacket(conn->readq)) {
+            if (packet->type == WS_MSG_TEXT || packet->type == WS_MSG_BINARY) {
+                httpSendBlock(conn, packet->type, httpGetPacketStart(packet), httpGetPacketLength(packet), 0);
+            }
         }
     }
 }
@@ -106,7 +107,7 @@ static void empty_response()
  */
 static void big_response() 
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
     MprBuf      *buf;
     ssize       wrote;
     int         i, count;
@@ -149,7 +150,7 @@ static void big_response()
  */
 static void frames_response() 
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
     cchar       *str;
     int         i, more, count;
 
@@ -174,7 +175,7 @@ static void frames_response()
 static MprList  *clients;
 
 typedef struct Msg {
-    HttpConn    *conn;
+    HttpStream  *conn;
     HttpPacket  *packet;
 } Msg;
 
@@ -188,7 +189,7 @@ static void manageMsg(Msg *msg, int flags)
 
 static void chat(Msg *msg)
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
     HttpPacket  *packet;
 
     conn = msg->conn;
@@ -203,18 +204,19 @@ static void chat(Msg *msg)
 static void chat_callback(HttpConn *conn, int event, int arg)
 {
     HttpPacket  *packet;
-    HttpConn    *client;
+    HttpStream  *client;
     Msg         *msg;
     int         next;
 
     if (event == HTTP_EVENT_READABLE) {
-        packet = httpGetPacket(conn->readq);
-        if (packet->type == WS_MSG_TEXT || packet->type == WS_MSG_BINARY) {
-            for (ITERATE_ITEMS(clients, client, next)) {
-                msg = mprAllocObj(Msg, manageMsg);
-                msg->conn = client;
-                msg->packet = packet;
-                mprCreateEvent(client->dispatcher, "chat", 0, chat, msg, 0);
+        for (packet = httpGetPacket(conn->readq); packet; packet = httpGetPacket(conn->readq)) {
+            if (packet->type == WS_MSG_TEXT || packet->type == WS_MSG_BINARY) {
+                for (ITERATE_ITEMS(clients, client, next)) {
+                    msg = mprAllocObj(Msg, manageMsg);
+                    msg->conn = client;
+                    msg->packet = packet;
+                    mprCreateEvent(client->dispatcher, "chat", 0, chat, msg, 0);
+                }
             }
         }
     } else if (event == HTTP_EVENT_APP_CLOSE) {
@@ -230,7 +232,7 @@ static void chat_callback(HttpConn *conn, int event, int arg)
  */
 static void chat_action()
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
 
     conn = getConn();
     mprAddItem(clients, conn);

@@ -1,13 +1,13 @@
 {
     "name": "appweb",
-    "description": "Embedthis Appweb Community Edition",
-    "title": "Embedthis Appweb Community Edition",
-    "version": "7.2.1",
+    "description": "Embedthis Appweb Enterprise Edition",
+    "title": "Embedthis Appweb Enterprise Edition",
     "keywords": [
         "appweb",
         "http",
         "webserver"
     ],
+    "version": "8.0.2",
     "homepage": "https://www.embedthis.com/appweb/",
     "author": {
         "name": "Embedthis Software",
@@ -22,31 +22,27 @@
         "email": "dev@embedthis.com",
         "url": "http://github.com/embedthis/appweb/issues"
     },
-    "licenses": [
-        {
-            "type": "GPL",
-            "url": "http://www.gnu.org/licenses/gpl-2.0.html"
-        },
-        {
-            "type": "Commercial",
-            "url": "https://www.embedthis.com/licensing/"
-        }
-    ],
+    "license": {
+        "type": "Commercial",
+        "url": "https://www.embedthis.com/licensing/"
+    },
     "dependencies": {
-        "assist": "~0.1",
-        "http": "~7",
-        "makerom": "~0.3",
+        "appweb-php": "~1",
+        "assist": "~1",
+        "http": "~8",
+        "makerom": "~1",
+        "mbedtls": "~2.8",
+        "me-win": "~1",
         "mpr": "~8",
+        "mpr-version": "~1",
         "osdep": "~1",
-        "pcre": "~1.0",
-        "ssl": "~0.9",
-        "watchdog": "~0.3"
+        "pcre": "~1",
+        "ssl": "~1",
+        "watchdog": "~1"
     },
     "optionalDependencies": {
-        "appweb-ejscript": "~0.2",
-        "certs": "~0.1",
-        "ejscript": "~2.7",
-        "esp": "~7",
+        "certs": "~1",
+        "esp": "~8",
         "mpr-mbedtls": "~2",
         "mpr-openssl": "~1",
         "sqlite": "~3"

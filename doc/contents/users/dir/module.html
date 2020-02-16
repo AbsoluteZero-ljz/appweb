@@ -52,7 +52,7 @@
                             themselves. Pure modules are units of functionality that augment Appweb without directly
                             handling HTTP responses themselves.</p>
                             <p>Appweb will automatically load the modules for built-in modules and handlers including:
-                                ESP, Ejscript, PHP, CGI and SSL if Appweb is built with support for those modules.</p>
+                                ESP, PHP, CGI and SSL if Appweb is built with support for those modules.</p>
                             <h3>Appweb supplied modules</h3>
                             <table title="cgi">
                                 <tbody>
@@ -67,11 +67,6 @@
                                         <td>mod_esp</td>
                                     </tr>
                                     <tr>
-                                        <td>Ejscript Web Framework and Handler</td>
-                                        <td>ejs</td>
-                                        <td>mod_ejs</td>
-                                    </tr>
-                                    <tr>
                                         <td>SSL Module</td>
                                         <td>ssl</td>
                                         <td>mod_ssl</td>
@@ -82,7 +77,7 @@
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="loadModulePath"></a>
             <h2>LoadModulePath</h2>
             <table class="directive" title="loadModulePath">

@@ -13,9 +13,8 @@ if (!Config.SSL) {
     var WS = HTTPS.replace('https', 'wss') + '/websockets/basic/ssl'
     const TIMEOUT = 5000
 
-    ttrue(WebSocket)
     let ws = new WebSocket(WS, ['chat'], { verify: false })
-    ttrue(ws)
+    ttrue(ws != null)
     ttrue(ws.readyState == WebSocket.CONNECTING)
 
     let closed, opened, response
