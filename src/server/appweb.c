@@ -26,6 +26,10 @@
 
 #include    "appweb.h"
 
+#ifdef ME_LOCAL_MAIN
+    #include ME_LOCAL_MAIN
+#endif
+
 #if ME_STATIC && ME_COM_ESP
 /*
     Generate cache/server.c via: appweb-esp --combine compile.
@@ -33,7 +37,7 @@
     Below, we invoke the ESP initializers via: esp_app_server_combine().
     Note: appweb-esp must be separately built in a separate appweb build configured without --static --rom.
  */
-#include    "cache/server.c"
+    #include    "cache/server.c"
 #endif
 
 /********************************** Locals ************************************/
@@ -59,15 +63,16 @@ static AppwebApp *app;
 
 static int changeRoot(cchar *jail);
 static int checkEnvironment(cchar *program);
-static int findConfigFile();
+static int findConfigFile(void);
 static void manageApp(AppwebApp *app, int flags);
 static int createEndpoints(int argc, char **argv);
-static void usageError();
+static int loadModules();
+static void usageError(void);
 
 #if ME_UNIX_LIKE
     #if defined(SIGINFO) || defined(SIGPWR) || defined(SIGRTMIN)
         static void statusCheck(void *ignored, MprSignal *sp);
-        static void addSignals();
+        static void addSignals(void);
     #endif
     static void traceHandler(void *ignored, MprSignal *sp);
     static int  unixSecurityChecks(cchar *program, cchar *home);
@@ -99,7 +104,7 @@ MAIN(appweb, int argc, char **argv, char **envp)
     logSpec = 0;
     traceSpec = 0;
 
-    if ((mpr = mprCreate(argc, argv, 0)) == NULL) {
+    if ((mpr = mprCreate(argc, argv, MPR_USER_EVENTS_THREAD)) == NULL) {
         exit(1);
     }
     if ((app = mprAllocObj(AppwebApp, manageApp)) == NULL) {
@@ -250,6 +255,9 @@ MAIN(appweb, int argc, char **argv, char **envp)
     if (jail && changeRoot(jail) < 0) {
         exit(8);
     }
+    if (loadModules() < 0) {
+        return MPR_ERR_CANT_INITIALIZE;
+    }
     if (createEndpoints(argc - argind, &argv[argind]) < 0) {
         return MPR_ERR_CANT_INITIALIZE;
     }
@@ -267,16 +275,13 @@ MAIN(appweb, int argc, char **argv, char **envp)
     /*
         Invoke ESP initializers here
      */
-    esp_app_server_combine(httpGetDefaultRoute(NULL), NULL);
+    esp_app_server_combine(httpGetDefaultRoute(NULL));
 #endif
+
     /*
         Events thread will service requests. We block here.
      */
-    mprYield(MPR_YIELD_STICKY);
-    while (!mprIsStopping()) {
-        mprSuspendThread(-1);
-    }
-    mprResetYield();
+    mprServiceEvents(-1, 0);
 
     mprLog("info appweb", 1, "Stopping Appweb ...");
     mprDestroy();
@@ -316,9 +321,24 @@ static int changeRoot(cchar *jail)
         return MPR_ERR_CANT_INITIALIZE;
     } else {
         mprLog("info appweb", 2, "Chroot to: \"%s\"", jail);
+        httpSetJail(jail);
     }
 #endif
     return 0;
+}
+
+
+static int loadModules()
+{
+    int     rc;
+
+    rc = 0;
+#ifdef ME_LOCAL_MODULE
+    if ((rc = ME_LOCAL_MODULE()) < 0) {
+        return rc;
+    }
+#endif
+    return rc;
 }
 
 
@@ -361,7 +381,7 @@ static int createEndpoints(int argc, char **argv)
         EXE/../BASE
         EXE/../appweb.conf
  */
-static int findConfigFile()
+static int findConfigFile(void)
 {
     cchar   *name;
 
@@ -412,7 +432,7 @@ static int findConfigFile()
 }
 
 
-static void usageError(Mpr *mpr)
+static void usageError()
 {
     cchar   *name;
 
@@ -432,7 +452,7 @@ static void usageError(Mpr *mpr)
         "    --name uniqueName       # Unique name for this instance\n"
         "    --show                  # Show route table\n"
         "    --trace traceFile:level # Trace to file at verbosity level (0-5)\n"
-        "    --verbose               # Same as --log stdout:2\n"
+        "    --verbose               # Same as --log stdout:2 --trace stdout:2\n"
         "    --version               # Output version information\n"
         "    --DIGIT                 # Same as --log stdout:DIGIT\n\n",
         mprGetAppTitle(), name, name, name);
@@ -458,7 +478,7 @@ static int checkEnvironment(cchar *program)
 
 
 #if ME_UNIX_LIKE
-static void addSignals()
+static void addSignals(void)
 {
     app->traceToggle = mprAddSignalHandler(SIGUSR2, traceHandler, 0, 0, MPR_SIGNAL_AFTER);
 
@@ -575,7 +595,6 @@ static int writePort()
     return 0;
 }
 #endif /* ME_WIN_LIKE */
-
 
 #if VXWORKS
 /*

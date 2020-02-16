@@ -106,7 +106,7 @@ static void empty_response()
  */
 static void big_response() 
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
     MprBuf      *buf;
     ssize       wrote;
     int         i, count;
@@ -149,7 +149,7 @@ static void big_response()
  */
 static void frames_response() 
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
     cchar       *str;
     int         i, more, count;
 
@@ -174,7 +174,7 @@ static void frames_response()
 static MprList  *clients;
 
 typedef struct Msg {
-    HttpConn    *conn;
+    HttpStream  *conn;
     HttpPacket  *packet;
 } Msg;
 
@@ -188,7 +188,7 @@ static void manageMsg(Msg *msg, int flags)
 
 static void chat(Msg *msg)
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
     HttpPacket  *packet;
 
     conn = msg->conn;
@@ -203,7 +203,7 @@ static void chat(Msg *msg)
 static void chat_callback(HttpConn *conn, int event, int arg)
 {
     HttpPacket  *packet;
-    HttpConn    *client;
+    HttpStream  *client;
     Msg         *msg;
     int         next;
 
@@ -230,7 +230,7 @@ static void chat_callback(HttpConn *conn, int event, int arg)
  */
 static void chat_action()
 {
-    HttpConn    *conn;
+    HttpStream  *conn;
 
     conn = getConn();
     mprAddItem(clients, conn);

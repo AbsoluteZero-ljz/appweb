@@ -2,20 +2,19 @@
 <html lang="en">
 <head>
     <title>Appweb Features</title>
-    <!-- Copyright Embedthis Software. All Rights Reserved. -->
+    
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <meta name="description" content="Appweb Features" />
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
-        rel='stylesheet' type='text/css'>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <meta name="description" content="Appweb Features">
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     
-    <link href="../images/favicon.ico" rel="shortcut icon" />
-    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css" />
-    <link href="../css/all.min.css" rel="stylesheet" type="text/css" />
-    <link href="../css/api.min.css" rel="stylesheet" type="text/css" />
+    <link href="../images/favicon.ico" rel="shortcut icon">
+    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css">
+    <link href="../css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="../css/api.min.css" rel="stylesheet" type="text/css">
     
 
 </head>
@@ -80,7 +79,7 @@
                     <a class="item" href="../developers/action.html">Using the Action Handler</a>
                     <a class="item" href="../developers/stages.html">Creating Pipeline Stages</a>
                     <a class="item" href="../developers/rom.html">Serving Pages from ROM</a>
-                    <a class="item" href="../developers/migrating.html">Upgrading Earlier Releases</a>
+                    <a class="item" href="../developers/migrating.html">Migrating from Earlier Releases</a>
                 </div>
             </div>
             <div class="item">
@@ -102,7 +101,9 @@
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/cpp-module">cpp-module</a>
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/deploy-server">deploy-server</a>
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/esp-hosted">esp-hosted</a>
+                    <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/esp-upload">esp-upload</a>
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/login-basic">login-basic</a>
+                    <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/login-database">login-database</a>
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/login-form">login-form</a>
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/max-server">max-server</a>
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/min-server">min-server</a>
@@ -181,8 +182,20 @@
     </div>
     <div class="content">
 
-   
+
             <h1>Embedthis Appweb&trade; Features</h1>
+
+            <p>Appweb is published in two editions:</p>
+            <ul>
+                <li>Embedthis Appweb Enterprise Edition</li>
+                <li>Embedthis Appweb Community Edition</li>
+            </ul>
+
+            <p>The Enterprise edition is a royalty free, commercially licensed edition with options for commercial maintenance and support. Contact <a href="mailto:dev@embedthis.com">sales@embedthis.com</a> for details.
+            The Community edition is an open source licensed edition of Appweb provided under the GPL license.</p>
+            <p>You may use Appweb with either license. Please read <a href="../licensing/index.html">Licensing</a> for further details.</p>
+
+            <h2>Components</h2>
             <p>The Appweb product includes the following components:</p>
             <ul>
                 <li>Appweb HTTP Server main program</li>
@@ -197,7 +210,8 @@
             <h2>Feature Overview</h2>
             <h3>HTTP Server Engine</h3>
             <ul>
-                <li>Full HTTP/1.1 support</li>
+                <li>HTTP/2 support</li>
+                <li>HTTP/1.1 support</li>
                 <li>IPv4 and IPv6</li>
                 <li>Multithreaded, event-based server</li>
                 <li>Fast co-routine request pipeline</li>
@@ -219,7 +233,8 @@
             <h3>Modularity</h3>
             <ul>
                 <li>Dynamic loading of modules</li>
-                <li>Modules for CGI, Directory Listings, ESP, Ejscript, PHP, file upload and SSL</li>
+                <li>Support for the ESP "C" web framework</li>
+                <li>Modules for CGI, Directory Listings, PHP, file upload and SSL</li>
                 <li>Configurable request routing</li>
                 <li>Extensible/replaceable authorization, SSL and script</li>
             </ul>
@@ -235,7 +250,6 @@
             <h3>Dynamic Content</h3>
             <ul>
                 <li>Embedded Server Pages (included)</li>
-                <li>Support for Ejscript Server-Side JavaScript (separate product)</li>
                 <li>PHP (separate)</li>
                 <li>CGI/1.1</li>
             </ul>
@@ -270,8 +284,8 @@
             <ul>
                 <li>Linux (2.6)</li>
                 <li>Windows (7 and later)</li>
-                <li>MAC OSX (Lion)</li>
-                <li>VxWorks (6.X)</li>
+                <li>MAC OS (10.9 and later)</li>
+                <li>VxWorks (7.X)</li>
                 <li>Free BSD</li>
                 <li>Unix</li>
             </ul>
@@ -283,7 +297,6 @@
             </ul>
             <h3>Other Features</h3>
             <ul>
-                <li>Packaged installations for Linux, Windows and MAC OS X</li>
                 <li>Run as a service/daemon</li>
                 <li>HTTP server and client access program</li>
             </ul>
@@ -306,5 +319,6 @@
 
     
 
-</body>
-</html>
+
+
+

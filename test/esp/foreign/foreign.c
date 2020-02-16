@@ -3,7 +3,7 @@
  */
 #include "esp.h"
 
-static void finalizeResponse(HttpConn *conn, void *message);
+static void finalizeResponse(HttpStream *stream, void *message);
 static void serviceRequest();
 static void foreignThread(uint64 seqno);
 
@@ -13,36 +13,40 @@ ESP_EXPORT int esp_controller_app_foreign(HttpRoute *route)
     return 0;
 }
 
-static void serviceRequest(HttpConn *conn)
+static void serviceRequest(HttpStream *stream)
 {
     uint64      seqno;
 
-    seqno = conn->seqno;
-    mprStartOsThread("foreign", foreignThread, LTOP(conn->seqno), NULL);
+    seqno = stream->seqno;
+    if (mprStartOsThread("foreign", foreignThread, LTOP(stream->seqno), NULL) < 0) {
+        print("No threads available");
+    }
 }
 
 
-static void foreignThread(uint64 connSeqno)
+static void foreignThread(uint64 streamSeqno)
 {
     char    *message;
 
     assert(mprGetCurrentThread() == NULL);
 
     message = strdup("Hello World");
-    if (httpCreateEvent(connSeqno, finalizeResponse, message) < 0) {
+    if (httpCreateEvent(streamSeqno, finalizeResponse, message) < 0) {
+        print("Connection closed");
         free(message);
     }
 }
 
 
-static void finalizeResponse(HttpConn *conn, void *message)
+static void finalizeResponse(HttpStream *stream, void *message)
 {
     assert(message);
-    if (conn) {
-        httpWrite(conn->writeq, "message: %s\n", message);
-        httpFinalize(conn);
-        httpIO(conn, 0);
-        /* Warning -- can can be destroyed here */
+
+    if (stream) {
+        httpWrite(stream->writeq, "message: %s\n", message);
+        httpFinalize(stream);
+    } else {
+        print("Connection closed");
     }
     free(message);
 }

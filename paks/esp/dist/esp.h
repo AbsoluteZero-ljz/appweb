@@ -8,11 +8,13 @@
 #include "osdep.h"
 
 #ifndef ESP_VERSION
-    #define ESP_VERSION "7.2.0"
+    #define ESP_VERSION "8.1.2"
 #endif
 
 /*
     edi.h -- Embedded Database Interface (EDI).
+
+    This interface sits atop a SQLite driver and the in-memory database MDB.
 
     Copyright (c) All Rights Reserved. See copyright notice at the bottom of the file.
  */
@@ -34,7 +36,9 @@ extern "C" {
 #endif
 
 /********************************** Defines ***********************************/
-
+/*
+    Forward declare structures
+ */
 struct Edi;
 struct EdiGrid;
 struct EdiProvider;
@@ -57,11 +61,11 @@ typedef struct EdiService {
     @stability Evolving
     @internal
  */
-PUBLIC EdiService *ediCreateService();
+PUBLIC EdiService *ediCreateService(void);
 
 /**
-    Add a database provider. 
-    @description This should only be called by database providers. 
+    Add a database provider.
+    @description This should only be called by database providers.
     @ingroup EdiService
     @stability Evolving
  */
@@ -72,7 +76,7 @@ PUBLIC void ediAddProvider(struct EdiProvider *provider);
     @param vp Validation structure reference
     @param rec Record to validate
     @param fieldName Field name to validate
-    @param value Field value to validate 
+    @param value Field value to
     @ingroup EdiService
     @stability Evolving
  */
@@ -114,7 +118,7 @@ PUBLIC void ediAddFieldError(struct EdiRec *rec, cchar *field, cchar *fmt, ...);
  */
 #define EDI_TYPE_BINARY     1           /**< Arbitrary binary data */
 #define EDI_TYPE_BOOL       2           /**< Boolean true|false value */
-#define EDI_TYPE_DATE       3           /**< Date type */
+#define EDI_TYPE_DATE       3           /**< Date type (stored as epoch) */
 #define EDI_TYPE_FLOAT      4           /**< Floating point number */
 #define EDI_TYPE_INT        5           /**< Integer number */
 #define EDI_TYPE_STRING     6           /**< String */
@@ -129,7 +133,13 @@ PUBLIC void ediAddFieldError(struct EdiRec *rec, cchar *field, cchar *fmt, ...);
 #define EDI_INDEX           0x4         /**< Field flag -- Column is indexed */
 #define EDI_FOREIGN         0x8         /**< Field flag -- Column is a foreign key */
 #define EDI_NOT_NULL        0x10        /**< Field flag -- Column must not be null (not implemented) */
- 
+#define EDI_READ_ONLY       0x20        /**< Field flag -- Field is read-only (not implemented) */
+
+/*
+    Encodings
+ */
+#define EDI_ENCODE_PREFIX   0x
+
 /**
     EDI Record field structure
     @description The EdiField stores record field data and minimal schema information such as the data type and
@@ -172,6 +182,7 @@ typedef struct EdiGrid {
     struct Edi      *edi;               /**< Database handle */
     cchar           *tableName;         /**< Base table name for grid */
     int             flags;              /**< Grid flags */
+    int             count;              /**< Total count of available records matching query */
     int             nrecords;           /**< Number of records in grid */
     EdiRec          *records[ARRAY_FLEX];/**< Grid records */
 } EdiGrid;
@@ -189,7 +200,7 @@ typedef struct EdiGrid {
 typedef int (*EdiMigration)(struct Edi *db);
 
 /**
-    Define migration callbacks
+    Define database migration callbacks
     @param edi Database handle
     @param forw Forward migration callback. Of the form:
         int forw(Edi *edit);
@@ -204,7 +215,7 @@ PUBLIC void ediDefineMigration(struct Edi *edi, EdiMigration forw, EdiMigration 
 
 /**
     Database structure
-    @description The Embedded Database Interface (EDI) defines an abstract interface atop various relational 
+    @description The Embedded Database Interface (EDI) defines an abstract interface atop various relational
     database providers. Providers are supplied for SQLite and for the ESP Memory Database (MDB).
     @defgroup Edi Edi
   */
@@ -242,8 +253,8 @@ typedef struct EdiProvider {
     Edi       *(*open)(cchar *path, int flags);
     EdiGrid   *(*query)(Edi *edi, cchar *cmd, int argc, cchar **argv, va_list vargs);
     EdiField  (*readField)(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName);
+    EdiGrid   *(*findGrid)(Edi *edi, cchar *tableName, cchar *query);
     EdiRec    *(*readRec)(Edi *edi, cchar *tableName, cchar *key);
-    EdiGrid   *(*readWhere)(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value);
     int       (*removeColumn)(Edi *edi, cchar *tableName, cchar *columnName);
     int       (*removeIndex)(Edi *edi, cchar *tableName, cchar *indexName);
     int       (*removeRec)(Edi *edi, cchar *tableName, cchar *key);
@@ -262,8 +273,8 @@ typedef struct EdiProvider {
     @param tableName Database table name
     @param columnName Database column name
     @param type Column data type. Set to one of EDI_TYPE_BINARY, EDI_TYPE_BOOL, EDI_TYPE_DATE
-        EDI_TYPE_FLOAT, EDI_TYPE_INT, EDI_TYPE_STRING, EDI_TYPE_TEXT 
-    @param flags Control column attributes. Set to a set of: EDI_AUTO_INC for auto incrementing columns, 
+        EDI_TYPE_FLOAT, EDI_TYPE_INT, EDI_TYPE_STRING, EDI_TYPE_TEXT
+    @param flags Control column attributes. Set to a set of: EDI_AUTO_INC for auto incrementing columns,
         EDI_KEY if the column is the key column and/or EDI_INDEX to create an index on the column.
     @return Zero if successful. Otherwise a negative MPR error code.
     @ingroup Edi
@@ -299,7 +310,7 @@ PUBLIC int ediAddTable(Edi *edi, cchar *tableName);
     @description Validations are run when calling ediUpdateRec. A validation is used to validate field data
         using builtin validators.
     @param edi Database handle
-    @param name Validation name. Select from: 
+    @param name Validation name. Select from:
         @arg banned -- to validate field data against a regular express for banned content.
         @arg boolean -- to validate field data as "true" or "false"
         @arg date -- to validate field data as a date or time.
@@ -323,8 +334,8 @@ PUBLIC int ediAddValidation(Edi *edi, cchar *name, cchar *tableName, cchar *colu
     @param tableName Database table name
     @param columnName Database column name
     @param type Column data type. Set to one of EDI_TYPE_BINARY, EDI_TYPE_BOOL, EDI_TYPE_DATE
-        EDI_TYPE_FLOAT, EDI_TYPE_INT, EDI_TYPE_STRING, EDI_TYPE_TEXT 
-    @param flags Control column attributes. Set to a set of: EDI_AUTO_INC for auto incrementing columns, 
+        EDI_TYPE_FLOAT, EDI_TYPE_INT, EDI_TYPE_STRING, EDI_TYPE_TEXT
+    @param flags Control column attributes. Set to a set of: EDI_AUTO_INC for auto incrementing columns,
         EDI_KEY if the column is the key column and/or EDI_INDEX to create an index on the column.
     @return Zero if successful. Otherwise a negative MPR error code.
     @ingroup Edi
@@ -350,9 +361,12 @@ PUBLIC void ediClose(Edi *edi);
 PUBLIC EdiGrid *ediCloneGrid(EdiGrid *grid);
 
 /**
-    Create a record
-    @description This will create a record using the given database tableName to supply the record schema. Use
-        #ediCreateBareRec to create a free-standing record without requiring a database.
+    Create a new record based on the table's schema.
+    @description This will create an empty record using the given database tableName to supply the record schema. It will
+        not be saved to the database as the field values have not been assigned. Set field values using #ediSetField and
+        #ediSetFields and then save to the database using #ediUpdateRec.
+        Create a record based on the table's schema. Not saved to the database.
+        Use #ediCreateBareRec to create a free-standing record without requiring a database.
         The record is allocated and room is reserved to store record values. No record field values are stored.
     @param edi Database handle
     @param tableName Database table name
@@ -375,14 +389,26 @@ PUBLIC int ediDelete(Edi *edi, cchar *path);
 
 /**
     Display the grid to the debug log
+    @description Used for debugging only.
+    @param message Prefix message to output
     @param grid EDI grid
     @ingroup Edi
     @stability Prototype
  */
-PUBLIC void espDumpGrid(EdiGrid *grid);
+PUBLIC void ediDumpGrid(cchar *message, EdiGrid *grid);
 
 /**
-    Get a list of column names.
+    Display a record to the debug log
+    @description Used for debugging only.
+    @param message Prefix message to output
+    @param rec Record to log
+    @ingroup Edi
+    @stability Prototype
+ */
+PUBLIC void ediDumpRec(cchar *message, EdiRec *rec);
+
+/**
+    Get a list of database column names.
     @param edi Database handle
     @param tableName Database table name
     @return An MprList of column names in the given table.
@@ -400,7 +426,7 @@ PUBLIC MprList *ediGetColumns(Edi *edi, cchar *tableName);
         EDI_TYPE_BINARY, EDI_TYPE_BOOL, EDI_TYPE_DATE, EDI_TYPE_FLOAT, EDI_TYPE_INT, EDI_TYPE_STRING, EDI_TYPE_TEXT.
         Set to null if this data is not required.
     @param flags Output parameter to receive the column control flags. Will be set to one or more of:
-            EDI_AUTO_INC, EDI_KEY and/or EDI_INDEX 
+            EDI_AUTO_INC, EDI_KEY and/or EDI_INDEX
         Set to null if this data is not required.
     @param cid Output parameter to receive the ordinal column index in the database table.
         Set to null if this data is not required.
@@ -476,8 +502,8 @@ PUBLIC MprList *ediGetTables(Edi *edi);
 /**
     Convert an EDI database grid into a JSON string.
     @param grid EDI grid
-    @param flags Reserved. Set to zero.
-    @return JSON string 
+    @param flags Reserved. Set to MPR_JSON_PRETTY for a prettier format.
+    @return JSON string
     @ingroup Edi
     @stability Prototype
   */
@@ -551,12 +577,11 @@ PUBLIC Edi *ediOpen(cchar *source, cchar *provider, int flags);
 PUBLIC Edi *ediClone(Edi *edi);
 
 /**
-    Run a query.
+    Run a database query query.
     @description This runs a provider dependant query. For the SDB SQLite provider, this runs an SQL statement.
-    The "mdb" provider does not implement this API. To do queries using the "mdb" provider, use:
-        #ediReadRec, #ediReadRecWhere, #ediReadWhere, #ediReadField and #ediReadTable.
-    The query may contain positional parameters via argc/argv or via a va_list. These are recommended to mitigate
-    SQL injection risk.
+        The "mdb" provider does not implement this API. To do queries using the "mdb" provider, use:
+        #ediFindRec, #ediFindGrid and #ediReadField.
+        The query may contain positional parameters via argc/argv or via a va_list. These are recommended to mitigate SQL injection risk.
     @param edi Database handle
     @param cmd Query command to execute.
     @param argc Number of query parameters in argv
@@ -573,7 +598,7 @@ PUBLIC EdiGrid *ediQuery(Edi *edi, cchar *cmd, int argc, cchar **argv, va_list v
     @description This reads a field from the database and formats the result using an optional format string.
         If the field has a null or empty value, the supplied defaultValue will be returned.
     @param edi Database handle
-    @param fmt Reserved. Set to NULL.
+    @param fmt Reserved and not yet implemented. Set to NULL.
     @param tableName Database table name
     @param key Row key column value to read.
     @param fieldName Column name to read
@@ -598,47 +623,48 @@ PUBLIC cchar *ediReadFieldValue(Edi *edi, cchar *fmt, cchar *tableName, cchar *k
 PUBLIC EdiField ediReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName);
 
 /**
+    Read matching records in a table
+    @description This runs a SQL like query on the database and returns matching records in a grid. The query selects
+        the rows that have matching fields.
+    @param edi Database handle
+    @param tableName Database table name
+    @param query SQL like query expression. This arg is a printf style format string. When expanded, this will contain
+        a SQL style query expression of the form: "Field Op Value AND field OP value ... LIMIT offset, limit".
+        All fields may be matched by using the pseudo column name "*". Where OP is "==", "!=", "<", ">", "<=", ">=" or "><".
+    @return A grid containing all matching records. Returns NULL if no matching records.
+    @ingroup Edi
+    @stability Evolving
+ */
+PUBLIC EdiGrid *ediFindGrid(Edi *edi, cchar *tableName, cchar *query);
+
+/**
     Read one record.
     @description This runs a simple query on the database and selects the first matching record. The query selects
         a row that has a "field" that matches the given "value".
     @param edi Database handle
     @param tableName Database table name
-    @param fieldName Database field name to evaluate
-    @param operation Comparision operation. Set to "==", "!=", "<", ">", "<=" or ">=".
-    @param value Data value to compare with the field values.
+    @param query SQL like query expression. This arg is a printf style format string. When expanded, this will contain
+        a SQL style query expression of the form: "Field Op Value AND field OP value ... LIMIT offset, limit".
+        All fields may be matched by using the pseudo column name "*". Where OP is "==", "!=", "<", ">", "<=", ">=" or "><".
     @return First matching record. Returns NULL if no matching records.
     @ingroup Edi
-    @stability Evolving
+    @stability Deprecated
  */
-PUBLIC EdiRec *ediReadRecWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value);
+PUBLIC EdiRec *ediFindRec(Edi *edi, cchar *tableName, cchar *query);
 
 /**
     Read a record.
     @description Read a record from the given table as identified by the key value.
     @param edi Database handle
     @param tableName Database table name
-    @param key Key value of the record to read 
+    @param key Key value of the record to read
     @return Record instance of EdiRec.
     @ingroup Edi
     @stability Evolving
  */
 PUBLIC EdiRec *ediReadRec(Edi *edi, cchar *tableName, cchar *key);
 
-/**
-    Read matching records.
-    @description This runs a simple query on the database and returns matching records in a grid. The query selects
-        all rows that have a "field" that matches the given "value".
-    @param edi Database handle
-    @param tableName Database table name
-    @param fieldName Database field name to evaluate
-    @param operation Comparision operation. Set to "==", "!=", "<", ">", "<=" or ">=".
-    @param value Data value to compare with the field values.
-    @return A grid containing all matching records. Returns NULL if no matching records.
-    @ingroup Edi
-    @stability Evolving
- */
-PUBLIC EdiGrid *ediReadWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value);
-
+#if DEPRECATED || 1
 /**
     Read a table.
     @description This reads all the records in a table and returns a grid containing the results.
@@ -646,15 +672,48 @@ PUBLIC EdiGrid *ediReadWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar
     @param tableName Database table name
     @return A grid containing all records in the table. Returns NULL if no matching records.
     @ingroup Edi
-    @stability Evolving
+    @stability Deprecated
  */
-PUBLIC EdiGrid *ediReadTable(Edi *edi, cchar *tableName);
+PUBLIC EdiGrid *ediReadTable(Edi *edi, cchar *tableName) ME_DEPRECATED("Use ediFindGrid instead");
+
+/**
+    Read one record.
+    @description This runs a simple query on the database and selects the first matching record. The query selects
+        a row that has a "field" that matches the given "value".
+        This API is deprecated, use ediFindGrid instead.
+    @param edi Database handle
+    @param tableName Database table name
+    @param fieldName Database field name to evaluate
+    @param operation Comparision operation. Set to "==", "!=", "<", ">", "<=" or ">=".
+    @param value Data value to compare with the field values.
+    @return First matching record. Returns NULL if no matching records.
+    @ingroup Edi
+    @stability Deprecated
+ */
+PUBLIC EdiRec *ediFindRecWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value) ME_DEPRECATED("Use ediFindGrid instead");
+
+/**
+    Read matching records.
+    @description This runs a simple query on the database and returns matching records in a grid. The query selects
+        all rows that have a "field" that matches the given "value".
+        This API is deprecated, use ediFindGrid instead.
+    @param edi Database handle
+    @param tableName Database table name
+    @param fieldName Database field name to evaluate
+    @param operation Comparision operation. Set to "==", "!=", "<", ">", "<=" or ">=".
+    @param value Data value to compare with the field values.
+    @return A grid containing all matching records. Returns NULL if no matching records.
+    @ingroup Edi
+    @stability Deprecated
+ */
+PUBLIC EdiGrid *ediReadWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value) ME_DEPRECATED("Use ediFindRec instead");
+#endif
 
 /**
     Convert an EDI database record into a JSON string.
     @param rec EDI record
     @param flags Reserved. Set to zero.
-    @return JSON string 
+    @return JSON string
     @ingroup Edi
     @stability Prototype
   */
@@ -682,11 +741,26 @@ PUBLIC int edRemoveColumn(Edi *edi, cchar *tableName, cchar *columnName);
  */
 PUBLIC int ediRemoveIndex(Edi *edi, cchar *tableName, cchar *indexName);
 
+#if KEEP
 /**
-    Delete a row in a database table
+    Delete a row in a database table identified by the query expression
     @param edi Database handle
     @param tableName Database table name
-    @param key Row key column value to delete.
+    @param query SQL like query expression. This arg is a printf style format string. When expanded, this will contain
+        a SQL style query expression of the form: "Field Op Value AND field OP value ... LIMIT offset, limit".
+        All fields may be matched by using the pseudo column name "*". Where OP is "==", "!=", "<", ">", "<=", ">=" or "><".
+    @return Zero if successful. Otherwise a negative MPR error code.
+    @ingroup Edi
+    @stability Evolving
+ */
+PUBLIC int ediRemoveRec(Edi *edi, cchar *tableName, cchar *query);
+#endif
+
+/**
+    Delete a row in a database table identified by a key value
+    @param edi Database handle
+    @param tableName Database table name
+    @param key Key column value to delete.
     @return Zero if successful. Otherwise a negative MPR error code.
     @ingroup Edi
     @stability Evolving
@@ -715,7 +789,7 @@ PUBLIC int ediRemoveTable(Edi *edi, cchar *tableName);
 PUBLIC int ediRenameTable(Edi *edi, cchar *tableName, cchar *newTableName);
 
 /**
-    Rename a column. 
+    Rename a column.
     @param edi Database handle
     @param tableName Database table name
     @param columnName Database column name
@@ -752,13 +826,26 @@ PUBLIC int ediSave(Edi *edi);
 PUBLIC EdiRec *ediSetField(EdiRec *rec, cchar *fieldName, cchar *value);
 
 /**
-    Set record fields without writing to the database.
-    @description This routine updates the record object with the given values. The "data' argument supplies 
-        a hash of fieldNames and values. The data hash may come from the request params() or it can be manually
-        created via #ediMakeHash to convert a JSON string into an options hash.
-        For example: ediSetFields(rec, mprParseJson("{ name: '%s', address: '%s' }", name, address))
-        The record will not be written
+    Set a record field using a format string.
+    @description This routine updates the record object with the given value. The record will not be written
         to the database. To write to the database, use #ediUpdateRec.
+    @param rec Record to update
+    @param fieldName Record field name to update
+    @param fmt Format string
+    @param ... Variable arguments for the format string
+    @return The record instance if successful, otherwise NULL.
+    @ingroup Edi
+    @stability Evolving
+ */
+PUBLIC EdiRec *ediSetFieldFmt(EdiRec *rec, cchar *fieldName, cchar *fmt, ...);
+
+/**
+    Set record fields without writing to the database.
+    @description This routine updates the record object with the given values. The "data' argument supplies
+        the fieldNames and values. The data may come from the request params() or it can be manually
+        created via #ediMakeJson.
+        For example: ediSetFields(rec, mprParseJson("{ name: '%s', address: '%s' }", name, address))
+        The record will not be written to the database. To write to the database, use #ediUpdateRec.
     @param rec Record to update
     @param data Json object of field to use for the update
     @return The record instance if successful, otherwise NULL.
@@ -787,7 +874,7 @@ PUBLIC void ediSetPrivate(Edi *edi, bool on);
 
 /**
     Write a value to a database table field
-    @description Update the value of a table field in the selected table row. Note: field validations are not run.
+    @description Update the value of a table field in the selected table row. Note: field validations are not run MOB.
     @param edi Database handle
     @param tableName Database table name
     @param key Key value for the table row to update.
@@ -798,6 +885,21 @@ PUBLIC void ediSetPrivate(Edi *edi, bool on);
     @stability Evolving
  */
 PUBLIC int ediUpdateField(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName, cchar *value);
+
+/**
+    Write a formatted value to a database table field.
+    @description Update the value of a table field in the selected table row. Note: field validations are not run.
+    @param edi Database handle
+    @param tableName Database table name
+    @param key Key value for the table row to update.
+    @param fieldName Column name to update
+    @param fmt Value format string
+    @param ... Variable arguments for the format string
+    @return Zero if successful. Otherwise a negative MPR error code.
+    @ingroup Edi
+    @stability Evolving
+ */
+PUBLIC int ediUpdateFieldFmt(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName, cchar *fmt, ...);
 
 /**
     Write a record to the database.
@@ -814,7 +916,7 @@ PUBLIC int ediUpdateRec(Edi *edi, EdiRec *rec);
 /**
     Validate a record.
     @description Run defined field validations and return true if the record validates. Field validations are defined
-        via #ediAddValidation calls. If any validations fail, error messages will be added to the record and can be 
+        via #ediAddValidation calls. If any validations fail, error messages will be added to the record and can be
         retrieved via #ediGetRecErrors.
     @param rec Record to validate
     @return True if all field valiations pass.
@@ -837,8 +939,10 @@ PUBLIC bool ediValidateRec(EdiRec *rec);
 PUBLIC EdiGrid *ediCreateBareGrid(Edi *edi, cchar *tableName, int nrows);
 
 /**
-    Create a bare record.
-    @description This creates an empty record based on the given table's schema.
+    Create a bare, free-standing record.
+    @description This creates an empty record based. The tableName and number of fields are defined
+        in the record, but otherwise, the record's fields are uninitialized. This API is a low level API
+        used internally by ESP and EDI.
     @param edi Database handle
     @param tableName Database table name
     @param nfields Number of fields to reserve in the record
@@ -851,7 +955,7 @@ PUBLIC EdiRec *ediCreateBareRec(Edi *edi, cchar *tableName, int nfields);
 /**
     Filter the fields of a grid
     @param grid Grid to modify and filter
-    @param fields Space separated list of record field names 
+    @param fields Space separated list of record field names
     @param include Set to true to interpret the names as fields to include. If false, interpret the names
         as fields to reject.
     @return The filtered grid. Same reference as the input grid.
@@ -863,7 +967,7 @@ PUBLIC EdiGrid *ediFilterGridFields(EdiGrid *grid, cchar *fields, int include);
 /**
     Filter the fields of a record
     @param rec Record to modify and filter
-    @param fields Space separated list of record field names 
+    @param fields Space separated list of record field names
     @param include Set to true to interpret the names as fields to include. If false, interpret the names
         as fields to reject.
     @return The filtered record. Same reference as the input record.
@@ -893,7 +997,7 @@ PUBLIC cchar *ediFormatField(cchar *fmt, EdiField *fp);
 PUBLIC EdiField *ediGetField(EdiRec *rec, cchar *fieldName);
 
 /**
-    Get a field value 
+    Get a field value
     @param rec Database record
     @param fieldName Field in the record to extract
     @return A field value as a string. Returns ZZ
@@ -906,8 +1010,8 @@ PUBLIC cchar *ediGetFieldValue(EdiRec *rec, cchar *fieldName);
     Get the data type of a record field.
     @param rec Record to examine
     @param fieldName Field to examine
-    @return The field type. Returns one of: EDI_TYPE_BINARY, EDI_TYPE_BOOL, EDI_TYPE_DATE, EDI_TYPE_FLOAT, 
-        EDI_TYPE_INT, EDI_TYPE_STRING, EDI_TYPE_TEXT. 
+    @return The field type. Returns one of: EDI_TYPE_BINARY, EDI_TYPE_BOOL, EDI_TYPE_DATE, EDI_TYPE_FLOAT,
+        EDI_TYPE_INT, EDI_TYPE_STRING, EDI_TYPE_TEXT.
     @ingroup Edi
     @stability Evolving
  */
@@ -942,24 +1046,12 @@ PUBLIC MprHash *ediGetRecErrors(EdiRec *rec);
 /**
     Convert an EDI type to a string.
     @param type Column data type. Set to one of EDI_TYPE_BINARY, EDI_TYPE_BOOL, EDI_TYPE_DATE
-        EDI_TYPE_FLOAT, EDI_TYPE_INT, EDI_TYPE_STRING, EDI_TYPE_TEXT 
+        EDI_TYPE_FLOAT, EDI_TYPE_INT, EDI_TYPE_STRING, EDI_TYPE_TEXT
     @return Type string. This will be set to one of: "binary", "bool", "date", "float", "int", "string" or "text".
     @ingroup Edi
     @stability Evolving
  */
 PUBLIC char *ediGetTypeString(int type);
-
-/**
-    Make a hash container of property values.
-    @description This routine formats the given arguments, parses the result as a JSON string and returns an 
-        equivalent hash of property values. 
-    @param fmt Printf style format string
-    @param ... arguments
-    @return MprHash instance
-    @ingroup Edi
-    @stability Evolving
- */
-PUBLIC MprHash *ediMakeHash(cchar *fmt, ...);
 
 /**
     Make a JSON container of property values.
@@ -989,6 +1081,18 @@ grid = ediMakeGrid("[ \\ \n
 PUBLIC EdiGrid *ediMakeGrid(cchar *content);
 
 /**
+    Make a record from a JSON fields object.
+    @description This call makes a free-standing data record based on the JSON fields.
+    @param tableName Name of the database table to initialize in the record.
+    @param fields JSON object.
+    @return An EdiRec instance
+    @ingroup Edi
+    @stability Prototype
+    @see ediMakeRec ediMakeGrid
+ */
+PUBLIC EdiRec *ediMakeRecFromJson(cchar *tableName, MprJson *fields);
+
+/**
     Make a record.
     @description This call makes a free-standing data record based on the JSON format content string.
     @param content JSON format content string. The content should be a set of property names and values.
@@ -1012,7 +1116,7 @@ PUBLIC void ediManageEdiRec(EdiRec *rec, int flags);
 /**
     Parse an EDI type string.
     @param type Type string set to one of: "binary", "bool", "date", "float", "int", "string" or "text".
-    @return Type code. Set to one of EDI_TYPE_BINARY, EDI_TYPE_BOOL, EDI_TYPE_DATE, EDI_TYPE_FLOAT, EDI_TYPE_INT, 
+    @return Type code. Set to one of EDI_TYPE_BINARY, EDI_TYPE_BOOL, EDI_TYPE_DATE, EDI_TYPE_FLOAT, EDI_TYPE_INT,
         EDI_TYPE_STRING, EDI_TYPE_TEXT.
     @ingroup Edi
     @stability Evolving
@@ -1035,11 +1139,11 @@ PUBLIC EdiGrid *ediPivotGrid(EdiGrid *grid, int flags);
 PUBLIC EdiGrid *ediSortGrid(EdiGrid *grid, cchar *sortColumn, int sortOrder);
 
 #if ME_COM_MDB
-PUBLIC void mdbInit();
+PUBLIC void mdbInit(void);
 #endif
 
 #if ME_COM_SQLITE
-PUBLIC void sdbInit();
+PUBLIC void sdbInit(void);
 #endif
 
 #ifdef __cplusplus
@@ -1190,11 +1294,14 @@ extern "C" {
 
 /********************************** Tunables **********************************/
 
+#ifndef ME_ESP_ABBREV
+    #define ME_ESP_ABBREV 1                             /**< Enable the ESP Abbreviated API */
+#endif
 #ifndef ME_ESP_EMAIL_TIMEOUT
-    #define ME_ESP_EMAIL_TIMEOUT (60 * 1000)           /**< Timeout for sending email */
+    #define ME_ESP_EMAIL_TIMEOUT (60 * 1000)            /**< Timeout for sending email */
 #endif
 #ifndef ME_ESP_RELOAD_TIMEOUT
-    #define ME_ESP_RELOAD_TIMEOUT (5 * 1000)           /**< Timeout for reloading esp modules */
+    #define ME_ESP_RELOAD_TIMEOUT (5 * 1000)            /**< Timeout for reloading esp modules */
 #endif
 #define ESP_TOK_INCR        1024                        /**< Growth increment for ESP tokens */
 #define ESP_LISTEN          "4000"                      /**< Default listening endpoint for the esp program */
@@ -1219,12 +1326,18 @@ extern "C" {
 #endif
 
 /********************************** Defines ***********************************/
+/*
+    Forward declare the EspAction
+ */
+struct EspAction;
+
 /**
     Procedure callback
     @ingroup Esp
-    @stability Stable
+    @stability Evolving
  */
-typedef void (*EspProc)(HttpConn *conn);
+typedef void (*EspLegacyProc)(HttpStream *stream);
+typedef void (*EspProc)(HttpStream *stream, struct EspAction *action);
 
 #define ESP_CONTENT_MARKER  "${_ESP_CONTENT_MARKER_}"       /* Layout content marker */
 
@@ -1334,7 +1447,7 @@ PUBLIC void espInitHtmlOptions(Esp *esp);
     Initialize the ESP configuration file parser
     @internal
  */
-PUBLIC int espInitParser();
+PUBLIC int espInitParser(void);
 
 /********************************** EspRoutes *********************************/
 /**
@@ -1365,26 +1478,27 @@ typedef struct EspRoute {
     uint            combine: 1;             /**< Combine C source into a single file */
     uint            compileMode: 1;         /**< Compile the application debug or release mode */
     uint            compile: 1;             /**< Enable recompiling the application or esp page */
-    uint            update: 1;              /**< Enable dynamically updating the application */
+    uint            encodeTypes: 1;         /**< Encode data types in JSON API request/response */
     uint            keep: 1;                /**< Keep intermediate source code after compiling */
+    uint            update: 1;              /**< Enable dynamically updating the application */
 
     Edi             *edi;                   /**< Default database for this route */
 
-#if DEPRECATED || 1
+#if DEPRECATED && REMOVE
     cchar           *combineScript;         /**< Combine mode script filename */
     cchar           *combineSheet;          /**< Combine mode stylesheet filename */
 #endif
 } EspRoute;
 
-#if DEPRECATED || 1
+#if DEPRECATED && REMOVE
 /**
     Add the specified pak to the pak.json packs list.
     @param route HttpRoute defining the ESP application
-    @param name Desired pak name. For example: "angular-mvc"
+    @param name Desired pak name. For example: "vue-mvc"
     @param version Pack version string.
     @returns Zero if successful, otherwise a negative MPR error code.
     @ingroup EspRoute
-    @stability Prototype
+    @stability Deprecated
  */
 PUBLIC void espAddPak(HttpRoute *route, cchar *name, cchar *version);
 #endif
@@ -1410,7 +1524,7 @@ PUBLIC void espAddHomeRoute(HttpRoute *route);
         <tr><td>home</td><td>GET,POST,PUT</td><td>^/$</td><td>index.esp</td></tr>
     </table>
     @param route Parent route from which to inherit configuration.
-    @param set Route set to select. Use "angular-mvc", or "html-mvc".
+    @param set Route set to select. Use "vue-mvc", or "html-mvc".
     @ingroup EspRoute
     @stability Stable
  */
@@ -1429,8 +1543,8 @@ PUBLIC void espAddRouteSet(HttpRoute *route, cchar *set);
 PUBLIC int espInit(HttpRoute *route, cchar *prefix, cchar *path);
 
 /**
-    Configure an ESP application
-    @description Load the esp.json and pak.json configuration files.
+    Load configuration for an ESP application
+    @description Load the application's esp.json and pak.json configuration files.
     @param route Parent route from which to inherit configuration.
     @returns Zero if successful, otherwise a negative MPR error code.
     @ingroup EspRoute
@@ -1446,7 +1560,6 @@ PUBLIC int espLoadConfig(HttpRoute *route);
     @returns The EspRoute object.
     @ingroup EspRoute
     @stability Prototype
-    @param route
  */
 PUBLIC EspRoute *espRoute(HttpRoute *route, bool create);
 
@@ -1555,17 +1668,6 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
     EspState *state, char **err);
 
 /**
-    Define an action
-    @description Actions are C procedures that are invoked when specific URIs are routed to the controller/action pair.
-    @param route HttpRoute object
-    @param targetKey Target key used to select the action in a HttpRoute target. This is typically a URI prefix.
-    @param actionProc EspProc callback procedure to invoke when the action is requested.
-    @ingroup EspRoute
-    @stability Stable
- */
-PUBLIC void espDefineAction(HttpRoute *route, cchar *targetKey, void *actionProc);
-
-/**
     Define an action for a URI pattern.
     @description This creates a new route and binds the action function to a URI pattern.
     @param route Parent route object from which to inherit settings when creating the new route.
@@ -1577,6 +1679,17 @@ PUBLIC void espDefineAction(HttpRoute *route, cchar *targetKey, void *actionProc
 PUBLIC int espBindProc(HttpRoute *route, cchar *pattern, void *actionProc);
 
 /**
+    Define a common controller function to invoke before invoking for all controller actions.
+    @description A base controller function can be defined that will be called before calling any controller action. This emulates a super class constructor.
+    @param route HttpRoute object
+    @param baseProc Function to call just prior to invoking a controller action.
+    @ingroup EspRoute
+    @stability Evolving
+ */
+PUBLIC void espController(HttpRoute *route, EspProc baseProc);
+
+
+/**
     Create an EspRoute object
     @param route HttpRoute to associate with
     @return EspRoute object
@@ -1585,16 +1698,19 @@ PUBLIC int espBindProc(HttpRoute *route, cchar *pattern, void *actionProc);
  */
 PUBLIC EspRoute *espCreateRoute(HttpRoute *route);
 
+#if DEPRECATE || 1
 /**
-    Define a base function to invoke for all controller actions.
-    @description A base function can be defined that will be called before calling any controller action. This
+    Define a base controller function to invoke for all controller actions.
+    @description A base controller function can be defined that will be called before calling any controller action. This
         emulates a super class constructor.
     @param route HttpRoute object
     @param baseProc Function to call just prior to invoking a controller action.
     @ingroup EspRoute
-    @stability Stable
+    @stability Deprecated
  */
-PUBLIC void espDefineBase(HttpRoute *route, EspProc baseProc);
+PUBLIC void espDefineBase(HttpRoute *route, EspLegacyProc baseProc) ME_DEPRECATED("Use espDefineCommon instead");
+#endif
+
 
 /**
     Define a view
@@ -1628,7 +1744,7 @@ PUBLIC void espDefineView(HttpRoute *route, cchar *path, void *viewProc);
             <li>VS - Path to Visual Studio</li>
         </ul>
     @param route HttpRoute object
-    @param command Http connection object
+    @param command Command to run
     @param source ESP web page source pathname
     @param module Output module pathname
     @return An expanded command line
@@ -1649,15 +1765,15 @@ PUBLIC char *espExpandCommand(HttpRoute *route, cchar *command, cchar *source, c
  */
 PUBLIC cchar *espGetConfig(HttpRoute *route, cchar *key, cchar *defaultValue);
 
-#if DEPRECATED || 1
+#if DEPRECATED && REMOVE
 /**
     Test if the ESP application includes the specified pak
     @description This tests the dependencies property specified pak.
     @param route HttpRoute defining the ESP application
-    @param name Desired pak name. For example: "angular-mvc"
+    @param name Desired pak name. For example: "vue-mvc"
     @returns True if the specified pak is supported
     @ingroup EspRoute
-    @stability Prototype
+    @stability Deprecated
  */
 PUBLIC bool espHasPak(HttpRoute *route, cchar *name);
 #endif
@@ -1671,14 +1787,14 @@ PUBLIC bool espHasPak(HttpRoute *route, cchar *name);
  */
 PUBLIC int espLoadCompilerRules(HttpRoute *route);
 
-#if DEPRECATED || 1
+#if DEPRECATED && REMOVE
 /**
     Save the in-memory ESP pak.json configuration to the default location for the ESP application
     defined by the specified route.
     @param route HttpRoute defining the ESP application
     @returns Zero if successful, otherwise a negative MPR error code.
     @ingroup EspRoute
-    @stability Evolving
+    @stability Deprecated
  */
 PUBLIC int espSaveConfig(HttpRoute *route);
 #endif
@@ -1697,13 +1813,13 @@ PUBLIC int espSetConfig(HttpRoute *route, cchar *key, cchar *value);
 
 /**
     Set a private data reference for the current request
-    @param conn HttpConn object
+    @param stream HttpStream object
     @param data Data object to associate with the current request. This must be a managed reference.
     @return Reference to private data
     @ingroup Esp
     @stability prototype
  */
-PUBLIC void espSetData(HttpConn *conn, void *data);
+PUBLIC void espSetData(HttpStream *stream, void *data);
 
 /**
     Test if a configuration property from the ESP pak.json has a desired value.
@@ -1719,30 +1835,22 @@ PUBLIC bool espTestConfig(HttpRoute *route, cchar *key, cchar *desired);
 /*
     Internal
  */
-PUBLIC cchar *espGetVisualStudio();
+PUBLIC cchar *espGetVisualStudio(void);
 PUBLIC void espManageEspRoute(EspRoute *eroute, int flags);
 PUBLIC bool espModuleIsStale(HttpRoute *route, cchar *source, cchar *module, int *recompile);
 PUBLIC int espOpenDatabase(HttpRoute *route, cchar *spec);
+PUBLIC void espCloseDatabase(HttpRoute *route);
+PUBLIC int espReloadDatabase(HttpRoute *route);
 PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app);
 
 /********************************** Requests **********************************/
 /**
     View procedure callback.
-    @param conn Http connection object
+    @param stream Http stream object
     @ingroup EspReq
     @stability Stable
  */
-typedef void (*EspViewProc)(HttpConn *conn);
-
-/**
-    ESP Action
-    @description Actions are run after a request URI is routed to a controller.
-    @ingroup EspReq
-    @stability Stable
- */
-typedef EspProc EspAction;
-
-PUBLIC void espManageAction(EspAction *ap, int flags);
+typedef void (*EspViewProc)(HttpStream *stream);
 
 /**
     ESP request structure
@@ -1755,7 +1863,7 @@ typedef struct EspReq {
     Esp             *esp;                   /**< Convenient esp reference */
     MprHash         *feedback;              /**< Feedback messages */
     MprHash         *lastFeedback;          /**< Feedback messages from the last request */
-    HttpNotifier    notifier;               /**< Connection Http state change notification callback */
+    HttpNotifier    notifier;               /**< Http state change notification callback */
     void            *data;                  /**< Custom data for request (managed) */
     void            *staticData;            /**< Custom data for request (unmanaged) */
     cchar           *commandLine;           /**< Command line for compile/link */
@@ -1768,7 +1876,7 @@ typedef struct EspReq {
 /**
     Add a header to the transmission using a format string.
     @description Add a header if it does not already exist.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param key Http response header key
     @param fmt Printf style formatted string to use as the header key value
     @param ... Arguments for fmt
@@ -1777,12 +1885,12 @@ typedef struct EspReq {
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espAddHeader(HttpConn *conn, cchar *key, cchar *fmt, ...);
+PUBLIC void espAddHeader(HttpStream *stream, cchar *key, cchar *fmt, ...);
 
 /**
     Add a header to the transmission.
     @description Add a header if it does not already exist.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param key Http response header key
     @param value Value to set for the header
     @return Zero if successful, otherwise a negative MPR error code. Returns MPR_ERR_ALREADY_EXISTS if the header already
@@ -1790,51 +1898,51 @@ PUBLIC void espAddHeader(HttpConn *conn, cchar *key, cchar *fmt, ...);
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espAddHeaderString(HttpConn *conn, cchar *key, cchar *value);
+PUBLIC void espAddHeaderString(HttpStream *stream, cchar *key, cchar *value);
 
 /**
     Add a request parameter value if it is not already defined.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param var Name of the request parameter to set
     @param value Value to set.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espAddParam(HttpConn *conn, cchar *var, cchar *value);
+PUBLIC void espAddParam(HttpStream *stream, cchar *var, cchar *value);
 
 /**
     Append a transmission header.
     @description Set the header if it does not already exist. Append with a ", " separator if the header already exists.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param key Http response header key
     @param fmt Printf style formatted string to use as the header key value
     @param ... Arguments for fmt
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espAppendHeader(HttpConn *conn, cchar *key, cchar *fmt, ...);
+PUBLIC void espAppendHeader(HttpStream *stream, cchar *key, cchar *fmt, ...);
 
 /**
     Append a transmission header string.
     @description Set the header if it does not already exist. Append with a ", " separator if the header already exists.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param key Http response header key
     @param value Value to set for the header
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espAppendHeaderString(HttpConn *conn, cchar *key, cchar *value);
+PUBLIC void espAppendHeaderString(HttpStream *stream, cchar *key, cchar *value);
 
 /**
     Auto-finalize transmission of the http request.
     @description If auto-finalization is enabled via #espSetAutoFinalizing, this call will finalize writing Http response
     data by writing the final chunk trailer if required. If using chunked transfers, a null chunk trailer is required
     to signify the end of write data.  If the request is already finalized, this call does nothing.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espAutoFinalize(HttpConn *conn);
+PUBLIC void espAutoFinalize(HttpStream *stream);
 
 /**
     Create a session state object.
@@ -1842,26 +1950,26 @@ PUBLIC void espAutoFinalize(HttpConn *conn);
     If a session has not already been created, this call will create a new session.
     It will create a response cookie containing a session ID that will be sent to the client
     with the response. Note: Objects are stored in the session state using JSON serialization.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return Session ID string
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC cchar *espCreateSession(HttpConn *conn);
+PUBLIC cchar *espCreateSession(HttpStream *stream);
 
 /**
     Destroy a session state object.
     @description This will destroy the server-side session state and
         emit an expired cookie to the client to force it to erase the session cookie.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espDestroySession(HttpConn *conn);
+PUBLIC void espDestroySession(HttpStream *stream);
 
 /**
     Send mail using sendmail
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param to Message recipient
     @param from Message sender
     @param subject Message subject
@@ -1872,7 +1980,7 @@ PUBLIC void espDestroySession(HttpConn *conn);
     @return Zero if the email is successfully sent.
     @stability Evolving
  */
-PUBLIC int espEmail(HttpConn *conn, cchar *to, cchar *from, cchar *subject, MprTime date, cchar *mime,
+PUBLIC int espEmail(HttpStream *stream, cchar *to, cchar *from, cchar *subject, MprTime date, cchar *mime,
     cchar *message, MprList *files);
 
 /**
@@ -1887,89 +1995,90 @@ PUBLIC int espEmail(HttpConn *conn, cchar *to, cchar *from, cchar *subject, MprT
         means the application has fully processed the request including reading all the input data it wishes to read
         and has generated all the output that will be generated. A fully finalized request has both HttpTx.finalized
         and HttpTx.finalizedConnector true.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espFinalize(HttpConn *conn);
+PUBLIC void espFinalize(HttpStream *stream);
 
 /**
     Flush transmit data.
-    @description This writes any buffered data.
-    @param conn HttpConn connection object
+    @description This writes any buffered data and initiates writing to the peer. This will not block.
+    @param stream HttpStream stream object
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espFlush(HttpConn *conn);
+PUBLIC void espFlush(HttpStream *stream);
 
 /**
     Get the current route HttpAuth object.
+    @param stream HttpStream stream object
     @return The HttpAuth object
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC HttpAuth *espGetAuth();
+PUBLIC HttpAuth *espGetAuth(HttpStream *stream);
 
 /**
-    Get the current request connection.
-    @return The HttpConn connection object
+    Get the current request stream.
+    @return The HttpStream stream object
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC HttpConn *espGetConn();
+PUBLIC HttpStream *espGetStream(void);
 
 /**
     Get the receive body content length.
     @description Get the length of the receive body content (if any). This is used in servers to get the length of posted
         data and, in clients, to get the response body length.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return A count of the response content data in bytes.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC MprOff espGetContentLength(HttpConn *conn);
+PUBLIC MprOff espGetContentLength(HttpStream *stream);
 
 /**
     Get the receive body content type.
     @description Get the content mime type of the receive body content (if any).
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return Mime type of any receive content. Set to NULL if not posted data.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC cchar *espGetContentType(HttpConn *conn);
+PUBLIC cchar *espGetContentType(HttpStream *stream);
 
 /**
     Get a request cookie.
     @description Get the cookie for the given name.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param name Cookie name to retrieve
     @return Return the cookie value
         Return null if the cookie is not defined.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC cchar *espGetCookie(HttpConn *conn, cchar *name);
+PUBLIC cchar *espGetCookie(HttpStream *stream, cchar *name);
 
 /**
     Get the request cookies.
     @description Get the cookies defined in the current request. This returns the HTTP cookies header with all
         cookies in one string.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return Return a string containing the cookies sent in the Http header of the last request
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC cchar *espGetCookies(HttpConn *conn);
+PUBLIC cchar *espGetCookies(HttpStream *stream);
 
 /**
     Get the private data reference for the current request set via #setData
-    @param conn HttpConn object
+    @param stream HttpStream object
     @return Reference to private data
     @ingroup EspReq
     @stability prototype
  */
-PUBLIC void *espGetData(HttpConn *conn);
+PUBLIC void *espGetData(HttpStream *stream);
 
 /**
     Get the current database instance.
@@ -1979,7 +2088,7 @@ PUBLIC void *espGetData(HttpConn *conn);
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC Edi *espGetDatabase(HttpConn *conn);
+PUBLIC Edi *espGetDatabase(HttpStream *stream);
 
 /**
     Get the current extended route information.
@@ -1987,156 +2096,172 @@ PUBLIC Edi *espGetDatabase(HttpConn *conn);
     @ingroup EspReq
     @stability Evolving
  */
-PUBLIC EspRoute *espGetEspRoute(HttpConn *conn);
+PUBLIC EspRoute *espGetEspRoute(HttpStream *stream);
 
 /**
     Get the default documents directory for the request route.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return A directory path name
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC cchar *espGetDocuments(HttpConn *conn);
+PUBLIC cchar *espGetDocuments(HttpStream *stream);
 
 /**
     Get a feedback message defined via #feedback
-    @param conn HttpConn object
+    @param stream HttpStream object
     @param type type of feedback message to retrieve. This may be set to any word, but the following feedback types
         are typically supported as per RFC 5424: "debug", "info", "notice", "warn", "error", "critical".
     @return Reference to the feedback message
     @ingroup EspReq
     @stability Evolving
  */
-PUBLIC cchar *espGetFeedback(HttpConn *conn, cchar *type);
+PUBLIC cchar *espGetFeedback(HttpStream *stream, cchar *type);
 
 /**
-    Get the current database grid.
+    Get the current database grid reference.
     @description The current grid is defined via #setGrid
     @return EdiGrid instance
     @ingroup EspReq
     @stability Deprecated
     @internal
  */
-PUBLIC EdiGrid *espGetGrid(HttpConn *conn);
+PUBLIC EdiGrid *espGetGrid(HttpStream *stream);
 
 /**
     Get an rx http header.
     @description Get a http response header for a given header key.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param key Name of the header to retrieve. This should be a lower case header name. For example: "Connection"
     @return Value associated with the header key or null if the key did not exist in the response.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC cchar *espGetHeader(HttpConn *conn, cchar *key);
+PUBLIC cchar *espGetHeader(HttpStream *stream, cchar *key);
 
 /**
     Get the hash table of rx Http headers.
     @description Get the internal hash table of rx headers
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return Hash table. See MprHash for how to access the hash table.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC MprHash *espGetHeaderHash(HttpConn *conn);
+PUBLIC MprHash *espGetHeaderHash(HttpStream *stream);
 
 /**
     Get all the request http headers.
     @description Get all the rx headers. The returned string formats all the headers in the form:
         key: value\\nkey2: value2\\n...
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return String containing all the headers. The caller must free this returned string.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC char *espGetHeaders(HttpConn *conn);
-
-/**
-    Get a request pararmeter as an integer.
-    @description Get the value of a named request parameter as an integer. Form variables are defined via
-        www-urlencoded query or post data contained in the request.
-    @param conn HttpConn connection object
-    @param var Name of the request parameter to retrieve
-    @param defaultValue Default value to return if the variable is not defined. Can be null.
-    @return Integer containing the request parameter's value
-    @ingroup EspReq
-    @stability Evolving
- */
-PUBLIC int espGetIntParam(HttpConn *conn, cchar *var, int defaultValue);
+PUBLIC char *espGetHeaders(HttpStream *stream);
 
 /**
     Get the HTTP method.
     @description This is a convenience API to return the Http method
-    @return The HttpConn.rx.method property
+    @return The HttpStream.rx.method property
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC cchar *espGetMethod(HttpConn *conn);
+PUBLIC cchar *espGetMethod(HttpStream *stream);
 
 /**
     Get a request parameter.
-    @description Get the value of a named request parameter. Form variables are defined via www-urlencoded query or post
-        data contained in the request.
-    @param conn HttpConn connection object
+    @description Get the value of a named request parameter. Request parameters are defined via www-urlencoded
+        query, post data contained in the request and route parameters. Route parameters are stored as JSON tree objects
+        and may contain nested properties.
+    @param stream HttpStream stream object
     @param var Name of the request parameter to retrieve
     @param defaultValue Default value to return if the variable is not defined. Can be null.
     @return String containing the request parameter's value. Caller should not free.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC cchar *espGetParam(HttpConn *conn, cchar *var, cchar *defaultValue);
+PUBLIC cchar *espGetParam(HttpStream *stream, cchar *var, cchar *defaultValue);
 
 /**
-    Get the request parameter hash table.
-    @description This call gets the params hash table for the current request.
-        Route tokens, request query data, and www-url encoded form data are all entered into the params table after decoding.
-        Use #mprLookupKey to retrieve data from the table.
-    @param conn HttpConn connection object
+    Get a request pararmeter as an integer.
+    @description Get the value of a named request parameter. Request parameters are defined via www-urlencoded
+        query, post data contained in the request and route parameters. Request parameters are stored as JSON tree objects
+        and may contain nested properties.
+    @param stream HttpStream stream object
+    @param var Name of the request parameter to retrieve
+    @param defaultValue Default value to return if the variable is not defined. Can be null.
+    @return Integer containing the request parameter's value
+    @ingroup EspReq
+    @stability Evolving
+ */
+PUBLIC int espGetIntParam(HttpStream *stream, cchar *var, int defaultValue);
+
+/**
+    Get a request pararmeter as a JSON object.
+    @description Get the value of a named request parameter. Request parameters are defined via www-urlencoded
+        query, post data contained in the request and route parameters. Request parameters are stored as JSON tree objects
+        and may contain nested properties.
+    @param stream HttpStream stream object
+    @param var Name of the request parameter to retrieve
+    @return JSON parameter object.
+    @ingroup EspReq
+    @stability Evolving
+ */
+PUBLIC MprJson *espGetParamObj(HttpStream *stream, cchar *var);
+
+/**
+    Get the request parameters.
+    @description This call gets the request parameters for the current request.
+    @description Request parameters are defined via www-urlencoded query, post data contained in the request and route parameters.
+        Request parameters are stored as JSON tree objects and may contain nested properties.
+    @param stream HttpStream stream object
     @return MprJson instance containing the request parameters
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC MprJson *espGetParams(HttpConn *conn);
+PUBLIC MprJson *espGetParams(HttpStream *stream);
 
 /**
     Get the request URI path string.
     @description This is a convenience API to return the request URI path. This is the request URI path after removing
         query parameters. It does not include the application route prefix.
-    @return The espGetConn()->rx->pathInfo
+    @return The espGetStream()->rx->pathInfo
     @ingroup EspReq
     @stability Evolving
  */
-PUBLIC cchar *espGetPath(HttpConn *conn);
+PUBLIC cchar *espGetPath(HttpStream *stream);
 
 /**
-    Get the request query string.
-    @description Get query string sent with the current request.
-    @param conn HttpConn connection object
+    Get the request URI query string.
+    @description Get URI query string sent with the current request.
+    @param stream HttpStream stream object
     @return String containing the request query string. Caller should not free.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC cchar *espGetQueryString(HttpConn *conn);
+PUBLIC cchar *espGetQueryString(HttpStream *stream);
 
 /**
     Get the referring URI.
     @description This returns the referring URI as described in the HTTP "referer" (yes the HTTP specification does
         spell it incorrectly) header. If this header is not defined, this routine will return the home URI as returned
         by uri("~").
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return String URI back to the referring URI. If no referrer is defined, refers to the home URI.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC char *espGetReferrer(HttpConn *conn);
+PUBLIC cchar *espGetReferrer(HttpStream *stream);
 
 /**
     Get the current route HttpRoute object.
+    @param stream HttpStream stream object
     @return The HttpRoute object
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC HttpRoute *espGetRoute();
+PUBLIC HttpRoute *espGetRoute(HttpStream *stream);
 
 /**
     Get the default database defined on a route.
@@ -2150,75 +2275,75 @@ PUBLIC Edi *espGetRouteDatabase(HttpRoute *route);
 /**
     Get a route variable
     @description Get the value of a request route variable.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param var Name of the request parameter to retrieve
     @return String containing the route variable value. Caller should not free.
     @ingroup EspReq
     @stability Evolving
  */
-PUBLIC cchar *espGetRouteVar(HttpConn *conn, cchar *var);
+PUBLIC cchar *espGetRouteVar(HttpStream *stream, cchar *var);
 
 /**
     Get the session state ID.
     @description This will get the session and return the session ID. This will create a new session state storage area if
         create is true and one does not already exist. This can be used to test if the session state exists for this
-        connection.
-    @param conn HttpConn connection object
+        stream.
+    @param stream HttpStream stream object
     @param create Set to true to create a new session if one does not already exist.
     @return The session state identifier string.
     @ingroup EspReq
     @stability Evolving
  */
-PUBLIC cchar *espGetSessionID(HttpConn *conn, int create);
+PUBLIC cchar *espGetSessionID(HttpStream *stream, int create);
 
 /**
     Get the response status.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return An integer Http response code. Typically 200 is success.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC int espGetStatus(HttpConn *conn);
+PUBLIC int espGetStatus(HttpStream *stream);
 
 /**
     Get the Http response status message.
     @description The HTTP status message is supplied on the first line of the HTTP response.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @returns A Http status message.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC char *espGetStatusMessage(HttpConn *conn);
+PUBLIC cchar *espGetStatusMessage(HttpStream *stream);
 
 /**
     Get the uploaded files.
     @description Get the list of uploaded files.
         This list entries are HttpUploadFile objects.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return A list of HttpUploadFile objects.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC MprList *espGetUploads(HttpConn *conn);
+PUBLIC MprList *espGetUploads(HttpStream *stream);
 
 /**
     Get the request URI string.
     @description This is a convenience API to return the request URI. This is the request URI after removing
         query parameters. It includes any application route prefix.
-    @return The espGetConn()->rx->uri
+    @return The espGetStream()->rx->uri
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC cchar *espGetUri(HttpConn *conn);
+PUBLIC cchar *espGetUri(HttpStream *stream);
 
 /**
-    Test if a current grid has been defined.
+    Test if a current grid has been defined via #espSetGrid.
     @return "True" if a current grid has been defined
     @ingroup EspReq
     @stability Deprecated
     @internal
  */
-PUBLIC bool espHasGrid(HttpConn *conn);
+PUBLIC bool espHasGrid(HttpStream *stream);
 
 /**
     Test if a current record has been defined and save to the database.
@@ -2229,192 +2354,203 @@ PUBLIC bool espHasGrid(HttpConn *conn);
     @stability Deprecated
     @internal
  */
-PUBLIC bool espHasRec(HttpConn *conn);
+PUBLIC bool espHasRec(HttpStream *stream);
 
 /**
-    Test if the connection is being made on behalf of the current, single authenticated user.
+    Test if the request is being made on behalf of the current, single authenticated user.
     @description Set esp.login.single to true to enable current session tracking.
     @return true if the
     @stability Evolving
     @ingroup EspReq
  */
-PUBLIC bool espIsCurrentSession(HttpConn *conn);
+PUBLIC bool espIsCurrentSession(HttpStream *stream);
+
+/**
+    Test if the user is authenticated
+    @param stream HttpStream stream object
+    @return True if the username and password have been authenticated.
+    @ingroup EspReq
+    @stability Prototype
+ */
+PUBLIC bool espIsAuthenticated(HttpStream *stream);
 
 /**
     Test if the receive input stream is at end-of-file.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return "True" if there is no more receive data to read
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC bool espIsEof(HttpConn *conn);
+PUBLIC bool espIsEof(HttpStream *stream);
 
 /**
-    Test if the connection is using SSL and is secure.
-    @param conn HttpConn connection object
-    @return "True" if the connection is using SSL.
+    Test if the stream is using SSL and is secure.
+    @param stream HttpStream stream object
+    @return "True" if the stream is using SSL.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC bool espIsSecure(HttpConn *conn);
+PUBLIC bool espIsSecure(HttpStream *stream);
 
 /**
     Test if the request has been finalized.
     @description This tests if #espFinalize or #httpFinalize has been called for a request.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return "True" if the request has been finalized.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC bool espIsFinalized(HttpConn *conn);
+PUBLIC bool espIsFinalized(HttpStream *stream);
 
 /**
     Match a request parameter with an expected value.
     @description Compare a request parameter and return "true" if it exists and its value matches.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param var Name of the request parameter
     @param value Expected value to match
     @return "True" if the value matches
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC bool espMatchParam(HttpConn *conn, cchar *var, cchar *value);
+PUBLIC bool espMatchParam(HttpStream *stream, cchar *var, cchar *value);
 
 /**
     Read receive body content.
         Use httpReadBlock for more options to read data.
     @description Read body content from the client. This call does not block.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param buf Buffer to accept content data
     @param size Size of the buffer
     @return A count of bytes read into the buffer
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC ssize espReceive(HttpConn *conn, char *buf, ssize size);
+PUBLIC ssize espReceive(HttpStream *stream, char *buf, ssize size);
 
 /**
     Redirect the client.
     @description Redirect the client to a new uri.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param status Http status code to send with the response
     @param target New target uri for the client
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espRedirect(HttpConn *conn, int status, cchar *target);
+PUBLIC void espRedirect(HttpStream *stream, int status, cchar *target);
 
 /**
     Redirect the client back to the referrer
     @description Redirect the client to the referring URI.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espRedirectBack(HttpConn *conn);
+PUBLIC void espRedirectBack(HttpStream *stream);
 
 /**
     Remove a cookie
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param name Cookie name
     @ingroup EspReq
     @stability Stable
 */
-PUBLIC void espRemoveCookie(HttpConn *conn, cchar *name);
+PUBLIC void espRemoveCookie(HttpStream *stream, cchar *name);
 
 /**
     Remove a header from the transmission
     @description Remove a header if present.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param key Http response header key
     @return Zero if successful, otherwise a negative MPR error code.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC int espRemoveHeader(HttpConn *conn, cchar *key);
+PUBLIC int espRemoveHeader(HttpStream *stream, cchar *key);
 
 /**
     Remove a session state variable
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param name Variable name to set
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espRemoveSessionVar(HttpConn *conn, cchar *name);
+PUBLIC void espRemoveSessionVar(HttpStream *stream, cchar *name);
 
 /**
     Render a formatted string.
     @description Render a formatted string of data into packets to the client. Data packets will be created
-        as required to store the write data. This call may block waiting for data to drain to the client.
-    @param conn HttpConn connection object
+        as required to store the write data. This call may block waiting for data to drain to the client and
+        may yield to the garbage collector.
+    @param stream HttpStream stream object
     @param fmt Printf style formatted string
     @param ... Arguments for fmt
     @return A count of the bytes actually written
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC ssize espRender(HttpConn *conn, cchar *fmt, ...);
+PUBLIC ssize espRender(HttpStream *stream, cchar *fmt, ...);
 
 /**
     Render the client configuration string in JSON
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return A count of the bytes actually written
     @ingroup EspReq
     @stability PRototype
  */
-PUBLIC ssize espRenderConfig(HttpConn *conn);
+PUBLIC ssize espRenderConfig(HttpStream *stream);
 
 /**
     Render a block of data to the client.
     @description Render a block of data to the client. Data packets will be created as required to store the write data.
-    @param conn HttpConn connection object
+    This call may block waiting for the client to absorb the data.
+    @param stream HttpStream stream object
     @param buf Buffer containing the write data
     @param size Size of the data in buf
     @return A count of the bytes actually written
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC ssize espRenderBlock(HttpConn *conn, cchar *buf, ssize size);
+PUBLIC ssize espRenderBlock(HttpStream *stream, cchar *buf, ssize size);
 
 /**
     Render cached content.
     @description Render the saved, cached response from a prior request to this URI. This is useful if the caching
         mode has been set to "manual".
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return A count of the bytes actually written
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC ssize espRenderCached(HttpConn *conn);
+PUBLIC ssize espRenderCached(HttpStream *stream);
 
 /**
     Render an ESP document
     @description If the document is an ESP page, it will be rendered as a view via #espRenderDocument.
-        Otherwise, it will be rendered using the fileHandler as a static document.
-    @param conn Http connection object
+        Otherwise, it will be rendered using the fileHandler as a static document. This routine may yield.
+    @param stream Http stream object
     @param path Relative pathname from route->documents to the document to render.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espRenderDocument(HttpConn *conn, cchar *path);
+PUBLIC void espRenderDocument(HttpStream *stream, cchar *path);
 
 /**
     Render an error message back to the client and finalize the request. The output is Html escaped for security.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param status Http status code
     @param fmt Printf style message format
     @return A count of the bytes actually written
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC ssize espRenderError(HttpConn *conn, int status, cchar *fmt, ...);
+PUBLIC ssize espRenderError(HttpStream *stream, int status, cchar *fmt, ...);
 
 /**
     Render feedback messages.
     @description Feedback messages for one-time messages that are sent to the client. For HTML clients, feedback
     messages use the session state store and persist for only one request. For smart/thick clients, feedback messages
     are sent as JSON responses via the espSendFeedback API. See #espSetFeedback for how to define feedback messages.
-    @param conn Http connection object
+    @param stream Http stream object
     @param types Types of feedback message to retrieve. Set to "*" to retrieve all types of feedback.
         This may be set to any word, but the following feedback types are typically supported as per
         RFC 5424: "debug", "info", "notice", "warn", "error", "critical".
@@ -2423,161 +2559,161 @@ PUBLIC ssize espRenderError(HttpConn *conn, int status, cchar *fmt, ...);
     @stability Deprecated
     @internal
  */
-PUBLIC ssize espRenderFeedback(HttpConn *conn, cchar *types);
+PUBLIC ssize espRenderFeedback(HttpStream *stream, cchar *types);
 
 /**
     Render the contents of a file back to the client.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param path File path name
     @return A count of the bytes actually written
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC ssize espRenderFile(HttpConn *conn, cchar *path);
+PUBLIC ssize espRenderFile(HttpStream *stream, cchar *path);
 
 /**
     Read a table from the current database
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param tableName Database table name
     @return An EDI grid containing data for the table.
     @ingroup EspReq
     @stability Evolving
   */
-PUBLIC EdiGrid *espReadTable(HttpConn *conn, cchar *tableName);
+PUBLIC EdiGrid *espReadTable(HttpStream *stream, cchar *tableName);
 
 /**
     Render a formatted string after HTML escaping
     @description Render a formatted string of data and then HTML escape. Data packets will be created
         as required to store the write data. This call may block waiting for data to drain to the client.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param fmt Printf style formatted string
     @param ... Arguments for fmt
     @return A count of the bytes actually written
     @ingroup EspReq
     @stability Stable
 */
-PUBLIC ssize espRenderSafe(HttpConn *conn, cchar *fmt, ...);
+PUBLIC ssize espRenderSafe(HttpStream *stream, cchar *fmt, ...);
 
 /**
     Render a safe string of data to the client.
     @description HTML escape a string and then write the string of data to the client.
         Data packets will be created as required to store the write data. This call may block waiting for the data to
         the client to drain.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param s String containing the data to write
     @return A count of the bytes actually written
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC ssize espRenderSafeString(HttpConn *conn, cchar *s);
+PUBLIC ssize espRenderSafeString(HttpStream *stream, cchar *s);
 
 /**
     Render a string of data to the client
     @description Render a string of data to the client. Data packets will be created
         as required to store the write data. This call may block waiting for data to drain to the client.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param s String containing the data to write
     @return A count of the bytes actually written
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC ssize espRenderString(HttpConn *conn, cchar *s);
+PUBLIC ssize espRenderString(HttpStream *stream, cchar *s);
 
 /**
     Render the value of a request variable to the client.
     If a request parameter is not found by the given name, consult the session store for a variable the same name.
     @description This writes the value of a request variable after HTML escaping its value.
-    @param conn HttpConn connection object
-    @param name Form variable name
+    @param stream HttpStream stream object
+    @param name Request parameter variable name
     @return A count of the bytes actually written
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC ssize espRenderVar(HttpConn *conn, cchar *name);
+PUBLIC ssize espRenderVar(HttpStream *stream, cchar *name);
 
 /**
     Render an ESP view page to the client
-    @param conn Http connection object
+    @param stream Http stream object
     @param view View name. The view name is interpreted relative to the matching route documents directory and may omit
-        an ESP extension.
+        an ESP extension. This routine may yield.
     @param flags Reserved. Set to zero.
     @return true if a vew can be rendered.
     @ingroup EspReq
     @stability Evolving
  */
-PUBLIC bool espRenderView(HttpConn *conn, cchar *view, int flags);
+PUBLIC bool espRenderView(HttpStream *stream, cchar *view, int flags);
 
 /**
     Send a database grid as a JSON string
     @description The JSON string is rendered as part of an enclosing "{ data: JSON }" wrapper.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param grid EDI grid
     @param flags Reserved. Set to zero.
     @return Number of bytes rendered
     @ingroup EspReq
     @stability Evolving
   */
-PUBLIC ssize espSendGrid(HttpConn *conn, EdiGrid *grid, int flags);
+PUBLIC ssize espSendGrid(HttpStream *stream, EdiGrid *grid, int flags);
 
 /**
     Send a database record as a JSON string
     @description The JSON string is rendered as part of an enclosing "{ data: JSON }" wrapper.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param rec EDI record
     @param flags Reserved. Set to zero.
     @return Number of bytes rendered
     @ingroup EspReq
     @stability Evolving
   */
-PUBLIC ssize espSendRec(HttpConn *conn, EdiRec *rec, int flags);
+PUBLIC ssize espSendRec(HttpStream *stream, EdiRec *rec, int flags);
 
 /**
     Send a JSON response result
     @description This renders a JSON response including the request success status, feedback message and field errors.
     The field errors apply to the current EDI record.
     The format of the response is:
-        "{ success: STATUS, feedback: {messages}, fieldErrors: {messages}}" wrapper.
+        "{ error: 0/1, feedback: {messages}, fieldErrors: {messages}}" wrapper.
     The feedback messages are created via the espSetFeedback API. Field errors are created by ESP validations.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param success True if the operation was a success.
     @return Number of bytes sent.
     @ingroup EspReq
     @stability Evolving
   */
-PUBLIC ssize espSendResult(HttpConn *conn, bool success);
+PUBLIC ssize espSendResult(HttpStream *stream, bool success);
 
 /**
     Enable auto-finalizing for this request
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param on Set to "true" to enable auto-finalizing.
     @return "True" if auto-finalizing was enabled prior to this call
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC bool espSetAutoFinalizing(HttpConn *conn, bool on);
+PUBLIC bool espSetAutoFinalizing(HttpStream *stream, bool on);
 
 /**
-    Set the current request connection.
-    @param conn The HttpConn connection object to define
+    Set the current request stream.
+    @param stream The HttpStream stream object to define
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espSetConn(HttpConn *conn);
+PUBLIC void espSetStream(HttpStream *stream);
 
 /**
     Define a content length header in the transmission.
     @description This will define a "Content-Length: NNN" request header.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param length Numeric value for the content length header.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espSetContentLength(HttpConn *conn, MprOff length);
+PUBLIC void espSetContentLength(HttpStream *stream, MprOff length);
 
 /**
     Set a cookie in the transmission
     @description Define a cookie to send in the transmission Http header
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param name Cookie name
     @param value Cookie value
     @param path URI path to which the cookie applies
@@ -2586,22 +2722,22 @@ PUBLIC void espSetContentLength(HttpConn *conn, MprOff length);
     Some browsers will accept cookies without the initial ".", but the spec: (RFC 2109) requires it.
     @param lifespan Duration for the cookie to persist in msec. Set to a negative number to delete a cookie. Set to
         zero for a "session" cookie that lives only for the user's session.
-    @param isSecure Set to "true" if the cookie only applies for SSL based connections
+    @param isSecure Set to "true" if the cookie only applies for SSL based connections.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espSetCookie(HttpConn *conn, cchar *name, cchar *value, cchar *path, cchar *domain, MprTicks lifespan,
+PUBLIC void espSetCookie(HttpStream *stream, cchar *name, cchar *value, cchar *path, cchar *domain, MprTicks lifespan,
     bool isSecure);
 
 /**
     Set the transmission (response) content mime type
     @description Set the mime type Http header in the transmission
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param mimeType Mime type string
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espSetContentType(HttpConn *conn, cchar *mimeType);
+PUBLIC void espSetContentType(HttpStream *stream, cchar *mimeType);
 
 /**
     Set this authenticated session as the current session.
@@ -2610,31 +2746,31 @@ PUBLIC void espSetContentType(HttpConn *conn, cchar *mimeType);
     @stability Evolving
     @ingroup EspReq
  */
-PUBLIC void espSetCurrentSession(HttpConn *conn);
+PUBLIC void espSetCurrentSession(HttpStream *stream);
 
 /**
     Clear the current authenticated session
     @stability Evolving
     @ingroup EspReq
  */
-PUBLIC void espClearCurrentSession(HttpConn *conn);
+PUBLIC void espClearCurrentSession(HttpStream *stream);
 
 /**
     Set a feedback message
     @description Feedback messages are a convenient way to aggregate messages state information in the response.
         Feedback messages are removed at the completion of the request.
-    @param conn Http connection object
+    @param stream Http stream object
     @param type type of feedback message. This may be set to any word, but the following feedback types
         are typically supported as per RFC 5424: "debug", "info", "notice", "warn", "error", "critical".
     @param fmt Printf style formatted string to use as the message
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espSetFeedback(HttpConn *conn, cchar *type, cchar *fmt, ...);
+PUBLIC void espSetFeedback(HttpStream *stream, cchar *type, cchar *fmt, ...);
 
 /**
     Send a feedback message
-    @param conn Http connection object
+    @param stream Http stream object
     @param type type of feedback message. This may be set to any word, but the following feedback types
         are typically supported as per RFC 5424: "debug", "info", "notice", "warn", "error", "critical".
     @param fmt Printf style formatted string to use as the message
@@ -2643,7 +2779,7 @@ PUBLIC void espSetFeedback(HttpConn *conn, cchar *type, cchar *fmt, ...);
     @stability Internal
     @internal
  */
-PUBLIC void espSetFeedbackv(HttpConn *conn, cchar *type, cchar *fmt, va_list args);
+PUBLIC void espSetFeedbackv(HttpStream *stream, cchar *type, cchar *fmt, va_list args);
 
 /**
     Set the current database grid
@@ -2651,45 +2787,46 @@ PUBLIC void espSetFeedbackv(HttpConn *conn, cchar *type, cchar *fmt, va_list arg
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC EdiGrid *espSetGrid(HttpConn *conn, EdiGrid *grid);
+PUBLIC EdiGrid *espSetGrid(HttpStream *stream, EdiGrid *grid);
 
 /**
     Set a transmission header
     @description Set a Http header to send with the request. If the header already exists, its value is overwritten.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param key Http response header key
     @param fmt Printf style formatted string to use as the header key value
     @param ... Arguments for fmt
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espSetHeader(HttpConn *conn, cchar *key, cchar *fmt, ...);
+PUBLIC void espSetHeader(HttpStream *stream, cchar *key, cchar *fmt, ...);
 
 /**
     Set a simple key/value transmission header
     @description Set a Http header to send with the request. If the header already exists, its value is overwritten.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param key Http response header key
     @param value String value for the key
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espSetHeaderString(HttpConn *conn, cchar *key, cchar *value);
+PUBLIC void espSetHeaderString(HttpStream *stream, cchar *key, cchar *value);
 
 /**
     Set an integer request parameter value
-    @description Set the value of a named request parameter to an integer value. Form variables are defined via
+    @description Set the value of a named request parameter to an integer value. Request parameters are defined via
         www-urlencoded query or post data contained in the request.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param var Name of the request parameter to set
     @param value Value to set.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espSetIntParam(HttpConn *conn, cchar *var, int value);
+PUBLIC void espSetParamInt(HttpStream *stream, cchar *var, int value);
+#define espSetIntParam espSetParamInt
 
 /**
-    Define a notifier callback for this connection.
+    Define a notifier callback for this stream.
     @description The notifier callback will be invoked for state changes and I/O events as requests are processed.
     The supported events are:
     <ul>
@@ -2701,86 +2838,86 @@ PUBLIC void espSetIntParam(HttpConn *conn, cchar *var, int value);
     <li>HTTP_EVENT_READABLE &mdash; There is data available to read</li>
     <li>HTTP_EVENT_WRITABLE &mdash; The outgoing pipeline can absorb more data</li>
     <li>HTTP_EVENT_ERROR &mdash; The request has encountered an error</li>
-    <li>HTTP_EVENT_DESTROY &mdash; The connection structure is about to be destoyed</li>
+    <li>HTTP_EVENT_DESTROY &mdash; The stream structure is about to be destoyed</li>
     <li>HTTP_EVENT_OPEN &mdash; The application layer is now open</li>
     <li>HTTP_EVENT_CLOSE &mdash; The application layer is now closed</li>
     </ul>
-    Before the notifier is invoked, espSetConn is called to set the connection object in the thread local storage.
+    Before the notifier is invoked, espSetStream is called to set the stream object in the thread local storage.
     This enables the ESP Abbreviated API.
-    @param conn HttpConn connection object created via #httpCreateConn
+    @param stream HttpStream stream object created via #httpCreateStream
     @param notifier Notifier function.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espSetNotifier(HttpConn *conn, HttpNotifier notifier);
+PUBLIC void espSetNotifier(HttpStream *stream, HttpNotifier notifier);
 
 /**
     Set the current database record
     @description The current record is used to supply data to various abbreviated controls, such as: text(), input(),
         checkbox and dropdown()
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param rec Record object to define as the current record.
     @return The grid instance. This permits chaining.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC EdiRec *espSetRec(HttpConn *conn, EdiRec *rec);
+PUBLIC EdiRec *espSetRec(HttpStream *stream, EdiRec *rec);
 
 /**
     Set a request parameter value
     @description Set the value of a named request parameter to a string value. Parameters are defined via
         requeset POST data or request URI queries. This API permits these initial request parameters to be set or
         modified.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param var Name of the request parameter to set
     @param value Value to set.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espSetParam(HttpConn *conn, cchar *var, cchar *value);
+PUBLIC void espSetParam(HttpStream *stream, cchar *var, cchar *value);
 
 /**
     Set a Http response status.
     @description Set the Http response status for the request. This defaults to 200 (OK).
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param status Http status code.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espSetStatus(HttpConn *conn, int status);
+PUBLIC void espSetStatus(HttpStream *stream, int status);
 
 /**
     Set a session variable.
     @description
-    @param conn Http connection object
+    @param stream Http stream object
     @param name Variable name to set
     @param value Variable value to use
     @return Zero if successful. Otherwise a negative MPR error code.
     @ingroup HttpSession
     @stability Stable
  */
-PUBLIC int espSetSessionVar(HttpConn *conn, cchar *name, cchar *value);
+PUBLIC int espSetSessionVar(HttpStream *stream, cchar *name, cchar *value);
 
 /**
     Show request details
     @description This e request details back to the client. This is useful as a debugging tool.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espShowRequest(HttpConn *conn);
+PUBLIC void espShowRequest(HttpStream *stream);
 
 /**
     Update the cached content for a request
     @description Save the given content for future requests. This is useful if the caching mode has been set to "manual".
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param uri Request URI to cache for
     @param data Data to cache
     @param lifesecs Time in seconds to cache the data
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espUpdateCache(HttpConn *conn, cchar *uri, cchar *data, int lifesecs);
+PUBLIC void espUpdateCache(HttpStream *stream, cchar *uri, cchar *data, int lifesecs);
 
 /**
     Write a record to the database
@@ -2788,13 +2925,13 @@ PUBLIC void espUpdateCache(HttpConn *conn, cchar *uri, cchar *data, int lifesecs
         fail to pass, the record will not be written and error details can be retrieved via #ediGetRecErrors.
         If the record is a new record and the "id" column is EDI_AUTO_INC, then the "id" will be assigned
         prior to saving the record.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param rec Record to write to the database.
     @return "true" if the record can be successfully written.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC bool espUpdateRec(HttpConn *conn, EdiRec *rec);
+PUBLIC bool espUpdateRec(HttpStream *stream, EdiRec *rec);
 
 /**
     Create a URI.
@@ -2803,7 +2940,7 @@ PUBLIC bool espUpdateRec(HttpConn *conn, EdiRec *rec);
     are supplied using the current request and route tables. The resulting URI is a normalized, server-local
     URI (that begins with "/"). The URI will include any defined route prefix, but will not include scheme, host or
     port components.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param target The URI target. The target parameter can be a URI string or JSON style set of options.
         The target will have any embedded "{tokens}" expanded by using token values from the request parameters.
         If the target has an absolute URI path, that path is used directly after tokenization. If the target begins with
@@ -2841,33 +2978,73 @@ PUBLIC bool espUpdateRec(HttpConn *conn, EdiRec *rec);
             <li>route String Route name to use for the URI template</li>
         </ul>
     @return A normalized, server-local Uri string.
-    @example espUri(conn, "http://example.com/index.html", 0); \n
-    espUri(conn, "/path/to/index.html", 0); \n
-    espUri(conn, "../images/splash.png", 0); \n
-    espUri(conn, "~/client/images/splash.png", 0); \n
-    espUri(conn, "${app}/client/images/splash.png", 0); \n
-    espUri(conn, "@controller/checkout", 0); \n
-    espUri(conn, "@controller/") \n
-    espUri(conn, "@init") \n
-    espUri(conn, "@") \n
-    espUri(conn, "{ action: '@post/create' }", 0); \n
-    espUri(conn, "{ action: 'checkout' }", 0); \n
-    espUri(conn, "{ action: 'logout', controller: 'admin' }", 0); \n
-    espUri(conn, "{ action: 'admin/logout'", 0); \n
-    espUri(conn, "{ product: 'candy', quantity: '10', template: '/cart/${product}/${quantity}' }", 0); \n
-    espUri(conn, "{ route: '~/STAR/edit', action: 'checkout', id: '99' }", 0); \n
-    espUri(conn, "{ template: '~/client/images/${theme}/background.jpg', theme: 'blue' }", 0);
+    @example espUri(stream, "http://example.com/index.html", 0); <br/>
+    espUri(stream, "/path/to/index.html", 0); <br/>
+    espUri(stream, "../images/splash.png", 0); <br/>
+    espUri(stream, "~/client/images/splash.png", 0); <br/>
+    espUri(stream, "${app}/client/images/splash.png", 0); <br/>
+    espUri(stream, "@controller/checkout", 0); <br/>
+    espUri(stream, "@controller/") <br/>
+    espUri(stream, "@init") <br/>
+    espUri(stream, "@") <br/>
+    espUri(stream, "{ action: '@post/create' }", 0); <br/>
+    espUri(stream, "{ action: 'checkout' }", 0); <br/>
+    espUri(stream, "{ action: 'logout', controller: 'admin' }", 0); <br/>
+    espUri(stream, "{ action: 'admin/logout'", 0); <br/>
+    espUri(stream, "{ product: 'candy', quantity: '10', template: '/cart/${product}/${quantity}' }", 0); <br/>
+    espUri(stream, "{ route: '~/STAR/edit', action: 'checkout', id: '99' }", 0); <br/>
+    espUri(stream, "{ template: '~/client/images/${theme}/background.jpg', theme: 'blue' }", 0);
     @ingroup EspReq
     @stability Evolving
  */
-PUBLIC cchar *espUri(HttpConn *conn, cchar *target);
+PUBLIC cchar *espUri(HttpStream *stream, cchar *target);
+
+
+/************************************** Actions *******************************/
+/**
+    Action definition
+    @stability Prototype
+ */
+typedef struct EspAction {
+    cchar       *target;            /**< Route target string */
+    cchar       *abilities;         /**< Abilities or roles for action. Comma separated. */
+    EspProc     callback;           /**< Callback action */
+} EspAction;
+
+#if DEPRECATED || 1
+/**
+    Define an action
+    @description Actions are C procedures that are invoked when specific URIs are routed to the controller/action pair.
+    This API is deprecated. Use #espAction instead.
+    @param route HttpRoute object
+    @param targetKey Target key used to select the action in a HttpRoute target. This is typically a URI prefix.
+    @param actionProc EspProc callback procedure to invoke when the action is requested.
+    @ingroup EspRoute
+    @stability Deprecated
+ */
+PUBLIC void espDefineAction(HttpRoute *route, cchar *targetKey, EspProc actionProc) ME_DEPRECATED("Use espAction instead");
+#endif
+
+/**
+    Define an action
+    @description Actions are C procedures that are invoked when specific URIs are routed to the controller/action pair.
+    The action will require the specified abilities or roles.
+    @param route HttpRoute object
+    @param targetKey Target key used to select the action in a HttpRoute target. This is typically a URI prefix.
+    @param abilities String Comma separated list of abilities or roles. If set to the empty string, no specific abilities are required
+        but an authenticated user is required. Set to NULL if an authenticated user is not required.
+    @param actionProc EspProc callback procedure to invoke when the action is requested.
+    @ingroup EspRoute
+    @stability Prototype
+ */
+PUBLIC void espAction(HttpRoute *route, cchar *targetKey, cchar *abilities, EspProc actionProc);
 
 /***************************** Abbreviated Controls ***************************/
+#if ME_ESP_ABBREV
 /**
     Abbreviated ESP API.
-    @description This is a short-form API that uses the current HttpConn connection object.
+    @description This is a short-form API that uses the current HttpStream stream object.
         These APIs are designed to be terse and highly readable. Consequently, they are not prefixed with "esp".
-    @see espAlert
     @defgroup EspAbbrev EspAbbrev
     @stability Stable
   */
@@ -2876,13 +3053,22 @@ typedef struct EspAbbrev { int dummy; } EspAbbrev;
 /******************************* Abbreviated API ******************************/
 
 /**
+    Create an absolute URI with a scheme and host
+    @param target The URI target. See httpLink for details
+    @param ... arguments to the formatted target string
+    @return A normalized, absolute Uri string containing scheme and host.
+    @ingroup EspAbbrev
+    @stability Evolving
+ */
+PUBLIC cchar *absuri(cchar *target, ...);
+
+/**
     Add a header to the transmission using a format string.
     @description Add a header if it does not already exist.
     @param key Http response header key
     @param fmt Printf style formatted string to use as the header key value
     @param ... Arguments for fmt
-    @return Zero if successful, otherwise a negative MPR error code. Returns MPR_ERR_ALREADY_EXISTS if the header already
-        exists.
+    @return Zero if successful, otherwise a negative MPR error code. Returns MPR_ERR_ALREADY_EXISTS if the header already exists.
     @ingroup EspAbbrev
     @stability Evolving
  */
@@ -2910,9 +3096,10 @@ PUBLIC bool canUser(cchar *abilities, bool warn);
 
 /**
     Create a record and initialize field values
-    @description This will call #ediCreateRec to create a record based on the given table's schema. It will then
-        call #ediSetFields to update the record with the given data.
-    The record is remembered for this request as the "current" record and can be retrieved via: getRec().
+    @description This will call #ediCreateRec to create a record based on the table's schema. It will then
+        call #setFields to update the record with the given data.
+        The record is remembered for this request as the "current" record and can be retrieved via: getRec().
+        The record is not written to the database. Use #updateRec to write to the database.
     @param tableName Database table name
     @param data Json object with field values
     @return EdRec instance
@@ -2930,7 +3117,20 @@ PUBLIC EdiRec *createRec(cchar *tableName, MprJson *data);
     @ingroup EspAbbrev
     @stability Prototype
 */
-PUBLIC bool createRecFromParams(cchar *table);
+PUBLIC bool createRecByParams(cchar *table);
+
+#if DEPRECATED || 1
+/**
+    Create a record from the request parameters
+    @description A new record is created with the request parameters in the specified table.
+    The record is remembered for this request as the "current" record and can be retrieved via: getRec().
+    @param table Database table to update
+    @return True if the update is successful.
+    @ingroup EspAbbrev
+    @stability Deprecated
+*/
+PUBLIC bool createRecFromParams(cchar *table) ME_DEPRECATED("Use updateRecFields(table, params(\"fields\") instead");
+#endif
 
 /**
     Create a session state object.
@@ -2942,7 +3142,7 @@ PUBLIC bool createRecFromParams(cchar *table);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC cchar *createSession();
+PUBLIC cchar *createSession(void);
 
 /**
     Destroy a session state object.
@@ -2950,14 +3150,40 @@ PUBLIC cchar *createSession();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC void destroySession();
+PUBLIC void destroySession(void);
 
 /**
     Don't auto-finalize this request
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC void dontAutoFinalize();
+PUBLIC void dontAutoFinalize(void);
+
+/**
+    Display the grid to the debug log
+    @param message Prefix message to output
+    @param grid EDI grid
+    @ingroup EspAbbrev
+    @stability Prototype
+ */
+PUBLIC void dumpGrid(cchar *message, EdiGrid *grid);
+
+/**
+    Display request parameters to the debug log
+    @param message Prefix message to output
+    @ingroup EspAbbrev
+    @stability Prototype
+ */
+PUBLIC void dumpParams(cchar *message);
+
+/**
+    Display a record to the debug log
+    @param message Prefix message to output
+    @param rec Record to log
+    @ingroup EspAbbrev
+    @stability Prototype
+ */
+PUBLIC void dumpRec(cchar *message, EdiRec *rec);
 
 /**
     Finalize the response.
@@ -2967,7 +3193,7 @@ PUBLIC void dontAutoFinalize();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC void finalize();
+PUBLIC void finalize(void);
 
 /**
     Set a feedback message
@@ -2986,19 +3212,31 @@ PUBLIC void finalize();
 PUBLIC bool feedback(cchar *type, cchar *fmt, ...);
 
 /**
+    Build an EDI selection query from the request parameters for use by SPA applications.
+    @description This call creates an EDI "SQL style" query from the request parameters.
+        This call expects optional "fields" and "options" parameters with options.offset, options.limit and options.filter parameters. It examines each of the "fields" parameters to build an SQL "WHERE" expression testing the value of each field. The resulting expression looks like:
+    \n\n
+        field OP value AND field OP value .... LIMIT offset, limit
+    @return An EDI sql style selection query string suitable for use with #findRec and #findGrid
+    @ingroup EspAbbrev
+    @stability Prototype
+ */
+PUBLIC cchar *findParams(void);
+
+/**
     Flush transmit data.
     @description This writes any buffered data.
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC void flush();
+PUBLIC void flush(void);
 
 /**
     Get the auth object for the current route
     @ingroup EspAbbrev
     @stability Prototype
  */
-PUBLIC HttpAuth *getAuth();
+PUBLIC HttpAuth *getAuth(void);
 
 /**
     Get a list of column names.
@@ -3016,17 +3254,25 @@ PUBLIC MprList *getColumns(EdiRec *rec);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC cchar *getCookies();
+PUBLIC cchar *getCookies(void);
 
 /**
-    Get the connection object
-    @description Before a view or controller is run, the current connection object for the request is saved in thread
-    local data. Most EspAbbrev APIs take an HttpConn object as an argument.
-    @return HttpConn connection instance object.
+    Get the HttpStream object
+    @description Before a view or controller is run, the current stream object for the request is saved in thread
+    local data. Most EspAbbrev APIs take an HttpStream object as an argument.
+    @return HttpStream stream instance object.
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC HttpConn *getConn();
+PUBLIC HttpStream *getStream(void);
+
+#if ME_COMPAT
+/*
+    LEGACY redefinitions
+ */
+#define getConn() getStream()
+#define setConn(stream) setStream(stream)
+#endif
 
 /**
     Get the receive body content length
@@ -3036,7 +3282,7 @@ PUBLIC HttpConn *getConn();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC MprOff getContentLength();
+PUBLIC MprOff getContentLength(void);
 
 /**
     Get the receive body content type
@@ -3045,7 +3291,7 @@ PUBLIC MprOff getContentLength();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC cchar *getContentType();
+PUBLIC cchar *getContentType(void);
 
 /**
     Get the private data reference for the current request set via #setData
@@ -3053,15 +3299,15 @@ PUBLIC cchar *getContentType();
     @ingroup EspAbbrev
     @stability prototype
  */
-PUBLIC void *getData();
+PUBLIC void *getData(void);
 
 /**
-    Get the connection dispatcher object
-    @return MprDispatcher connection dispatcher instance object.
+    Get the stream dispatcher object
+    @return MprDispatcher stream dispatcher instance object.
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC MprDispatcher *getDispatcher();
+PUBLIC MprDispatcher *getDispatcher(void);
 
 /**
     Get a feedback message defined via #feedback
@@ -3081,7 +3327,7 @@ PUBLIC cchar *getFeedback(cchar *type);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC Edi *getDatabase();
+PUBLIC Edi *getDatabase(void);
 
 /**
     Get the extended route EspRoute structure
@@ -3089,7 +3335,7 @@ PUBLIC Edi *getDatabase();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC EspRoute *getEspRoute();
+PUBLIC EspRoute *getEspRoute(void);
 
 /**
     Get the default document root directory for the request route.
@@ -3097,7 +3343,7 @@ PUBLIC EspRoute *getEspRoute();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC cchar *getDocuments();
+PUBLIC cchar *getDocuments(void);
 
 /**
     Get a field from the current database record
@@ -3116,12 +3362,12 @@ PUBLIC cchar *getField(EdiRec *rec, cchar *field);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC EdiGrid *getGrid();
+PUBLIC EdiGrid *getGrid(void);
 
 /**
     Get an rx http header.
     @description Get a http response header for a given header key.
-    @param key Name of the header to retrieve. This should be a lower case header name. For example: "Connection"
+    @param key Name of the header to retrieve. This should be a lower case header name. For example: "Connection".
     @return Value associated with the header key or null if the key did not exist in the response.
     @ingroup EspAbbrev
     @stability Evolving
@@ -3131,20 +3377,20 @@ PUBLIC cchar *getHeader(cchar *key);
 /**
     Get the HTTP method
     @description This is a convenience API to return the Http method
-    @return The HttpConn.rx.method property
+    @return The HttpStream.rx.method property
     @ingroup EspReq
     @stability Evolving
  */
-PUBLIC cchar *getMethod();
+PUBLIC cchar *getMethod(void);
 
 /**
     Get the HTTP URI query string
     @description This is a convenience API to return the query string for the current request.
-    @return The espGetConn()->rx->parsedUri->query property
+    @return The espGetStream()->rx->parsedUri->query property
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC cchar *getQuery();
+PUBLIC cchar *getQuery(void);
 
 /**
     Get the referring URI
@@ -3155,22 +3401,22 @@ PUBLIC cchar *getQuery();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC cchar *getReferrer();
+PUBLIC cchar *getReferrer(void);
 
 /**
     Get the ESP request object
-    @return EspReq connection instance object.
+    @return EspReq request instance object.
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC EspReq *getReq();
+PUBLIC EspReq *getReq(void);
 
 /**
     Get the HttpRoute object for the current route
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC HttpRoute *getRoute();
+PUBLIC HttpRoute *getRoute(void);
 
 /**
     Get the security token.
@@ -3181,7 +3427,7 @@ PUBLIC HttpRoute *getRoute();
     @ingroup EspAbbrev
     @stability Evolving
 */
-PUBLIC cchar *getSecurityToken();
+PUBLIC cchar *getSecurityToken(void);
 
 /**
     Get a session state variable
@@ -3201,7 +3447,7 @@ PUBLIC cchar *getSessionVar(cchar *name);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC cchar *getSessionID();
+PUBLIC cchar *getSessionID(void);
 
 /**
     Test if a field in the current record has input validation errors
@@ -3214,11 +3460,11 @@ PUBLIC cchar *getFieldError(cchar *field);
     Get the request URI path string
     @description This is a convenience API to return the request URI path. This is the portion after the application/route
         prefix.
-    @return The espGetConn()->rx->pathInfo
+    @return The espGetStream()->rx->pathInfo
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC cchar *getPath();
+PUBLIC cchar *getPath(void);
 
 /**
     Get the current database record
@@ -3226,7 +3472,7 @@ PUBLIC cchar *getPath();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC EdiRec *getRec();
+PUBLIC EdiRec *getRec(void);
 
 /**
     Get a field from the application pak.json configuration
@@ -3244,16 +3490,16 @@ PUBLIC cchar *getConfig(cchar *field);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC MprList *getUploads();
+PUBLIC MprList *getUploads(void);
 
 /**
     Get the request URI string
     @description This is a convenience API to return the request URI.
-    @return The espGetConn()->rx->uri
+    @return The espGetStream()->rx->uri
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC cchar *getUri();
+PUBLIC cchar *getUri(void);
 
 /**
     Test if a current grid has been defined
@@ -3261,7 +3507,7 @@ PUBLIC cchar *getUri();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC bool hasGrid();
+PUBLIC bool hasGrid(void);
 
 /**
     Test if a current record has been defined and save to the database
@@ -3271,12 +3517,12 @@ PUBLIC bool hasGrid();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC bool hasRec();
+PUBLIC bool hasRec(void);
 
 /**
     Render an input field as part of a form. This is a smart input control that will call the appropriate
         input control based on the database record field data type. This control should not be used
-        if using the esp-angular-mvc or other similar client-side Javascript framework.
+        if using the esp-vue-mvc or other similar client-side Javascript framework.
     @param field Name for the input field. This defines the HTML element name and provides the source
         of the initial value to display. The field should be a property of the form current record.
         If this call is used without a form control record, the actual data value should be supplied via the
@@ -3290,12 +3536,43 @@ PUBLIC bool hasRec();
 PUBLIC void input(cchar *field, cchar *options);
 
 /**
+    Render an input field with a hidden XSRF security token.
+    @description Security tokens are used to help guard against CSRF threats.
+    This call will generate a hidden input field that includes the CSRF security token for the form.
+    This call should not be included in SPA client applications as the SPA framework should automatically
+    handle the security token.
+    @ingroup EspAbbrev
+    @stability Prototype
+ */
+PUBLIC void inputSecurityToken(void);
+
+/**
+    Get an integer request parameter
+    @description Get the value of a named request parameter. Request parameters are defined via www-urlencoded
+        query or post data contained in the request. This routine calls #espGetParam
+    @param name Name of the request parameter to retrieve
+    @return Integer containing the request parameter's value. Returns zero if not found.
+    @ingroup EspAbbrev
+    @stability Evolving
+ */
+PUBLIC int paramInt(cchar *name);
+#define intParam paramInt
+
+/**
+    Test if the user is authenticated
+    @return True if the username and password have been authenticated.
+    @ingroup EspAbbrev
+    @stability Prototype
+ */
+PUBLIC bool isAuthenticated(void);
+
+/**
     Test if the receive input stream is at end-of-file
     @return "true" if there is no more receive data to read
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC bool isEof();
+PUBLIC bool isEof(void);
 
 /**
     Test if a http request is finalized.
@@ -3304,15 +3581,15 @@ PUBLIC bool isEof();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC bool isFinalized();
+PUBLIC bool isFinalized(void);
 
 /**
-    Test if the connection is using SSL and is secure
-    @return "true" if the connection is using SSL.
+    Test if the stream is using SSL and is secure
+    @return "true" if the stream is using SSL.
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC bool isSecure();
+PUBLIC bool isSecure(void);
 
 /**
     Make a hash table container of property values
@@ -3339,7 +3616,7 @@ PUBLIC MprHash *makeHash(cchar *fmt, ...);
 PUBLIC MprJson *makeJson(cchar *fmt, ...);
 
 /**
-    Make a record
+    Make a free-standing record
     @description This call makes a free-standing data record based on the JSON format content string.
         The record is not saved to the database.
     @param content JSON format content string. The content should be a set of property names and values.
@@ -3394,21 +3671,21 @@ PUBLIC EdiRec *makeRec(cchar *content);
             <li>route String Route name to use for the URI template</li>
         </ul>
     @return A normalized, server-local Uri string.
-    @example makeUri("http://example.com/index.html", 0); \n
-    makeUri("/path/to/index.html", 0); \n
-    makeUri("../images/splash.png", 0); \n
-    makeUri("~/client/images/splash.png", 0); \n
-    makeUri("${app}/client/images/splash.png", 0); \n
-    makeUri("@controller/checkout", 0); \n
-    makeUri("@controller/") \n
-    makeUri("@init") \n
-    makeUri("@") \n
-    makeUri("{ action: '@post/create' }", 0); \n
-    makeUri("{ action: 'checkout' }", 0); \n
-    makeUri("{ action: 'logout', controller: 'admin' }", 0); \n
-    makeUri("{ action: 'admin/logout'", 0); \n
-    makeUri("{ product: 'candy', quantity: '10', template: '/cart/${product}/${quantity}' }", 0); \n
-    makeUri("{ route: '~/STAR/edit', action: 'checkout', id: '99' }", 0); \n
+    @example makeUri("http://example.com/index.html", 0); <br/>
+    makeUri("/path/to/index.html", 0); <br/>
+    makeUri("../images/splash.png", 0); <br/>
+    makeUri("~/client/images/splash.png", 0); <br/>
+    makeUri("${app}/client/images/splash.png", 0); <br/>
+    makeUri("@controller/checkout", 0); <br/>
+    makeUri("@controller/") <br/>
+    makeUri("@init") <br/>
+    makeUri("@") <br/>
+    makeUri("{ action: '@post/create' }", 0); <br/>
+    makeUri("{ action: 'checkout' }", 0); <br/>
+    makeUri("{ action: 'logout', controller: 'admin' }", 0); <br/>
+    makeUri("{ action: 'admin/logout'", 0); <br/>
+    makeUri("{ product: 'candy', quantity: '10', template: '/cart/${product}/${quantity}' }", 0); <br/>
+    makeUri("{ route: '~/STAR/edit', action: 'checkout', id: '99' }", 0); <br/>
     makeUri("{ template: '~/client/images/${theme}/background.jpg', theme: 'blue' }", 0);
     @ingroup EspReq
     @stability Evolving
@@ -3420,7 +3697,7 @@ PUBLIC cchar *makeUri(cchar *target);
     @param str String to hash
     @returns An allocated MD5 checksum string.
     @ingroup EspAbbrev
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC cchar *md5(cchar *str);
 
@@ -3428,9 +3705,9 @@ PUBLIC cchar *md5(cchar *str);
     Generate a onetime random string
     @returns An MD5 encoded random string
     @ingroup EspAbbrev
-    @stability Prototype
+    @stability Evolving
  */
-PUBLIC cchar *nonce();
+PUBLIC cchar *nonce(void);
 
 /**
     Test the the application mode
@@ -3444,9 +3721,8 @@ PUBLIC bool modeIs(cchar *check);
 
 /**
     Get a request parameter
-    @description Get the value of a named request parameter. Form variables are defined via www-urlencoded query or post
-        data contained in the request.
-        This routine calls #espGetParam
+    @description Get the value of a named request parameter. Request parameters are defined via www-urlencoded
+        query or post data contained in the request. This routine calls #espGetParam.
     @param name Name of the request parameter to retrieve
     @return String containing the request parameter's value. Caller should not free.
         Returns NULL if the parameter is not defined.
@@ -3456,29 +3732,57 @@ PUBLIC bool modeIs(cchar *check);
 PUBLIC cchar *param(cchar *name);
 
 /**
-    Get the request parameter hash table
-    @description This call gets the params hash table for the current request.
-        Route tokens, request query data, and www-url encoded form data are all entered into the params table after decoding.
-        Use #mprLookupKey to retrieve data from the table.
-        This routine calls #espGetParams
+    Get a collection of request parameters
+    @description This call gets request parameters for a given variable root.
+        Route tokens, request query data, and www-url encoded form data are all entered into the request parameters
+    @param var Root property of the params collection. Set to NULL for the root collection.
     @return MprJson instance containing the request parameters
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC MprJson *params();
+PUBLIC MprJson *params(cchar *var);
 
 /**
-    Read the identified record
-    @description Read the record identified by the request param("id") from the nominated table.
-    The record is remembered for this request as the "current" record and can be retrieved via: getRec().
+    Read matching records in table from the database
+    @description This reads a table and returns a grid containing the table data.
+    The grid of records is remembered for this request as the "current" grid and can be retrieved via: getGrid().
     @param tableName Database table name
-    @param key Key value of the record to read
-    @return The identified record. Returns NULL if the table or record cannot be found.
+    @param select Selection format string. This is a printf style format string. This will contain a select criteria typically
+        of the form: "Field Op Value AND field OP value ...". All fields may be matched by using the pseudo column name "*".
+        OP is "==", "!=", "<", ">", "<=", ">=" or "><".
+    @return A grid containing all table rows. Returns NULL if the table cannot be found.
     @ingroup EspAbbrev
     @stability Evolving
  */
+PUBLIC EdiGrid *findGrid(cchar *tableName, cchar *select);
+
+/**
+    Read a record identified by SQL style query expression
+    @description Read a record from the given table as described by the selection criteria.
+    The record is remembered for this request as the "current" record and can be retrieved via: getRec().
+    @param tableName Database table name
+    @param query SQL like query expression. This arg is a printf style format string. When expanded, this will contain
+        a SQL style query expression of the form: "Field Op Value AND field OP value ... LIMIT offset, limit".
+        All fields may be matched by using the pseudo column name "*". OP is "==", "!=", "<", ">", "<=", ">=" or "><".
+    @return Record instance of EdiRec.
+    @ingroup EspAbbrev
+    @stability Evolving
+ */
+PUBLIC EdiRec *findRec(cchar *tableName, cchar *query);
+
+/**
+    Read a record identified by key value
+    @description Read a record from the given table as identified by the key value.
+    The record is remembered for this request as the "current" record and can be retrieved via: getRec().
+    @param tableName Database table name
+    @param key Key value of the record to read
+    @return Record instance of EdiRec.
+    @ingroup EspAbbrev
+    @stability Prototype
+ */
 PUBLIC EdiRec *readRec(cchar *tableName, cchar *key);
 
+#if DEPRECATED || 1
 /**
     Read matching records
     @description This runs a simple query on the database and returns matching records in a grid. The query selects
@@ -3490,9 +3794,9 @@ PUBLIC EdiRec *readRec(cchar *tableName, cchar *key);
     @param value Data value to compare with the field values.
     @return A grid containing all matching records. Returns NULL if no matching records.
     @ingroup EspAbbrev
-    @stability Evolving
+    @stability Deprecated
  */
-PUBLIC EdiGrid *readWhere(cchar *tableName, cchar *fieldName, cchar *operation, cchar *value);
+PUBLIC EdiGrid *readWhere(cchar *tableName, cchar *fieldName, cchar *operation, cchar *value) ME_DEPRECATED("Use findGrid instead");
 
 /**
     Read one record
@@ -3505,21 +3809,9 @@ PUBLIC EdiGrid *readWhere(cchar *tableName, cchar *fieldName, cchar *operation, 
     @param value Data value to compare with the field values.
     @return First matching record. Returns NULL if no matching records.
     @ingroup EspAbbrev
-    @stability Evolving
+    @stability Deprecated
  */
-PUBLIC EdiRec *readRecWhere(cchar *tableName, cchar *fieldName, cchar *operation, cchar *value);
-
-/**
-    Read a record identified by key value
-    @description Read a record from the given table as identified by the key value.
-    The record is remembered for this request as the "current" record and can be retrieved via: getRec().
-    @param tableName Database table name
-    @param key Key value of the record to read
-    @return Record instance of EdiRec.
-    @ingroup EspAbbrev
-    @stability Evolving
- */
-PUBLIC EdiRec *readRecByKey(cchar *tableName, cchar *key);
+PUBLIC EdiRec *findRecWhere(cchar *tableName, cchar *fieldName, cchar *operation, cchar *value) ME_DEPRECATED("Use findRec instead");
 
 /**
     Read all the records in table from the database
@@ -3530,7 +3822,8 @@ PUBLIC EdiRec *readRecByKey(cchar *tableName, cchar *key);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC EdiGrid *readTable(cchar *tableName);
+PUBLIC EdiGrid *readTable(cchar *tableName) ME_DEPRECATED("Use findGrid instead");
+#endif
 
 /**
     Read receive body content
@@ -3560,7 +3853,7 @@ PUBLIC void redirect(cchar *target);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC void redirectBack();
+PUBLIC void redirectBack(void);
 
 /**
     Remove a cookie
@@ -3570,14 +3863,31 @@ PUBLIC void redirectBack();
 */
 PUBLIC void removeCookie(cchar *name);
 
+#if KEEP
+/**
+    Remove a record from a database table
+    @description Remove the record identified by the query expression.
+        As a sideeffect, if the removal succeeds, the feedback message {inform: "Deleted Record"} will be created.
+        If the removal fails, a feedback message {error: "Cannot delete Record"} will be created.
+    @param tableName Database table name
+    @param query SQL like query expression. This arg is a printf style format string. When expanded, this will contain
+        a SQL style query expression of the form: "Field Op Value AND field OP value ... LIMIT offset, limit".
+        All fields may be matched by using the pseudo column name "*". OP is "==", "!=", "<", ">", "<=", ">=" or "><".
+    @return True if the removal succeeds, otherwise false.
+    @ingroup EspAbbrev
+    @stability Prototype
+ */
+PUBLIC bool removeRec(cchar *tableName, cchar *query);
+#endif
+
 /**
     Remove a record from a database table
     @description Remove the record identified by the key value from the given table.
         If the removal succeeds, the feedback message {inform: "Deleted Record"} will be created. If the removal fails,
         a feedback message {error: "Cannot delete Record"} will be created.
     @param tableName Database table name
-    @param key Key value of the record to remove
-    @return Record instance of EdiRec.
+    @param key Record key value.
+    @return True if the removal succeeds, otherwise false.
     @ingroup EspAbbrev
     @stability Evolving
  */
@@ -3611,7 +3921,7 @@ PUBLIC ssize render(cchar *fmt, ...);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC ssize renderCached();
+PUBLIC ssize renderCached(void);
 
 /**
     Render the pak.json
@@ -3619,7 +3929,7 @@ PUBLIC ssize renderCached();
     @ingroup EspAbbrev
     @stability Prototype
  */
-PUBLIC ssize renderConfig();
+PUBLIC ssize renderConfig(void);
 
 /**
     Render an error message back to the client and finalize the request. The output is Html escaped for security.
@@ -3669,17 +3979,6 @@ PUBLIC ssize renderFile(cchar *path);
 PUBLIC ssize renderSafe(cchar *fmt, ...);
 
 /**
-    Render an input field with a hidden XSRF security token.
-    @description Security tokens are used to help guard against CSRF threats.
-    This call will generate a hidden input field that includes the CSRF security token for the form.
-    This call should not be included in Angular client applications as the Angular framework will automatically
-    handle the security token.
-    @ingroup EspAbbrev
-    @stability Prototype
- */
-PUBLIC void inputSecurityToken();
-
-/**
     Render a string of data to the client
     @description Render a string of data to the client. Data packets will be created
         as required to store the write data. This call may block waiting for data to drain to the client.
@@ -3694,7 +3993,7 @@ PUBLIC ssize renderString(cchar *s);
     Render the value of a request variable to the client.
     If a request parameter is not found by the given name, consult the session store for a variable the same name.
     @description This writes the value of a request variable after HTML escaping its value.
-    @param name Form variable name
+    @param name Request parameter variable name
     @return A count of the bytes actually written
     @ingroup EspAbbrev
     @stability Evolving
@@ -3724,7 +4023,7 @@ PUBLIC void renderView(cchar *view);
  */
 PUBLIC int runCmd(cchar *command, char *input, char **output, char **error, MprTicks timeout, int flags);
 
-#if DEPRECATED || 1
+#if DEPRECATED && REMOVE
 /**
     Render scripts
     @description This renders script elements for all matching filenames on the server.
@@ -3738,9 +4037,9 @@ PUBLIC void scripts(cchar *patterns);
 #endif
 
 /**
-    Send a Edatabase grid as a JSON string
-    @description The JSON string is rendered as part of an enclosing "{ data: JSON }" wrapper.
-    This API is used to send database data to client user interfaces such as Angular or Aurelia clients.
+    Send a database grid as a JSON string to the request client
+    @description The JSON string is rendered as part of an enclosing "{ data: JSON, schema: schema }" wrapper.
+    This API is used to send database data to clients.
     @param grid EDI grid
     @return Number of bytes sent
     @ingroup EspReq
@@ -3751,7 +4050,7 @@ PUBLIC ssize sendGrid(EdiGrid *grid);
 /**
     Send a database record as a JSON string
     @description The JSON string is rendered as part of an enclosing "{ data: JSON }" wrapper.
-    This API is used to send database data to client user interfaces such as Angular or Aurelia clients.
+    This API is used to send database data to client user interfaces such as VueJS or Aurelia clients.
     @param rec EDI record
     @return Number of bytes sent
     @ingroup EspReq
@@ -3762,7 +4061,7 @@ PUBLIC ssize sendRec(EdiRec *rec);
 /**
     Send a JSON response result
     @description This sends a JSON response including the request success status, feedback message and field errors.
-    This API is used to send controller action responses to client user interfaces such as Angular or Aurelia clients.
+    This API is used to send controller action responses to client user interfaces such as VueJS or Aurelia clients.
     The field errors apply to the current EDI record.
     The format of the response is:
         "{ success: STATUS, feedback: {messages}, fieldErrors: {messages}}" wrapper.
@@ -3773,7 +4072,7 @@ PUBLIC ssize sendRec(EdiRec *rec);
   */
 PUBLIC void sendResult(bool status);
 
-#if DEPRECATED || 1
+#if DEPRECATED && REMOVE
 /**
     Render stylesheets
     @description This renders stylesheet elements for all matching filenames on the server.
@@ -3795,7 +4094,7 @@ PUBLIC void stylesheets(cchar *patterns);
     @ingroup EspAbbrev
     @stability Evolving
 */
-PUBLIC void securityToken();
+PUBLIC void securityToken(void);
 
 /**
     Get a session state variable
@@ -3817,19 +4116,19 @@ PUBLIC cchar *session(cchar *name);
         For example: domain: .example.com
         Some browsers will accept cookies without the initial ".", but the spec: (RFC 2109) requires it.
     @param lifespan Lifespan of the cookie in seconds.
-    @param isSecure Boolean Set to "true" if the cookie only applies for SSL based connections
+    @param isSecure Boolean Set to "true" if the cookie only applies for SSL based connections.
     @ingroup EspAbbrev
     @stability Evolving
 */
 PUBLIC void setCookie(cchar *name, cchar *value, cchar *path, cchar *domain, MprTicks lifespan, bool isSecure);
 
 /**
-    Set the current request connection.
-    @param conn The HttpConn connection object to define
+    Set the current request stream.
+    @param stream The HttpStream stream object to define
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC void setConn(HttpConn *conn);
+PUBLIC void setStream(HttpStream *stream);
 
 /**
     Set the transmission (response) content mime type
@@ -3851,7 +4150,7 @@ PUBLIC void setData(void *data);
 /**
     Update a record field without writing to the database
     @description This routine updates the record object with the given value. The record will not be written
-        to the database. To write to the database, use #updateRec.
+        to the database. To write to the database, use #updateRec
     @param rec Record to update
     @param fieldName Record field name to update
     @param value Value to update
@@ -3864,10 +4163,10 @@ PUBLIC EdiRec *setField(EdiRec *rec, cchar *fieldName, cchar *value);
 /**
     Update record fields without writing to the database
     @description This routine updates the record object with the given values. The "data' argument supplies
-        a hash of fieldNames and values. The data hash may come from the request #params or it can be manually
-        created via #ediMakeHash to convert a JSON string into an options hash.
-        For example: updateFields(rec, hash("{ name: '%s', address: '%s' }", name, address))
-        The record will not be written to the database. To write to the database, use #ediUpdateRec.
+        a hash of fieldNames and values. The "data' argument supplies the fieldNames and values as a JSON object. The data
+    may come from the request #params or it can be manually created via makeJson to convert a JSON
+    string into an options hash. For example: ediWriteFields(rec, params());
+    The record runs field validations before saving to the database.
     @param rec Record to update
     @param data Json object of field data.
     @return The record instance if successful, otherwise NULL.
@@ -3877,7 +4176,8 @@ PUBLIC EdiRec *setField(EdiRec *rec, cchar *fieldName, cchar *value);
 PUBLIC EdiRec *setFields(EdiRec *rec, MprJson *data);
 
 /**
-    Set the current database grid
+    Set the current database grid reference.
+    @description This sets the current database which is used by many APIs that operate on the current grid.
     @return The grid instance. This permits chaining.
     @ingroup EspAbbrev
     @stability Evolving
@@ -3897,19 +4197,19 @@ PUBLIC void setHeader(cchar *key, cchar *fmt, ...);
 
 /**
     Set an integer request parameter value
-    @description Set the value of a named request parameter to an integer value. Form variables are defined via
+    @description Set the value of a named request parameter to an integer value. Request parameters are defined via
         www-urlencoded query or post data contained in the request.
     @param name Name of the request parameter to set
     @param value Integer value to set.
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC void setIntParam(cchar *name, int value);
+PUBLIC void setParamInt(cchar *name, int value);
+#define setIntParam setParamInt
 
 /**
-    Set a notifier callback for the connection.
-    This wraps httpSetConnNotifier and calls espSetConn before invoking the notifier for
-    connection events.
+    Set a notifier callback for the stream.
+    This wraps the streamNotifier and calls espSetStream before invoking the notifier for stream events.
     @param notifier Callback function
     @ingroup EspAbbrev
     @stability Evolving
@@ -3973,7 +4273,7 @@ PUBLIC void setTimeout(void *proc, MprTicks timeout, void *data);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC void showRequest();
+PUBLIC void showRequest(void);
 
 //  FUTURE - document
 PUBLIC EdiGrid *sortGrid(EdiGrid *grid, cchar *sortColumn, int sortOrder);
@@ -4004,12 +4304,10 @@ PUBLIC bool updateField(cchar *tableName, cchar *key, cchar *fieldName, cchar *v
 
 /**
     Write field values to a database row
-    @description This routine updates the current record with the given data and then saves the record to
-        the database. The "data' argument supplies
-        a hash of fieldNames and values. The data hash may come from the request #params or it can be manually
-        created via #ediMakeHash to convert a JSON string into an options hash.
-        For example: ediWriteFields(rec, params());
-        The record runs field validations before saving to the database.
+    @description This routine updates the current record with the given data. The "data' argument supplies the
+        fieldNames and values as a JSON object. The data
+        may come from the request #params or it can be manually created via makeJson to convert a JSON
+        string into an options hash. For example: ediWriteFields(rec, params());
     @param tableName Database table name
     @param data Json object of fields to update
     @return "true" if the field  can be successfully written. Returns false if field validations fail.
@@ -4019,7 +4317,7 @@ PUBLIC bool updateField(cchar *tableName, cchar *key, cchar *fieldName, cchar *v
 PUBLIC bool updateFields(cchar *tableName, MprJson *data);
 
 /**
-    Write a record to the database
+    Save a record to the database
     @description The record will be saved to the database after running any field validations. If any field validations
         fail to pass, the record will not be written and error details can be retrieved via #ediGetRecErrors.
         If the record is a new record and the "id" column is EDI_AUTO_INC, then the "id" will be assigned
@@ -4033,43 +4331,45 @@ PUBLIC bool updateFields(cchar *tableName, MprJson *data);
  */
 PUBLIC bool updateRec(EdiRec *rec);
 
+#if DEPRECATED || 1
 /**
     Update a record from the request parameters
     @description The record identified by the params(id) is read and updated with the request parameters.
     @param table Database table to update
     @return True if the update is successful.
     @ingroup EspAbbrev
-    @stability Prototype
+    @stability Deprecated
 */
-PUBLIC bool updateRecFromParams(cchar *table);
+PUBLIC bool updateRecFromParams(cchar *table) ME_DEPRECATED("Use updateRecFields instead");
+#endif
 
 /**
     Create a URI link.
     @description Create a URI link based on a given target an expanding embedded tokens based on the current request and
         route state. The target URI parameter may contain partial or complete URI information. The missing parts
-    are supplied using the current request and route tables.
+        are supplied using the current request and route tables.
     @param target The URI target. The target parameter can be a URI string or JSON style set of options.
         The target will have any embedded "{tokens}" expanded by using token values from the request parameters.
         If the target has an absolute URI path, that path is used directly after tokenization. If the target begins with
         "~", that character will be replaced with the route prefix. This is a very convenient way to create application
         top-level relative links.
-        \n\n
+        <br/>
         If the target is a string that begins with "{AT}" it will be interpreted as a service/action pair of the
         form "{AT}Service/action". If the "service/" portion is absent, the current service is used. If
         the action component is missing, the "list" action is used. A bare "{AT}" refers to the "list" action
         of the current service.
-        \n\n
+        <br/>
         If the target starts with "{" it is interpreted as being a JSON style set of options that describe the link.
         If the target is a relative URI path, it is appended to the current request URI path.
-        \n\n
+        <br/><br/>
         If the is a JSON style of options, it can specify the URI components: scheme, host, port, path, reference and
         query. If these component properties are supplied, these will be combined to create a URI.
-        \n\n
+        <br/><br/>
         If the target specifies either a service/action or a JSON set of options, The URI will be created according
         to the route URI template. The template may be explicitly specified
         via a "route" target property. Otherwise, if an "action" property is specified, the route of the same
         name will be used. If these don't result in a usable route, the "default" route will be used.
-        \n\n
+        <br/><br/>
         These are the properties supported in a JSON style "{ ... }" target:
         <ul>
             <li>scheme String URI scheme portion</li>
@@ -4088,7 +4388,8 @@ PUBLIC bool updateRecFromParams(cchar *table);
     @return A normalized Uri string.
     @ingroup EspAbbrev
     @stability Evolving
-    @remarks Examples:<pre>
+    @examples:
+    <pre>
     uri("http://example.com/index.html");
     uri("/path/to/index.html");
     uri("../images/splash.png");
@@ -4105,29 +4406,24 @@ PUBLIC bool updateRecFromParams(cchar *table);
     uri("{ product: 'candy', quantity: '10', template: '/cart/${product}/${quantity}' }");
     uri("{ route: '~/STAR/edit', action: 'checkout', id: '99' }");
     uri("{ template: '~/static/images/${theme}/background.jpg', theme: 'blue' }");
-</pre>
+    </pre>
  */
 PUBLIC cchar *uri(cchar *target, ...);
 
-/**
-    Create an absolute URI with a scheme and host
-    @param target The URI target. See httpLink for details
-    @param ... arguments to the formatted target string
-    @return A normalized, absolute Uri string containing scheme and host.
-    @ingroup EspAbbrev
-    @stability Evolving
+#endif /* ME_ESP_ABBREV */
+/*
+    LEGACY redefines
  */
-PUBLIC cchar *absuri(cchar *target, ...);
+#define espGetConn espGetStream
+#define espSetConn espSetStream
 
-#if DEPRECATED || 1
-
-#define espGetFlash(conn, type) espGetFeedback(conn, type)
-#define espRenderFlash(conn, types) espRenderFeedback(conn, types)
-#define espSetFlashv(conn, type, fmt, args) espSetFeedbackv(conn, type, fmt, args)
+#if DEPRECATED && REMOVE
+#define espGetFlash(stream, type) espGetFeedback(stream, type)
+#define espRenderFlash(stream, types) espRenderFeedback(stream, types)
+#define espSetFlashv(stream, type, fmt, args) espSetFeedbackv(stream, type, fmt, args)
 #define getFlash(type) getFeedback(type)
 #define renderFlash(types) renderFeedback(types)
-
-PUBLIC void espSetFlash(HttpConn *conn, cchar *type, cchar *fmt, ...);
+PUBLIC void espSetFlash(HttpStream *stream, cchar *type, cchar *fmt, ...);
 PUBLIC void flash(cchar *type, cchar *fmt, ...);
 #endif /* DEPRECATED */
 

@@ -5,7 +5,7 @@
 #	Copyright (c) Embedthis Software. All Rights Reserved.
 #
 
-ME_PRODUCT=${settings.name}
+ME_PRODUCT=appweb
 ME_NAME="${settings.title}"
 ME_ETC_PREFIX="${prefixes.etc}"
 ME_CACHE_PREFIX="${prefixes.cache}"

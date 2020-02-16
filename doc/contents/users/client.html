@@ -7,7 +7,9 @@
             <h1>Appweb HTTP Client</h1>
             <p>http &mdash; HTTP client program.</p><a id="synopsis"></a>
             <h2>Synopsis</h2>
-            <p>http [options] URIs ...</p><a id="description"></a>
+            <p>http [options] [file] URL</p>
+
+            <a id="description"></a>
             <h2>Description</h2>
             <p>The <b>http</b> utility uses the Appweb HTTP client library to retrieve documents from HTTP servers. It
             supports HTTP, SSL, authentication and form data and the GET, POST, PUT, DELETE, OPTIONS and TRACE HTTP
@@ -22,8 +24,16 @@
                 </thead>
                 <tbody>
                     <tr>
+                        <td>--auth Type</td>
+                        <td>Set the authentication type to "app", "basic", "digest" or "form".</td>
+                    </tr>
+                    <tr>
                         <td>--benchmark</td>
                         <td>Output timing results after retrieving URLs.</td>
+                    </tr>
+                    <tr>
+                        <td>--ca file</td>
+                        <td>Define a bundle of root certificates to use when validating a server certificate.</td>
                     </tr>
                     <tr>
                         <td>--cert file</td>
@@ -73,13 +83,13 @@
                         with the URL "/", then http will retrieve http://www.myHost.com:8888/.</td>
                     </tr>
                     <tr>
-                        <td>--insecure</td>
-                        <td>Don't validate server certificates when using SSL.</td>
-                    </tr>
-                    <tr>
                         <td>--iterations count</td>
                         <td>Retrieve the URLs iterations times. Useful for load testing. This switch can also be
                         abbreviated as -i.</td>
+                    </tr>
+                    <tr>
+                        <td>--key file</td>
+                        <td>Private key file for SSL.</td>
                     </tr>
                     <tr>
                         <td>--log logSpec</td>
@@ -109,6 +119,10 @@
                         --user.</td>
                     </tr>
                     <tr>
+                        <td>--password PASSWORD</td>
+                        <td>Password for authentication.</td>
+                    </tr>
+                    <tr>
                         <td>--post</td>
                         <td>Use POST method. Shortcut for --method POST.</td>
                     </tr>
@@ -118,8 +132,8 @@
                     </tr>
                     <tr>
                         <td class="nowrap">--protocol HTTP_VERSION</td>
-                        <td>Use the specified HTTP protocol. httpVersion should be either '0' for HTTP/1.0 or '1' for
-                        HTTP/1.1.</td>
+                        <td>Use the specified HTTP protocol. Version should be either '0' for HTTP/1.0 or '1' for
+                        HTTP/1.1. or '2' for HTTP/2</td>
                     </tr>
                     <tr>
                         <td>--put</td>
@@ -150,6 +164,10 @@
                         <td>Single step between requests by pausing for user input before proceeding.</td>
                     </tr>
                     <tr>
+                        <td>--streams count</td>
+                        <td>Number of http streams to spawn.</td>
+                    </tr>
+                    <tr>
                         <td>--threads loadThreads</td>
                         <td>Number of threads to use. Each URL will be retrieved by all threads. Useful only for load
                         testing.</td>
@@ -166,7 +184,7 @@
                         <td>Specify a user name to send with the request. If a password is not specified via
                         --password, the program will prompt for a password (which will not be echoed). The username and
                         password will be sent with the request according to the authentication protocol required by the
-                        requested web server and requested document.</td>
+                        requested web server and requested document. The username may have a password appended separated by a colon.</td>
                     </tr>
                     <tr>
                         <td>--verbose</td>
@@ -174,8 +192,20 @@
                         tracing. This switch can also be abbreviated as -v.</td>
                     </tr>
                     <tr>
+                        <td>--verify</td>
+                        <td>Validate server certificates when using SSL.</td>
+                    </tr>
+                    <tr>
+                        <td>--window size</td>
+                        <td>Set the HTTP/2 input window size. Min 65535 bytes.</td>
+                    </tr>
+                    <tr>
                         <td>--workers count</td>
                         <td>Set maximum number of worker threads.</td>
+                    </tr>
+                    <tr>
+                        <td>--zero</td>
+                        <td>Exit with zero status for any valid HTTP response. Normally exits with zero status only for HTTP status 200.</td>
                     </tr>
                 </tbody>
             </table>

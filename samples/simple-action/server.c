@@ -13,39 +13,39 @@
     This method is run when the action form is called from the web page.
  */
 
-static void myaction(HttpConn *conn)
+static void myaction(HttpStream *stream)
 {
     HttpQueue   *q;
 
-    q = conn->writeq;
+    q = stream->writeq;
     /*
         Set the HTTP response status
      */
-    httpSetStatus(conn, 200);
+    httpSetStatus(stream, 200);
 
     /*
         Add desired headers. "Set" will overwrite, add will create if not already defined.
      */
-    httpAddHeaderString(conn, "Content-Type", "text/html");
-    httpSetHeaderString(conn, "Cache-Control", "no-cache");
+    httpAddHeaderString(stream, "Content-Type", "text/html");
+    httpSetHeaderString(stream, "Cache-Control", "no-cache");
 
     httpWrite(q, "<html><title>simpleAction</title><body>\r\n");
-    httpWrite(q, "<p>Name: %s</p>\n", httpGetParam(conn, "name", "unspecified"));
-    httpWrite(q, "<p>Address: %s</p>\n", httpGetParam(conn, "address", "unspecified"));
+    httpWrite(q, "<p>Name: %s</p>\n", httpGetParam(stream, "name", "unspecified"));
+    httpWrite(q, "<p>Address: %s</p>\n", httpGetParam(stream, "address", "unspecified"));
     httpWrite(q, "</body></html>\r\n");
 
     /*
         Call finalize output and close the request.
         Delay closing if you want to do asynchronous output and close later.
      */
-    httpFinalize(conn);
+    httpFinalize(stream);
 
 #if POSSIBLE
     /*
         Useful things to do in actions
      */
-    httpRedirect(conn, 302, "/other-uri");
-    httpError(conn, 409, "My message : %d", 5);
+    httpRedirect(stream, 302, "/other-uri");
+    httpError(stream, 409, "My message : %d", 5);
 #endif
 }
 

@@ -2,20 +2,19 @@
 <html lang="en">
 <head>
     <title>Action Handler</title>
-    <!-- Copyright Embedthis Software. All Rights Reserved. -->
+    
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <meta name="description" content="Action Handler" />
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
-        rel='stylesheet' type='text/css'>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <meta name="description" content="Action Handler">
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     
-    <link href="../images/favicon.ico" rel="shortcut icon" />
-    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css" />
-    <link href="../css/all.min.css" rel="stylesheet" type="text/css" />
-    <link href="../css/api.min.css" rel="stylesheet" type="text/css" />
+    <link href="../images/favicon.ico" rel="shortcut icon">
+    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css">
+    <link href="../css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="../css/api.min.css" rel="stylesheet" type="text/css">
     
 
 </head>
@@ -80,7 +79,7 @@
                     <a class="item" href="../developers/action.html">Using the Action Handler</a>
                     <a class="item" href="../developers/stages.html">Creating Pipeline Stages</a>
                     <a class="item" href="../developers/rom.html">Serving Pages from ROM</a>
-                    <a class="item" href="../developers/migrating.html">Upgrading Earlier Releases</a>
+                    <a class="item" href="../developers/migrating.html">Migrating from Earlier Releases</a>
                 </div>
             </div>
             <div class="item">
@@ -102,7 +101,9 @@
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/cpp-module">cpp-module</a>
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/deploy-server">deploy-server</a>
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/esp-hosted">esp-hosted</a>
+                    <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/esp-upload">esp-upload</a>
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/login-basic">login-basic</a>
+                    <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/login-database">login-database</a>
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/login-form">login-form</a>
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/max-server">max-server</a>
                     <a class="item" href="https://github.com/embedthis/appweb/tree/dev/samples/min-server">min-server</a>
@@ -189,19 +190,19 @@
             <h1>Using the Action Handler</h1>
             <p>The Action handler is a simple Appweb handler that processes requires by invoking registered C
             functions. The action handler is ideal for situations when you want to generate a simple response using
-            C code. The action handler employs a direct mapping from URIs to C functions with no further parsing or 
+            C code. The action handler employs a direct mapping from URIs to C functions with no further parsing or
             analysis of the URI than that provided by the Appweb router.</p>
             <a name="registering"></a>
 
             <h2>Registering Actions</h2>
-            <p>Actions are registered by calling 
+            <p>Actions are registered by calling
             <a href="../ref/api/http.html#http_8h_1a97b87c9cd5010bbd1188abfa67296768">httpDefineAction</a> and providing
             the function to run and the corresponding URI.
 <pre class="code">
-static void hello(HttpConn *conn)
+static void hello(HttpStream *stream)
 {
-    httpWrite(conn, "Hello World\n");
-    httpFinalize(conn);
+    httpWrite(stream, "Hello World\n");
+    httpFinalize(stream);
 }
 httpDefineAction("/action/hello", hello);</pre>
 
@@ -211,19 +212,19 @@ httpDefineAction("/action/hello", hello);</pre>
             <a name="actions"></a>
             <h2>Actions</h2>
             <p>An action routine is responsible for rendering a complete response to the client. A response is
-            concluded by calling 
-            <a href="../ref/api/http.html#group___http_tx_1ga279ad49e5163402e2afd6caf478bcc70">httpFinalize</a>. 
-            If you cannot yet complete the response without waiting, 
+            concluded by calling
+            <a href="../ref/api/http.html#group___http_tx_1ga1a328a25ac329fd5cfc9e1ab033b10db">httpFinalize</a>.
+            If you cannot yet complete the response without waiting,
             it is best not to block, as this will consume a thread from the worker pool while waiting. Instead,
             return from the action without calling httpFinalize and arrange for the response to be completed later.
             Note: that the Appweb RequestTimeout and InactivityTimeout in appweb.conf may terminate a long running
             request. If you need to extend these timeouts for a request, call
-            <a href="../ref/api/http.html#group___http_conn_1gaa4b4def5658e51af56d186e0b35ace55">httpSetTimeout</a>.</p>
+            <a href="../ref/api/http.html#group___http_stream_1ga99922c1f07023f4ed5bcf39d37a86791">httpSetTimeout</a>.</p>
 
             <a name="api"></a>
             <h2>Appweb API</h2>
             <p>The Appweb Native APIs consist of C language headers, function prototypes, structure definitions and
-            defines. They are divided into three API groups. You can use many of these APIs from within Action 
+            defines. They are divided into three API groups. You can use many of these APIs from within Action
             routines.</p>
             <table title="APIs" class="ui table segment">
                 <thead>
@@ -260,5 +261,6 @@ httpDefineAction("/action/hello", hello);</pre>
 
     
 
-</body>
-</html>
+
+
+

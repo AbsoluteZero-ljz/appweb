@@ -140,7 +140,7 @@ This software is supplied under license. Both a GNU and commercial license are a
 
 Copyright (c) Embedthis Software. All Rights Reserved.
 
-Embedthis is a trademark of Embedthis Software LLC. Embedthis, Appweb and Ejscript are trademarks of Embedthis Software. All other brand or product names are the trademarks or registered trademarks of their respective holders.
+Embedthis is a trademark of Embedthis Software LLC. Embedthis, Appweb and ESP are trademarks of Embedthis Software. All other brand or product names are the trademarks or registered trademarks of their respective holders.
 
 
 Embedthis Software, LLC.

@@ -10,10 +10,10 @@ Me.load({
     blend: [
         'src/*.me',
         'src/*/*.me',
-        'doc/doc.me',
-        'test/test.me',
-        'samples/samples.me',
-        'installs/installs.me',
+        '?doc/doc.me',
+        '?test/test.me',
+        '?samples/samples.me',
+        '?installs/installs.me',
         '?local.me',
     ],
 
@@ -22,7 +22,7 @@ Me.load({
     configure: {
         requires:  [ 'osdep', 'http', 'mpr', 'pcre'],
         discovers: [ 'esp', 'mdb', 'ssl', 'watchdog' ],
-        extras:    [ 'cgi', 'dir', 'ejs', 'php' ],
+        extras:    [ 'cgi', 'dir', 'ejs', 'php', 'sqlite' ],
     },
 
     customize: [
@@ -34,6 +34,16 @@ Me.load({
     ],
 
     settings: {
+        /*
+            Set compat to true to enable compatibility defines to assist migrating pre Appweb 8 handlers/modules
+         */
+        compat: true,
+
+        /*
+            Set to true to emit warnings about deprecated APIs
+         */
+        deprecatedWarnings: false,
+
         integrate: true,
 
         /*
@@ -46,6 +56,12 @@ Me.load({
             Name and path of the appweb config file. Defaults to './appweb.conf' if empty.
          */
         configFile: 'appweb.conf',
+
+        /*
+            Local main program code to include in appweb.c. Typically put in local.me.
+
+            localMain: '/path/main.c',
+         */
 
         /* Must build locally to build tools */
         platforms: [ 'local' ],
@@ -60,6 +76,7 @@ Me.load({
 
         esp: {
             cmd:    true,
+            name:   'appweb-esp',
             legacy: false,
             module: false,
         },
@@ -68,15 +85,16 @@ Me.load({
             /* Use PAM (Plugable Authentication Module) to store passwords */
             cmd: true,
             pam: true,
+            http2: true,
             webSockets: true,
         },
 
         mbedtls: {
-            compact: true,      /* Compact edition - Disable non-essential ciphers and features */
+            compact: true,              /* Compact edition - Disable non-essential ciphers and features */
         },
 
         openssl: {
-            version: '1.0',
+            version: '1.0',             /* Base edition */
         },
 
         mpr: {
@@ -94,13 +112,13 @@ Me.load({
             romMount: "/rom",           /* Virtual mount point for a rom file system */
             ssl: {
                 cache: 512,             /* Set the session cache size (items) */
-                logLevel: 5,            /* Starting logging level for SSL messages */
+                logLevel: 6,            /* Starting logging level for SSL messages */
                 handshakes: 3,          /* Set maximum number of renegotiations (zero means infinite) */
                 ticket: true,           /* Enable session resumption via ticketing - client side session caching */
                 timeout: 86400,         /* Session and ticketing duration in seconds */
             },
             threadStack: 0,             /* Use the default system stack size */
-            threadLimitByCores: true,   /* Limit threads to CPU core count */
+            threadLimitByCores: true,   /* Limit number of active threads to CPU core count */
         },
 
         /*
@@ -151,10 +169,14 @@ Me.load({
          */
         projects: {
             action: `
-                genProjects('--set openssl.version=1.0 --with openssl', 'openssl_10', 'windows-x64')
-                genProjects('--set openssl.version=1.1 --with openssl', 'openssl_11', 'windows-x64')
-                genProjects('--with openssl', 'openssl', 'macosx-x64')
-                genProjects('')
+                if (me.settings.description == 'Embedthis Appweb Enterprise Edition') {
+                    genProjects('--set openssl.version=1.0 --with openssl', 'openssl_10', 'windows-x64')
+                    genProjects('--set openssl.version=1.1 --with openssl', 'openssl_11', 'windows-x64')
+                    genProjects('--with openssl', 'openssl', 'macosx-x64')
+                    genProjects('')
+                } else {
+                    genProjects('', ['default'])
+                }
             `,
         },
 

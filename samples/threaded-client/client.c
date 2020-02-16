@@ -15,14 +15,14 @@
 #define TEST_URL "http://example.com/index.html"
 #define TEST_THREADS 1
 #define TEST_ITERATIONS 1
-#define TEST_METHOD "GET"
-#define TEST_DATA ""
+#define TEST_METHOD "POST"
+#define TEST_DATA "Hello Post"
 
 static int threadCount = 0;
 
 /******************************** Forwards ****************************/
 
-static int request(HttpConn *conn);
+static int request(HttpStream *stream);
 static void threadMain(void *data, MprThread *thread);
 
 /********************************* Code *******************************/
@@ -71,7 +71,8 @@ MAIN(simpleClient, int argc, char **argv, char **envp)
 static void threadMain(void *data, MprThread *thread)
 {
     MprDispatcher   *dispatcher;
-    HttpConn        *conn;
+    HttpNet         *net;
+    HttpStream      *stream;
     int             i;
 
     if ((dispatcher = mprCreateDispatcher("httpRequest", 0)) == 0) {
@@ -81,20 +82,26 @@ static void threadMain(void *data, MprThread *thread)
     mprStartDispatcher(dispatcher);
 
     /*
-        Create a connection object for the network connection for this thread.
+        Create a network object for the network connection for this thread.
      */
-    if ((conn = httpCreateConn(NULL, dispatcher)) == 0) {
-        mprError("Cannot create connection");
+    if ((net = httpCreateNet(dispatcher, NULL, 1, 0)) == 0) {
+        mprError("Cannot create net");
         mprDestroyDispatcher(dispatcher);
         return;
     }
+    if ((stream = httpCreateStream(net, 0)) == 0) {
+        mprError("Cannot create stream");
+        return;
+    }
+
     for (i = 0; i < TEST_ITERATIONS; i++) {
-        if (request(conn) < 0) {
+        if (request(stream) < 0) {
             mprError("Can't get URL");
             return;
         }
     }
-    httpDestroyConn(conn);
+    httpDestroyStream(stream);
+    httpDestroyNet(net);
     mprDestroyDispatcher(dispatcher);
 
     /*
@@ -111,7 +118,7 @@ static void threadMain(void *data, MprThread *thread)
 /*
     Issue a test request on a thread
  */
-static int request(HttpConn *conn)
+static int request(HttpStream *stream)
 {
     cchar           *data;
     ssize           len;
@@ -119,26 +126,26 @@ static int request(HttpConn *conn)
     /*
        Connect and issue the request. Then finalize the request output - this forces the request out.
      */
-    if (httpConnect(conn, TEST_METHOD, TEST_URL, NULL) < 0) {
+    if (httpConnect(stream, TEST_METHOD, TEST_URL, NULL) < 0) {
         mprError("Cannot connect to %s", TEST_URL);
         return MPR_ERR_CANT_CONNECT;
     }
     data = TEST_DATA;
     if (data) {
         len = slen(data);
-        if (httpWriteBlock(conn->writeq, data, len, HTTP_BLOCK) != len) {
+        if (httpWriteBlock(stream->writeq, data, len, HTTP_BLOCK) != len) {
             mprError("Cannot write request body data");
             return MPR_ERR_CANT_WRITE;
         }
     }
-    httpFinalizeOutput(conn);
+    httpFinalizeOutput(stream);
 
-    if (httpWait(conn, HTTP_STATE_CONTENT, MPR_MAX_TIMEOUT) < 0) {
+    if (httpWait(stream, HTTP_STATE_CONTENT, MPR_MAX_TIMEOUT) < 0) {
         mprError("No response");
         return MPR_ERR_BAD_STATE;
     }
-    if (httpGetStatus(conn) != 200) {
-        mprError("Server responded with status %d\n", httpGetStatus(conn));
+    if (httpGetStatus(stream) != 200) {
+        mprError("Server responded with status %d\n", httpGetStatus(stream));
         return MPR_ERR_BAD_STATE;
     }
     mprPrintf("%s\n", httpReadString(conn));
