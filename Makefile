@@ -1,4 +1,4 @@
-# 
+#
 #   Makefile - Embedthis Appweb Makefile wrapper for per-platform makefiles
 #
 #	This Makefile is for Unix/Linux and Cygwin. On windows, it can be invoked via make.bat.
@@ -7,12 +7,12 @@
 #   you can build using the MakeMe tool for for a fully configurable build. If you wish to
 #   cross-compile, you should use MakeMe.
 #
-#	See projects/$(OS)-$(ARCH)-$(PROFILE)-me.h for configuration default settings. Can override 
-#	via make environment variables. For example: make ME_COM_SQLITE=0. These are converted to 
-#	DFLAGS and will then override the me.h default values. Use "make help" for a list of available 
+#	See projects/$(OS)-$(ARCH)-$(PROFILE)-me.h for configuration default settings. Can override
+#	via make environment variables. For example: make ME_COM_SQLITE=0. These are converted to
+#	DFLAGS and will then override the me.h default values. Use "make help" for a list of available
 #	make variable options.
 #
-NAME    := appweb
+NAME    := appweb-core
 OS      := $(shell uname | sed 's/CYGWIN.*/windows/;s/Darwin/macosx/' | tr '[A-Z]' '[a-z]')
 PROFILE := default
 
@@ -37,7 +37,7 @@ else
 endif
 
 BIN 	:= $(OS)-$(ARCH)-$(PROFILE)/bin
-PATH    := $(PWD)/build/$(BIN):$(PATH)
+PATH	:= $(PWD)/build/$(BIN):$(PATH)
 
 .EXPORT_ALL_VARIABLES:
 
@@ -69,8 +69,6 @@ help:
 	@echo 'The default configuration can be modified by setting make variables' >&2
 	@echo 'Set to 0 to disable and 1 to enable:' >&2
 	@echo '' >&2
-	@echo '  ME_ESP_MDB        # Enable ESP MDB database support' >&2
-	@echo '  ME_ESP_SDB        # Enable ESP SQLite database support' >&2
 	@echo '  ME_MPR_LOGGING    # Enable application logging' >&2
 	@echo '  ME_MPR_TRACING    # Enable debug tracing' >&2
 	@echo '  ME_COM_CGI        # Enable the CGI handler' >&2
@@ -105,3 +103,8 @@ help:
 	@echo 'Use "DEBUG=release make" to build for release.' >&2
 	@echo '' >&2
 
+LOCAL_MAKEFILE := $(strip $(wildcard ./.local.mk))
+
+ifneq ($(LOCAL_MAKEFILE),)
+include	$(LOCAL_MAKEFILE)
+endif

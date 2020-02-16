@@ -1,28 +1,26 @@
-Embedthis Appweb Community Edition Licenses
+Embedthis Appweb Enterprise Edition Licenses
 ===
 
-Embedthis Appweb Community Edition is distributed under a GPL open source license. The GPL License does not generally permit incorporating this software into non-open source programs. Commercial licenses for Appweb Enterprise Edition and support services are available from [Embedthis Software](mailto@sales@embedthis.com).
+Embedthis Appweb Enterprise Edition is distributed under a commercial license. 
 
-The GPL license requires that all software linked with a GPL licensed component, be itself licensed via the GPL. If you use Appweb Community Edition, you must also license all your software that modifies, links with or is combined with Appweb via the GPL. This means you must offer your source code to the general public and anyone who requests it.
+An Embedthis commercial license provides a royalty free, commercial license to embed the software into your products with options for ongoing maintenance and support. Contact [sales@embedthis.com](mailto:dev@embdthis.com) for details.
 
-If you release products that use Appweb Community Edition, according to the GPL license, Embedthis herein requests a copy of your source code that is used in combination with Appweb. Please provide a copy of your source code by contacting [licensing@embedthis.com](mailto:licensing@embedthis.com).
+If have a commercial license with an active maintenance agreement you can incorporate new releases, updates and patches for the software into your products. If you do not have active maintenance agreement, you cannot use the GPL license for applying these updates without also fully complying with all the terms of the GPL license for your entire product including publicly offering your source code to the general public. If you choose this option, please provide notification and a copy of your source code to [licensing@embedthis.com](mailto:licensing@embedthis.com).
 
-Please consult the GPL license for license details. Contact Embedthis at [licensing@embedthis.com](mailto:licensing@embedthis.com) if you have any licensing questions.
+Please read the following document for more information:
 
-* [GPL License](http://www.gnu.org/licenses/gpl-2.0.html)
+* [Embedthis Commercial License](https://www.embedthis.com/licensing/)
 
-## Commercial License
-
-An enhanced version of Appweb is available called Embedthis Appweb Enterprise Edition. This edition uses a commercial license and provides a royalty free, license to embed the software into your products with options for ongoing maintenance and support. Contact [sales@embedthis.com](mailto:dev@embdthis.com) for details.  
 
 Third Party Licenses
 ---
 
-The Software contains third party software under the agreements that follow:
+The Software contains third party software under the agreements that follow.
 
 ### MbedTLS License
 
 MbedTLS - [Apache](http://www.apache.org/licenses/LICENSE-2.0)
+
 
 ### Perl Regular Expressions License
 
@@ -37,6 +35,36 @@ License to copy and use this software is granted provided that it is identified 
 ### SQLite License
 
 SQLite - [Public Domain](http://www.sqlite.org/copyright.html)
+
+### Nginx License
+
+Portions of hpack.c used for the HTTP/2 support.
+
+Copyright (C) 2002-2018 Igor Sysoev
+Copyright (C) 2011-2018 Nginx, Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS AS IS AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE.
 
 Trademarks and Copyrights
 ---
