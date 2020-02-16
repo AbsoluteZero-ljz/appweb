@@ -1,9 +1,9 @@
 #
-#   appweb-macosx-static.mk -- Makefile to build Embedthis Appweb Community Edition for macosx
+#   appweb-macosx-static.mk -- Makefile to build Embedthis Appweb Enterprise Edition for macosx
 #
 
 NAME                  := appweb
-VERSION               := 7.2.1
+VERSION               := 7.2.2
 PROFILE               ?= static
 ARCH                  ?= $(shell uname -m | sed 's/i.86/x86/;s/x86_64/x64/;s/arm.*/arm/;s/mips.*/mips/')
 CC_ARCH               ?= $(shell echo $(ARCH) | sed 's/x86/i686/;s/x64/x86_64/')

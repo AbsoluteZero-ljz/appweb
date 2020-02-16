@@ -2,20 +2,19 @@
 <html lang="en">
 <head>
     <title>Authorization</title>
-    <!-- Copyright Embedthis Software. All Rights Reserved. -->
+    
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <meta name="description" content="Authorization" />
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
-        rel='stylesheet' type='text/css'>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <meta name="description" content="Authorization">
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     
-    <link href="../../images/favicon.ico" rel="shortcut icon" />
-    <link href="../../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css" />
-    <link href="../../css/all.min.css" rel="stylesheet" type="text/css" />
-    <link href="../../css/api.min.css" rel="stylesheet" type="text/css" />
+    <link href="../../images/favicon.ico" rel="shortcut icon">
+    <link href="../../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css">
+    <link href="../../css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="../../css/api.min.css" rel="stylesheet" type="text/css">
     
 
 </head>
@@ -257,44 +256,7 @@
                 </tbody>
             </table>
             
-            <!-- UNUSED
-            <a id="authCipher"></a>
-            <h2>AuthCipher</h2>
-            <table class="directive" title="directive">
-                <tbody>
-                    <tr>
-                        <td class="pivot">Description</td>
-                        <td>Defines the cipher used to encrypt passwords</td>
-                    </tr>
-                    <tr>
-                        <td class="pivot">Synopsis</td>
-                        <td>AuthCipher [blowfish | md5]</td>
-                    </tr>
-                    <tr>
-                        <td class="pivot">Context</td>
-                        <td>Default Server, Virtual Host, Route</td>
-                    </tr>
-                    <tr>
-                        <td class="pivot">Example</td>
-                        <td>AuthCipher blowfish</td>
-                    </tr>
-                    <tr>
-                        <td class="pivot">Notes</td>
-                        <td>
-                            <p>The AuthCipher directive specifies the cipher used for encryption when storing passwords 
-                            at the server. There are two choices, 
-                            <ul>
-                            <li>blowfish &mdash; for Blowfish encryption. Cannot use with Digest authentication</li>
-                            <li>md5 &mdash; for MD5 hashing. Required if using Digest authentication</li>
-                            </ul>
-                            <p>The blowfish cipher is much more secure than MD5 which can be compromised if the password
-                            file is accessible.
-                            <p>The default cipher is "md5".</p>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            -->
+            
             
             <a id="authDigestQop"></a>
             <h2>AuthDigestQop</h2>
@@ -332,44 +294,7 @@
                     </tr>
                 </tbody>
             </table>
-            <!-- DEPRECATED
-            <a id="authRealm"></a>
-            <h2>AuthRealm</h2>
-            <table class="directive" title="directive">
-                <tbody>
-                    <tr>
-                        <td class="pivot">Description</td>
-                        <td>Defines a realm name for authentication.</td>
-                    </tr>
-                    <tr>
-                        <td class="pivot">Synopsis</td>
-                        <td>AuthRealm realm</td>
-                    </tr>
-                    <tr>
-                        <td class="pivot">Context</td>
-                        <td>Default Server, Virtual Host, Route</td>
-                    </tr>
-                    <tr>
-                        <td class="pivot">Example</td>
-                        <td>AuthRealm "example.com"<br />
-                        AuthType Basic<br />
-                        Require group employees</td>
-                    </tr>
-                    <tr>
-                        <td class="pivot">Notes</td>
-                        <td>
-                            <p>The AuthRealm directive defines a unique name for a zone of access. The realm is used
-                            in combination with the username and password during the authentication process.
-                            For Basic and Digest authentication types, the realm is displayed by the user's browser when
-                            prompting for a user name and password. For consistency, Appweb requires a realm to be
-                            specified even if Basic and Digest authentication types are not employed. When creating
-                            internal passwords via the <em>authpass</em> utility, the realm is combined with the
-                            username and password when encrypting the password.</p>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            -->
+            
             
             <a id="authStore"></a>
             <h2>AuthStore</h2>
@@ -401,7 +326,7 @@
                             directives are typically stored in a separate authentication configuration file that is
                             included by <em>appweb.conf</em>. The <em>authpass</em> program can be used to create
                             encrypted User passwords in the authentication file.</p>
-                            <P>The "system" option selects the default system password database. On Unix, the 
+                            <p>The "system" option selects the default system password database. On Unix, the 
                             Plugable Authentication Modules (PAM) method is used. Windows ActiveDirectory is not yet 
                             supported. </p>
                         </td>
@@ -419,7 +344,7 @@
                     </tr>
                     <tr>
                         <td class="pivot">Synopsis</td>
-                        <td>AuthType [basic | digest | none] [realm]<br/>
+                        <td>AuthType [basic | digest | none] [realm]<br>
                         AuthType form realm login-page [login-service logout-service logged-in-page]</td>
                     </tr>
                     <tr>
@@ -428,9 +353,9 @@
                     </tr>
                     <tr>
                         <td class="pivot">Example</td>
-                        <td>AuthType basic example.com<br />
-                            AuthType form example.com https:///admin/login.esp -<br/>
-                                &nbsp; &nbsp; https:///login /logout /home.html<br/>
+                        <td>AuthType basic example.com<br>
+                            AuthType form example.com https:///admin/login.esp -<br>
+                                &nbsp; &nbsp; https:///login /logout /home.html<br>
                             Require ability modify</td>
                     </tr>
                     <tr>
@@ -512,8 +437,8 @@
                     </tr>
                     <tr>
                         <td class="pivot">Example</td>
-                        <td>Order Deny,Allow<br />
-                        Deny from all<br />
+                        <td>Order Deny,Allow<br>
+                        Deny from all<br>
                         Allow from www.example.com</td>
                     </tr>
                     <tr>
@@ -558,8 +483,8 @@ Deny from www.myCompetitor.com
                     </tr>
                     <tr>
                         <td class="pivot">Synopsis</td>
-                        <td>Require user username...<br />
-                        Require secure [age=secs] [domains]<br />
+                        <td>Require user username...<br>
+                        Require secure [age=secs] [domains]<br>
                         Require ability name...</td>
                     </tr>
                     <tr>
@@ -682,5 +607,6 @@ Deny from www.myCompetitor.com
 
     
 
-</body>
-</html>
+
+
+

@@ -1,9 +1,9 @@
 #
-#   appweb-windows-openssl_11.nmake -- Makefile to build Embedthis Appweb Community Edition for windows
+#   appweb-windows-openssl_11.nmake -- Makefile to build Embedthis Appweb Enterprise Edition for windows
 #
 
 NAME                  = appweb
-VERSION               = 7.2.1
+VERSION               = 7.2.2
 
 OS                    = windows
 PA                    = $(PROCESSOR_ARCHITECTURE)
@@ -136,7 +136,7 @@ LIBS                  = ws2_32.lib advapi32.lib user32.lib kernel32.lib oldnames
 
 ME_ROOT_PREFIX        = C:
 ME_BASE_PREFIX        = $(ME_ROOT_PREFIX)\Program Files
-ME_APP_PREFIX         = $(ME_BASE_PREFIX)\Embedthis Appweb Community Edition
+ME_APP_PREFIX         = $(ME_BASE_PREFIX)\Embedthis Appweb Enterprise Edition
 ME_VAPP_PREFIX        = $(ME_APP_PREFIX)
 ME_DATA_PREFIX        = $(ME_VAPP_PREFIX)
 ME_STATE_PREFIX       = $(ME_VAPP_PREFIX)

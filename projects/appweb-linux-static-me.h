@@ -85,7 +85,7 @@
     #define ME_DEPTH 1
 #endif
 #ifndef ME_DESCRIPTION
-    #define ME_DESCRIPTION "Embedthis Appweb Community Edition"
+    #define ME_DESCRIPTION "Embedthis Appweb Enterprise Edition"
 #endif
 #ifndef ME_ESP_CMD
     #define ME_ESP_CMD 1
@@ -172,13 +172,13 @@
     #define ME_STATIC 1
 #endif
 #ifndef ME_TITLE
-    #define ME_TITLE "Embedthis Appweb Community Edition"
+    #define ME_TITLE "Embedthis Appweb Enterprise Edition"
 #endif
 #ifndef ME_TUNE
     #define ME_TUNE "size"
 #endif
 #ifndef ME_VERSION
-    #define ME_VERSION "7.2.1"
+    #define ME_VERSION "7.2.2"
 #endif
 #ifndef ME_WATCHDOG_NAME
     #define ME_WATCHDOG_NAME "appman"
@@ -207,7 +207,7 @@
     #define ME_APP_PREFIX "/usr/local/lib/appweb"
 #endif
 #ifndef ME_VAPP_PREFIX
-    #define ME_VAPP_PREFIX "/usr/local/lib/appweb/7.2.1"
+    #define ME_VAPP_PREFIX "/usr/local/lib/appweb/7.2.2"
 #endif
 #ifndef ME_BIN_PREFIX
     #define ME_BIN_PREFIX "/usr/local/bin"
@@ -240,7 +240,7 @@
     #define ME_CACHE_PREFIX "/var/spool/appweb/cache"
 #endif
 #ifndef ME_SRC_PREFIX
-    #define ME_SRC_PREFIX "appweb-7.2.1"
+    #define ME_SRC_PREFIX "appweb-7.2.2"
 #endif
 
 /* Suffixes */
@@ -282,10 +282,10 @@
     #define ME_MINOR_VERSION 2
 #endif
 #ifndef ME_PATCH_VERSION
-    #define ME_PATCH_VERSION 1
+    #define ME_PATCH_VERSION 2
 #endif
 #ifndef ME_VNUM
-    #define ME_VNUM 700020001
+    #define ME_VNUM 700020002
 #endif
 
 /* Components */
