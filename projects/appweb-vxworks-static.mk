@@ -1,9 +1,9 @@
 #
-#   appweb-vxworks-static.mk -- Makefile to build Embedthis Appweb Community Edition for vxworks
+#   appweb-vxworks-static.mk -- Makefile to build Embedthis Appweb Enterprise Edition for vxworks
 #
 
 NAME                  := appweb
-VERSION               := 7.2.1
+VERSION               := 7.2.2
 PROFILE               ?= static
 ARCH                  ?= $(shell echo $(WIND_HOST_TYPE) | sed 's/-.*$(ME_ROOT_PREFIX)/')
 CPU                   ?= $(subst X86,PENTIUM,$(shell echo $(ARCH) | tr a-z A-Z))
