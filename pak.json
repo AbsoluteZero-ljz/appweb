@@ -27,19 +27,17 @@
         "url": "https://www.embedthis.com/licensing/"
     },
     "dependencies": {
-        "assist": "~0.1",
+        "assist": "~1",
         "http": "~7",
-        "makerom": "~0.3",
+        "makerom": "~1",
         "mpr": "~8",
         "osdep": "~1",
-        "pcre": "~1.0",
-        "ssl": "~0.9",
-        "watchdog": "~0.3"
+        "pcre": "~1",
+        "ssl": "~1",
+        "watchdog": "~1"
     },
     "optionalDependencies": {
-        "appweb-ejscript": "~0.2",
-        "certs": "~0.1",
-        "ejscript": "~2.7",
+        "certs": "~1",
         "esp": "~7",
         "mpr-mbedtls": "~2",
         "mpr-openssl": "~1",
