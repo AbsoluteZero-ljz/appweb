@@ -1,14 +1,15 @@
-Embedthis Appweb Enterprise Edition
+Embedthis Appweb Community Edition
 ===
 
-Appweb is a compact, fast and secure web server for embedded applications. It supports HTTP/1 and HTTP/2 with a web server and HTTP client utility.
+Appweb is a compact, fast and secure web server for embedded applications. It supports HTTP with a web server and HTTP client utility.
+
+This repository does not contain the Appweb Enterprise Edition source code, but it is the repository for issues and bug reports for both the Appweb Community and Enterprise editions. Contact dev@embedthis.com for access to the Enterprise Edition source code. 
 
 Branches
 ---
 The repository has several branches:
 
 * master - Most recent release of the software.
-* dev - Current ongoing development.
 * X.X - Archived prior release branches for maintenance.
 
 Licensing
@@ -45,11 +46,11 @@ To run
 
 #### Windows
 
-make
+First open a Windows cmd prompt window and then set your Visual Studio environment variables by running vcvarsall.bat from your Visual Studio installation folder.
 
-The make.bat runs projects/windows.bat to locate the Visual Studio compiler. If you have setup
-your CMD environment for Visual Studio by running the Visual Studio vsvarsall.bat, then that edition of
-Visual Studio will be used. If not, windows.bat will attempt to locate the most recent Visual Studio version.
+Then run a Windows cmd prompt window and type:
+
+    make
 
 ### To Build with Visual Studio:
 
@@ -113,7 +114,6 @@ or
 
 The src/server directory contains a minimal appweb.conf suitable for production use without SSL. The test directory contains an appweb.conf that is fully configured for testing. When using the src/server/appweb.conf, change to the src/server directory to run. When using the test/appweb.conf, change to the test directory to run.
 
-
 ### To Test:
 
 Build with MakeMe and then:
@@ -125,5 +125,5 @@ Build with MakeMe and then:
 Resources
 ---
   - [Appweb web site](https://www.embedthis.com/)
-  - [Appweb GitLab repository](http://gitlab.com/embedthis/appweb-ee)
+  - [Appweb GitHub repository](http://github.com/embedthis/appweb)
   - [Embedthis web site](https://www.embedthis.com/)

@@ -1,4 +1,4 @@
-Embedthis Appweb Enterprise Edition
+Embedthis Appweb
 ===
 
 Appweb is a compact, fast and secure web server for embedded applications. It supports HTTP/1 and HTTP/2 with a web server and HTTP client utility.
@@ -125,5 +125,5 @@ Build with MakeMe and then:
 Resources
 ---
   - [Appweb web site](https://www.embedthis.com/)
-  - [Appweb GitLab repository](http://gitlab.com/embedthis/appweb-ee)
+  - [Appweb GitHub repository](http://github.com/embedthis/appweb)
   - [Embedthis web site](https://www.embedthis.com/)
