@@ -102,5 +102,6 @@ help:
 	@echo '  PROFILE            # Set to "static" for static linking or "default" for dynamic' >&2
 	@echo '' >&2
 	@echo 'Use "SHOW=1 make" to show executed commands.' >&2
+	@echo 'Use "DEBUG=release make" to build for release.' >&2
 	@echo '' >&2
 
