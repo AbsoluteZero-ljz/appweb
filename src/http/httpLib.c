@@ -9462,7 +9462,7 @@ typedef void (*FrameHandler)(HttpQueue *q, HttpPacket *packet);
 /************************************ Forwards ********************************/
 
 static bool addHeaderToSet(HttpStream *stream, cchar *key, cchar *value);
-static int changeState(HttpStream *stream, int event);
+static int setState(HttpStream *stream, int event);
 static void closeNetworkWhenDone(HttpQueue *q);
 static HttpStream *createStream(HttpQueue *q, HttpPacket *packet);
 static int decodeInt(HttpPacket *packet, uint prefix);
@@ -9743,12 +9743,12 @@ static void outgoingHttp2Service(HttpQueue *q)
 
         if (stream && !stream->destroyed) {
             if (packet->flags & HTTP_PACKET_HEADER) {
-                if (changeState(stream, E2_TX_HDR) == H2_ERR) {
+                if (setState(stream, E2_TX_HDR) == H2_ERR) {
                     invalidState(net, stream, E2_TX_HDR);
                     break;
                 }
             } else if (packet->flags & HTTP_PACKET_DATA) {
-                if (changeState(stream, E2_TX_DATA) == H2_ERR) {
+                if (setState(stream, E2_TX_DATA) == H2_ERR) {
                     invalidState(net, stream, E2_TX_DATA);
                     break;
                 }
@@ -9776,7 +9776,7 @@ static void outgoingHttp2Service(HttpQueue *q)
             if (packet) {
                 flags = getFrameFlags(q, packet);
                 if (flags & HTTP2_END_STREAM_FLAG) {
-                    if (changeState(stream, E2_TX_END) == H2_ERR) {
+                    if (setState(stream, E2_TX_END) == H2_ERR) {
                         invalidState(net, stream, E2_TX_END);
                         break;
                     }
@@ -10002,13 +10002,13 @@ static HttpFrame *parseFrame(HttpQueue *q, HttpPacket *packet, int *done)
         return 0;
     }
     if (stream) {
-        if ((state = changeState(stream, type)) == H2_ERR) {
+        if ((state = setState(stream, type)) == H2_ERR) {
             invalidState(net, stream, type);
             return 0;
 
         } else if (flags & HTTP2_END_STREAM_FLAG && type != HTTP2_HEADERS_FRAME && type != HTTP2_CONT_FRAME) {
             httpSetEof(stream);
-            state = changeState(stream, E2_END);
+            state = setState(stream, E2_END);
             if (state == H2_ERR) {
                 invalidState(net, stream, E2_END);
                 return 0;
@@ -10192,7 +10192,7 @@ static void parseHeaderFrame(HttpQueue *q, HttpPacket *packet)
         return;
     }
     if ((stream = createStream(q, packet)) != 0) {
-        if (changeState(stream, frame->type) == H2_ERR) {
+        if (setState(stream, frame->type) == H2_ERR) {
             invalidState(net, stream, frame->type);
             return;
         }
@@ -10201,7 +10201,7 @@ static void parseHeaderFrame(HttpQueue *q, HttpPacket *packet)
                 Replicate here from parseFrame because parseFrame won't yet have a stream
              */
             httpSetEof(stream);
-            if (changeState(stream, E2_END) == H2_ERR) {
+            if (setState(stream, E2_END) == H2_ERR) {
                 invalidState(net, stream, E2_END);
                 return;
             }
@@ -10851,7 +10851,7 @@ static void sendReset(HttpQueue *q, HttpStream *stream, int status, cchar *fmt, 
     if (!stream || stream->destroyed) {
         return;
     }
-    if (changeState(stream, E2_RESET) == H2_ERR) {
+    if (setState(stream, E2_RESET) == H2_ERR) {
         invalidState(q->net, stream, E2_RESET);
         return;
     }
@@ -10877,7 +10877,7 @@ static void sendReset(HttpQueue *q, HttpStream *stream, int status, cchar *fmt, 
 static void resetStream(HttpStream *stream, cchar *msg, int error)
 {
     httpLog(stream->trace, "http2.rx", "context", "msg='Receive GoAway. %s' error=%d", msg, error);
-    changeState(stream, E2_RESET);
+    setState(stream, E2_RESET);
     httpProcess(stream->inputq);
 }
 
@@ -11458,7 +11458,7 @@ static void sendGoAway(HttpQueue *q, int status, cchar *fmt, ...)
     for (ITERATE_ITEMS(q->net->streams, stream, next)) {
         if (stream->streamID > net->lastStreamID) {
             resetStream(stream, "Stream terminated", HTTP2_REFUSED_STREAM);
-            changeState(stream, E2_GOAWAY);
+            setState(stream, E2_GOAWAY);
         }
     }
     net->parsingHeaders = 0;
@@ -11466,7 +11466,7 @@ static void sendGoAway(HttpQueue *q, int status, cchar *fmt, ...)
 }
 
 
-static int changeState(HttpStream *stream, int event)
+static int setState(HttpStream *stream, int event)
 {
     HttpNet     *net;
     int         state;
