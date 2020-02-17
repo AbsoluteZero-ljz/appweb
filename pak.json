@@ -22,7 +22,7 @@
         "email": "dev@embedthis.com",
         "url": "http://github.com/embedthis/appweb/issues"
     },
-    "licenses": {
+    "license": {
         "type": "Commercial",
         "url": "https://www.embedthis.com/licensing/"
     },
