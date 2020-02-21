@@ -32,7 +32,7 @@
                     <tr>
                         <td class="pivot">Notes</td>
                         <td>
-                            <p>The ListenSecure directive specifies the IP endpoints on which Appweb will listen for 
+                            <p>The ListenSecure directive specifies the IP endpoints on which Appweb will listen for
                             incoming SSL/TLS HTTP requests. If you specify only the port number and omit the IP address,
                             Appweb will listen on all network interfaces including the loop-back adaptor. Multiple Listen
                             directives may be given and Appweb will listen on all the specified endpoints for SSL/TLS.</p>
@@ -43,7 +43,7 @@
                     </tr>
                 </tbody>
             </table>
-            
+
             <!-- DEPRECATED
             <a id="sslEngine"></a>
             <h2>SSLEngine</h2>
@@ -79,7 +79,7 @@
                 </tbody>
             </table>
             DEPRECATED -->
-            
+
             <a id="sslProtocol"></a>
             <h2>SSLProtocol</h2>
             <table class="directive" title="directive">
@@ -98,7 +98,7 @@
                     </tr>
                     <tr>
                         <td class="pivot">Example</td>
-                        <td>SSLProtocol all -SSLV2</td>
+                        <td>SSLProtocol ALL -SSLv2 -SSLv3 -TLSv1.0</td>
                     </tr>
                     <tr>
                         <td class="pivot">Notes</td>
@@ -108,16 +108,22 @@
                             <h3>SSLv2</h3>
                             <p>This is the original Secure Sockets Layer (SSL) protocol defined by Netscape. It has
                                 several flaws and should not be used if SSLv3 or TLSv1 are available.</p>
+
                             <h3>SSLv3</h3>
-                                <p>This is the Secure Sockets Layer (SSL) protocol version 3.</p>
-                            <h3>TLSv1</h3>
-                            <p>This is the Transport Layer Security (TLS) protocol version 1. It is the most current SSL
-                            standard defined by the IETF and should be used if available.</p>
-                            <h3>TLSv1.1, TLSv1.2</h3>
-                            <p>Available when using OpenSSL 1.0.1 or later.</p>
+                            <p>This is the Secure Sockets Layer (SSL) protocol version 3.</p>
+
+                            <h3>TLSv1/h3>
+                            <p>This enables all TSLv1 including versions 0, 1, 2 and 3.</p>
+
+                            <h3>TLSv1.0/h3>
+                            <p>This is an early TLS protocol and should not be used if TLSv1.2 and TLSv1.3 are available.</p>
+
+                            <h3>TLSv1.1, TLSv1.2 or TLS1.3</h3>
+                            <p>These are the current versions of the Transport Layer Security (TLS) protocol recommended by the IETF and should be used if available.</p>
                             <h3>ALL</h3>
                                 <p>Enables all SSL protocol variants.</p>
-                            <p>If unspecified, the default is: TLSv1, TLSv1.1 or TLSv1.2.</p>
+
+                            <p>If unspecified, the default is: TLSv1.1 | TLSv1.2 | TLSv1.3.</p>
                         </td>
                     </tr>
                     <tr>
@@ -128,7 +134,7 @@
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="sslCipherSuite"></a>
             <h2>SSLCipherSuite</h2>
             <table class="directive" title="directive">
@@ -157,23 +163,23 @@
                     <tr>
                         <td class="pivot">Notes</td>
                         <td>
-                            <p>The SSLCipherSuite directive specifies the permissible set of cipher algorithms to use when 
+                            <p>The SSLCipherSuite directive specifies the permissible set of cipher algorithms to use when
                             communicating with the client. If unspecified, the cipher suite is defined by the SSL
                             protocol stack and negotiated with the client. You may use this directive multiple times or
                             may specify multiple ciphers separated by commas. This directive is not supported with all
                             SSL stacks.</p>
-                            
-                            <p>The format of this directive varies depending on the SSL protocol stack. 
-                            The OpenSSL stack uses its own proprietary cipher naming. If using OpenSSL, please consult the 
+
+                            <p>The format of this directive varies depending on the SSL protocol stack.
+                            The OpenSSL stack uses its own proprietary cipher naming. If using OpenSSL, please consult the
                             <a href="http://www.openssl.org/docs/apps/ciphers.html">OpenSSL</a> documentation for
-                            how to format the cipher suite argument. Other SSL stacks use 
+                            how to format the cipher suite argument. Other SSL stacks use
                             <a href="http://www.iana.org/assignments/tls-parameters/tls-parameters.xml#tls-parameters-3">IANA
-                                Cipher Suite Registry</a> names. 
+                                Cipher Suite Registry</a> names.
                         </td>
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="sslCertificateFile"></a>
             <h2>SSLCertificateFile</h2>
             <table class="directive" title="directive">
@@ -205,7 +211,7 @@
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="sslCertificateKeyFile"></a>
             <h2>SSLCertificateKeyFile</h2>
             <table class="directive" title="directive">
@@ -245,7 +251,7 @@
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="sslCaCertificateFile"></a>
             <h2>SSLCACertificateFile</h2>
             <table class="directive" title="directive">
@@ -276,12 +282,12 @@
                             <p>The certificate file contains the concatenated certificates to use in preference order.
                             The path may be an absolute path or it may be relative to the Home directory.</p>
                             <p>If using the OpenSSL stack, You may alternatively use SSLCACertificatePath if you have
-                            separate certificates.</p> 
+                            separate certificates.</p>
                         </td>
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="sslCaCertificatePath"></a>
             <h2>SSLCACertificatePath</h2>
             <table class="directive" title="directive">
@@ -316,7 +322,7 @@
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="sslVerifyClient"></a>
             <h2>SSLVerifyClient</h2>
             <table class="directive" title="directive">
@@ -374,7 +380,7 @@
                         <td class="pivot">Notes</td>
                         <td>
                             <p>This directive controls whether the issuer of the client certificate will be verified.
-                            If set to <b>off</b>, the certificate issuer will not be verified. This is useful to 
+                            If set to <b>off</b>, the certificate issuer will not be verified. This is useful to
                             accept self-signed test certificates.</p>
                         </td>
                     </tr>
