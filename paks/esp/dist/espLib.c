@@ -8835,7 +8835,7 @@ static int mdbSave(Edi *edi)
     }
     path = mdb->edi.path;
     if (path == 0) {
-        mprLog("error esp mdb", 0, "Cannot save database, no path specified");
+        mprLog("error esp mdb", 0, "Cannot save MDB database in mdbSave, no path specified");
         return MPR_ERR_BAD_ARGS;
     }
     npath = mprReplacePathExt(path, "new");
@@ -9764,6 +9764,14 @@ static EdiField sdbReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fiel
         return err;
     }
     if ((grid = query(edi, sfmt("SELECT %s FROM %s WHERE 'id' = ?;", fieldName, tableName), key, NULL)) == 0) {
+        err.valid = 0;
+        return err;
+    }
+    if (grid->nrecords == 0) {
+        err.valid = 0;
+        return err;
+    }
+    if (grid->records[0]->nfields == 0) {
         err.valid = 0;
         return err;
     }
