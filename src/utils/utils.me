@@ -10,5 +10,21 @@ Me.load({
             depends: [ 'libappweb' ],
             platforms: [ 'local' ],
         },
+
+        'cgiProgram': {
+            type:   'exe',
+            sources: [ 'cgiProgram.c' ],
+            ifdef: [ 'cgi' ],
+            action: true,
+            generate: false,
+        },
+
+        'fcgi': {
+            type:   'exe',
+            sources: [ 'fcgi/fcgi.c' ],
+            _ifdef: [ 'fast' ],
+            _action: true,
+            _generate: false,
+        },
 	},
 })
