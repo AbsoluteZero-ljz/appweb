@@ -42,3 +42,4 @@ samples/*/client
 samples/*/roots.crt
 cache/
 .local.mk
+src/utils/fcgi
