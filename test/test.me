@@ -19,18 +19,9 @@ Me.load({
 
         'prep-test': {
             platforms: [ 'local' ],
-            depends: [ 'clean-test', 'build', 'cgiProgram', 'prep-cgi', 'test-testScript', 'test-cgiProgram' ],
+            depends: [ 'clean-test', 'build', 'prep-cgi', 'test-testScript', 'test-cgiProgram' ],
             generate: false,
             action: `Path('.test-prepared').write('')`,
-            generate: false,
-        },
-
-
-        'cgiProgram': {
-            type:   'exe',
-            sources: [ 'cgiProgram.c' ],
-            ifdef: [ 'cgi' ],
-            action: true,
             generate: false,
         },
 
