@@ -8327,7 +8327,6 @@ static EdiGrid *mdbFindGrid(Edi *edi, cchar *tableName, cchar *query)
     if (offset < 0) {
         offset = 0;
     }
-
     count = index = 0;
 
     /*
@@ -9913,7 +9912,7 @@ static EdiGrid *sdbFindGrid(Edi *edi, cchar *tableName, cchar *select)
         grid = query(edi, sql, NULL);
     }
     if (grid) {
-        if (grid->nrecords == limit) {
+        if (offset > 0 || grid->nrecords == limit) {
             sdbGetTableDimensions(edi, tableName, &grid->count, NULL);
         } else {
             grid->count = grid->nrecords;
