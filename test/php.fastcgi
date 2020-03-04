@@ -1,8 +1,0 @@
-#!/bin/bash
-#
-#   Invoke PHP via FastCGI
-#
-
-export PHP_FCGI_CHILDREN=1
-export PHP_FCGI_MAX_REQUESTS=0
-exec /usr/local/bin/php-cgi -b 127.0.0.1:9991

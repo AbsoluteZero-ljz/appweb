@@ -787,18 +787,6 @@ static int copyParams(HttpStream *stream, cchar **envv, int index, MprJson *para
 }
 
 
-static int actionDirective(MaState *state, cchar *key, cchar *value)
-{
-    char    *mimeType, *program;
-
-    if (!maTokenize(state, value, "%S %S", &mimeType, &program)) {
-        return MPR_ERR_BAD_SYNTAX;
-    }
-    mprSetMimeProgram(state->route->mimeTypes, mimeType, program);
-    return 0;
-}
-
-
 static int cgiEscapeDirective(MaState *state, cchar *key, cchar *value)
 {
     bool    on;
@@ -867,7 +855,6 @@ PUBLIC int httpCgiInit(Http *http, MprModule *module)
     /*
         Add configuration file directives
      */
-    maAddDirective("Action", actionDirective);
     maAddDirective("ScriptAlias", scriptAliasDirective);
     maAddDirective("CgiEscape", cgiEscapeDirective);
     maAddDirective("CgiPrefix", cgiPrefixDirective);
