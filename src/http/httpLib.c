@@ -17232,7 +17232,6 @@ PUBLIC cchar *httpTraceHeaders(HttpQueue *q, MprHash *headers)
 
 static void initQueue(HttpNet *net, HttpStream *stream, HttpQueue *q, cchar *name, int dir);
 static void manageQueue(HttpQueue *q, int flags);
-static void serviceQueue(HttpQueue *q);
 
 /************************************ Code ************************************/
 /*
@@ -17340,7 +17339,11 @@ PUBLIC void httpAssignQueueCallbacks(HttpQueue *q, HttpStage *stage, int dir)
 PUBLIC void httpSetQueueLimits(HttpQueue *q, HttpLimits *limits, ssize packetSize, ssize low, ssize max, ssize window)
 {
     if (packetSize < 0) {
-        packetSize = limits->packetSize;
+        if (limits) {
+            packetSize = limits->packetSize;
+        } else {
+            packetSize = ME_PACKET_SIZE;
+        }
     }
     if (max < 0) {
         max = q->packetSize * ME_QUEUE_MAX_FACTOR;
@@ -17354,7 +17357,11 @@ PUBLIC void httpSetQueueLimits(HttpQueue *q, HttpLimits *limits, ssize packetSiz
 
 #if ME_HTTP_HTTP2
     if (window < 0) {
-        window = limits->window;
+        if (limits) {
+            window = limits->window;
+        } else {
+            window = HTTP2_MIN_WINDOW;
+        }
     }
     q->window = window;
 #endif
@@ -17611,14 +17618,15 @@ PUBLIC void httpScheduleQueue(HttpQueue *q)
 }
 
 
-static void serviceQueue(HttpQueue *q)
+PUBLIC void httpServiceQueue(HttpQueue *q)
 {
     /*
         Hold the queue for GC while scheduling.
-        TODO - this is probably not required as the queue is always linked into a pipeline
+        Not typically required as the queue is typically linked into a pipeline.
      */
-    q->net->holdq = q;
-
+    if (q->net) {
+        q->net->holdq = q;
+    }
     if (q->servicing) {
         q->flags |= HTTP_QUEUE_RESERVICE;
     } else {
@@ -17668,7 +17676,7 @@ PUBLIC bool httpServiceNetQueues(HttpNet *net, int flags)
             q->flags |= HTTP_QUEUE_RESERVICE;
         } else {
             assert(q->schedulePrev == q->scheduleNext);
-            serviceQueue(q);
+            httpServiceQueue(q);
             workDone = 1;
         }
         if (mprNeedYield() && (flags & HTTP_BLOCK)) {
@@ -24733,7 +24741,7 @@ PUBLIC void httpFinalizeConnector(HttpStream *stream)
 
     tx = stream->tx;
     tx->finalizedConnector = 1;
-    tx->finalizedOutput = 1;
+    httpFinalizeOutput(stream);
 }
 
 
@@ -24783,7 +24791,6 @@ PUBLIC void httpFinalizeOutput(HttpStream *stream)
         httpFinalize(stream);
     }
     httpPutPacket(stream->writeq, httpCreateEndPacket());
-    //  TODO -- new
     httpScheduleQueue(stream->writeq);
     httpServiceNetQueues(stream->net, 0);
 }

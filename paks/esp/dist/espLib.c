@@ -439,6 +439,9 @@ PUBLIC EdiField *ediGetField(EdiRec *rec, cchar *fieldName)
 {
     EdiField    *fp;
 
+    if (rec == 0) {
+        return 0;
+    }
     for (fp = rec->fields; fp < &rec->fields[rec->nfields]; fp++) {
         if (smatch(fp->name, fieldName)) {
             return fp;
@@ -5925,7 +5928,7 @@ static bool preload(HttpRoute *route)
                 }
             }
         }
-        mprLog("esp info", 4, "Loaded ESP application \"%s\", profile \"%s\" with options: combine %d, compile %d, compile mode %d, update %d",
+        mprLog("esp info", 6, "Loaded ESP application \"%s\", profile \"%s\" with options: combine %d, compile %d, compile mode %d, update %d",
             eroute->appName, route->mode ? route->mode : "unset", eroute->combine, eroute->compile, eroute->compileMode, eroute->update);
     }
 #endif
