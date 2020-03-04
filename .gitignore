@@ -43,3 +43,4 @@ samples/*/roots.crt
 cache/
 .local.mk
 src/utils/fcgi
+test/php.fast

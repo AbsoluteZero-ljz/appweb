@@ -22,9 +22,8 @@ Me.load({
         'fcgi': {
             type:   'exe',
             sources: [ 'fcgi/fcgi.c' ],
-            _ifdef: [ 'fast' ],
-            _action: true,
-            _generate: false,
+            action: true,
+            generate: false
         },
 	},
 })
