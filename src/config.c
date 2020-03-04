@@ -2967,6 +2967,9 @@ static bool conditionalDefinition(MaState *state, cchar *key)
         } else if (scaselessmatch(key, "ESP_MODULE")) {
             result = ME_COM_ESP;
 
+        } else if (scaselessmatch(key, "FAST_MODULE")) {
+            result = ME_COM_FAST;
+
         } else if (scaselessmatch(key, "PHP_MODULE")) {
             result = ME_COM_PHP;
 

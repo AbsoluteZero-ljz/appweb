@@ -3,6 +3,8 @@
 
     Copyright (c) All Rights Reserved. See copyright notice at the bottom of the file.
 
+    https://github.com/fast-cgi/spec/blob/master/spec.md
+
     <Route /fast>
         LoadModule fastHandler libmod_fast
         AddHandler fastHandler php
@@ -10,23 +12,11 @@
         FastMinProcesses 1
         FastMaxProcesses 2
         FastMaxRequests 500
-        FastListen *:4000
+        FastConnect *:4000
         FastTimeout Ticks         ## Not implemented
 
         Action application/x-php /usr/local/bin/php-cgi
     </Route>
-
-    MOB
-        - Do we need CGI to be configured to get the Action directive -- should not?
-        - need fast cgiProgram for testing
-        - What about pipes vs sockets?
-
-    FAST_LISTENSOCK_FILENO -- listening socket (on 0)
-        getpeername(FAST_LISTENSOCK_FILENO) returns -1 & errno == ENOTCONN
-    FAST_WEB_SERVER_ADDRS - list of validate addresses for the web server (comma separated)
-        FAST_WEB_SERVER_ADDRS=199.170.183.28,199.170.183.71
-    Stdout, stderr are closed
-    NULL data packet indicates end of stream
  */
 
 /*********************************** Includes *********************************/
@@ -39,121 +29,103 @@
 /************************************ Locals ***********************************/
 
 #define FAST_VERSION            1
-
-#define FAST_BEGIN_REQUEST      1
-#define FAST_ABORT_REQUEST      2
-#define FAST_END_REQUEST        3
-#define FAST_PARAMS             4
-#define FAST_STDIN              5       //  Post body data
-#define FAST_STDOUT             6       //  Response body
-#define FAST_STDERR             7       //  FCGI app errors
-#define FAST_DATA               8       //  MOB ??
-#define FAST_GET_VALUES         9
-#define FAST_GET_VALUES_RESULT  10
-#define FAST_UNKNOWN_TYPE       11      //   Unknown management request
-#define FAST_MAX                11
-
-#define FAST_RESPONDER          1
-#define FAST_AUTHORIZER         2       //  Not supported
-#define FAST_FILTER             3       //  Not supported
-
-#define FAST_KEEP_CONN          1       //  MOB??
-#define FAST_HEADER_LEN         8       //  MOB??
-
-#define FCGI_REQUEST_COMPLETE   0
-#define FCGI_CANT_MPX_CONN      1
-#define FCGI_OVERLOADED         2
-#define FCGI_UNKNOWN_ROLE       3
-
-#define FAST_MULTIPLEX          0       //  This code does not yet support multiplexing requests
+#define FAST_DEBUG              0           //  For debugging (keeps filedes open in FastCGI for debug output)
 
 /*
-    FAST_MAX_CONNS  The maximum number of concurrent transport connections this application will accept
-    FAST_MAX_REQS   The maximum number of concurrent requests this application will accept
-    FAST_MPX_CONNS  Does the application support multiplexed connections
+    FastCGI spec packet types
  */
+#define FAST_REAP               0           //  Proxy has been reaped (not part of spec)
+#define FAST_BEGIN_REQUEST      1           //  Start new request - sent to FastCGI
+#define FAST_ABORT_REQUEST      2           //  Abort request - sent to FastCGI
+#define FAST_END_REQUEST        3           //  End request - received from FastCGI
+#define FAST_PARAMS             4           //  Send params to FastCGI
+#define FAST_STDIN              5           //  Post body data
+#define FAST_STDOUT             6           //  Response body
+#define FAST_STDERR             7           //  FastCGI app errors
+#define FAST_DATA               8           //  Additional data to application (unused)
+#define FAST_GET_VALUES         9           //  Query FastCGI app (unused)
+#define FAST_GET_VALUES_RESULT  10          //  Query result
+#define FAST_UNKNOWN_TYPE       11          //  Unknown management request
+#define FAST_MAX                11          //  Max type
 
+static cchar *fastTypes[FAST_MAX + 1] = {
+    "invalid", "begin", "abort", "end", "params", "stdin", "stdout", "stderr",
+    "data", "get-values", "get-values-result", "unknown",
+};
+
+/*
+    FastCGI app types
+ */
+#define FAST_RESPONDER          1           //  Supported web request responder
+#define FAST_AUTHORIZER         2           //  Not supported
+#define FAST_FILTER             3           //  Not supported
+
+/*
+    Default constants. WARNING: this code does not yet support multiple requests per proxy
+ */
+#define FAST_MAX_PROXIES        1           //  Max of one proxy
+#define FAST_MIN_PROXIES        1           //  Min of one proxy (keep running after started)
+#define FAST_MAX_REQUESTS       500         //  Max number of requests per proxy instance
+#define FAST_MAX_CONCURRENCY    1           //  Max number of concurrent requests per proxy instance
+
+#define FAST_PACKET_SIZE        8           //  Size of minimal FastCGI packet
+#define FAST_KEEP_CONN          1           //  Flag to app to keep connection open
+
+#define FAST_Q_SIZE             ((FAST_PACKET_SIZE + 65535 + 8) * 2)
+
+#define FAST_REQUEST_COMPLETE   0           //  End Request response status for request complete
+#define FAST_CANT_MPX_CONN      1           //  Request rejected -- FastCGI app cannot multiplex requests
+#define FAST_OVERLOADED         2           //  Request rejected -- app server is overloaded
+#define FAST_UNKNOWN_ROLE       3           //  Request rejected -- unknown role
+
+#define FAST_WAIT_TIMEOUT       (30 * TPS)  //  Time to wait for a proxy
+#define FAST_CONNECT_TIMEOUT    (10 * TPS)  //  Time to wait for FastCGI to respond to a connect
+
+/*
+    Top level FastCGI structure per route
+ */
 typedef struct Fast {
-    cchar           *endpoint;
-    int             minProxies;
-    int             maxProxies;
-    int             maxRequests;
-    MprTicks        proxyTimeout;
-    MprList         *proxies;
-    MprList         *idleProxies;
-    MprMutex        *mutex;
-    MprCond         *cond;
-    cchar           *command;
-    cchar           *ip;
-    int             port;
+    cchar           *endpoint;              //  Proxy listening endpoint
+    int             concurrency;            //  Maximum number of requests to send to each FastCGI proxy
+    int             minProxies;             //  Minumum number of proxies to maintain
+    int             maxProxies;             //  Maximum number of proxies to spawn
+    int             maxRequests;            //  Maximum number of requests per proxy before respawning
+    MprTicks        proxyTimeout;           //  Timeout for an idle proxy to be maintained
+    MprList         *proxies;               //  List of active proxies
+    MprList         *idleProxies;           //  Idle proxies
+    MprMutex        *mutex;                 //  Multithread sync
+    MprCond         *cond;                  //  Condition to wait for available proxy
+    MprEvent        *timer;                 //  Timer to check for idle proxies
+    cchar           *command;               //  Proxy command to invoke
+    cchar           *ip;                    //  Listening IP address
+    int             port;                   //  Listening port
 } Fast;
 
+/*
+    Per FastCGI app instance
+ */
 typedef struct FastProxy {
-    Fast            *fast;
-    HttpStream      *stream;
-    MprList         *streams;
-    ssize           requestId;
-    int             requestID;
-    int             pid;
-    struct FastConnector
-                    *connector;
+    Fast            *fast;                  // Parent pointer
+    MprList         *streams;               // List of concurrent stream requests
+    HttpTrace       *trace;                 // Default tracing configuration
+    MprTicks        lastActive;             // When last active
+    int             nextID;                 // Next request ID
+    struct FastConnector *connector;        // Connector runs on a different dispatcher
 } FastProxy;
 
 typedef struct FastConnector {
-    MprSocket       *socket;
-    MprSocket       *listen;
-    MprDispatcher   *dispatcher;
-    MprMutex        *mutex;
-    HttpQueue       *writeq;                /**< Queue to write to the FastCGI app */
-    HttpQueue       *readq;                 /**< Queue to hold read data from the FastCGI app */
-    FastProxy       *proxy;
-    bool            writeBlocked;
-    int             eof;
+    MprSocket       *socket;                // I/O socket
+    MprDispatcher   *dispatcher;            // Dispatcher for connector. Different to handler if multiplexing
+    HttpQueue       *writeq;                // Queue to write to the FastCGI app
+    HttpQueue       *readq;                 // Queue to hold read data from the FastCGI app
+    FastProxy       *proxy;                 // Owning proxy
+    HttpTrace       *trace;                 // Default tracing configuration
+    MprSignal       *signal;                // Mpr signal handler for child death
+    int             pid;                    // Process ID of the FastCGI proxy app
+    bool            destroy;                // Must destroy proxy
+    bool            eof;                    // Socket is closed
+    bool            writeBlocked;           // Socket is full of write data
 } FastConnector;
-
-#if 0
-//  MOB - align on 8 byte boundaries
-
-typedef struct FastRec {
-    uchar version;                          /* 1 */
-    uchar type;
-    uchar requestIdB1;                      /* Request ID */
-    uchar requestIdB0;
-    uchar contentLengthB1;
-    uchar contentLengthB0;
-    uchar paddingLength;
-    uchar reserved;
-    uchar contentData[contentLength];
-    uchar paddingData[paddingLength];
-} FastRec;
-
-typedef struct FastRec {
-    uchar   version;                          /* 1 */
-    uchar   type;
-    ushort  requestIdB1;                      /* Request ID */
-    ushort  contentLengthB1;
-    uchar   paddingLength;
-    uchar   reserved;
-    uchar   contentData[contentLength];
-    uchar   paddingData[paddingLength];
-} FastRec;
-
-typedef struct FastRequestStart {
-    uchar roleB1;
-    uchar roleB0;
-    uchar flags;
-    uchar reserved[5];
-} FastRequestStart;
-
-typedef struct FastRequestEnd {
-    uchar appStatusB3;
-    uchar appStatusB2;
-    uchar appStatusB1;
-    uchar appStatusB0;
-    uchar protocolStatus;
-    uchar reserved[3];
-} FastRequestEnd;
-#endif
 
 /*********************************** Forwards *********************************/
 
@@ -161,64 +133,74 @@ static void addFastPacket(HttpQueue *q, HttpPacket *packet);
 static void addToFastVector(HttpQueue *q, char *ptr, ssize bytes);
 static void adjustNetVec(HttpQueue *q, ssize written);
 static Fast *allocFast();
-static FastConnector *allocFastConnector(FastProxy *proxy);
+static FastConnector *allocFastConnector(FastProxy *proxy, MprDispatcher *dispatcher, HttpStream *stream);
 static FastProxy *allocFastProxy(Fast *fast, HttpStream *stream);
 static MprOff buildFastVec(HttpQueue *q);
+static void checkProxies(Fast *fast);
 static void closeFast(HttpQueue *q);
+static int connectFastProxy(FastProxy *proxy);
+static void copyFastInner(HttpPacket *packet, cchar *key, cchar *value, cchar *prefix);
+static void copyFastParams(HttpPacket *packet, MprJson *params, cchar *prefix);
+static void copyFastVars(HttpPacket *packet, MprHash *vars, cchar *prefix);
+static MprSocket *createListener(FastConnector *connector);
 static void destroyFastProxy(FastProxy *proxy);
 static void enableFastConnectorEvents(FastConnector *connector);
-static int fastAction(MaState *state, cchar *key, cchar *value);
+static int fastActionDirective(MaState *state, cchar *key, cchar *value);
+static void fastConnectorData(HttpPacket *packet);
 static void fastConnectorIO(FastConnector *connector, MprEvent *event);
 static void fastConnectorIncoming(HttpQueue *q, HttpPacket *packet);
 static void fastConnectorIncomingService(HttpQueue *q);
 static void fastConnectorOutgoing(HttpQueue *q, HttpPacket *packet);
 static void fastConnectorOutgoingService(HttpQueue *q);
+static void fastHandlerResponse(HttpPacket *packet);
 static void fastIncoming(HttpQueue *q, HttpPacket *packet);
-static int fastListen(MaState *state, cchar *key, cchar *value);
-static int fastMaxProcesses(MaState *state, cchar *key, cchar *value);
-static int fastMinProcesses(MaState *state, cchar *key, cchar *value);
-static int fastMaxRequests(MaState *state, cchar *key, cchar *value);
+static int fastConnectDirective(MaState *state, cchar *key, cchar *value);
+static int fastMaxProcessesDirective(MaState *state, cchar *key, cchar *value);
+static int fastMinProcessesDirective(MaState *state, cchar *key, cchar *value);
+static int fastMaxRequestsDirective(MaState *state, cchar *key, cchar *value);
+static int fastConcurrencyDirective(MaState *state, cchar *key, cchar *value);
 static void fastOutgoing(HttpQueue *q);
-static int fastTimeout(MaState *state, cchar *key, cchar *value);
+static int fastTimeoutDirective(MaState *state, cchar *key, cchar *value);
 static void freeFastPackets(HttpQueue *q, ssize bytes);
 static Fast *getFast(HttpRoute *route);
 static char *getFastToken(MprBuf *buf, cchar *delim);
 static FastProxy *getFastProxy(Fast *fast, HttpStream *stream);
+static int getListenPort(MprSocket *socket);
+static HttpStream *getStream(FastProxy *proxy, int requestID);
 static void manageFast(Fast *fast, int flags);
-static void manageFastProxy(FastProxy *fastProxy, int flags);
+static void manageFastProxy(FastProxy *proxy, int flags);
 static void manageFastConnector(FastConnector *fastConnector, int flags);
 static int openFast(HttpQueue *q);
-static bool parseFastHeaders(HttpQueue *q, HttpPacket *packet);
-static HttpPacket *prepFastHeader(HttpQueue *q, int type, HttpPacket *packet);
-static void prepFastPost(HttpQueue *q, HttpPacket *packet);
+static bool parseFastHeaders(HttpPacket *packet);
+static bool parseFastResponseLine(HttpPacket *packet);
+static HttpPacket *prepFastPacket(HttpQueue *q, int type, HttpPacket *packet);
 static void prepFastRequestStart(HttpQueue *q);
-static void prepFastRequestEnd(HttpQueue *q, HttpPacket *packet);
 static void prepFastRequestParams(HttpQueue *q);
-static bool parseFastResponseLine(HttpQueue *q, HttpPacket *packet);
+static void putToConnectorWriteq(FastConnector *connector, HttpPacket *packet);
+static void reapProxyProcess(FastConnector *connector, MprSignal *sp);
 static void releaseFastProxy(Fast *fast, FastProxy *proxy);
 static FastProxy *startFastProxy(Fast *fast, HttpStream *stream);
-
-//  MOB - refactor args ... proxy vs q
 
 /************************************* Code ***********************************/
 /*
     Loadable module initialization
  */
-PUBLIC int httpFastInit(Http *http, MprModule *module)
+PUBLIC int httpFastHandlerInit(Http *http, MprModule *module)
 {
     HttpStage   *handler, *connector;
 
     /*
         Add configuration file directives
      */
-    maAddDirective("FastAction", fastAction);
-    maAddDirective("FastMaxProcesses", fastMaxProcesses);
-    maAddDirective("FastMaxRequests", fastMaxRequests);
-    maAddDirective("FastMinProcesses", fastMinProcesses);
-    maAddDirective("FastTimeout", fastTimeout);
-    maAddDirective("FastListen", fastListen);
+    maAddDirective("FastAction", fastActionDirective);
+    maAddDirective("FastConcurrency", fastConcurrencyDirective);
+    maAddDirective("FastConnect", fastConnectDirective);
+    maAddDirective("FastMaxProcesses", fastMaxProcessesDirective);
+    maAddDirective("FastMaxRequests", fastMaxRequestsDirective);
+    maAddDirective("FastMinProcesses", fastMinProcessesDirective);
+    maAddDirective("FastTimeout", fastTimeoutDirective);
 
-    if ((handler = httpCreateHandler("fastandler", module)) == 0) {
+    if ((handler = httpCreateHandler("fastHandler", module)) == 0) {
         return MPR_ERR_CANT_CREATE;
     }
     http->fastHandler = handler;
@@ -261,160 +243,41 @@ static int openFast(HttpQueue *q)
     fast = getFast(stream->rx->route);
 
     if ((proxy = getFastProxy(fast, stream)) == 0) {
-        httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot allocate Fast proxy process for route %s", stream->rx->route->pattern);
+        httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot allocate FastCGI proxy for route %s", stream->rx->route->pattern);
         return MPR_ERR_CANT_OPEN;
     }
     q->queueData = q->pair->queueData = proxy;
-    proxy->stream = stream;
+
+    if (connectFastProxy(proxy)) {
+        httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot connect to fast proxy: %d", errno);
+        return MPR_ERR_CANT_CONNECT;
+    }
+
+    httpTrimExtraPath(stream);
+    httpMapFile(stream);
+    httpCreateCGIParams(stream);
 
     prepFastRequestStart(q);
     prepFastRequestParams(q);
+    enableFastConnectorEvents(proxy->connector);
     return 0;
 }
 
 
+/*
+    Request is closed, so release proxy
+ */
 static void closeFast(HttpQueue *q)
 {
-    releaseFastProxy(q->stream->rx->route->eroute, q->queueData);
-}
-
-
-static Fast *getFast(HttpRoute *route)
-{
-    Fast        *fast;
-
-    if ((fast = route->eroute) == 0) {
-        mprGlobalLock();
-        if ((fast = route->eroute) == 0) {
-            fast = allocFast();
-        }
-        mprGlobalUnlock();
-    }
-    return fast;
-}
-
-
-static FastProxy *getFastProxy(Fast *fast, HttpStream *stream)
-{
-    FastProxy   *proxy;
-
-    lock(fast);
-    proxy = NULL;
-    //  MOB - need timeout
-
-    /*
-        MOB - this does not support multiplexing yet
-     */
-    while (!proxy) {
-        if (mprGetListLength(fast->idleProxies) >= 0) {
-            proxy = mprGetFirstItem(fast->idleProxies);
-            mprAddItem(fast->proxies, proxy);
-            break;
-
-        } else if (mprGetListLength(fast->idleProxies) < fast->maxProxies) {
-            proxy = startFastProxy(fast, stream);
-            mprAddItem(fast->proxies, proxy);
-            break;
-
-        } else {
-            unlock(fast);
-            //  MOB - timeout ahd
-            if (mprWaitForCond(fast->cond, 60 * 1000) < 0) {
-                return NULL;
-            }
-            lock(fast);
-        }
-    }
-    unlock(fast);
-    proxy->requestId++;
-    return proxy;
-}
-
-
-static void releaseFastProxy(Fast *fast, FastProxy *proxy)
-{
-    lock(fast);
-    if (mprRemoveItem(fast->proxies, proxy) < 0) {
-        mprLog("fast error", 0, "Cannot find proxy in list");
-    }
-    if (proxy->connector->eof) {
-        destroyFastProxy(proxy);
-
-    } else if (mprGetListLength(fast->proxies) + mprGetListLength(fast->idleProxies) >= fast->minProxies) {
-        destroyFastProxy(proxy);
-
-    } else {
-        mprAddItem(fast->idleProxies, proxy);
-    }
-    unlock(fast);
-}
-
-
-static FastProxy *startFastProxy(Fast *fast, HttpStream *stream)
-{
-    FastProxy   *proxy;
     HttpRoute   *route;
-    cchar       *path;
-    cchar       **argv;
-    int         argc, i;
+    FastProxy   *proxy;
 
-    route = stream->rx->route;
-    path = mprGetMimeProgram(route->mimeTypes, stream->tx->ext);
-
-    proxy = allocFastProxy(fast, stream);
-
-    if ((argc = mprMakeArgv(fast->command, &argv, 0)) < 0 || argv == 0) {
-        httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot make Fast proxy command: %s", fast->command);
-        return NULL;
+    route = q->stream->rx->route;
+    proxy = q->queueData;
+    if (proxy) {
+        mprRemoveItem(proxy->streams, q->stream);
+        releaseFastProxy(proxy->fast, proxy);
     }
-    //  MOB - add trace
-
-    if ((proxy->pid = fork()) < 0) {
-        fprintf(stderr, "Fork failed for FastCGI");
-        return NULL;
-
-    } else if (proxy->pid == 0) {
-        /* Child */
-        for (i = 0; i < 128; i++) {
-            close(i);
-        }
-        dup2(proxy->connector->socket->fd, 0);
-        if (execve(fast->command, (char**) argv, NULL /* (char**) &env->items[0] */) < 0) {
-            httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot exec fast proxy: %s", fast->command);
-        }
-        return NULL;
-
-    } else {
-        //  MOB- dynamic port
-        //  MOB - how do we know when they have accepted the socket?
-        //  MOB - retry
-        if (mprConnectSocket(proxy->connector->socket, fast->ip, fast->port, 0) < 0) {
-            httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot connect to fast proxy: %d", errno);
-            return NULL;
-        }
-    }
-    return proxy;
-}
-
-
-static void destroyFastProxy(FastProxy *proxy)
-{
-    int     status;
-
-    if (proxy->pid == 0) {
-        return;
-    }
-    while (waitpid(proxy->pid, &status, 0) != proxy->pid) {
-        if (errno == EINTR) {
-            mprSleep(100);
-            continue;
-        }
-        mprLog("fast error", 0, "Cannot wait for fastCGI app.");
-    }
-    if (WEXITSTATUS(status) != 0) {
-        mprLog("fast error", 0, "FastCGI app with bad exit status.");
-    }
-    proxy->pid = 0;
 }
 
 
@@ -427,112 +290,51 @@ static Fast *allocFast()
     fast->idleProxies = mprCreateList(0, 0);
     fast->mutex = mprCreateLock();
     fast->cond = mprCreateCond();
-    fast->maxRequests = -1;
-    fast->minProxies = 1;
-    fast->maxProxies = 1;
+    fast->concurrency = FAST_MAX_CONCURRENCY;
+    fast->maxRequests = FAST_MAX_REQUESTS;
+    fast->minProxies = FAST_MIN_PROXIES;
+    fast->maxProxies = FAST_MAX_PROXIES;
+    fast->ip = sclone("127.0.0.1");
+    fast->port = 0;
     return fast;
-}
-
-
-static FastProxy *allocFastProxy(Fast *fast, HttpStream *stream)
-{
-    FastProxy   *proxy;
-
-    proxy = mprAllocObj(FastProxy, manageFastProxy);
-    proxy->fast = fast;
-    proxy->requestId = 0;
-    proxy->connector = allocFastConnector(proxy);
-    return proxy;
-}
-
-
-/*
-    THREAD - currently don't support multiplexing so there is one connector per proxy
- */
-static FastConnector *allocFastConnector(FastProxy *proxy)
-{
-    Http            *http;
-    Fast            *fast;
-    FastConnector   *connector;
-
-    /*
-        Setup the proxy connector. This may run on a different thread.
-     */
-    http = proxy->stream->http;
-    fast = proxy->fast;
-
-    connector = mprAllocObj(FastConnector, manageFastConnector);
-    connector->proxy = proxy;
-    proxy->connector = connector;
-    proxy->mutex = mprCreateLock();
-
-    connector->readq = httpCreateQueue(NULL, NULL, http->fastConnector, HTTP_QUEUE_RX, 0);
-    connector->readq->pair = connector->writeq;
-    connector->writeq->pair = connector->readq;
-    connector->readq->queueData = proxy;
-    connector->writeq = httpCreateQueue(NULL, NULL, http->fastConnector, HTTP_QUEUE_TX, 0);
-    connector->writeq->queueData = proxy;
-
-    /*
-        Create listening socket for the fastCGI app to accept -- passed to app via fork
-     */
-    connector->listen = mprCreateSocket();
-    connector->socket = mprCreateSocket();
-
-    connector->dispatcher = FAST_MULTIPLEX ? mprCreateDispatcher("fast", 0) : proxy->stream->net->dispatcher;
-
-    //  MOB - need to get the real port number allocated here
-    if (mprListenOnSocket(connector->listen, fast->ip, fast->port, MPR_SOCKET_NODELAY) == SOCKET_ERROR) {
-        if (mprGetError() == EADDRINUSE) {
-            mprLog("error http", 0, "Cannot open a socket on %s:%d, socket already bound.",
-                fast->ip ? fast->ip : "*", fast->port);
-        } else {
-            mprLog("error http", 0, "Cannot open a socket on %s:%d", fast->ip ? fast->ip : "*", fast->port);
-        }
-        return NULL;
-    }
-    return connector;
 }
 
 
 static void manageFast(Fast *fast, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
+        mprMark(fast->command);
+        mprMark(fast->cond);
         mprMark(fast->endpoint);
-        mprMark(fast->proxies);
         mprMark(fast->idleProxies);
         mprMark(fast->ip);
-        mprMark(fast->command);
         mprMark(fast->mutex);
-        mprMark(fast->cond);
+        mprMark(fast->proxies);
+        mprMark(fast->timer);
     }
 }
 
-
-static void manageFastProxy(FastProxy *fastProxy, int flags)
-{
-    if (flags & MPR_MANAGE_MARK) {
-        mprMark(fastProxy->fast);
-        mprMark(fast->stream);
-    }
-}
-
-
-static void manageFastConnector(FastConnector *connector, int flags)
-{
-    if (flags & MPR_MANAGE_MARK) {
-        mprMark(connector->dispatcher);
-        mprMark(connector->socket);
-        mprMark(connector->listen);
-        mprMark(connector->writeq);
-        mprMark(connector->readq);
-        mprMark(connector->proxy);
-        mprMark(connector->mutex);
-    }
-}
 
 /*
-    Handler incoming route.
+    Get the fast structure for a route and save in "eroute"
+ */
+static Fast *getFast(HttpRoute *route)
+{
+    Fast        *fast;
+
+    if ((fast = route->eroute) == 0) {
+        mprGlobalLock();
+        if ((fast = route->eroute) == 0) {
+            fast = route->eroute = allocFast();
+        }
+        mprGlobalUnlock();
+    }
+    return fast;
+}
+
+
+/*
+    Handler incoming data.
     Accept incoming body data from the client destined for the CGI gateway. This is typically POST or PUT data.
     Note: For POST "form" requests, this will be called before the command is actually started.
  */
@@ -551,57 +353,38 @@ static void fastIncoming(HttpQueue *q, HttpPacket *packet)
     if (httpGetPacketLength(packet) == 0) {
         /* End of input */
         if (stream->rx->remainingContent > 0) {
-            /* Short incoming body data. Must kill the proxy -- MOB or can we send a kill request ? */
-            packet = prepFastHeader(q, FAST_ABORT_REQUEST, httpCreateDataPacket(0));
-            // proxy->connector->eof = 1;
             httpError(stream, HTTP_CODE_BAD_REQUEST, "Client supplied insufficient body data");
+            packet = prepFastPacket(q, FAST_ABORT_REQUEST, httpCreateDataPacket(0));
+
         } else {
-            prepFastRequestEnd(q, packet);
+            prepFastPacket(q, FAST_STDIN, packet);
         }
     } else {
-        prepFastPost(q, packet);
+        prepFastPacket(q, FAST_STDIN, packet);
     }
-    putToConnectorWriteq(proxy, packet);
+    putToConnectorWriteq(proxy->connector, packet);
 }
 
 
+/*
+    Put a packet to the FastCGI connector. This must be thread safe if multiplexing as the connector will run
+    on a different dispatcher.
+ */
 static void putToConnectorWriteq(FastConnector *connector, HttpPacket *packet)
 {
-    lock(connector);
-    httpPutForService(connector->writeq, packet, HTTP_SCHEDULE_QUEUE);
-    unlock(connector);
+    packet->data = connector->proxy;
+    mprCreateEvent(connector->dispatcher, "fast", 0, fastConnectorData, packet, 0);
 }
-
-
-#if UNUSED
-static HttpPacket *putToConnectorReadq(FastConnector *connector, HttpPacket *packet)
-{
-    lock(connector);
-    httpPutForService(connector->readq, packet, HTTP_SCHEDULE_QUEUE);
-    unlock(connector);
-}
-
-
-static HttpPacket *readFromConnectorWriteq(FastConnector *connector, HttpPacket *packet)
-{
-    lock(connector);
-    httpPutForService(connector->writeq, packet, HTTP_SCHEDULE_QUEUE);
-    unlock(connector);
-}
-
-
-static void readFromConnectorReadq(FastConnector *connector)
-{
-    lock(connector);
-    packet = httpPutForService(connector->readq);
-    unlock(connector);
-    return packet;
-}
-#endif
 
 
 static void fastOutgoing(HttpQueue *q)
 {
+    /*
+        This will copy outgoing packets downstream toward the network stream and on to the browser.
+     */
+    httpDefaultOutgoingServiceStage(q);
+
+#if TODO
     FastProxy       *proxy;
     FastConnector   *connector;
 
@@ -609,91 +392,528 @@ static void fastOutgoing(HttpQueue *q)
         return;
     }
     connector = proxy->connector;
-
-    /*
-        This will copy outgoing packets downstream toward the network stream and on to the browser.
-     */
-    httpDefaultOutgoingServiceStage(q);
     if (q->count < q->low) {
-        lock(connector);
         httpResumeQueue(connector->writeq);
-        unlock(connector);
 
     } else if (q->count > q->max && connector->writeBlocked) {
         httpSuspendQueue(q->stream->writeq);
     }
+#endif
 }
 
 
-static int fastAction(MaState *state, cchar *key, cchar *value)
+/*
+    Handle a FastCGI response. Called from the connector via mprCreateEvent().
+ */
+static void fastHandlerResponse(HttpPacket *packet)
 {
-    char    *mimeType, *program;
+    FastProxy   *proxy;
+    HttpStream  *stream;
+    HttpRx      *rx;
+    MprBuf      *buf;
+    int         status, protoStatus, type;
 
-    if (!maTokenize(state, value, "%S %S", &mimeType, &program)) {
-        return MPR_ERR_BAD_SYNTAX;
+    proxy = packet->data;
+    stream = packet->stream;
+    type = packet->type;
+    rx = stream->rx;
+    buf = packet->content;
+
+    if (type == FAST_END_REQUEST) {
+        if (httpGetPacketLength(packet) < 8) {
+            httpError(stream, HTTP_CODE_BAD_GATEWAY, "FastCGI bad request end packet");
+            return;
+        }
+        status = mprGetCharFromBuf(buf) << 24 || mprGetCharFromBuf(buf) << 16 ||
+                 mprGetCharFromBuf(buf) << 8 || mprGetCharFromBuf(buf);
+        protoStatus = mprGetCharFromBuf(buf);
+        mprAdjustBufStart(buf, 3);
+
+        if (protoStatus == FAST_REQUEST_COMPLETE) {
+            httpLog(proxy->trace, "fast.rx", "context", "msg:'Request complete', id:%d, status:%d", stream->reqID, status);
+
+        } else if (protoStatus == FAST_CANT_MPX_CONN) {
+            httpError(stream, HTTP_CODE_BAD_GATEWAY, "FastCGI cannot multiplex requests %s", stream->rx->uri);
+            return;
+
+        } else if (protoStatus == FAST_OVERLOADED) {
+            httpError(stream, HTTP_CODE_SERVICE_UNAVAILABLE, "FastCGI overloaded %s", stream->rx->uri);
+            return;
+
+        } else if (protoStatus == FAST_UNKNOWN_ROLE) {
+            httpError(stream, HTTP_CODE_BAD_GATEWAY, "FastCGI unknown role %s", stream->rx->uri);
+            return;
+        }
+        packet = httpCreateEndPacket();
+
+    } else if (type == FAST_STDOUT) {
+        if (!rx->seenFastHeaders) {
+            if (!parseFastHeaders(packet)) {
+                return;
+            }
+            rx->seenFastHeaders = 1;
+        }
     }
-    mprSetMimeProgram(state->route->mimeTypes, mimeType, program);
-    return 0;
-}
+    if (type == FAST_REAP) {
+        ; /* Nothing to do -- just call httpProcess below */
 
+    } else if (httpGetPacketLength(packet) == 0) {
+        httpLog(proxy->trace, "fast.rx.eof", "detail", "msg:'FastCGI EOF', id:%d", stream->reqID);
+        httpFinalizeOutput(stream);
 
-static int fastListen(MaState *state, cchar *key, cchar *value)
-{
-    Fast    *fast;
-
-    fast = getFast(state->route);
-    fast->endpoint = sclone(value);
-
-    if (mprParseSocketAddress(fast->endpoint, &fast->ip, &fast->port, NULL, 9128) < 0) {
-        mprLog("fast error", 0, "Cannot bind FastCGI proxy address: %s", fast->endpoint);
-        return MPR_ERR_BAD_SYNTAX;
+    } else {
+        httpLogPacket(proxy->trace, "fast.rx.data", "packet", 0, packet, "id:%d, len:%ld", stream->reqID,
+            httpGetPacketLength(packet));
+        httpPutPacketToNext(stream->writeq, packet);
     }
-    return 0;
+    httpProcess(stream->inputq);
 }
 
 
-static int fastMaxProcesses(MaState *state, cchar *key, cchar *value)
+/*
+    Parse the FastCGI app output headers. Sample FastCGI program output:
+        Content-type: text/html
+        <html.....
+ */
+static bool parseFastHeaders(HttpPacket *packet)
 {
-    Fast    *fast;
+    FastProxy   *proxy;
+    HttpStream  *stream;
+    MprBuf      *buf;
+    char        *endHeaders, *headers, *key, *value;
+    ssize       blen, len;
 
-    //  MOB - should these be in limits so they can be inherited?
-    fast = getFast(state->route);
-    fast->maxProxies = httpGetInt(value);
-    return 0;
+    stream = packet->stream;
+    proxy = packet->data;
+    buf = packet->content;
+    headers = mprGetBufStart(buf);
+    value = 0;
+
+
+    headers = mprGetBufStart(buf);
+    blen = mprGetBufLength(buf);
+    len = 0;
+
+    if ((endHeaders = sncontains(headers, "\r\n\r\n", blen)) == NULL) {
+        if ((endHeaders = sncontains(headers, "\n\n", blen)) == NULL) {
+            if (slen(headers) < ME_MAX_HEADERS) {
+                /* Not EOF and less than max headers and have not yet seen an end of headers delimiter */
+                httpLog(proxy->trace, "fast.rx", "detail", "msg:'FastCGI incomplete headers', id:%d", stream->reqID);
+                return 0;
+            }
+        }
+        len = 2;
+    } else {
+        len = 4;
+    }
+
+    /*
+        Split the headers from the body. Add null to ensure we can search for line terminators.
+     */
+    if (endHeaders) {
+        endHeaders[len - 1] = '\0';
+        endHeaders += len;
+    }
+
+    /*
+        Want to be tolerant of FastCGI programs that omit the status line.
+     */
+    if (strncmp((char*) buf->start, "HTTP/1.", 7) == 0) {
+        if (!parseFastResponseLine(packet)) {
+            /* httpError already called */
+            return 0;
+        }
+    }
+    if (endHeaders && strchr(mprGetBufStart(buf), ':')) {
+        while (mprGetBufLength(buf) > 0 && buf->start[0] && (buf->start[0] != '\r' && buf->start[0] != '\n')) {
+            if ((key = getFastToken(buf, ":")) == 0) {
+                key = "Bad Header";
+            }
+            value = getFastToken(buf, "\n");
+            while (isspace((uchar) *value)) {
+                value++;
+            }
+            len = (int) strlen(value);
+            while (len > 0 && (value[len - 1] == '\r' || value[len - 1] == '\n')) {
+                value[len - 1] = '\0';
+                len--;
+            }
+            httpLog(stream->trace, "fast.rx", "detail", "key:'%s', value: '%s'", key, value);
+            if (scaselesscmp(key, "location") == 0) {
+                httpRedirect(stream, stream->tx->status, value);
+
+            } else if (scaselesscmp(key, "status") == 0) {
+                httpSetStatus(stream, atoi(value));
+
+            } else if (scaselesscmp(key, "content-type") == 0) {
+                httpSetHeaderString(stream, "Content-Type", value);
+
+            } else if (scaselesscmp(key, "content-length") == 0) {
+                httpSetContentLength(stream, (MprOff) stoi(value));
+                httpSetChunkSize(stream, 0);
+
+            } else {
+                /*
+                    Now pass all other headers back to the client
+                 */
+                key = ssplit(key, ":\r\n\t ", NULL);
+                httpSetHeaderString(stream, key, value);
+            }
+        }
+        buf->start = endHeaders;
+    }
+    return 1;
 }
 
 
-static int fastMinProcesses(MaState *state, cchar *key, cchar *value)
+/*
+    Parse the CGI output first line
+ */
+static bool parseFastResponseLine(HttpPacket *packet)
 {
-    Fast    *fast;
+    MprBuf      *buf;
+    char        *protocol, *status, *msg;
 
-    fast = getFast(state->route);
-    fast->minProxies = httpGetInt(value);
-    return 0;
+    buf = packet->content;
+    protocol = getFastToken(buf, " ");
+    if (protocol == 0 || protocol[0] == '\0') {
+        httpError(packet->stream, HTTP_CODE_BAD_GATEWAY, "Bad CGI HTTP protocol response");
+        return 0;
+    }
+    if (strncmp(protocol, "HTTP/1.", 7) != 0) {
+        httpError(packet->stream, HTTP_CODE_BAD_GATEWAY, "Unsupported CGI protocol");
+        return 0;
+    }
+    status = getFastToken(buf, " ");
+    if (status == 0 || *status == '\0') {
+        httpError(packet->stream, HTTP_CODE_BAD_GATEWAY, "Bad CGI header response");
+        return 0;
+    }
+    msg = getFastToken(buf, "\n");
+    mprDebug("http cgi", 4, "CGI response status: %s %s %s", protocol, status, msg);
+    return 1;
 }
 
 
-static int fastMaxRequests(MaState *state, cchar *key, cchar *value)
+/*
+    Get the next input token. The content buffer is advanced to the next token. This routine always returns a
+    non-zero token. The empty string means the delimiter was not found.
+ */
+static char *getFastToken(MprBuf *buf, cchar *delim)
 {
-    Fast    *fast;
+    char    *token, *nextToken;
+    ssize   len;
 
-    fast = getFast(state->route);
-    fast->maxRequests = httpGetInt(value);
-    return 0;
+    len = mprGetBufLength(buf);
+    if (len == 0) {
+        return "";
+    }
+    token = mprGetBufStart(buf);
+    nextToken = sncontains(mprGetBufStart(buf), delim, len);
+    if (nextToken) {
+        *nextToken = '\0';
+        len = (int) strlen(delim);
+        nextToken += len;
+        buf->start = nextToken;
+
+    } else {
+        buf->start = mprGetBufEnd(buf);
+    }
+    return token;
 }
 
 
-static int fastTimeout(MaState *state, cchar *key, cchar *value)
+/************************************************ FastProxy ***************************************************************/
+
+static FastProxy *allocFastProxy(Fast *fast, HttpStream *stream)
 {
-    Fast    *fast;
+    FastProxy   *proxy;
 
-    fast = getFast(state->route);
-    fast->proxyTimeout = httpGetTicks(value);
-    return 0;
+    proxy = mprAllocObj(FastProxy, manageFastProxy);
+    proxy->fast = fast;
+    proxy->trace = stream->net->trace;
+    /*
+        The requestID must start at 1
+     */
+    proxy->nextID = 1;
+    proxy->streams = mprCreateList(0, 0);
+    proxy->connector = allocFastConnector(proxy, fast->concurrency > 1 ? NULL : stream->net->dispatcher, stream);
+    if (proxy->connector == NULL) {
+        return NULL;
+    }
+    return proxy;
 }
 
 
-static HttpPacket *prepFastHeader(HttpQueue *q, int type, HttpPacket *packet)
+static void manageFastProxy(FastProxy *proxy, int flags)
+{
+    if (flags & MPR_MANAGE_MARK) {
+        mprMark(proxy->fast);
+        mprMark(proxy->streams);
+        mprMark(proxy->connector);
+        mprMark(proxy->trace);
+    }
+}
+
+
+static FastProxy *getFastProxy(Fast *fast, HttpStream *stream)
+{
+    FastProxy   *proxy;
+    MprTicks    timeout;
+    int         next;
+
+    lock(fast);
+    proxy = NULL;
+    timeout = mprGetTicks() +  FAST_WAIT_TIMEOUT;
+
+    while (!proxy && mprGetTicks() < timeout) {
+        if (mprGetListLength(fast->idleProxies) > 0) {
+            proxy = mprGetFirstItem(fast->idleProxies);
+            mprRemoveItemAtPos(fast->idleProxies, 0);
+            mprAddItem(fast->proxies, proxy);
+            break;
+
+        } else if (mprGetListLength(fast->idleProxies) < fast->maxProxies) {
+            if ((proxy = startFastProxy(fast, stream)) != 0) {
+                mprAddItem(fast->proxies, proxy);
+            }
+            break;
+
+        } else {
+            for (ITERATE_ITEMS(fast->proxies, proxy, next)) {
+                if (mprGetListLength(proxy->streams) < fast->concurrency) {
+                    break;
+                }
+            }
+            if (proxy) {
+                break;
+            }
+            unlock(fast);
+            if (mprWaitForCond(fast->cond, TPS) < 0) {
+                return NULL;
+            }
+            lock(fast);
+        }
+    }
+    if (proxy) {
+        mprAddItem(proxy->streams, stream);
+        stream->reqID = proxy->nextID++;
+    }
+    proxy->lastActive = mprGetTicks();
+    unlock(fast);
+    return proxy;
+}
+
+
+static void releaseFastProxy(Fast *fast, FastProxy *proxy)
+{
+    FastConnector   *connector;
+
+    lock(fast);
+    connector = proxy->connector;
+
+    if (connector->socket) {
+        mprCloseSocket(connector->socket, 1);
+        connector->socket = 0;
+    }
+    if (mprRemoveItem(fast->proxies, proxy) < 0) {
+        httpLog(proxy->trace, "fast", "error", "msg:'Cannot find proxy in list'");
+    }
+    if (connector->destroy || proxy->nextID >= fast->maxRequests) {
+        httpLog(proxy->trace, "fast", "detail", "msg:'Destroy FastCGI proxy', command:'%s', pid:%d, destroy:%d, nextId:%d",
+            fast->command, connector->pid, connector->destroy, proxy->nextID);
+        destroyFastProxy(proxy);
+
+    } else if (mprGetListLength(fast->proxies) + mprGetListLength(fast->idleProxies) + 1 > fast->minProxies) {
+        destroyFastProxy(proxy);
+
+    } else {
+        proxy->lastActive = mprGetTicks();
+        mprAddItem(fast->idleProxies, proxy);
+        fast->timer = mprCreateEvent(NULL, "fast-watchdog", fast->proxyTimeout, checkProxies, fast, MPR_EVENT_QUICK);
+
+        httpLog(proxy->trace, "fast", "context",
+            "msg:'Release FastCGI proxy', command:'%s', idle:%d, active:%d, pid:%d, id:%d, max:%d",
+            fast->command, mprGetListLength(fast->idleProxies), mprGetListLength(fast->proxies),
+            connector->pid, proxy->nextID, fast->maxRequests);
+    }
+    mprSignalCond(fast->cond);
+    unlock(fast);
+}
+
+
+static void checkProxies(Fast *fast)
+{
+    FastProxy   *proxy;
+    MprTicks    now;
+    int         next;
+
+    lock(fast);
+
+    now = mprGetTicks();
+    for (ITERATE_ITEMS(fast->idleProxies, proxy, next)) {
+        if ((now - proxy->lastActive) > fast->proxyTimeout) {
+            destroyFastProxy(proxy);
+            break;
+        }
+    }
+    unlock(fast);
+}
+
+
+static FastProxy *startFastProxy(Fast *fast, HttpStream *stream)
+{
+    FastProxy       *proxy;
+    FastConnector   *connector;
+    HttpRoute       *route;
+    MprSocket       *listen;
+    cchar           **argv;
+    int             argc;
+
+    route = stream->rx->route;
+
+    proxy = allocFastProxy(fast, stream);
+    assert(proxy->connector);
+    connector = proxy->connector;
+
+    fast->command = mprGetMimeProgram(route->mimeTypes, stream->tx->ext);
+
+    if (fast->command && *fast->command) {
+        if ((argc = mprMakeArgv(mprGetPathBase(fast->command), &argv, 0)) < 0 || argv == 0) {
+            httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot make Fast proxy command: %s", fast->command);
+            return NULL;
+        }
+        httpLog(stream->trace, "fast", "context", "msg:'Start FastCGI proxy', command:'%s'", fast->command);
+
+        if ((listen = createListener(connector)) < 0) {
+            httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot create proxy listening endpoint for %s", fast->command);
+            return NULL;
+        }
+        if (!connector->signal) {
+            connector->signal = mprAddSignalHandler(SIGCHLD, reapProxyProcess, connector, connector->dispatcher, MPR_SIGNAL_BEFORE);
+        }
+        if ((connector->pid = fork()) < 0) {
+            fprintf(stderr, "Fork failed for FastCGI");
+            return NULL;
+
+        } else if (connector->pid == 0) {
+            /* Child */
+    #if !FAST_DEBUG
+            int     i;
+            for (i = 0; i < 128; i++) {
+                close(i);
+            }
+    #endif
+            dup2(listen->fd, 0);
+            // TODO envp[0] = sfmt("FCGI_WEB_SERVER_ADDRS=%s", route->host->defaultEndpoint->ip);
+
+            if (execve(fast->command, (char**) argv, NULL /* (char**) &env->items[0] */) < 0) {
+                printf("Cannot exec fast proxy: %s\n", fast->command);
+            }
+            return NULL;
+        } else {
+            httpLog(proxy->trace, "fast", "context", "msg:'FastCGI started proxy', command:'%s', pid:%d",
+                fast->command, connector->pid);
+            mprCloseSocket(listen, 0);
+        }
+    } else {
+        fast->command = NULL;
+    }
+    return proxy;
+}
+
+
+/*
+    Proxy process has died. WARNING: this may be called before all the data has been read from the socket.
+    So we must not set eof = 1 here.
+ */
+static void reapProxyProcess(FastConnector *connector, MprSignal *sp)
+{
+    HttpPacket  *packet;
+    HttpStream  *stream;
+    int         next, status;
+
+    if (connector->pid == 0) {
+        return;
+    }
+    while (waitpid(connector->pid, &status, WNOHANG) != connector->pid) {
+        if (errno == EINTR) {
+            mprSleep(100);
+            continue;
+        }
+        httpLog(connector->trace, "fast", "error", "msg:'Cannot wait for fastCGI app'");
+        return;
+    }
+    if (WEXITSTATUS(status) != 0) {
+        httpLog(connector->trace, "fast", "error", "msg:'FastCGI exited with status', status:%d", WEXITSTATUS(status));
+    } else {
+        httpLog(connector->trace, "fast", "context", "msg:'FastCGI exited with status', status:%d", WEXITSTATUS(status));
+    }
+    if (connector->signal) {
+        mprRemoveSignalHandler(connector->signal);
+        connector->signal = 0;
+    }
+    connector->pid = 0;
+    connector->destroy = 1;
+
+    for (ITERATE_ITEMS(connector->proxy->streams, stream, next)) {
+        if (stream->state < HTTP_STATE_RUNNING) {
+            packet = httpCreateDataPacket(0);
+            packet->data = connector->proxy;
+            packet->stream = stream;
+            packet->type = FAST_REAP;
+            mprCreateEvent(stream->dispatcher, "fast.reap", 0, fastHandlerResponse, packet, 0);
+        }
+    }
+}
+
+
+static void destroyFastProxy(FastProxy *proxy)
+{
+    FastConnector   *connector;
+
+    connector = proxy->connector;
+    if (connector->pid) {
+        lock(proxy->fast);
+        httpLog(proxy->trace, "fast", "context", "msg: 'Kill FastCGI process', pid:%d", connector->pid);
+        kill(connector->pid, SIGTERM);
+        reapProxyProcess(connector, NULL);
+        unlock(proxy->fast);
+    }
+}
+
+
+static int connectFastProxy(FastProxy *proxy)
+{
+    Fast            *fast;
+    FastConnector   *connector;
+    MprTicks        timeout;
+    int             connected;
+
+    fast = proxy->fast;
+    connector = proxy->connector;
+
+    timeout = mprGetTicks() +  FAST_CONNECT_TIMEOUT;
+    do {
+        httpLog(proxy->trace, "fast.rx", "request", "FastCGI try to connect to %s:%d pid %d",
+            fast->ip, fast->port, connector->pid);
+
+        connector->socket = mprCreateSocket();
+        if ((connected = mprConnectSocket(connector->socket, fast->ip, fast->port, 0)) == 0) {
+            mprLog("fast info", 0, "FastCGI connected to pid %d", connector->pid);
+            return 0;
+        }
+        mprSleep(50);
+    } while (mprGetTicks() < timeout);
+
+    return MPR_ERR_CANT_CONNECT;
+}
+
+
+/*
+    Add the FastCGI spec packet header to the packet->prefix
+ */
+static HttpPacket *prepFastPacket(HttpQueue *q, int type, HttpPacket *packet)
 {
     FastProxy   *proxy;
     uchar       *buf;
@@ -708,30 +928,31 @@ static HttpPacket *prepFastHeader(HttpQueue *q, int type, HttpPacket *packet)
     buf = (uchar*) packet->prefix->start;
     *buf++ = FAST_VERSION;
     *buf++ = type;
-    //  MOB - must limit requestID to ushort
-    *buf++ = (uchar) (proxy->requestId >> 8);
-    *buf++ = (uchar) (proxy->requestId & 0xFF);
+
+    *buf++ = (uchar) (q->stream->reqID >> 8);
+    *buf++ = (uchar) (q->stream->reqID & 0xFF);
 
     len = httpGetPacketLength(packet);
     *buf++ = (uchar) (len >> 8);
     *buf++ = (uchar) (len & 0xFF);
+    mprAdjustBufEnd(packet->prefix, 8);
 
+    /*
+        Use 8 byte padding alignment
+     */
     pad = (len % 8) ? (8 - (len % 8)) : 0;
-    *buf++ = pad;
-    *buf++ = 0;
-    mprAdjustBufEnd(packet->content, 8 + pad);
+    if (pad > 0) {
+        if (mprGetBufSpace(packet->content) < pad) {
+            mprGrowBuf(packet->content, pad);
+            mprAdjustBufEnd(packet->content, pad);
+        }
+    }
+    httpLog(proxy->trace, "fast.tx", "context", "msg:FastCGI send packet', type:%d, id:%d, lenth:%ld",
+        type, q->stream->reqID, len);
     return packet;
 }
 
 
-/*
-    typedef struct {
-        unsigned char roleB1;
-        unsigned char roleB0;
-        unsigned char flags;
-        unsigned char reserved[5];
-    } FCGI_RequestStart;
- */
 static void prepFastRequestStart(HttpQueue *q)
 {
     HttpPacket  *packet;
@@ -743,43 +964,82 @@ static void prepFastRequestStart(HttpQueue *q)
     buf = (uchar*) packet->content->start;
     *buf++= 0;
     *buf++= FAST_RESPONDER;
-    //  MOB - what is flags?
-    *buf++ = 0;     //  MOB flags;
-    //  MOB ??
+    *buf++ = FAST_KEEP_CONN;
+    /* Reserved bytes */
     buf += 5;
     mprAdjustBufEnd(packet->content, 8);
-    (void) prepFastHeader(q, FAST_BEGIN_REQUEST, packet);
-    putToConnectorWriteq(proxy->connector, packet);
-}
-
-
-static void prepFastRequestEnd(HttpQueue *q, HttpPacket *packet)
-{
-    FastProxy   *proxy;
-
-    proxy = q->queueData;
-    (void) prepFastHeader(q, FAST_END_REQUEST, packet);
-    putToConnectorWriteq(proxy->connector, packet);
+    putToConnectorWriteq(proxy->connector, prepFastPacket(q, FAST_BEGIN_REQUEST, packet));
 }
 
 
 static void prepFastRequestParams(HttpQueue *q)
 {
-    HttpPacket  *packet;
     FastProxy   *proxy;
+    HttpStream  *stream;
+    HttpPacket  *packet;
+    HttpRx      *rx;
 
     proxy = q->queueData;
+    stream = q->stream;
+    rx = stream->rx;
 
-    //  MOB - how to encode params
-    //  MOB - what params
-    packet = prepFastHeader(q, FAST_PARAMS, 0);
-    putToConnectorWriteq(proxy->connector, packet);
+    packet = httpCreateDataPacket(stream->limits->headerSize);
+    packet->data = proxy;
+    copyFastParams(packet, rx->params, rx->route->envPrefix);
+    copyFastVars(packet, rx->svars, "");
+    copyFastVars(packet, rx->headers, "HTTP_");
+
+    putToConnectorWriteq(proxy->connector, prepFastPacket(q, FAST_PARAMS, packet));
+    putToConnectorWriteq(proxy->connector, prepFastPacket(q, FAST_PARAMS, 0));
 }
 
 
-static void prepFastPost(HttpQueue *q, HttpPacket *packet)
+/************************************************ FastConnector ***********************************************************/
+/*
+    Setup the proxy connector. This may run on a different thread.
+ */
+static FastConnector *allocFastConnector(FastProxy *proxy, MprDispatcher *dispatcher, HttpStream *stream)
 {
-    (void) prepFastHeader(q, FAST_STDIN, packet);
+    Fast            *fast;
+    FastConnector   *connector;
+
+    fast = proxy->fast;
+
+    connector = mprAllocObj(FastConnector, manageFastConnector);
+    connector->proxy = proxy;
+    proxy->connector = connector;
+    connector->trace = proxy->trace;
+
+    connector->readq = httpCreateQueue(stream->net, stream, HTTP->fastConnector, HTTP_QUEUE_RX, 0);
+    connector->writeq = httpCreateQueue(stream->net, stream, HTTP->fastConnector, HTTP_QUEUE_TX, 0);
+
+    connector->readq->max = FAST_Q_SIZE;
+    connector->writeq->max = FAST_Q_SIZE;
+
+    connector->readq->queueData = connector;
+    connector->writeq->queueData = connector;
+    connector->readq->pair = connector->writeq;
+    connector->writeq->pair = connector->readq;
+
+    /*
+        Create listening socket for the fastCGI app to accept -- passed to app via fork
+     */
+    connector->dispatcher = mprCreateDispatcher("fast-connector", 0);
+    return connector;
+}
+
+
+static void manageFastConnector(FastConnector *connector, int flags)
+{
+    if (flags & MPR_MANAGE_MARK) {
+        mprMark(connector->dispatcher);
+        mprMark(connector->socket);
+        mprMark(connector->writeq);
+        mprMark(connector->readq);
+        mprMark(connector->proxy);
+        mprMark(connector->signal);
+        mprMark(connector->trace);
+    }
 }
 
 
@@ -792,52 +1052,92 @@ static void fastConnectorIncoming(HttpQueue *q, HttpPacket *packet)
 }
 
 
-static void fastConnectorIncomingService(HttpQueue *q)
+/*
+    Called via CreateEvent to transfer packets from the handler's dispatcher to the connector's dispatcher
+ */
+static void fastConnectorData(HttpPacket *packet)
 {
     FastProxy   *proxy;
-    HttpPacket  *packet;
-    int         type;
 
-    proxy = q->queueData;
-
-    while ((packet = httpGetPacket(q)) != 0) {
-        type = mprGetCharFromBuf(packet->content);
-        requestId = mprGetCharFromBuf(packet->content);
-
-        /* KEEP
-            stream = mprGetItemAt(proxy->streams, requestId);
-            MOB - locking
-            mprCreateEvent
-         */
-        if (type == FAST_STDOUT) {
-            packet->stream = stream;
-            packet->data = proxy;
-            mprCreateEvent(stream->dispatcher, "fast", 0, xxxx, packet, 0);
-        }
-    }
+    proxy = packet->data;
+    httpPutForService(proxy->connector->writeq, packet, HTTP_SCHEDULE_QUEUE);
 }
 
 
-static void fastHandlerResponse(HttpPacket *packet)
+/*
+    Parse an incoming packet (response) from the FastCGI app
+ */
+static void fastConnectorIncomingService(HttpQueue *q)
 {
-    HttpStream  *stream;
-    HttpRx      *rx;
+    FastConnector   *connector;
+    FastProxy       *proxy;
+    HttpPacket      *packet, *tail;
+    HttpStream      *stream;
+    MprBuf          *buf;
+    ssize           contentLength, len, padLength;
+    int             requestID, type, version;
 
-    stream = packet->stream;
-    proxy =
-    rx = stream->rx;
+    connector = q->queueData;
+    proxy = connector->proxy;
 
-    if (!rx->seenFastHeaders) {
-        if ((len = getHeadersLength(packet)) == 0) {
-            return;
+    while ((packet = httpGetPacket(q)) != 0) {
+        buf = packet->content;
+
+        if (mprGetBufLength(buf) < FAST_PACKET_SIZE) {
+            /* Insufficient data */
+            httpPutBackPacket(q, packet);
+            httpLog(proxy->trace, "fast", "context", "msg: 'FastCGI waiting for rest of header frame'");
+            break;
         }
-        if (!parseFastHeaders(q, packet, len)) {
-            return;
+        version = mprGetCharFromBuf(buf);
+        type = mprGetCharFromBuf(buf);
+        requestID = (mprGetCharFromBuf(buf) << 8) | (mprGetCharFromBuf(buf) & 0xFF);
+        contentLength = (mprGetCharFromBuf(buf) << 8) | (mprGetCharFromBuf(buf) & 0xFF);
+        padLength = mprGetCharFromBuf(buf);
+        /* reserved */ (void) mprGetCharFromBuf(buf);
+        len = contentLength + padLength;
+
+        if (version != FAST_VERSION) {
+            httpLog(proxy->trace, "fast.rx", "error", "msg:'Bad FastCGI response version'");
+            break;
         }
-        proxy->seenFastHeaders = 1;
-    }
-        if (httpGetPacketLength(packet) > 0) {
-            httpPutPacketToNext(q, packet);
+        if (contentLength < 0 || contentLength > 65535) {
+            httpLog(proxy->trace, "fast", "error", "msg:'Bad FastCGI content length', length:%ld", contentLength);
+            break;
+        }
+        if (padLength < 0 || padLength > 255) {
+            httpLog(proxy->trace, "fast", "error", "msg:'Bad FastCGI pad length', padding:%ld", padLength);
+            break;
+        }
+        if (mprGetBufLength(buf) < len) {
+            /* Insufficient data */
+            mprAdjustBufStart(buf, -FAST_PACKET_SIZE);
+            httpPutBackPacket(q, packet);
+            httpLog(proxy->trace, "fast", "context", "msg: 'FastCGI waiting for rest of packet', length:%ld, queue:%ld", httpGetPacketLength(packet), q->count);
+            break;
+        }
+        packet->type = type;
+
+        httpLog(proxy->trace, "fast", "context", "msg:'FastCGI incoming packet', type:'%s' id:%d, length:%ld",
+                fastTypes[type], requestID, contentLength);
+
+        if ((tail = httpSplitPacket(packet, len)) != 0) {
+            httpPutBackPacket(q, tail);
+        }
+        if ((stream = getStream(proxy, requestID)) != 0) {
+            if (type == FAST_STDOUT || type == FAST_END_REQUEST) {
+                packet->stream = stream;
+                packet->data = proxy;
+                mprCreateEvent(stream->dispatcher, "fast", 0, fastHandlerResponse, packet, 0);
+
+            } else if (type == FAST_STDERR) {
+                httpLog(proxy->trace, "fast", "error", "msg:'FastCGI stderr', uri:'%s', error:'%s'",
+                    stream->rx->uri, mprBufToString(packet->content));
+
+            } else {
+                httpLog(proxy->trace, "fast", "error", "msg:'FastCGI invalid packet', command:'%s', type:%d",
+                    stream->rx->uri, type);
+                connector->destroy = 1;
             }
         }
     }
@@ -845,9 +1145,7 @@ static void fastHandlerResponse(HttpPacket *packet)
 
 
 /*
-    Handle IO on the network. Initially the dispatcher will be set to the server->dispatcher and the first
-    I/O event will be handled on the server thread (or main thread). A request handler may create a new
-    net->dispatcher and transfer execution to a worker thread if required.
+    Handle IO on the network
  */
 static void fastConnectorIO(FastConnector *connector, MprEvent *event)
 {
@@ -890,7 +1188,6 @@ static void enableFastConnectorEvents(FastConnector *connector)
         if (connector->writeq->count > 0) {
             eventMask |= MPR_WRITABLE;
         }
-        //  MOB - can't do this?
         if (connector->readq->count < connector->readq->max) {
             eventMask |= MPR_READABLE;
         }
@@ -935,8 +1232,9 @@ static void fastConnectorOutgoingService(HttpQueue *q)
                 connector->writeBlocked = 1;
                 break;
             }
-            mprLog("fast error", 6, "fastConnector: Cannot write. errno %d", errCode);
+            httpLog(connector->proxy->trace, "fast", "error", "msg='Write error', errno:%d", errCode);
             connector->eof = 1;
+            connector->destroy = 1;
             break;
 
         } else if (written > 0) {
@@ -1011,7 +1309,6 @@ static void addToFastVector(HttpQueue *q, char *ptr, ssize bytes)
 static void freeFastPackets(HttpQueue *q, ssize bytes)
 {
     HttpPacket  *packet;
-    HttpStream  *stream;
     ssize       len;
 
     assert(q->count >= 0);
@@ -1019,10 +1316,11 @@ static void freeFastPackets(HttpQueue *q, ssize bytes)
 
     while ((packet = q->first) != 0) {
         if (packet->flags & HTTP_PACKET_END) {
+            /*
             if ((stream = packet->stream) != 0) {
-                httpFinalizeConnector(stream);
+                // httpFinalizeConnector(stream);
                 httpProcess(stream->inputq);
-            }
+            } */
         } else if (bytes > 0) {
             if (packet->prefix) {
                 len = mprGetBufLength(packet->prefix);
@@ -1095,166 +1393,212 @@ static void adjustNetVec(HttpQueue *q, ssize written)
 }
 
 
-static int getHeadersLength(HttpPacket *packet)
+static void encodeFastLen(MprBuf *buf, cchar *s)
 {
-    char    *endHeaders, *headers;
-    int     len;
-
-    buf = packet->content;
-    headers = mprGetBufStart(buf);
-    len = 0;
-
-    if ((endHeaders = sncontains(headers, "\r\n\r\n", blen)) == NULL) {
-        if ((endHeaders = sncontains(headers, "\n\n", blen)) == NULL) {
-            if (slen(headers) < ME_MAX_HEADERS) {
-                /* Not EOF and less than max headers and have not yet seen an end of headers delimiter */
-                return 0;
-            }
-        }
-        len = 2;
-    } else {
-        len = 4;
-    }
-    return len;
-}
-
-
-/*
-    Parse the CGI output headers. Sample CGI program output:
-        Content-type: text/html
-        <html.....
- */
-static bool parseFastHeaders(HttpQueue *q, HttpPacket *packet, int len)
-{
-    FastProxy   *proxy;
-    HttpStream  *stream;
-    MprBuf      *buf;
-    char        *endHeaders, *headers, *key, *value;
-    ssize       blen;
-
-    proxy = q->queueData;
-    stream = proxy->stream;
-    buf = packet->content;
-    headers = mprGetBufStart(buf);
-    blen = mprGetBufLength(buf);
-    value = 0;
-
-    /*
-        Split the headers from the body. Add null to ensure we can search for line terminators.
-     */
-    endHeaders = &buf[len];
-    if (endHeaders > buf->end) {
-        assert(endHeaders <= buf->end);
-        return 0;
-    }
-    endHeaders[len - 1] = '\0';
-    endHeaders += len;
-
-    /*
-        Want to be tolerant of CGI programs that omit the status line.
-     */
-    if (strncmp((char*) buf->start, "HTTP/1.", 7) == 0) {
-        if (!parseFastResponseLine(q, packet)) {
-            /* httpError already called */
-            return 0;
-        }
-    }
-    if (endHeaders && strchr(mprGetBufStart(buf), ':')) {
-        while (mprGetBufLength(buf) > 0 && buf->start[0] && (buf->start[0] != '\r' && buf->start[0] != '\n')) {
-            if ((key = getFastToken(buf, ":")) == 0) {
-                key = "Bad Header";
-            }
-            value = getFastToken(buf, "\n");
-            while (isspace((uchar) *value)) {
-                value++;
-            }
-            len = (int) strlen(value);
-            while (len > 0 && (value[len - 1] == '\r' || value[len - 1] == '\n')) {
-                value[len - 1] = '\0';
-                len--;
-            }
-            if (scaselesscmp(key, "location") == 0) {
-                //  MOB - THREAD
-                httpRedirect(proxy->stream, stream->tx->status, value);
-
-            } else if (scaselesscmp(key, "status") == 0) {
-                httpSetStatus(stream, atoi(value));
-
-            } else if (scaselesscmp(key, "content-type") == 0) {
-                httpSetHeaderString(stream, "Content-Type", value);
-
-            } else if (scaselesscmp(key, "content-length") == 0) {
-                httpSetContentLength(stream, (MprOff) stoi(value));
-                httpSetChunkSize(stream, 0);
-
-            } else {
-                /*
-                    Now pass all other headers back to the client
-                 */
-                key = ssplit(key, ":\r\n\t ", NULL);
-                httpSetHeaderString(stream, key, value);
-            }
-        }
-        buf->start = endHeaders;
-    }
-    return 1;
-}
-
-
-/*
-    Parse the CGI output first line
- */
-static bool parseFastResponseLine(HttpQueue *q, HttpPacket *packet)
-{
-    MprBuf      *buf;
-    char        *protocol, *status, *msg;
-
-    buf = packet->content;
-    protocol = getFastToken(buf, " ");
-    if (protocol == 0 || protocol[0] == '\0') {
-        httpError(q->stream, HTTP_CODE_BAD_GATEWAY, "Bad CGI HTTP protocol response");
-        return 0;
-    }
-    if (strncmp(protocol, "HTTP/1.", 7) != 0) {
-        httpError(q->stream, HTTP_CODE_BAD_GATEWAY, "Unsupported CGI protocol");
-        return 0;
-    }
-    status = getFastToken(buf, " ");
-    if (status == 0 || *status == '\0') {
-        httpError(q->stream, HTTP_CODE_BAD_GATEWAY, "Bad CGI header response");
-        return 0;
-    }
-    msg = getFastToken(buf, "\n");
-    mprDebug("http cgi", 4, "CGI response status: %s %s %s", protocol, status, msg);
-    return 1;
-}
-
-
-/*
-    Get the next input token. The content buffer is advanced to the next token. This routine always returns a
-    non-zero token. The empty string means the delimiter was not found.
- */
-static char *getFastToken(MprBuf *buf, cchar *delim)
-{
-    char    *token, *nextToken;
     ssize   len;
 
-    len = mprGetBufLength(buf);
-    if (len == 0) {
-        return "";
-    }
-    token = mprGetBufStart(buf);
-    nextToken = sncontains(mprGetBufStart(buf), delim, len);
-    if (nextToken) {
-        *nextToken = '\0';
-        len = (int) strlen(delim);
-        nextToken += len;
-        buf->start = nextToken;
-
+    len = slen(s);
+    if (len <= 127) {
+        mprPutCharToBuf(buf, (uchar) len);
     } else {
-        buf->start = mprGetBufEnd(buf);
+        mprPutCharToBuf(buf, (uchar) (((len >> 24) & 0x7f) | 0x80));
+        mprPutCharToBuf(buf, (uchar) ((len >> 16) & 0xff));
+        mprPutCharToBuf(buf, (uchar) ((len >> 8) & 0xff));
+        mprPutCharToBuf(buf, (uchar) (len & 0xff));
     }
-    return token;
+}
+
+
+static void encodeFastName(HttpPacket *packet, cchar *name, cchar *value)
+{
+    MprBuf      *buf;
+
+    buf = packet->content;
+    encodeFastLen(buf, name);
+    encodeFastLen(buf, value);
+    mprPutStringToBuf(buf, name);
+    mprPutStringToBuf(buf, value);
+}
+
+
+static void copyFastInner(HttpPacket *packet, cchar *key, cchar *value, cchar *prefix)
+{
+    FastProxy   *proxy;
+
+    proxy = packet->data;
+    if (prefix) {
+        key = sjoin(prefix, key, NULL);
+    }
+    httpLog(proxy->trace, "fast.tx", "context", "msg:'FastCGI env', key:'%s', value:'%s'", key, value);
+    encodeFastName(packet, key, value);
+}
+
+
+static void copyFastVars(HttpPacket *packet, MprHash *vars, cchar *prefix)
+{
+    MprKey  *kp;
+
+    for (ITERATE_KEYS(vars, kp)) {
+        if (kp->data) {
+            copyFastInner(packet, kp->key, kp->data, prefix);
+        }
+    }
+}
+
+
+static void copyFastParams(HttpPacket *packet, MprJson *params, cchar *prefix)
+{
+    MprJson     *param;
+    int         i;
+
+    for (ITERATE_JSON(params, param, i)) {
+        copyFastInner(packet, param->name, param->value, prefix);
+    }
+}
+
+
+static int fastActionDirective(MaState *state, cchar *key, cchar *value)
+{
+    char    *mimeType, *program;
+
+    if (!maTokenize(state, value, "%S ?S", &mimeType, &program)) {
+        return MPR_ERR_BAD_SYNTAX;
+    }
+    mprSetMimeProgram(state->route->mimeTypes, mimeType, program);
+    return 0;
+}
+
+
+static int fastConnectDirective(MaState *state, cchar *key, cchar *value)
+{
+    Fast    *fast;
+
+    fast = getFast(state->route);
+    fast->endpoint = sclone(value);
+
+    if (mprParseSocketAddress(fast->endpoint, &fast->ip, &fast->port, NULL, 9128) < 0) {
+        mprLog("fast error", 0, "Cannot bind FastCGI proxy address: %s", fast->endpoint);
+        return MPR_ERR_BAD_SYNTAX;
+    }
+    return 0;
+}
+
+
+static int fastMaxProcessesDirective(MaState *state, cchar *key, cchar *value)
+{
+    Fast    *fast;
+
+    fast = getFast(state->route);
+    fast->maxProxies = httpGetInt(value);
+    if (fast->minProxies < 1) {
+        return MPR_ERR_BAD_SYNTAX;
+    }
+    return 0;
+}
+
+
+static int fastMinProcessesDirective(MaState *state, cchar *key, cchar *value)
+{
+    Fast    *fast;
+
+    fast = getFast(state->route);
+    fast->minProxies = httpGetInt(value);
+    if (fast->minProxies < 0) {
+        return MPR_ERR_BAD_SYNTAX;
+    }
+    return 0;
+}
+
+
+static int fastMaxRequestsDirective(MaState *state, cchar *key, cchar *value)
+{
+    Fast    *fast;
+
+    fast = getFast(state->route);
+    fast->maxRequests = httpGetInt(value);
+    if (fast->maxRequests < 1) {
+        return MPR_ERR_BAD_SYNTAX;
+    }
+    return 0;
+}
+
+
+static int fastConcurrencyDirective(MaState *state, cchar *key, cchar *value)
+{
+    Fast    *fast;
+
+    fast = getFast(state->route);
+    fast->concurrency = httpGetInt(value);
+    if (fast->concurrency < 0 || fast->concurrency > 1) {
+        return MPR_ERR_BAD_SYNTAX;
+    }
+    return 0;
+}
+
+
+static int fastTimeoutDirective(MaState *state, cchar *key, cchar *value)
+{
+    Fast    *fast;
+
+    fast = getFast(state->route);
+    fast->proxyTimeout = httpGetTicks(value);
+    return 0;
+}
+
+
+static MprSocket *createListener(FastConnector *connector)
+{
+    Fast        *fast;
+    FastProxy   *proxy;
+    MprSocket   *listen;
+
+    proxy = connector->proxy;
+    fast = proxy->fast;
+
+    listen = mprCreateSocket();
+    if (mprListenOnSocket(listen, fast->ip, fast->port, MPR_SOCKET_NODELAY) == SOCKET_ERROR) {
+        if (mprGetError() == EADDRINUSE) {
+            httpLog(proxy->trace, "fast.rx", "error", "msg:'Cannot open a socket, already bound', address: '%s:%d'",
+                fast->ip ? fast->ip : "*", fast->port);
+        } else {
+            httpLog(proxy->trace, "fast.rx", "error", "msg:'Cannot open a socket', address: '%s:%d'",
+                fast->ip ? fast->ip : "*", fast->port);
+        }
+        return NULL;
+    }
+    if (fast->port == 0) {
+        fast->port = getListenPort(listen);
+    }
+    httpLog(proxy->trace, "fast.rx", "context", "msg:'Listening for FastCGI', endpoint: '%s:%d'",
+        fast->ip ? fast->ip : "*", fast->port);
+    return listen;
+}
+
+
+static int getListenPort(MprSocket *socket)
+{
+    struct sockaddr_in sin;
+    socklen_t len;
+
+    len = sizeof(sin);
+    if (getsockname(socket->fd, (struct sockaddr *)&sin, &len) < 0) {
+        return MPR_ERR_CANT_FIND;
+    }
+    return ntohs(sin.sin_port);
+}
+
+
+static HttpStream *getStream(FastProxy *proxy, int requestID)
+{
+    HttpStream  *stream;
+    int         next;
+
+    for (ITERATE_ITEMS(proxy->streams, stream, next)) {
+        if ((int) stream->reqID == requestID) {
+            return stream;
+        }
+    }
+    return NULL;
 }
 
 #endif /* ME_COM_FAST */

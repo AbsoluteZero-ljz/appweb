@@ -22,7 +22,7 @@ Me.load({
     configure: {
         requires:  [ 'osdep', 'http', 'mpr', 'pcre'],
         discovers: [ 'esp', 'mdb', 'ssl', 'watchdog' ],
-        extras:    [ 'cgi', 'dir', 'ejs', 'php', 'sqlite' ],
+        extras:    [ 'cgi', 'dir', 'ejs', 'fast', 'php', 'sqlite' ],
     },
 
     customize: [
@@ -162,6 +162,12 @@ Me.load({
             description: 'Directory Listing Module',
         },
 
+        fast: {
+            configurable: true,
+            description: 'FastCGI Module',
+            path: 'src/modules/fastHandler.c',
+            depends: [ 'libmod_fast' ],
+        },
         /*
             See src/server/server.me for the appweb targets
             See src/libappweb.me for the appweb library target
