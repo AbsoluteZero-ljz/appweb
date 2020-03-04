@@ -999,6 +999,8 @@ typedef struct Http {
     struct HttpStage *ejsHandler;           /**< Ejscript Web Framework handler */
 #endif
     struct HttpStage *espHandler;           /**< ESP Web Framework handler */
+    struct HttpStage *fastHandler;          /**< FastCGI handler */
+    struct HttpStage *fastConnector;        /**< FastCGI connector */
     struct HttpStage *fileHandler;          /**< Static file handler */
     struct HttpStage *netConnector;         /**< Default network connector */
     struct HttpStage *passHandler;          /**< Pass through handler */
@@ -2588,6 +2590,7 @@ PUBLIC void httpPairQueues(HttpQueue *q1, HttpQueue *q2);
 PUBLIC void httpRemovePacket(HttpQueue *q, HttpPacket *prev, HttpPacket *packet);
 PUBLIC cchar *httpTraceHeaders(HttpQueue *q, MprHash *headers);
 PUBLIC void httpTraceQueues(struct HttpStream *stream);
+PUBLIC void httpServiceQueue(HttpQueue *q);
 
 /******************************** Pipeline Stages *****************************/
 /*
@@ -3620,6 +3623,7 @@ typedef struct HttpStream {
     int             keepAliveCount;         /**< Count of remaining Keep-Alive requests for this connection */
     int             port;                   /**< Remote port */
     int             streamID;               /**< Http/2 stream */
+    int             reqID;                  /**< Generic request ID for handler use */
     int             timeout;                /**< Timeout indication */
 
     bool            authRequested: 1;       /**< Authorization requested based on user credentials */
@@ -6720,6 +6724,7 @@ typedef struct HttpRx {
     bool            parsedHeaders: 1;       /**< Parsed HTTP/2 headers */
     bool            renameUploads: 1;       /**< Rename uploaded files to the client specified filename */
     bool            seenRegularHeader: 1;   /**< Seen a regular HTTP/2 header (non pseudo) */
+    bool            seenFastHeaders: 1;     /**< Seen a FastCGI headers */
     bool            sessionProbed: 1;       /**< Session has been resolved */
     bool            streaming: 1;           /**< Stream incoming content. Forms typically buffer and dont stream */
     bool            upload: 1;              /**< Request is using file upload */
