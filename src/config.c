@@ -230,86 +230,14 @@ static int parseFileInner(MaState *state, cchar *path)
 }
 
 
-/*
-    TraceLog path|-
-        [size=bytes]
-        [level=0-5]
-        [backup=count]
-        [anew]
-        [format="format"]
-        [type="common|detail"]
- */
-static int traceLogDirective(MaState *state, cchar *key, cchar *value)
+static int actionDirective(MaState *state, cchar *key, cchar *value)
 {
-    HttpRoute   *route;
-    cchar       *path;
-    char        *format, *option, *ovalue, *tok, *formatter;
-    ssize       size;
-    int         flags, backup, level;
+    char    *mimeType, *program;
 
-    route = state->route;
-    size = MAXINT;
-    backup = 0;
-    flags = 0;
-    path = 0;
-    format = ME_HTTP_LOG_FORMAT;
-    formatter = "detail";
-    level = 0;
-
-    if (route->trace->flags & MPR_LOG_CMDLINE) {
-        mprLog("info appweb config", 4, "Already tracing. Ignoring TraceLog directive");
-        return 0;
-    }
-    for (option = maGetNextArg(sclone(value), &tok); option; option = maGetNextArg(tok, &tok)) {
-        if (!path) {
-            if ((path = httpGetRouteVar(state->route, "LOG_DIR")) == 0) {
-                path = ".";
-            }
-            path = mprJoinPath(path, httpExpandRouteVars(state->route, option));
-        } else {
-            option = ssplit(option, " =\t,", &ovalue);
-            ovalue = strim(ovalue, "\"'", MPR_TRIM_BOTH);
-            if (smatch(option, "anew")) {
-                flags |= MPR_LOG_ANEW;
-
-            } else if (smatch(option, "backup")) {
-                backup = atoi(ovalue);
-
-            } else if (smatch(option, "format")) {
-                format = ovalue;
-
-            } else if (smatch(option, "level")) {
-                level = (int) stoi(ovalue);
-
-            } else if (smatch(option, "size")) {
-                size = (ssize) httpGetNumber(ovalue);
-
-            } else if (smatch(option, "formatter")) {
-                formatter = ovalue;
-
-            } else {
-                mprLog("error appweb config", 0, "Unknown TraceLog option %s", option);
-            }
-        }
-    }
-    if (size < HTTP_TRACE_MIN_LOG_SIZE) {
-        size = HTTP_TRACE_MIN_LOG_SIZE;
-    }
-    if (path == 0) {
-        mprLog("error appweb config", 0, "Missing TraceLog filename");
+    if (!maTokenize(state, value, "%S %S", &mimeType, &program)) {
         return MPR_ERR_BAD_SYNTAX;
     }
-    if (formatter) {
-        httpSetTraceFormatterName(route->trace, formatter);
-    }
-    if (!smatch(path, "stdout") && !smatch(path, "stderr")) {
-        path = httpMakePath(route, state->configDir, path);
-    }
-    route->trace = httpCreateTrace(route->trace);
-    if (httpSetTraceLogFile(route->trace, path, size, backup, format, flags) < 0) {
-        return MPR_ERR_CANT_OPEN;
-    }
-    httpSetTraceLevel(level);
+    mprSetMimeProgram(state->route->mimeTypes, mimeType, program);
     return 0;
 }
 
@@ -2658,6 +2586,90 @@ static int traceDirective(MaState *state, cchar *key, cchar *value)
 
 
 /*
+    TraceLog path|-
+        [size=bytes]
+        [level=0-5]
+        [backup=count]
+        [anew]
+        [format="format"]
+        [type="common|detail"]
+ */
+static int traceLogDirective(MaState *state, cchar *key, cchar *value)
+{
+    HttpRoute   *route;
+    cchar       *path;
+    char        *format, *option, *ovalue, *tok, *formatter;
+    ssize       size;
+    int         flags, backup, level;
+
+    route = state->route;
+    size = MAXINT;
+    backup = 0;
+    flags = 0;
+    path = 0;
+    format = ME_HTTP_LOG_FORMAT;
+    formatter = "detail";
+    level = 0;
+
+    if (route->trace->flags & MPR_LOG_CMDLINE) {
+        mprLog("info appweb config", 4, "Already tracing. Ignoring TraceLog directive");
+        return 0;
+    }
+    for (option = maGetNextArg(sclone(value), &tok); option; option = maGetNextArg(tok, &tok)) {
+        if (!path) {
+            if ((path = httpGetRouteVar(state->route, "LOG_DIR")) == 0) {
+                path = ".";
+            }
+            path = mprJoinPath(path, httpExpandRouteVars(state->route, option));
+        } else {
+            option = ssplit(option, " =\t,", &ovalue);
+            ovalue = strim(ovalue, "\"'", MPR_TRIM_BOTH);
+            if (smatch(option, "anew")) {
+                flags |= MPR_LOG_ANEW;
+
+            } else if (smatch(option, "backup")) {
+                backup = atoi(ovalue);
+
+            } else if (smatch(option, "format")) {
+                format = ovalue;
+
+            } else if (smatch(option, "level")) {
+                level = (int) stoi(ovalue);
+
+            } else if (smatch(option, "size")) {
+                size = (ssize) httpGetNumber(ovalue);
+
+            } else if (smatch(option, "formatter")) {
+                formatter = ovalue;
+
+            } else {
+                mprLog("error appweb config", 0, "Unknown TraceLog option %s", option);
+            }
+        }
+    }
+    if (size < HTTP_TRACE_MIN_LOG_SIZE) {
+        size = HTTP_TRACE_MIN_LOG_SIZE;
+    }
+    if (path == 0) {
+        mprLog("error appweb config", 0, "Missing TraceLog filename");
+        return MPR_ERR_BAD_SYNTAX;
+    }
+    if (formatter) {
+        httpSetTraceFormatterName(route->trace, formatter);
+    }
+    if (!smatch(path, "stdout") && !smatch(path, "stderr")) {
+        path = httpMakePath(route, state->configDir, path);
+    }
+    route->trace = httpCreateTrace(route->trace);
+    if (httpSetTraceLogFile(route->trace, path, size, backup, format, flags) < 0) {
+        return MPR_ERR_CANT_OPEN;
+    }
+    httpSetTraceLevel(level);
+    return 0;
+}
+
+
+/*
     TypesConfig path
  */
 static int typesConfigDirective(MaState *state, cchar *key, cchar *value)
@@ -3256,6 +3268,7 @@ static int parseInit(void)
     directives = mprCreateHash(-1, MPR_HASH_STATIC_VALUES | MPR_HASH_CASELESS | MPR_HASH_STABLE);
     mprAddRoot(directives);
 
+    maAddDirective("Action", actionDirective);
     maAddDirective("AddLanguageSuffix", addLanguageSuffixDirective);
     maAddDirective("AddLanguageDir", addLanguageDirDirective);
     maAddDirective("AddFilter", addFilterDirective);

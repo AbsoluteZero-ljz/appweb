@@ -192,7 +192,57 @@
     </div>
     <div class="content">
 
-            <h1>Route Directives</h1><a id="addHandler"></a>
+            <h1>Route Directives</h1>
+
+            <a id="action"></a>
+            <h2>Action</h2>
+            <table class="directive" title="directive">
+                <tbody>
+                    <tr>
+                        <td class="pivot">Description</td>
+                        <td>Specify the CGI program to run to handle the document</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Synopsis</td>
+                        <td>Action mimeType programPath</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Context</td>
+                        <td>Default server, Virtual host</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Example</td>
+                        <td>Action application/x-appweb-python /usr/bin/python</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Notes</td>
+                        <td>
+                            <p>The Action directive associates the specified program path with a document mime type.
+                            The Action directive may be&nbsp; used to ensure a specific program is used to run CGI
+                            scripts.</p>
+                            <p>The CGI handler may match URLs by extension or by prefix path, depending on how the
+                            appweb configuration file setup. When a match by extension occurs, the cgiHandler will
+                            first see if an Action directive has been specified for the corresponding mime type for the
+                            URLs extension. If one is defined, the specified program is run with the CGI script passed
+                            as the first argument. If no action directive is found, the script is examined to see if it
+                            contains a "#!/programPath" in the first line of the script. If it does, the specified
+                            program is run with the CGI script passed as the first argument. If the script is a binary
+                            executable or if the first line does not contain such a programPath, the CGI script will be
+                            directly executed.</p>
+                            <p>The default extensions in the appweb configuration file are: cgi, cgi-nph, bat, cmd, pl,
+                            py, and php. For Linux, the default settings also include an Action directive for the php
+                            extension. The other default extensions do not have Action directives.</p>
+                            <p>The mime type may be added via the AddType directive or you may edit the mime.types file
+                            to add the mime type. Mime type entries associate a mime type with a given URL extension.
+                            For example, the following mime entry specifies that any URL with a ".php" extension should
+                            will have the application/x-appweb-php mime type:</p>
+                            <p><em>application/x-appweb-php php</em></p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <a id="addHandler"></a>
             <h2>AddHandler</h2>
             <table class="directive" title="details">
                 <tbody>
@@ -415,6 +465,7 @@
                     </tr>
                 </tbody>
             </table>
+
             <a id="cache"></a>
             <h2>Cache</h2>
             <table class="directive" title="details">
@@ -771,6 +822,47 @@ Defense reboot REMEDY=restart
                     </tr>
                 </tbody>
             </table>
+
+            <a id="fastConnect"></a>
+            <h2>FastConnect</h2>
+            <table class="directive" title="details">
+                <tbody>
+                    <tr>
+                        <td class="pivot">Description</td>
+                        <td>Configure FastCGI applications</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Synopsis</td>
+                        <td>FastConnect endpoint<br>
+                            FastConnect endpoint [count=number] [launch] [max=number] [min=number] [multiplex=number]
+                                [timeout="timespec"]<br>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Context</td>
+                        <td>Default server, VirtualHost, Route</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Example</td>
+                        <td>FastConnect 127.0.0.1:9000<br>
+                            FastConnect localhost:9000 launch<br>
+                            FastConnect localhost:9000 launch min=1 max=2 count=500 timeout=5mins multiplex=1<br>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Notes</td>
+                        <td>
+                            <p>The FastConnect directive configures the FastCGI handler to serve requests using the
+                                <a href="https://en.wikipedia.org/wiki/FastCGI">FastCGI</a> protocol.</p>
+                            <p>FastCGI programs may be pre-launched or may be launched on-demand by Appweb. If using pre-launched configuration, the FastCGI program should be started before Appweb and should be configured to listen for requests on the IP:PORT address specified via this directive.</p>
+                            <p>The "launch" attribute specifies that the FastCGI application should be launched by Appweb. The path to the applications is given via the <a href="#action">Action</a> directive which specifies a mapping from a mime-type (and hence request extension) to the FastCGI program to serve the request of that type.</p>
+                            <p>The "min" attribute specifies the minimum number of FastCGI programs to maintain. Appweb will launch FastCGI programs up to the maximum specified via the "max" attribute. After the "timeout" expires, Appweb will kill unwanted FastCGI programs to reduce resource load down to the minimum specified by "min". The default min and max values are 1. The default timeout is 5 minutes.</p>
+                            <p>The "multiplex" attribute defines how many simultaneous requests the FastCGI application can handle. The default is 1.</p>
+                            <p>The "count" attribute defines how many requests to serve before a launched FastCGI application is restarted. The default is 500.</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
             <a id="header"></a>
             <h2>Header</h2>
             <table class="directive" title="details">
