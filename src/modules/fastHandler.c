@@ -708,8 +708,6 @@ static FastProxy *getFastProxy(Fast *fast, HttpStream *stream)
 }
 
 
-/*
- */
 static void releaseFastProxy(Fast *fast, FastProxy *proxy)
 {
     FastConnector   *connector;
@@ -974,7 +972,7 @@ static int connectFastProxy(FastProxy *proxy)
 
         connector->socket = mprCreateSocket();
         if ((connected = mprConnectSocket(connector->socket, fast->ip, fast->port, 0)) == 0) {
-            mprLog("fast info", 0, "FastCGI connected to pid %d", connector->pid);
+            mprLog("fast info", 0, "FastCGI connected to %s:%d", fast->ip, fast->port);
             return 0;
         }
         mprSleep(50 * tries++);
@@ -1257,7 +1255,7 @@ static void enableFastConnectorEvents(FastConnector *connector)
 
     sp = connector->socket;
 
-    if (!connector->eof) {
+    if (!connector->eof && sp) {
         eventMask = 0;
         if (connector->writeq->count > 0) {
             eventMask |= MPR_WRITABLE;
