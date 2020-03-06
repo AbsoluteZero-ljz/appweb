@@ -7,7 +7,7 @@ Me.load({
         test: {
             action: `run('testme --depth ' + me.settings.depth)`,
             platforms: [ 'local' ],
-            depends: [ 'prep-test' ],
+            depends: [ 'test-prep' ],
             generate: false,
         },
 
@@ -17,12 +17,18 @@ Me.load({
             generate: false,
         },
 
-        'prep-test': {
+        'test-prep': {
             platforms: [ 'local' ],
             depends: [ 'clean-test', 'build', 'prep-cgi', 'test-testScript', 'test-cgiProgram' ],
             generate: false,
-            action: `Path('.test-prepared').write('')`,
-            generate: false,
+            action: `
+                print('   [Create] test files')
+                run('utils/make-files 2050 web/100K.txt')
+                run('utils/make-files 21000 web/1M.txt')
+                run('utils/make-files 1040000 web/50M.txt')
+                run('utils/make-files 4200000 web/200M.txt')
+                Path('.test-prepared').write('')
+            `,
         },
 
         'prep-cgi': {

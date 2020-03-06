@@ -35,7 +35,7 @@ web/print.css
 web/screen.css
 web/test
 web/test/big.cgi
-web/test/big.txt
+web/test/100K.txt
 web/test/test.cgi
 web/test/test.html
 web/test/test.pl

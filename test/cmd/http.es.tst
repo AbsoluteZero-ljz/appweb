@@ -49,7 +49,7 @@ ttrue(data.startsWith("012345678"))
 ttrue(data.trimEnd().endsWith("END"))
 
 //  Chunked get
-data = run("--chunk 10240 /big.txt")
+data = run("--chunk 10240 /100K.txt")
 if (!data.startsWith("012345678")) {
     print("DATA", data)
 }
@@ -135,7 +135,7 @@ ttrue(run("--range -5 /numbers.html").trim() == "5678")
 //  Load test
 if (tdepth() > 2) {
     run("-i 2000 /index.html")
-    run("-i 2000 /big.txt")
+    run("-i 2000 /100K.txt")
 }
 //  Cleanup
 for each (f in Path("../web/tmp").files()) {

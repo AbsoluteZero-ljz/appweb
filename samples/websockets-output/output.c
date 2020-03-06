@@ -108,7 +108,7 @@ static void output_action()
      */
     output = mprAllocObj(Output, manageOutput);
     if ((output->file = mprOpenFile(OUTPUT_FILE, O_RDONLY, 0)) == 0) {
-        httpError(getConn(), HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot open huge.txt");
+        httpError(getConn(), HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot open %s", OUTPUT_FILE);
         return;
     }
     mprGetPathInfo(OUTPUT_FILE, &output->info);
