@@ -398,7 +398,7 @@ static void cgiCallback(MprCmd *cmd, int channel, void *data)
         break;
     }
     if (cgi->location) {
-        httpRedirect(stream, stream->tx->status, cgi->location);
+        httpRedirect(stream, HTTP_CODE_MOVED_TEMPORARILY, cgi->location);
     }
     if (cmd->complete || cgi->location) {
         cgi->location = 0;
