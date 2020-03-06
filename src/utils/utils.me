@@ -19,11 +19,14 @@ Me.load({
             generate: false,
         },
 
-        'fcgi': {
+        'fastProgram': {
             type:   'exe',
-            sources: [ 'fcgi/fcgi.c' ],
+            sources: [ 'fastProgram.c' ],
+            ifdef: [ 'fast' ],
+            includes: [ '/usr/local/include' ],
+            libraries: [ 'fcgi' ],
             action: true,
-            generate: false
+            generate: true
         },
 	},
 })

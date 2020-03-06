@@ -19,7 +19,7 @@ Me.load({
 
         'test-prep': {
             platforms: [ 'local' ],
-            depends: [ 'clean-test', 'build', 'prep-cgi', 'test-testScript', 'test-cgiProgram' ],
+            depends: [ 'clean-test', 'build', 'prep-cgi', 'test-testScript', 'test-cgiProgram', 'test-fastProgram' ],
             generate: false,
             action: `
                 print('   [Create] test files')
@@ -72,6 +72,20 @@ Me.load({
             generate: false,
             platforms: [ 'local' ],
             ifdef: [ 'cgi' ],
+        },
+
+        'test-fastProgram': {
+            path: 'fast-bin/fastProgram${EXE}',
+            action: `
+                let perms = { permissions: 0755 }
+                let fastProgram = me.dir.bin.join('fastProgram${EXE}')
+                cp(fastProgram, Path('fast-bin/fastProgram${EXE}'), perms)
+                cp(fastProgram, Path('fast-bin/fast Program${EXE}'), perms)
+            `,
+            depends: [ 'fastProgram' ],
+            generate: false,
+            platforms: [ 'local' ],
+            ifdef: [ 'fast' ],
         },
 
         'auth.conf': {
@@ -155,6 +169,7 @@ Me.load({
                 rm('cgi-bin/cgi*')
                 rm('cgi-bin/nph*')
                 rm('cgi-bin/testScript*')
+                rm('fast-bin/fast*')
                 rm('web/js')
                 Path('cache').makeDir()
                 Path('cache/.keep').write()

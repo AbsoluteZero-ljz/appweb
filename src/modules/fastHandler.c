@@ -23,7 +23,7 @@
 /************************************ Locals ***********************************/
 
 #define FAST_VERSION            1
-#define FAST_DEBUG              0           //  For debugging (keeps filedes open in FastCGI for debug output)
+#define FAST_DEBUG              1           //  For debugging (keeps filedes open in FastCGI for debug output)
 
 /*
     FastCGI spec packet types
@@ -92,7 +92,6 @@ typedef struct Fast {
     MprMutex        *mutex;                 //  Multithread sync
     MprCond         *cond;                  //  Condition to wait for available proxy
     MprEvent        *timer;                 //  Timer to check for idle proxies
-    cchar           *command;               //  Proxy command to invoke
     cchar           *ip;                    //  Listening IP address
     int             port;                   //  Listening port
 } Fast;
@@ -131,6 +130,7 @@ static void adjustNetVec(HttpQueue *q, ssize written);
 static Fast *allocFast();
 static FastConnector *allocFastConnector(FastProxy *proxy, MprDispatcher *dispatcher, HttpStream *stream);
 static FastProxy *allocFastProxy(Fast *fast, HttpStream *stream);
+static cchar *buildProxyArgs(HttpStream *stream, int *argcp, cchar ***argvp);
 static MprOff buildFastVec(HttpQueue *q);
 static void checkIdleProxies(Fast *fast);
 static void closeFast(HttpQueue *q);
@@ -224,6 +224,10 @@ static int openFast(HttpQueue *q)
     stream = q->stream;
     http = stream->http;
 
+    httpTrimExtraPath(stream);
+    httpMapFile(stream);
+    httpCreateCGIParams(stream);
+
     fast = getFast(stream->rx->route);
 
     if ((proxy = getFastProxy(fast, stream)) == 0) {
@@ -236,10 +240,6 @@ static int openFast(HttpQueue *q)
         httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot connect to fast proxy: %d", errno);
         return MPR_ERR_CANT_CONNECT;
     }
-
-    httpTrimExtraPath(stream);
-    httpMapFile(stream);
-    httpCreateCGIParams(stream);
 
     prepFastRequestStart(q);
     prepFastRequestParams(q);
@@ -289,7 +289,6 @@ static Fast *allocFast()
 static void manageFast(Fast *fast, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
-        mprMark(fast->command);
         mprMark(fast->cond);
         mprMark(fast->endpoint);
         mprMark(fast->idleProxies);
@@ -742,8 +741,8 @@ static void releaseFastProxy(Fast *fast, FastProxy *proxy)
         mprAddItem(fast->idleProxies, proxy);
     }
     httpLog(proxy->trace, "fast", "context",
-        "msg:'%s', command:'%s', pid:%d, idle:%d, active:%d, id:%d, maxRequests:%d, destroy:%d, nextId:%d",
-        msg, fast->command, connector->pid, mprGetListLength(fast->idleProxies), mprGetListLength(fast->proxies),
+        "msg:'%s', pid:%d, idle:%d, active:%d, id:%d, maxRequests:%d, destroy:%d, nextId:%d",
+        msg, connector->pid, mprGetListLength(fast->idleProxies), mprGetListLength(fast->proxies),
         proxy->nextID, fast->maxRequests, connector->destroy, proxy->nextID);
     mprSignalCond(fast->cond);
     unlock(fast);
@@ -756,7 +755,7 @@ static FastProxy *startFastProxy(Fast *fast, HttpStream *stream)
     FastConnector   *connector;
     HttpRoute       *route;
     MprSocket       *listen;
-    cchar           **argv;
+    cchar           **argv, *command;
     int             argc;
 
     route = stream->rx->route;
@@ -766,16 +765,22 @@ static FastProxy *startFastProxy(Fast *fast, HttpStream *stream)
     connector = proxy->connector;
 
     if (fast->launch) {
+        argc = 1;                                   /* argv[0] == programName */
+        if ((command = buildProxyArgs(stream, &argc, &argv)) == 0) {
+            httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot find Fast proxy command");
+            return NULL;
+        }
+#if UNUSED
         fast->command = mprGetMimeProgram(route->mimeTypes, stream->tx->ext);
-
         if ((argc = mprMakeArgv(mprGetPathBase(fast->command), &argv, 0)) < 0 || argv == 0) {
             httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot make Fast proxy command: %s", fast->command);
             return NULL;
         }
-        httpLog(stream->trace, "fast", "context", "msg:'Start FastCGI proxy', command:'%s'", fast->command);
+#endif
+        httpLog(stream->trace, "fast", "context", "msg:'Start FastCGI proxy', command:'%s'", command);
 
         if ((listen = createListener(connector)) < 0) {
-            httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot create proxy listening endpoint for %s", fast->command);
+            httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot create proxy listening endpoint for %s", command);
             return NULL;
         }
         if (!connector->signal) {
@@ -796,17 +801,93 @@ static FastProxy *startFastProxy(Fast *fast, HttpStream *stream)
             dup2(listen->fd, 0);
             // TODO envp[0] = sfmt("FCGI_WEB_SERVER_ADDRS=%s", route->host->defaultEndpoint->ip);
 
-            if (execve(fast->command, (char**) argv, NULL /* (char**) &env->items[0] */) < 0) {
-                printf("Cannot exec fast proxy: %s\n", fast->command);
+            if (execve(command, (char**) argv, NULL /* (char**) &env->items[0] */) < 0) {
+                printf("Cannot exec fast proxy: %s\n", command);
             }
             return NULL;
         } else {
             httpLog(proxy->trace, "fast", "context", "msg:'FastCGI started proxy', command:'%s', pid:%d",
-                fast->command, connector->pid);
+                command, connector->pid);
             mprCloseSocket(listen, 0);
         }
     }
     return proxy;
+}
+
+
+
+/*
+    Build the command arguments. NOTE: argv is untrusted input.
+ */
+static cchar *buildProxyArgs(HttpStream *stream, int *argcp, cchar ***argvp)
+{
+    HttpRx      *rx;
+    HttpTx      *tx;
+    cchar       *actionProgram, *cp, *fileName, *query;
+    char        **argv, *tok;
+    ssize       len;
+    int         argc, argind, i;
+
+    rx = stream->rx;
+    tx = stream->tx;
+    fileName = tx->filename;
+
+    actionProgram = 0;
+    argind = 0;
+    argc = *argcp;
+
+    if (tx->ext) {
+        actionProgram = mprGetMimeProgram(rx->route->mimeTypes, tx->ext);
+        if (actionProgram != 0) {
+            argc++;
+        }
+        /* This is an Apache compatible hack for PHP 5.3 */
+        mprAddKey(rx->headers, "REDIRECT_STATUS", itos(HTTP_CODE_MOVED_TEMPORARILY));
+    }
+    /*
+        Count the args for ISINDEX queries. Only valid if there is not a "=" in the query.
+        If this is so, then we must not have these args in the query env also?
+     */
+    query = (char*) rx->parsedUri->query;
+    if (query && !schr(query, '=')) {
+        argc++;
+        for (cp = query; *cp; cp++) {
+            if (*cp == '+') {
+                argc++;
+            }
+        }
+    } else {
+        query = 0;
+    }
+    len = (argc + 1) * sizeof(char*);
+    argv = mprAlloc(len);
+
+    if (actionProgram) {
+        argv[argind++] = sclone(actionProgram);
+    }
+    argv[argind++] = sclone(fileName);
+    /*
+        ISINDEX queries. Only valid if there is not a "=" in the query. If this is so, then we must not
+        have these args in the query env also?
+        FUTURE - should query vars be set in the env?
+     */
+    if (query) {
+        cp = stok(sclone(query), "+", &tok);
+        while (cp) {
+            argv[argind++] = mprEscapeCmd(mprUriDecode(cp), 0);
+            cp = stok(NULL, "+", &tok);
+        }
+    }
+    assert(argind <= argc);
+    argv[argind] = 0;
+    *argcp = argc;
+    *argvp = (cchar**) argv;
+
+    mprDebug("http fast", 5, "Fast: command:");
+    for (i = 0; i < argind; i++) {
+        mprDebug("http fast", 5, "   argv[%d] = %s", i, argv[i]);
+    }
+    return argv[0];
 }
 
 
@@ -844,7 +925,10 @@ static void reapProxyProcess(FastConnector *connector, MprSignal *sp)
     connector->destroy = 1;
 
     for (ITERATE_ITEMS(connector->proxy->streams, stream, next)) {
-        if (stream->state < HTTP_STATE_RUNNING) {
+        if (stream->state <= HTTP_STATE_RUNNING) {
+            if (!stream->tx->finalized) {
+                httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "FastCGI app closed prematurely");
+            }
             packet = httpCreateDataPacket(0);
             packet->data = connector->proxy;
             packet->stream = stream;
