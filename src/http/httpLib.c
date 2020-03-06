@@ -2883,6 +2883,7 @@ static void incomingChunk(HttpQueue *q, HttpPacket *packet)
         len = httpGetPacketLength(packet);
         nbytes = min(rx->remainingContent, httpGetPacketLength(packet));
         rx->remainingContent -= nbytes;
+        rx->bytesRead += nbytes;
         if (rx->remainingContent <= 0) {
             if (!rx->eof) {
                 httpSetEof(stream);
@@ -2909,6 +2910,7 @@ static void incomingChunk(HttpQueue *q, HttpPacket *packet)
                 len = httpGetPacketLength(packet);
                 nbytes = min(rx->remainingContent, len);
                 rx->remainingContent -= nbytes;
+                rx->bytesRead += nbytes;
                 if (nbytes < len && (tail = httpSplitPacket(packet, nbytes)) != 0) {
                     httpPutPacketToNext(q, packet);
                     packet = tail;
@@ -3341,7 +3343,6 @@ PUBLIC void httpEnableUpload(HttpStream *stream)
 
 
 /*
-    TODO - need to test these
     Read data. If sync mode, this will block. If async, will never block.
     Will return what data is available up to the requested size.
     Timeout in milliseconds to wait. Set to -1 to use the default inactivity timeout. Set to zero to wait forever.
@@ -3378,7 +3379,6 @@ PUBLIC ssize httpReadBlock(HttpStream *stream, char *buf, ssize size, MprTicks t
                 break;
             }
             delay = min(limits->inactivityTimeout, mprGetRemainingTicks(start, timeout));
-            //  TODO - review
             httpEnableNetEvents(stream->net);
             mprWaitForEvent(stream->dispatcher, delay, dispatcherMark);
             if (mprGetRemainingTicks(start, timeout) <= 0) {
@@ -3569,7 +3569,6 @@ static int blockingFileCopy(HttpStream *stream, cchar *path)
 
 /*
     Write upload data. This routine blocks. If you need non-blocking ... cut and paste.
-    TODO - what about non-blocking upload
  */
 PUBLIC ssize httpWriteUploadData(HttpStream *stream, MprList *fileData, MprList *formData)
 {
@@ -3655,12 +3654,10 @@ PUBLIC int httpWait(HttpStream *stream, int state, MprTicks timeout)
     start = stream->http->now;
     dispatcherMark = mprGetEventMark(stream->dispatcher);
 
-    //  TODO - how does this work with http2?
     while (stream->state < state && !stream->error && !mprIsSocketEof(stream->sock)) {
         if (httpRequestExpired(stream, -1)) {
             return MPR_ERR_TIMEOUT;
         }
-        //  TODO - review
         httpEnableNetEvents(stream->net);
         delay = min(limits->inactivityTimeout, mprGetRemainingTicks(start, timeout));
         delay = max(delay, 0);
@@ -7301,7 +7298,7 @@ PUBLIC void httpNetError(HttpNet *net, cchar *fmt, ...)
             for (ITERATE_ITEMS(net->streams, stream, next)) {
                 httpError(stream, HTTP_ABORT | HTTP_CODE_COMMS_ERROR, "%s", msg);
             }
-            // TODO httpMonitorNetEvent(net, HTTP_COUNTER_BAD_REQUEST_ERRORS, 1);
+            httpMonitorNetEvent(net, HTTP_COUNTER_BAD_REQUEST_ERRORS, 1);
         }
     }
     va_end(args);
@@ -8812,6 +8809,8 @@ PUBLIC MprKeyValue *httpGetPackedHeader(HttpHeaderTable *headers, int index)
 /*
     http1Filter.c - HTTP/1 protocol handling.
 
+    The HttpFilter is after the TailFilter and before the NetConnector.
+
     Copyright (c) All Rights Reserved. See details at the end of the file.
  */
 
@@ -8916,10 +8915,13 @@ static void outgoingHttp1Service(HttpQueue *q)
             return;
         }
         logPacket(q, packet);
+        /*
+            Mutliplex directly onto the net connector and not use q->nextQ
+         */
         httpPutPacket(q->net->socketq, packet);
-        if (stream && q->count <= q->low && (stream->outputq->flags & HTTP_QUEUE_SUSPENDED)) {
-            httpResumeQueue(stream->outputq);
-        }
+    }
+    if (stream && q->count <= q->low && (stream->outputq->flags & HTTP_QUEUE_SUSPENDED)) {
+        httpResumeQueue(stream->outputq, 0);
     }
 }
 
@@ -8981,7 +8983,6 @@ static bool monitorActiveRequests(HttpStream *stream)
 
     limits = stream->limits;
 
-    //  TODO - find a better place for this?  Where does http2 do this
     if (httpServerStream(stream) && !stream->activeRequest) {
         /*
             ErrorDocuments may come through here twice so test activeRequest to keep counters valid.
@@ -9799,7 +9800,7 @@ static void outgoingHttp2Service(HttpQueue *q)
                 Resume upstream if there is now room
              */
             if (q->count <= q->low && (stream->outputq->flags & HTTP_QUEUE_SUSPENDED)) {
-                httpResumeQueue(stream->outputq);
+                httpResumeQueue(stream->outputq, 0);
             }
         }
         if (net->outputq->window == 0) {
@@ -10558,7 +10559,7 @@ static void parsePriorityFrame(HttpQueue *q, HttpPacket *packet)
 
 
 /*
-    Push frames are not yet implemented: TODO
+    Push frames are not yet implemented
  */
 static void parsePushFrame(HttpQueue *q, HttpPacket *packet)
 {
@@ -10683,7 +10684,7 @@ static void parseWindowFrame(HttpQueue *q, HttpPacket *packet)
             sendReset(q, stream, HTTP2_FLOW_CONTROL_ERROR, "Invalid window update for stream %d", stream->streamID);
         } else {
             stream->outputq->window += increment;
-            httpResumeQueue(stream->outputq);
+            httpResumeQueue(stream->outputq, 0);
         }
     } else {
         if (frame->streamID) {
@@ -10697,7 +10698,7 @@ static void parseWindowFrame(HttpQueue *q, HttpPacket *packet)
 
         } else {
             net->outputq->window += increment;
-            httpResumeQueue(net->outputq);
+            httpResumeQueue(net->outputq, 0);
         }
     }
 }
@@ -10927,7 +10928,6 @@ static void sendSettingsFrame(HttpQueue *q)
     if (!net->init && httpIsClient(net)) {
         sendPreface(q);
     }
-    //  TODO - set to the number of settings
     if ((packet = httpCreatePacket(HTTP2_SETTINGS_SIZE * 3)) == 0) {
         return;
     }
@@ -11338,7 +11338,7 @@ static HttpStream *createStream(HttpQueue *q, HttpPacket *packet)
                 (int) mprGetListLength(net->streams), net->limits->requestsPerClientMax);
             return 0;
         }
-        ///TODO httpMonitorEvent(stream, HTTP_COUNTER_REQUESTS, 1);
+        httpMonitorEvent(stream, HTTP_COUNTER_REQUESTS, 1);
         if (mprGetListLength(net->streams) >= net->limits->streamsMax) {
             sendReset(q, stream, HTTP2_REFUSED_STREAM, "Too many streams for connection: %s %d/%d", net->ip,
                 (int) mprGetListLength(net->streams), net->limits->streamsMax);
@@ -11408,7 +11408,7 @@ static void restartSuspendedStreams(HttpNet *net) {
     for (ITERATE_ITEMS(net->streams, stream, next)) {
         q = stream->outputq;
         if (q->count && q->window > 0 && (q->flags & HTTP_QUEUE_SUSPENDED)) {
-            httpResumeQueue(q);
+            httpResumeQueue(q, 0);
         }
     }
 }
@@ -14204,8 +14204,6 @@ PUBLIC void httpSetAsync(HttpNet *net, bool async)
 }
 
 
-//  TODO - naming. Some have Net, some not.
-
 PUBLIC void httpSetIOCallback(HttpNet *net, HttpIOCallback fn)
 {
     net->ioCallback = fn;
@@ -14437,7 +14435,6 @@ PUBLIC HttpNet *httpAccept(HttpEndpoint *endpoint, MprEvent *event)
             address->banUntil = 0;
         } else {
             mprLog("net info", 3, "Network connection refused, client banned: %s", address->banMsg ? address->banMsg : "");
-            //  TODO - address->banStatus not implemented
             httpDestroyNet(net);
             return 0;
         }
@@ -14490,8 +14487,9 @@ PUBLIC void httpIOEvent(HttpNet *net, MprEvent *event)
     }
     net->lastActivity = net->http->now;
     if (event->mask & MPR_WRITABLE) {
-        httpResumeQueue(net->socketq);
-        httpScheduleQueue(net->socketq);
+        if (net->socketq->count > 0) {
+            httpResumeQueue(net->socketq, 1);
+        }
     }
     if (event->mask & MPR_READABLE) {
         httpReadIO(net);
@@ -14505,38 +14503,6 @@ PUBLIC void httpIOEvent(HttpNet *net, MprEvent *event)
     } else if (net->async && !net->delay) {
         httpEnableNetEvents(net);
     }
-}
-
-
-static int sleuthProtocol(HttpNet *net, HttpPacket *packet)
-{
-#if ME_HTTP_HTTP2
-    MprBuf      *buf;
-    ssize       len;
-    int         protocol;
-
-    buf = packet->content;
-    protocol = 0;
-
-    if (!net->http2) {
-        protocol = 1;
-    } else {
-        if ((len = mprGetBufLength(buf)) < (sizeof(HTTP2_PREFACE) - 1)) {
-            /* Insufficient data */
-            return 0;
-        }
-        if (memcmp(buf->start, HTTP2_PREFACE, sizeof(HTTP2_PREFACE) - 1) != 0) {
-            protocol = 1;
-        } else {
-            mprAdjustBufStart(buf, strlen(HTTP2_PREFACE));
-            protocol = 2;
-            httpLog(net->trace, "net.rx", "context", "msg:'Detected HTTP/2 preface'");
-        }
-    }
-    return protocol;
-#else
-    return 1;
-#endif
 }
 
 
@@ -14583,166 +14549,6 @@ static HttpPacket *readPacket(HttpNet *net)
     return 0;
 }
 
-
-/*
-    Get the packet into which to read data. Return in *size the length of data to attempt to read.
- */
-static HttpPacket *getPacket(HttpNet *net, ssize *lenp)
-{
-    HttpPacket  *packet;
-    MprBuf      *buf;
-    ssize       size;
-
-#if ME_HTTP_HTTP2
-    if (net->protocol < 2) {
-        size = net->inputq ? net->inputq->packetSize : ME_PACKET_SIZE;
-    } else {
-        size = (net->inputq ? net->inputq->packetSize : HTTP2_MIN_FRAME_SIZE) + HTTP2_FRAME_OVERHEAD;
-    }
-#else
-    size = net->inputq ? net->inputq->packetSize : ME_PACKET_SIZE;
-#endif
-    if (!net->inputq || (packet = httpGetPacket(net->inputq)) == NULL) {
-        if ((packet = httpCreateDataPacket(size)) == 0) {
-            return 0;
-        }
-    }
-    buf = packet->content;
-    mprResetBufIfEmpty(buf);
-    if (mprGetBufSpace(buf) < size && mprGrowBuf(buf, size) < 0) {
-        return 0;
-    }
-    *lenp = mprGetBufSpace(buf);
-    assert(*lenp > 0);
-    return packet;
-}
-
-
-static bool netBanned(HttpNet *net)
-{
-    HttpAddress     *address;
-
-    if ((address = net->address) != 0 && address->delay) {
-        if (address->delayUntil > net->http->now) {
-            /*
-                Defensive counter measure - go slow
-             */
-            mprCreateEvent(net->dispatcher, "delayConn", net->delay, resumeEvents, net, 0);
-            httpLog(net->trace, "monitor.delay.stop", "context", "msg:'Suspend I/O',client:'%s'", net->ip);
-            return 1;
-        } else {
-            address->delay = 0;
-            httpLog(net->trace, "monitor.delay.stop", "context", "msg:'Resume I/O',client:'%s'", net->ip);
-        }
-    }
-    return 0;
-}
-
-
-/*
-    Defensive countermesasure - resume output after a delay
- */
-static void resumeEvents(HttpNet *net, MprEvent *event)
-{
-    net->delay = 0;
-    mprCreateEvent(net->dispatcher, "resumeConn", 0, httpEnableNetEvents, net, 0);
-}
-
-
-PUBLIC int httpGetNetEventMask(HttpNet *net)
-{
-    MprSocket   *sock;
-    int         eventMask;
-
-    if ((sock = net->sock) == 0) {
-        return 0;
-    }
-    eventMask = 0;
-
-    if (httpQueuesNeedService(net) || mprSocketHasBufferedWrite(sock) ||
-            (net->socketq && (net->socketq->count > 0 || net->socketq->ioCount > 0))) {
-        if (!mprSocketHandshaking(sock)) {
-            /* Must wait to write until handshaking is complete */
-            eventMask |= MPR_WRITABLE;
-        }
-    }
-    if (mprSocketHasBufferedRead(sock) || !net->inputq || (net->inputq->count < net->inputq->max)) {
-        /*
-            TODO - how to mitigate against a ping flood?
-            Was testing if !writeBlocked before adding MPR_READABLE, but this is always required for HTTP/2 to read window frames.
-         */
-        if (mprSocketHandshaking(sock) || !net->eof) {
-            eventMask |= MPR_READABLE;
-        }
-    }
-    return eventMask;
-}
-
-
-PUBLIC void httpEnableNetEvents(HttpNet *net)
-{
-    if (mprShouldAbortRequests() || net->borrowed || net->error || netBanned(net)) {
-        return;
-    }
-    /*
-        Used by ejs
-     */
-    if (net->workerEvent) {
-        MprEvent *event = net->workerEvent;
-        net->workerEvent = 0;
-        mprQueueEvent(net->dispatcher, event);
-        return;
-    }
-    httpSetupWaitHandler(net, httpGetNetEventMask(net));
-}
-
-
-PUBLIC void httpSetupWaitHandler(HttpNet *net, int eventMask)
-{
-    MprSocket   *sp;
-
-    if ((sp = net->sock) == 0) {
-        return;
-    }
-    if (eventMask) {
-        if (sp->handler == 0) {
-            mprAddSocketHandler(sp, eventMask, net->dispatcher, net->ioCallback, net, 0);
-        } else {
-            mprSetSocketDispatcher(sp, net->dispatcher);
-            mprEnableSocketEvents(sp, eventMask);
-        }
-        if (sp->flags & (MPR_SOCKET_BUFFERED_READ | MPR_SOCKET_BUFFERED_WRITE)) {
-            mprRecallWaitHandler(sp->handler);
-        }
-    } else if (sp->handler) {
-        mprWaitOn(sp->handler, eventMask);
-    }
-    net->eventMask = eventMask;
-}
-
-
-#if KEEP
-static void checkLen(HttpQueue *q)
-{
-    HttpNet     *net;
-    HttpPacket  *packet;
-    static int  maxCount = 0;
-    int         count = 0;
-
-    net = q->net;
-    for (packet = q->first; packet && count < 99999; packet = packet->next) {
-        count++;
-    }
-    if (count > maxCount) {
-        maxCount = count;
-        if (maxCount > 50) {
-            print("Qcount %ld, count %d, blocked %d, goaway %d, received goaway %d, eof %d", q->count, count, net->writeBlocked, net->goaway, net->receivedGoaway, net->eof);
-        }
-    }
-}
-#endif
-
-
 static void netOutgoing(HttpQueue *q, HttpPacket *packet)
 {
     assert(q == q->net->socketq);
@@ -14764,6 +14570,7 @@ static void netOutgoingService(HttpQueue *q)
 
     net = q->net;
     net->writeBlocked = 0;
+    written = 0;
 
     while (q->first || q->ioIndex) {
         if (q->ioIndex == 0 && buildNetVec(q) <= 0) {
@@ -14796,8 +14603,12 @@ static void netOutgoingService(HttpQueue *q)
             break;
         }
     }
-    if ((q->first || q->ioIndex) && net->writeBlocked && !(net->eventMask & MPR_WRITABLE)) {
-        httpEnableNetEvents(net);
+    if (net->writeBlocked) {
+        if ((q->first || q->ioIndex) && !(net->eventMask & MPR_WRITABLE)) {
+            httpEnableNetEvents(net);
+        }
+    } else if (q->count <= q->low && (net->outputq->flags & HTTP_QUEUE_SUSPENDED)) {
+        httpResumeQueue(net->outputq, 0);
     }
 }
 
@@ -14952,6 +14763,195 @@ static void adjustNetVec(HttpQueue *q, ssize written)
         q->ioIndex = j;
     }
 }
+
+
+static int sleuthProtocol(HttpNet *net, HttpPacket *packet)
+{
+#if ME_HTTP_HTTP2
+    MprBuf      *buf;
+    ssize       len;
+    int         protocol;
+
+    buf = packet->content;
+    protocol = 0;
+
+    if (!net->http2) {
+        protocol = 1;
+    } else {
+        if ((len = mprGetBufLength(buf)) < (sizeof(HTTP2_PREFACE) - 1)) {
+            /* Insufficient data */
+            return 0;
+        }
+        if (memcmp(buf->start, HTTP2_PREFACE, sizeof(HTTP2_PREFACE) - 1) != 0) {
+            protocol = 1;
+        } else {
+            mprAdjustBufStart(buf, strlen(HTTP2_PREFACE));
+            protocol = 2;
+            httpLog(net->trace, "net.rx", "context", "msg:'Detected HTTP/2 preface'");
+        }
+    }
+    return protocol;
+#else
+    return 1;
+#endif
+}
+
+/*
+    Get the packet into which to read data. Return in *size the length of data to attempt to read.
+ */
+static HttpPacket *getPacket(HttpNet *net, ssize *lenp)
+{
+    HttpPacket  *packet;
+    MprBuf      *buf;
+    ssize       size;
+
+#if ME_HTTP_HTTP2
+    if (net->protocol < 2) {
+        size = net->inputq ? net->inputq->packetSize : ME_PACKET_SIZE;
+    } else {
+        size = (net->inputq ? net->inputq->packetSize : HTTP2_MIN_FRAME_SIZE) + HTTP2_FRAME_OVERHEAD;
+    }
+#else
+    size = net->inputq ? net->inputq->packetSize : ME_PACKET_SIZE;
+#endif
+    if (!net->inputq || (packet = httpGetPacket(net->inputq)) == NULL) {
+        if ((packet = httpCreateDataPacket(size)) == 0) {
+            return 0;
+        }
+    }
+    buf = packet->content;
+    mprResetBufIfEmpty(buf);
+    if (mprGetBufSpace(buf) < size && mprGrowBuf(buf, size) < 0) {
+        return 0;
+    }
+    *lenp = mprGetBufSpace(buf);
+    assert(*lenp > 0);
+    return packet;
+}
+
+
+static bool netBanned(HttpNet *net)
+{
+    HttpAddress     *address;
+
+    if ((address = net->address) != 0 && address->delay) {
+        if (address->delayUntil > net->http->now) {
+            /*
+                Defensive counter measure - go slow
+             */
+            mprCreateEvent(net->dispatcher, "delayConn", net->delay, resumeEvents, net, 0);
+            httpLog(net->trace, "monitor.delay.stop", "context", "msg:'Suspend I/O',client:'%s'", net->ip);
+            return 1;
+        } else {
+            address->delay = 0;
+            httpLog(net->trace, "monitor.delay.stop", "context", "msg:'Resume I/O',client:'%s'", net->ip);
+        }
+    }
+    return 0;
+}
+
+
+/*
+    Defensive countermesasure - resume output after a delay
+ */
+static void resumeEvents(HttpNet *net, MprEvent *event)
+{
+    net->delay = 0;
+    mprCreateEvent(net->dispatcher, "resumeConn", 0, httpEnableNetEvents, net, 0);
+}
+
+
+PUBLIC int httpGetNetEventMask(HttpNet *net)
+{
+    MprSocket   *sock;
+    int         eventMask;
+
+    if ((sock = net->sock) == 0) {
+        return 0;
+    }
+    eventMask = 0;
+
+    if (httpQueuesNeedService(net) || mprSocketHasBufferedWrite(sock) ||
+            (net->socketq && (net->socketq->count > 0 || net->socketq->ioCount > 0))) {
+        if (!mprSocketHandshaking(sock)) {
+            /* Must wait to write until handshaking is complete */
+            eventMask |= MPR_WRITABLE;
+        }
+    }
+    if (mprSocketHasBufferedRead(sock) || !net->inputq || (net->inputq->count < net->inputq->max)) {
+        /*
+            Was testing if !writeBlocked before adding MPR_READABLE, but this is always required for HTTP/2 to read window frames.
+         */
+        if (mprSocketHandshaking(sock) || !net->eof) {
+            eventMask |= MPR_READABLE;
+        }
+    }
+    return eventMask;
+}
+
+
+PUBLIC void httpEnableNetEvents(HttpNet *net)
+{
+    if (mprShouldAbortRequests() || net->borrowed || net->error || netBanned(net)) {
+        return;
+    }
+    /*
+        Used by ejs
+     */
+    if (net->workerEvent) {
+        MprEvent *event = net->workerEvent;
+        net->workerEvent = 0;
+        mprQueueEvent(net->dispatcher, event);
+        return;
+    }
+    httpSetupWaitHandler(net, httpGetNetEventMask(net));
+}
+
+
+PUBLIC void httpSetupWaitHandler(HttpNet *net, int eventMask)
+{
+    MprSocket   *sp;
+
+    if ((sp = net->sock) == 0) {
+        return;
+    }
+    if (eventMask) {
+        if (sp->handler == 0) {
+            mprAddSocketHandler(sp, eventMask, net->dispatcher, net->ioCallback, net, 0);
+        } else {
+            mprSetSocketDispatcher(sp, net->dispatcher);
+            mprEnableSocketEvents(sp, eventMask);
+        }
+        if (sp->flags & (MPR_SOCKET_BUFFERED_READ | MPR_SOCKET_BUFFERED_WRITE)) {
+            mprRecallWaitHandler(sp->handler);
+        }
+    } else if (sp->handler) {
+        mprWaitOn(sp->handler, eventMask);
+    }
+    net->eventMask = eventMask;
+}
+
+
+#if KEEP
+static void checkLen(HttpQueue *q)
+{
+    HttpNet     *net;
+    HttpPacket  *packet;
+    static int  maxCount = 0;
+    int         count = 0;
+
+    net = q->net;
+    for (packet = q->first; packet && count < 99999; packet = packet->next) {
+        count++;
+    }
+    if (count > maxCount) {
+        maxCount = count;
+        if (maxCount > 50) {
+            print("Qcount %ld, count %d, blocked %d, goaway %d, received goaway %d, eof %d", q->count, count, net->writeBlocked, net->goaway, net->receivedGoaway, net->eof);
+        }
+    }
+}
+#endif
 
 
 /*
@@ -15136,7 +15136,7 @@ PUBLIC HttpPacket *httpGetPacket(HttpQueue *q)
                     This queue was full and now is below the low water mark. Back-enable the previous queue.
                     Must only resume the queue if a packet was actually dequed.
                  */
-                httpResumeQueue(prev);
+                httpResumeQueue(prev, 0);
             }
         }
         break;
@@ -15814,6 +15814,7 @@ PUBLIC void httpCreatePipeline(HttpStream *stream)
 
 PUBLIC void httpCreateRxPipeline(HttpStream *stream, HttpRoute *route)
 {
+    HttpNet     *net;
     HttpTx      *tx;
     HttpRx      *rx;
     HttpQueue   *q;
@@ -15823,6 +15824,7 @@ PUBLIC void httpCreateRxPipeline(HttpStream *stream, HttpRoute *route)
     assert(stream);
     assert(route);
 
+    net = stream->net;
     rx = stream->rx;
     tx = stream->tx;
 
@@ -15841,7 +15843,7 @@ PUBLIC void httpCreateRxPipeline(HttpStream *stream, HttpRoute *route)
 
     q = stream->rxHead->prevQ;
     for (next = 0; (stage = mprGetNextItem(rx->inputPipeline, &next)) != 0; ) {
-        q = httpCreateQueue(stream->net, stream, stage, HTTP_QUEUE_RX, q);
+        q = httpCreateQueue(net, stream, stage, HTTP_QUEUE_RX, q);
         q->flags |= HTTP_QUEUE_REQUEST;
     }
     stream->readq = q;
@@ -15853,8 +15855,9 @@ PUBLIC void httpCreateRxPipeline(HttpStream *stream, HttpRoute *route)
     } else if (!rx->streaming) {
         q->max = stream->limits->rxFormSize;
     }
-    if (q->net->protocol < 2) {
-        q->net->inputq->stream = stream;
+    if (net->protocol < 2) {
+        net->inputq->stream = stream;
+        net->inputq->pair->stream = stream;
     }
 }
 
@@ -16322,16 +16325,13 @@ static void processFirst(HttpQueue *q)
         stream->http->totalRequests++;
         httpSetState(stream, HTTP_STATE_FIRST);
 
-    } else {
-#if TODO /* TODO: 100 Continue */
-        if (rx->status != HTTP_CODE_CONTINUE) {
-            /*
-                Ignore Expect status responses. NOTE: Clients have already created their Tx pipeline.
-             */
-            httpCreateRxPipeline(stream, NULL);
-        }
+#if KEEP
+    } else if (rx->status != HTTP_CODE_CONTINUE) {
+        /*
+            Ignore Expect status responses. NOTE: Clients have already created their Tx pipeline.
+         */
+        httpCreateRxPipeline(stream, NULL);
 #endif
-
     }
     if (rx->flags & HTTP_EXPECT_CONTINUE) {
         sendContinue(q);
@@ -16689,7 +16689,6 @@ static void processParsed(HttpQueue *q)
             httpError(stream, HTTP_CLOSE | HTTP_CODE_NOT_FOUND, "No listening endpoint for request for %s", rx->hostHeader);
             /* continue */
         }
-        //  TODO is rx->length getting set for HTTP/2?
         if (!rx->upload && rx->length >= stream->limits->rxBodySize && stream->limits->rxBodySize != HTTP_UNLIMITED) {
             httpLimitError(stream, HTTP_ABORT | HTTP_CODE_REQUEST_TOO_LARGE,
                 "Request content length %lld bytes is too big. Limit %lld", rx->length, stream->limits->rxBodySize);
@@ -17422,8 +17421,6 @@ PUBLIC void httpDiscardQueueData(HttpQueue *q, bool removePackets)
                 continue;
             } else {
                 len = httpGetPacketLength(packet);
-                //  TODO - should do this in caller or have higher level routine that does this with "stream" as arg
-                //  TODO - or should we just set tx->length to zero?
                 if (q->stream && q->stream->tx && q->stream->tx->length > 0) {
                     q->stream->tx->length -= len;
                 }
@@ -17479,10 +17476,9 @@ PUBLIC bool httpFlushQueue(HttpQueue *q, int flags)
             if (events & MPR_READABLE) {
                 httpReadIO(net);
             }
-            if (events & MPR_WRITABLE) {
+            if (net->socketq->count > 0 && events & MPR_WRITABLE) {
                 net->lastActivity = net->http->now;
-                httpResumeQueue(net->socketq);
-                httpScheduleQueue(net->socketq);
+                httpResumeQueue(net->socketq, 1);
                 httpServiceNetQueues(net, flags);
             }
             if (net->protocol == HTTP_2) {
@@ -17515,15 +17511,19 @@ PUBLIC void httpFlushAll(HttpStream *stream)
 }
 
 
-PUBLIC void httpResumeQueue(HttpQueue *q)
+PUBLIC bool httpResumeQueue(HttpQueue *q, bool schedule)
 {
-    if (q && (q->flags & HTTP_QUEUE_SUSPENDED)) {
-        q->flags &= ~HTTP_QUEUE_SUSPENDED;
-        httpScheduleQueue(q);
+    if (q) {
+        if (q->flags & HTTP_QUEUE_SUSPENDED || schedule) {
+            q->flags &= ~HTTP_QUEUE_SUSPENDED;
+            httpScheduleQueue(q);
+        }
+        if (q->count == 0 && q->prevQ && q->prevQ->flags & HTTP_QUEUE_SUSPENDED) {
+            httpResumeQueue(q->prevQ, schedule);
+            return 1;
+        }
     }
-    if (q->count == 0 && q->prevQ->flags & HTTP_QUEUE_SUSPENDED) {
-        httpResumeQueue(q->prevQ);
-    }
+    return 0;
 }
 
 
@@ -23091,7 +23091,7 @@ static void pickStreamNumber(HttpStream *stream)
         stream->streamID = net->nextStreamID;
         net->nextStreamID += 2;
         if (stream->streamID >= HTTP2_MAX_STREAM) {
-            //TODO - must recreate connection. Cannot use this connection any more.
+            httpError(stream, HTTP_CODE_BAD_REQUEST, "Stream ID overflow");
         }
     }
 #endif
@@ -23341,11 +23341,9 @@ PUBLIC void httpSetTimeout(HttpStream *stream, MprTicks requestTimeout, MprTicks
     if (inactivityTimeout >= 0) {
         if (inactivityTimeout == 0) {
             stream->limits->inactivityTimeout = HTTP_UNLIMITED;
-            // TODO - need separate timeouts for net
             stream->net->limits->inactivityTimeout = HTTP_UNLIMITED;
         } else {
             stream->limits->inactivityTimeout = inactivityTimeout;
-            // TODO - need separate timeouts for net
             stream->net->limits->inactivityTimeout = inactivityTimeout;
         }
     }
@@ -23581,6 +23579,7 @@ PUBLIC void httpAddEndInputPacket(HttpStream *stream, HttpQueue *q)
 /*
     tailFilter.c -- Filter for the start/end of request pipeline.
 
+    The TailFilter is the last stage in a request pipline. After this is the Http*Filter and NetConnector.
     This filter multiplexes onto the net->outputq which is the http1Filter or http2Filter.
 
     Copyright (c) All Rights Reserved. See copyright notice at the bottom of the file.
@@ -23627,9 +23626,14 @@ static void incomingTail(HttpQueue *q, HttpPacket *packet)
         httpSetEof(stream);
     }
     count = stream->readq->count + httpGetPacketLength(packet);
-    if ((rx->form || !rx->streaming) && count >= stream->limits->rxFormSize && stream->limits->rxFormSize != HTTP_UNLIMITED) {
+    if ((rx->form || rx->upload) && count >= stream->limits->rxFormSize && stream->limits->rxFormSize != HTTP_UNLIMITED) {
         httpLimitError(stream, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
             "Request form of %ld bytes is too big. Limit %lld", count, stream->limits->rxFormSize);
+
+    } else if (count >= stream->limits->rxBodySize && stream->limits->rxBodySize != HTTP_UNLIMITED) {
+        httpLimitError(stream, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
+            "Request body of %ld bytes is too big. Limit %lld", count, stream->limits->rxFormSize);
+
     } else {
         httpPutPacketToNext(q, packet);
     }
@@ -25348,6 +25352,7 @@ PUBLIC bool httpFileExists(HttpStream *stream)
  */
 PUBLIC ssize httpWriteBlock(HttpQueue *q, cchar *buf, ssize len, int flags)
 {
+    HttpNet     *net;
     HttpPacket  *packet;
     HttpStream  *stream;
     HttpTx      *tx;
@@ -25357,6 +25362,7 @@ PUBLIC ssize httpWriteBlock(HttpQueue *q, cchar *buf, ssize len, int flags)
     if (!stream) {
         return 0;
     }
+    net = stream->net;
     assert(q == q->stream->writeq);
     tx = stream->tx;
 
@@ -25404,9 +25410,6 @@ PUBLIC ssize httpWriteBlock(HttpQueue *q, cchar *buf, ssize len, int flags)
     }
     if (stream->error) {
         return MPR_ERR_CANT_WRITE;
-    }
-    if (httpClientStream(stream)) {
-        httpEnableNetEvents(stream->net);
     }
     return totalWritten;
 }
