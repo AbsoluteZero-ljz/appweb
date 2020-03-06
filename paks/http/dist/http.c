@@ -952,7 +952,6 @@ static Request *createRequest(ThreadData *td, HttpStream *stream)
 
     /*
         Create file to save output
-        TODO - what if iterations?
      */
     if (app->outFilename) {
         path = app->loadThreads > 1 ? sfmt("%s-%s.tmp", app->outFilename, mprGetCurrentThreadName()): app->outFilename;
@@ -981,11 +980,6 @@ static void startRequest(Request *request)
         return;
     }
     request->written = 0;
-
-#if FUTURE
-    //  TODO - review
-    cchar *authType = stream->authType;
-#endif
 
     app->url = request->redirect ? request->redirect : app->url;
     request->redirect = 0;
@@ -1073,14 +1067,6 @@ static void checkRequestState(HttpStream *stream)
                 }
                 mprDebug("http", 4, "redirect %d of %d for: %s %s", request->follow, app->maxFollow, app->method, app->url);
             } else {
-#if FUTURE
-                //  TODO - check this
-                if (stream->rx && stream->rx->status == HTTP_CODE_UNAUTHORIZED && authType && smatch(authType, stream->authType)) {
-                    httpError(stream, HTTP_CODE_UNAUTHORIZED, "Authentication failed");
-                    //TODO - should this stop all requests?
-                    break;
-                }
-#endif
                 if (++request->retries >= app->maxRetries) {
                     httpError(stream, HTTP_CODE_NO_RESPONSE, "Too many retries");
                     break;
@@ -1115,7 +1101,6 @@ static void parseStatus(HttpStream *stream)
     HttpRx      *rx;
 
     if (stream->net->error) {
-        //  TODO - need to stop all streams on this network
         httpNetError(stream->net, "Connection I/O error");
 
     } else if (stream->error) {
@@ -1244,7 +1229,6 @@ static int processResponse(HttpStream *stream)
 }
 
 
-//  TODO - but this is blocking?
 static void readBody(HttpStream *stream)
 {
     Request     *request;
@@ -1277,7 +1261,6 @@ static int setContentLength(HttpStream *stream)
 
     len = 0;
     if (app->upload) {
-        //  TODO?
         httpEnableUpload(stream);
         return 0;
     }
@@ -1304,7 +1287,6 @@ static int setContentLength(HttpStream *stream)
 }
 
 
-//  TODO - how to make this non-blocking?
 static ssize writeBody(HttpStream *stream)
 {
     MprFile     *file;
@@ -1363,6 +1345,7 @@ static ssize writeBody(HttpStream *stream)
                 }
                 mprCloseFile(file);
                 app->inFile = 0;
+                httpEnableNetEvents(stream->net);
             }
         }
         if (app->bodyData) {

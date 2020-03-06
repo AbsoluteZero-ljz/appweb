@@ -2393,10 +2393,12 @@ PUBLIC HttpPacket *httpResizePacket(struct HttpQueue *q, HttpPacket *packet, ssi
         to run as soon as possible. This is normally called automatically called by the pipeline when downstream
         congestion has cleared.
     @param q Queue reference
+    @param force Force a queue to be scheduled regardless. Set to true to force.
+    @return True if the queue was resumed.
     @ingroup HttpQueue
-    @stability Stable
+    @stability Evolving
  */
-PUBLIC void httpResumeQueue(HttpQueue *q);
+PUBLIC bool httpResumeQueue(HttpQueue *q, bool force);
 
 /**
     Schedule a queue
@@ -3464,6 +3466,7 @@ PUBLIC Socket httpStealSocketHandle(HttpNet *net);
 /*
     Internal
  */
+PUBLIC int httpGetNetEventMask(HttpNet *net);
 PUBLIC void httpGetUriAddress(HttpUri *uri, cchar **ip, int *port);
 PUBLIC void httpSetNetTimeout(HttpNet *net, MprTicks inactivityTimeout);
 PUBLIC void httpSendGoAway(struct HttpNet *net, int status, cchar *fmt, ...);

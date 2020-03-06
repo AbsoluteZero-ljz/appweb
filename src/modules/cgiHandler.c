@@ -250,6 +250,8 @@ static void browserToCgiData(HttpQueue *q, HttpPacket *packet)
                 mprDestroyCmd(cgi->cmd);
             }
             httpError(stream, HTTP_CODE_BAD_REQUEST, "Client supplied insufficient body data");
+        } else {
+            httpFinalizeInput(stream);
         }
     }
     httpPutForService(cgi->writeq, packet, HTTP_SCHEDULE_QUEUE);
@@ -293,6 +295,7 @@ static void browserToCgiService(HttpQueue *q)
                     continue;
                 } else if (err == EAGAIN || err == EWOULDBLOCK) {
                     httpPutBackPacket(q, packet);
+                    httpSuspendQueue(q);
                     break;
                 }
                 httpLog(stream->trace, "cgi.error", "error", "msg=\"Cannot write to CGI gateway\", errno=%d", mprGetOsError());
@@ -304,6 +307,7 @@ static void browserToCgiService(HttpQueue *q)
             mprAdjustBufStart(buf, rc);
             if (mprGetBufLength(buf) > 0) {
                 httpPutBackPacket(q, packet);
+                httpSuspendQueue(q);
                 break;
             }
         }
@@ -378,7 +382,7 @@ static void cgiCallback(MprCmd *cmd, int channel, void *data)
     switch (channel) {
     case MPR_CMD_STDIN:
         /* Stdin can absorb more data */
-        httpResumeQueue(cgi->writeq);
+        httpResumeQueue(cgi->writeq, 1);
         break;
 
     case MPR_CMD_STDOUT:
