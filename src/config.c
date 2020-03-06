@@ -2133,6 +2133,26 @@ static int requestHeaderDirective(MaState *state, cchar *key, cchar *value)
 }
 
 
+static int scriptAliasDirective(MaState *state, cchar *key, cchar *value)
+{
+    HttpRoute   *route;
+    char        *handler, *prefix, *path;
+
+    if (!maTokenize(state, value, "%S %S ?S", &prefix, &path, &handler)) {
+        return MPR_ERR_BAD_SYNTAX;
+    }
+    if (!handler) {
+        handler = "cgiHandler";
+    }
+    route = httpCreateAliasRoute(state->route, prefix, path, 0);
+    httpSetRouteHandler(route, handler);
+    httpSetRoutePattern(route, sfmt("^%s(.*)$", prefix), 0);
+    httpSetRouteTarget(route, "run", "$1");
+    httpFinalizeRoute(route);
+    return 0;
+}
+
+
 /*
     ServerName URI
     ServerName *URI
@@ -3365,6 +3385,7 @@ static int parseInit(void)
     maAddDirective("Role", roleDirective);
     maAddDirective("<Route", routeDirective);
     maAddDirective("</Route", closeDirective);
+    maAddDirective("ScriptAlias", scriptAliasDirective);
     maAddDirective("ServerName", serverNameDirective);
     maAddDirective("SessionCookie", sessionCookieDirective);
     maAddDirective("SessionTimeout", sessionTimeoutDirective);

@@ -27,7 +27,7 @@ typedef struct Cgi {
 /*********************************** Forwards *********************************/
 
 static void browserToCgiService(HttpQueue *q);
-static void buildArgs(HttpStream *stream, MprCmd *cmd, int *argcp, cchar ***argvp);
+static void buildArgs(HttpStream *stream, int *argcp, cchar ***argvp);
 static void cgiCallback(MprCmd *cmd, int channel, void *data);
 static void cgiToBrowserData(HttpQueue *q, HttpPacket *packet);
 static void copyInner(HttpStream *stream, cchar **envv, int index, cchar *key, cchar *value, cchar *prefix);
@@ -159,7 +159,7 @@ static void startCgi(HttpQueue *q)
         cmd->forkData = stream->http->forkData;
     }
     argc = 1;                                   /* argv[0] == programName */
-    buildArgs(stream, cmd, &argc, &argv);
+    buildArgs(stream, &argc, &argv);
     fileName = argv[0];
     baseName = mprGetPathBase(fileName);
 
@@ -610,7 +610,7 @@ static bool parseFirstCgiResponse(Cgi *cgi, HttpPacket *packet)
 /*
     Build the command arguments. NOTE: argv is untrusted input.
  */
-static void buildArgs(HttpStream *stream, MprCmd *cmd, int *argcp, cchar ***argvp)
+static void buildArgs(HttpStream *stream, int *argcp, cchar ***argvp)
 {
     HttpRx      *rx;
     HttpTx      *tx;
@@ -815,23 +815,6 @@ static int cgiPrefixDirective(MaState *state, cchar *key, cchar *value)
 }
 
 
-static int scriptAliasDirective(MaState *state, cchar *key, cchar *value)
-{
-    HttpRoute   *route;
-    char        *prefix, *path;
-
-    if (!maTokenize(state, value, "%S %S", &prefix, &path)) {
-        return MPR_ERR_BAD_SYNTAX;
-    }
-    route = httpCreateAliasRoute(state->route, prefix, path, 0);
-    httpSetRouteHandler(route, "cgiHandler");
-    httpSetRoutePattern(route, sfmt("^%s(.*)$", prefix), 0);
-    httpSetRouteTarget(route, "run", "$1");
-    httpFinalizeRoute(route);
-    return 0;
-}
-
-
 /*
     Loadable module initialization
  */
@@ -859,7 +842,6 @@ PUBLIC int httpCgiInit(Http *http, MprModule *module)
     /*
         Add configuration file directives
      */
-    maAddDirective("ScriptAlias", scriptAliasDirective);
     maAddDirective("CgiEscape", cgiEscapeDirective);
     maAddDirective("CgiPrefix", cgiPrefixDirective);
     return 0;
