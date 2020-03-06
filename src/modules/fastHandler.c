@@ -921,11 +921,15 @@ static void reapProxyProcess(FastConnector *connector, MprSignal *sp)
         mprRemoveSignalHandler(connector->signal);
         connector->signal = 0;
     }
-    connector->pid = 0;
+    proxy = connector->proxy;
+    if (mprLookupItem(proxy->fast->idleProxies, proxy) >= 0) {
+        mprRemoveItem(proxy->fast->idleProxies, proxy);
+    }
     connector->destroy = 1;
+    connector->pid = 0;
 
     for (ITERATE_ITEMS(connector->proxy->streams, stream, next)) {
-        if (stream->state <= HTTP_STATE_RUNNING) {
+        if (HTTP_STATE_BEGIN < stream->state && stream->state <= HTTP_STATE_RUNNING) {
             if (!stream->tx->finalized) {
                 httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "FastCGI app closed prematurely");
             }
