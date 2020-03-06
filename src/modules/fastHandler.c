@@ -543,7 +543,7 @@ static bool parseFastHeaders(HttpPacket *packet)
             }
             httpLog(stream->trace, "fast.rx", "detail", "key:'%s', value: '%s'", key, value);
             if (scaselesscmp(key, "location") == 0) {
-                httpRedirect(stream, stream->tx->status, value);
+                httpRedirect(stream, HTTP_CODE_MOVED_TEMPORARILY, value);
 
             } else if (scaselesscmp(key, "status") == 0) {
                 httpSetStatus(stream, atoi(value));
@@ -892,11 +892,13 @@ static cchar *buildProxyArgs(HttpStream *stream, int *argcp, cchar ***argvp)
 
 
 /*
-    Proxy process has died. WARNING: this may be called before all the data has been read from the socket.
-    So we must not set eof = 1 here.
+    Proxy process has died.
+    WARNING: this may be called before all the data has been read from the socket, so we must not set eof = 1 here.
+    WARNING: this runs on the connectors dispatcher.
  */
 static void reapProxyProcess(FastConnector *connector, MprSignal *sp)
 {
+    FastProxy   *proxy;
     HttpPacket  *packet;
     HttpStream  *stream;
     int         next, status;
