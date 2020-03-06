@@ -1598,7 +1598,7 @@ static MprSocket *createListener(FastConnector *connector)
     fast = proxy->fast;
 
     listen = mprCreateSocket();
-    if (mprListenOnSocket(listen, fast->ip, fast->port, MPR_SOCKET_NODELAY) == SOCKET_ERROR) {
+    if (mprListenOnSocket(listen, fast->ip, fast->port, MPR_SOCKET_BLOCK | MPR_SOCKET_NODELAY) == SOCKET_ERROR) {
         if (mprGetError() == EADDRINUSE) {
             httpLog(proxy->trace, "fast.rx", "error", "msg:'Cannot open a socket, already bound', address: '%s:%d'",
                 fast->ip ? fast->ip : "*", fast->port);
