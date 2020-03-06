@@ -44,3 +44,10 @@ cache/
 .local.mk
 src/utils/fcgi
 test/php.fast
+test/fast
+test/web/big*.txt
+test/web/huge*.txt
+test/web/100K.txt
+test/web/1M.txt
+test/web/200M.txt
+test/web/50M.txt
