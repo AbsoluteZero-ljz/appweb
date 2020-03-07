@@ -99,8 +99,7 @@ static char     **queryKeys;
 static char     *responseMsg;
 static int      timeout;
 
-static FCGX_ParamArray fast_envp;
-static FCGX_Stream     *fast_in, *fast_out, *fast_err;
+static FCGX_Request request;
 
 /***************************** Forward Declarations ***************************/
 
@@ -110,6 +109,7 @@ static char     hex2Char(char *s);
 static int      getVars(char ***cgiKeys, char *buf, size_t len);
 static int      getPostData(char **buf, size_t *len);
 static int      getQueryString(char **buf, size_t *len);
+static int      parseArgs(int argc, char **argv);
 static void     printEnv(char **env);
 static void     printQuery();
 static void     printPost(char *buf, size_t len);
@@ -121,7 +121,7 @@ static char     *safeGetenv(char *key);
  */
 int main(int argc, char **argv, char **envp)
 {
-    char            *cp, *method;
+    char            *method;
     int             l, i, err;
 
     err = 0;
@@ -136,6 +136,114 @@ int main(int argc, char **argv, char **envp)
     queryBuf = 0;
     queryLen = 0;
     numQueryKeys = numPostKeys = 0;
+
+    FCGX_Init();
+    FCGX_InitRequest(&request, 0, 0);
+
+    while (1) {
+        if (FCGX_Accept_r(&request) < 0) {
+            if (errno == EAGAIN) {
+                continue;
+            }
+            FCGX_FPrintF(request.err, "Cannot accept a new connection errno :%d\n", errno);
+            break;
+        }
+        if (parseArgs(argc, argv) < 0) {
+            exit(255);
+            break;
+        }
+#if KEEP
+        char **xp;
+        for (xp = request.envp; *xp; xp++) {
+            printf("ENV %s\n", *xp);
+        }
+#endif
+        if ((method = FCGX_GetParam("REQUEST_METHOD", request.envp)) != 0 && strcmp(method, "POST") == 0) {
+            if (getPostData(&postBuf, &postBufLen) < 0) {
+                error("Cannot read FAST input");
+            }
+            if (strcmp(safeGetenv("CONTENT_TYPE"), "application/x-www-form-urlencoded") == 0) {
+                numPostKeys = getVars(&postKeys, postBuf, postBufLen);
+            }
+        }
+
+        if (hasError) {
+            FCGX_FPrintF(request.out, "HTTP/1.0 %d %s\r\n\r\n", responseStatus, responseMsg);
+            FCGX_FPrintF(request.out, "<HTML><BODY><p>Error: %d -- %s</p></BODY></HTML>\r\n", responseStatus, responseMsg);
+            FCGX_FPrintF(request.err, "fastProgram: ERROR: %s\n", responseMsg);
+            exit(2);
+        }
+
+#if KEEP
+        if (nonParsedHeader) {
+            if (responseStatus == 0) {
+                FCGX_FPrintF(request.out, "HTTP/1.0 200 OK\r\n");
+            } else {
+                FCGX_FPrintF(request.out, "HTTP/1.0 %d %s\r\n", responseStatus, responseMsg ? responseMsg: "");
+            }
+            FCGX_FPrintF(request.out, "Connection: close\r\n");
+            FCGX_FPrintF(request.out, "X-FAST-CustomHeader: Any value at all\r\n");
+        }
+#endif
+        FCGX_FPrintF(request.out, "Content-Type: %s\r\n", "text/html");
+
+        if (outputHeaderLines) {
+            for (i = 0; i < outputHeaderLines; i++) {
+                FCGX_FPrintF(request.out, "X-FAST-%d: A loooooooooooooooooooooooong string\r\n", i);
+            }
+        }
+        if (outputLocation) {
+            printf("@@@@ LOCATION %s", outputLocation);
+            FCGX_FPrintF(request.out, "Location: %s\r\n", outputLocation);
+        }
+        if (responseStatus) {
+            FCGX_FPrintF(request.out, "Status: %d\r\n", responseStatus);
+        }
+        FCGX_FPrintF(request.out, "\r\n");
+
+        if ((outputLines + outputArgs + outputEnv + outputQuery + outputPost + outputLocation + responseStatus) == 0) {
+            outputArgs++;
+            outputEnv++;
+            outputQuery++;
+            outputPost++;
+        }
+        if (outputLines) {
+            for (l = 0; l < outputLines; l++) {
+                FCGX_FPrintF(request.out, "%09d\n", l);
+            }
+
+        } else {
+            FCGX_FPrintF(request.out, "<HTML><TITLE>fastProgram: Output</TITLE><BODY>\r\n");
+            if (outputArgs) {
+    #if _WIN32
+                FCGX_FPrintF(request.out, "<P>CommandLine: %s</P>\r\n", GetCommandLine());
+    #endif
+                FCGX_FPrintF(request.out, "<H2>Args</H2>\r\n");
+                for (i = 0; i < argc; i++) {
+                    FCGX_FPrintF(request.out, "<P>ARG[%d]=%s</P>\r\n", i, argv[i]);
+                }
+            }
+            printEnv(request.envp);
+            if (outputQuery) {
+                printQuery();
+            }
+            if (outputPost) {
+                printPost(postBuf, postBufLen);
+            }
+            FCGX_FPrintF(request.out, "</BODY></HTML>\r\n");
+        }
+        // FCGX_FFlush(request.err);
+        // FCGX_FFlush(request.out);
+        FCGX_Finish_r(&request);
+    }
+    return 0;
+}
+
+
+static int parseArgs(int argc, char **argv)
+{
+    char    *cp;
+    int     i, err;
 
     originalArgc = argc;
     originalArgv = argv;
@@ -215,89 +323,11 @@ int main(int argc, char **argv, char **envp)
         }
     }
     if (err) {
-        FCGX_FPrintF(fast_err, "usage: fastProgram -aenp [-b bytes] [-h lines]\n"
+        FCGX_FPrintF(request.err, "usage: fastProgram -aenp [-b bytes] [-h lines]\n"
             "\t[-l location] [-s status] [-t timeout]\n"
             "\tor set the HTTP_SWITCHES environment variable\n");
-        FCGX_FPrintF(fast_err, "Error at fastProgram:%d\n", __LINE__);
+        FCGX_FPrintF(request.err, "Error at fastProgram:%d\n", __LINE__);
         exit(255);
-    }
-
-    while (FCGX_Accept(&fast_in, &fast_out, &fast_err, &fast_envp) >= 0) {
-        if ((method = FCGX_GetParam("REQUEST_METHOD", fast_envp)) != 0 && strcmp(method, "POST") == 0) {
-            if (getPostData(&postBuf, &postBufLen) < 0) {
-                error("Cannot read FAST input");
-            }
-            if (strcmp(safeGetenv("CONTENT_TYPE"), "application/x-www-form-urlencoded") == 0) {
-                numPostKeys = getVars(&postKeys, postBuf, postBufLen);
-            }
-        }
-
-        if (hasError) {
-            FCGX_FPrintF(fast_out, "HTTP/1.0 %d %s\r\n\r\n", responseStatus, responseMsg);
-            FCGX_FPrintF(fast_out, "<HTML><BODY><p>Error: %d -- %s</p></BODY></HTML>\r\n", responseStatus, responseMsg);
-            FCGX_FPrintF(fast_err, "fastProgram: ERROR: %s\n", responseMsg);
-            exit(2);
-        }
-
-#if KEEP
-        if (nonParsedHeader) {
-            if (responseStatus == 0) {
-                FCGX_FPrintF(fast_out, "HTTP/1.0 200 OK\r\n");
-            } else {
-                FCGX_FPrintF(fast_out, "HTTP/1.0 %d %s\r\n", responseStatus, responseMsg ? responseMsg: "");
-            }
-            FCGX_FPrintF(fast_out, "Connection: close\r\n");
-            FCGX_FPrintF(fast_out, "X-FAST-CustomHeader: Any value at all\r\n");
-        }
-#endif
-        FCGX_FPrintF(fast_out, "Content-Type: %s\r\n", "text/html");
-
-        if (outputHeaderLines) {
-            for (i = 0; i < outputHeaderLines; i++) {
-                FCGX_FPrintF(fast_out, "X-FAST-%d: A loooooooooooooooooooooooong string\r\n", i);
-            }
-        }
-        if (outputLocation) {
-            FCGX_FPrintF(fast_out, "Location: %s\r\n", outputLocation);
-        }
-        if (responseStatus) {
-            FCGX_FPrintF(fast_out, "Status: %d\r\n", responseStatus);
-        }
-        FCGX_FPrintF(fast_out, "\r\n");
-
-        if ((outputLines + outputArgs + outputEnv + outputQuery + outputPost + outputLocation + responseStatus) == 0) {
-            outputArgs++;
-            outputEnv++;
-            outputQuery++;
-            outputPost++;
-        }
-        if (outputLines) {
-            for (l = 0; l < outputLines; l++) {
-                FCGX_FPrintF(fast_out, "%010d\n", l);
-            }
-
-        } else {
-            FCGX_FPrintF(fast_out, "<HTML><TITLE>fastProgram: Output</TITLE><BODY>\r\n");
-            if (outputArgs) {
-    #if _WIN32
-                FCGX_FPrintF(fast_out, "<P>CommandLine: %s</P>\r\n", GetCommandLine());
-    #endif
-                FCGX_FPrintF(fast_out, "<H2>Args</H2>\r\n");
-                for (i = 0; i < argc; i++) {
-                    FCGX_FPrintF(fast_out, "<P>ARG[%d]=%s</P>\r\n", i, argv[i]);
-                }
-            }
-            printEnv(fast_envp);
-            if (outputQuery) {
-                printQuery();
-            }
-            if (outputPost) {
-                printPost(postBuf, postBufLen);
-            }
-            FCGX_FPrintF(fast_out, "</BODY></HTML>\r\n");
-        }
-        FCGX_FFlush(fast_err);
-        FCGX_FFlush(fast_out);
     }
     return 0;
 }
@@ -320,14 +350,14 @@ static int getArgv(int *pargc, char ***pargv, int originalArgc, char **originalA
 
     switches = 0;
     for (i = 0; i < numQueryKeys; i += 2) {
-        if (strcmp(queryKeys[i], "HTTP_SWITCHES") == 0) {
+        if (strcmp(queryKeys[i], "SWITCHES") == 0) {
             switches = queryKeys[i+1];
             break;
         }
     }
 
     if (switches == 0) {
-        switches = FCGX_GetParam("HTTP_SWITCHES", fast_envp);
+        switches = FCGX_GetParam("HTTP_SWITCHES", request.envp);
     }
     if (switches) {
         strncpy(sbuf, switches, sizeof(sbuf) - 1);
@@ -352,44 +382,44 @@ static int getArgv(int *pargc, char ***pargv, int originalArgc, char **originalA
 
 static void printEnv(char **envp)
 {
-    FCGX_FPrintF(fast_out, "<H2>Environment Variables</H2>\r\n");
-    FCGX_FPrintF(fast_out, "<P>AUTH_TYPE=%s</P>\r\n", safeGetenv("AUTH_TYPE"));
-    FCGX_FPrintF(fast_out, "<P>CONTENT_LENGTH=%s</P>\r\n", safeGetenv("CONTENT_LENGTH"));
-    FCGX_FPrintF(fast_out, "<P>CONTENT_TYPE=%s</P>\r\n", safeGetenv("CONTENT_TYPE"));
-    FCGX_FPrintF(fast_out, "<P>DOCUMENT_ROOT=%s</P>\r\n", safeGetenv("DOCUMENT_ROOT"));
-    FCGX_FPrintF(fast_out, "<P>GATEWAY_INTERFACE=%s</P>\r\n", safeGetenv("GATEWAY_INTERFACE"));
-    FCGX_FPrintF(fast_out, "<P>HTTP_ACCEPT=%s</P>\r\n", safeGetenv("HTTP_ACCEPT"));
-    FCGX_FPrintF(fast_out, "<P>HTTP_CONNECTION=%s</P>\r\n", safeGetenv("HTTP_CONNECTION"));
-    FCGX_FPrintF(fast_out, "<P>HTTP_HOST=%s</P>\r\n", safeGetenv("HTTP_HOST"));
-    FCGX_FPrintF(fast_out, "<P>HTTP_USER_AGENT=%s</P>\r\n", safeGetenv("HTTP_USER_AGENT"));
-    FCGX_FPrintF(fast_out, "<P>PATH_INFO=%s</P>\r\n", safeGetenv("PATH_INFO"));
-    FCGX_FPrintF(fast_out, "<P>PATH_TRANSLATED=%s</P>\r\n", safeGetenv("PATH_TRANSLATED"));
-    FCGX_FPrintF(fast_out, "<P>QUERY_STRING=%s</P>\r\n", safeGetenv("QUERY_STRING"));
-    FCGX_FPrintF(fast_out, "<P>REMOTE_ADDR=%s</P>\r\n", safeGetenv("REMOTE_ADDR"));
-    FCGX_FPrintF(fast_out, "<P>REQUEST_METHOD=%s</P>\r\n", safeGetenv("REQUEST_METHOD"));
-    FCGX_FPrintF(fast_out, "<P>REQUEST_URI=%s</P>\r\n", safeGetenv("REQUEST_URI"));
-    FCGX_FPrintF(fast_out, "<P>REMOTE_USER=%s</P>\r\n", safeGetenv("REMOTE_USER"));
-    FCGX_FPrintF(fast_out, "<P>SCRIPT_NAME=%s</P>\r\n", safeGetenv("SCRIPT_NAME"));
-    FCGX_FPrintF(fast_out, "<P>SCRIPT_FILENAME=%s</P>\r\n", safeGetenv("SCRIPT_FILENAME"));
-    FCGX_FPrintF(fast_out, "<P>SERVER_ADDR=%s</P>\r\n", safeGetenv("SERVER_ADDR"));
-    FCGX_FPrintF(fast_out, "<P>SERVER_NAME=%s</P>\r\n", safeGetenv("SERVER_NAME"));
-    FCGX_FPrintF(fast_out, "<P>SERVER_PORT=%s</P>\r\n", safeGetenv("SERVER_PORT"));
-    FCGX_FPrintF(fast_out, "<P>SERVER_PROTOCOL=%s</P>\r\n", safeGetenv("SERVER_PROTOCOL"));
-    FCGX_FPrintF(fast_out, "<P>SERVER_SOFTWARE=%s</P>\r\n", safeGetenv("SERVER_SOFTWARE"));
+    FCGX_FPrintF(request.out, "<H2>Environment Variables</H2>\r\n");
+    FCGX_FPrintF(request.out, "<P>AUTH_TYPE=%s</P>\r\n", safeGetenv("AUTH_TYPE"));
+    FCGX_FPrintF(request.out, "<P>CONTENT_LENGTH=%s</P>\r\n", safeGetenv("CONTENT_LENGTH"));
+    FCGX_FPrintF(request.out, "<P>CONTENT_TYPE=%s</P>\r\n", safeGetenv("CONTENT_TYPE"));
+    FCGX_FPrintF(request.out, "<P>DOCUMENT_ROOT=%s</P>\r\n", safeGetenv("DOCUMENT_ROOT"));
+    FCGX_FPrintF(request.out, "<P>GATEWAY_INTERFACE=%s</P>\r\n", safeGetenv("GATEWAY_INTERFACE"));
+    FCGX_FPrintF(request.out, "<P>HTTP_ACCEPT=%s</P>\r\n", safeGetenv("HTTP_ACCEPT"));
+    FCGX_FPrintF(request.out, "<P>HTTP_CONNECTION=%s</P>\r\n", safeGetenv("HTTP_CONNECTION"));
+    FCGX_FPrintF(request.out, "<P>HTTP_HOST=%s</P>\r\n", safeGetenv("HTTP_HOST"));
+    FCGX_FPrintF(request.out, "<P>HTTP_USER_AGENT=%s</P>\r\n", safeGetenv("HTTP_USER_AGENT"));
+    FCGX_FPrintF(request.out, "<P>PATH_INFO=%s</P>\r\n", safeGetenv("PATH_INFO"));
+    FCGX_FPrintF(request.out, "<P>PATH_TRANSLATED=%s</P>\r\n", safeGetenv("PATH_TRANSLATED"));
+    FCGX_FPrintF(request.out, "<P>QUERY_STRING=%s</P>\r\n", safeGetenv("QUERY_STRING"));
+    FCGX_FPrintF(request.out, "<P>REMOTE_ADDR=%s</P>\r\n", safeGetenv("REMOTE_ADDR"));
+    FCGX_FPrintF(request.out, "<P>REQUEST_METHOD=%s</P>\r\n", safeGetenv("REQUEST_METHOD"));
+    FCGX_FPrintF(request.out, "<P>REQUEST_URI=%s</P>\r\n", safeGetenv("REQUEST_URI"));
+    FCGX_FPrintF(request.out, "<P>REMOTE_USER=%s</P>\r\n", safeGetenv("REMOTE_USER"));
+    FCGX_FPrintF(request.out, "<P>SCRIPT_NAME=%s</P>\r\n", safeGetenv("SCRIPT_NAME"));
+    FCGX_FPrintF(request.out, "<P>SCRIPT_FILENAME=%s</P>\r\n", safeGetenv("SCRIPT_FILENAME"));
+    FCGX_FPrintF(request.out, "<P>SERVER_ADDR=%s</P>\r\n", safeGetenv("SERVER_ADDR"));
+    FCGX_FPrintF(request.out, "<P>SERVER_NAME=%s</P>\r\n", safeGetenv("SERVER_NAME"));
+    FCGX_FPrintF(request.out, "<P>SERVER_PORT=%s</P>\r\n", safeGetenv("SERVER_PORT"));
+    FCGX_FPrintF(request.out, "<P>SERVER_PROTOCOL=%s</P>\r\n", safeGetenv("SERVER_PROTOCOL"));
+    FCGX_FPrintF(request.out, "<P>SERVER_SOFTWARE=%s</P>\r\n", safeGetenv("SERVER_SOFTWARE"));
 
     /*
         This is not supported on VxWorks as you cannot get "envp" in main()
      */
-    FCGX_FPrintF(fast_out, "\r\n<H2>All Defined Environment Variables</H2>\r\n");
+    FCGX_FPrintF(request.out, "\r\n<H2>All Defined Environment Variables</H2>\r\n");
     if (envp) {
         char    *p;
         int     i;
         for (i = 0, p = envp[0]; envp[i]; i++) {
             p = envp[i];
-            FCGX_FPrintF(fast_out, "<P>%s</P>\r\n", p);
+            FCGX_FPrintF(request.out, "<P>%s</P>\r\n", p);
         }
     }
-    FCGX_FPrintF(fast_out, "\r\n");
+    FCGX_FPrintF(request.out, "\r\n");
 }
 
 
@@ -398,18 +428,18 @@ static void printQuery()
     int     i;
 
     if (numQueryKeys == 0) {
-        FCGX_FPrintF(fast_out, "<H2>No Query String Found</H2>\r\n");
+        FCGX_FPrintF(request.out, "<H2>No Query String Found</H2>\r\n");
     } else {
-        FCGX_FPrintF(fast_out, "<H2>Decoded Query String Variables</H2>\r\n");
+        FCGX_FPrintF(request.out, "<H2>Decoded Query String Variables</H2>\r\n");
         for (i = 0; i < (numQueryKeys * 2); i += 2) {
             if (queryKeys[i+1] == 0) {
-                FCGX_FPrintF(fast_out, "<p>QVAR %s=</p>\r\n", queryKeys[i]);
+                FCGX_FPrintF(request.out, "<p>QVAR %s=</p>\r\n", queryKeys[i]);
             } else {
-                FCGX_FPrintF(fast_out, "<p>QVAR %s=%s</p>\r\n", queryKeys[i], queryKeys[i+1]);
+                FCGX_FPrintF(request.out, "<p>QVAR %s=%s</p>\r\n", queryKeys[i], queryKeys[i+1]);
             }
         }
     }
-    FCGX_FPrintF(fast_out, "\r\n");
+    FCGX_FPrintF(request.out, "\r\n");
 }
 
 
@@ -418,24 +448,24 @@ static void printPost(char *buf, size_t len)
     int     i;
 
     if (numPostKeys) {
-        FCGX_FPrintF(fast_out, "<H2>Decoded Post Variables</H2>\r\n");
+        FCGX_FPrintF(request.out, "<H2>Decoded Post Variables</H2>\r\n");
         for (i = 0; i < (numPostKeys * 2); i += 2) {
-            FCGX_FPrintF(fast_out, "<p>PVAR %s=%s</p>\r\n", postKeys[i], postKeys[i+1]);
+            FCGX_FPrintF(request.out, "<p>PVAR %s=%s</p>\r\n", postKeys[i], postKeys[i+1]);
         }
 
     } else if (buf) {
         if (len < (50 * 1000)) {
-            FCGX_FPrintF(fast_out, "<H2>Post Data %d bytes found (data below)</H2>\r\n", (int) len);
-            FCGX_FFlush(fast_out);
+            FCGX_FPrintF(request.out, "<H2>Post Data %d bytes found (data below)</H2>\r\n", (int) len);
+            FCGX_FFlush(request.out);
             if (write(1, buf, (int) len) != len) {}
         } else {
-            FCGX_FPrintF(fast_out, "<H2>Post Data %d bytes found</H2>\r\n", (int) len);
+            FCGX_FPrintF(request.out, "<H2>Post Data %d bytes found</H2>\r\n", (int) len);
         }
 
     } else {
-        FCGX_FPrintF(fast_out, "<H2>No Post Data Found</H2>\r\n");
+        FCGX_FPrintF(request.out, "<H2>No Post Data Found</H2>\r\n");
     }
-    FCGX_FPrintF(fast_out, "\r\n");
+    FCGX_FPrintF(request.out, "\r\n");
 }
 
 
@@ -444,11 +474,11 @@ static int getQueryString(char **buf, size_t *buflen)
     *buflen = 0;
     *buf = 0;
 
-    if (FCGX_GetParam("QUERY_STRING", fast_envp) == 0) {
+    if (FCGX_GetParam("QUERY_STRING", request.envp) == 0) {
         *buf = "";
         *buflen = 0;
     } else {
-        *buf = FCGX_GetParam("QUERY_STRING", fast_envp);
+        *buf = FCGX_GetParam("QUERY_STRING", request.envp);
         *buflen = (int) strlen(*buf);
     }
     return 0;
@@ -460,7 +490,7 @@ static int getPostData(char **bufp, size_t *lenp)
     char    *contentLength, *buf;
     ssize_t bufsize, bytes, size, limit, len;
 
-    if ((contentLength = FCGX_GetParam("CONTENT_LENGTH", fast_envp)) != 0) {
+    if ((contentLength = FCGX_GetParam("CONTENT_LENGTH", request.envp)) != 0) {
         size = atoi(contentLength);
         if (size < 0 || size >= INT_MAX) {
             error("Bad content length");
@@ -606,7 +636,7 @@ static char *safeGetenv(char *key)
 {
     char    *cp;
 
-    cp = FCGX_GetParam(key, fast_envp);
+    cp = FCGX_GetParam(key, request.envp);
     if (cp == 0) {
         return "";
     }
@@ -621,7 +651,7 @@ static void error(char *fmt, ...)
 
     if (responseMsg == 0) {
         va_start(args, fmt);
-        FCGX_FPrintF(fast_out, buf, fmt, args);
+        FCGX_FPrintF(request.out, buf, fmt, args);
         responseStatus = 400;
         responseMsg = strdup(buf);
         va_end(args);

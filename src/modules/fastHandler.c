@@ -447,7 +447,8 @@ static void fastHandlerResponse(HttpPacket *packet)
             httpError(stream, HTTP_CODE_BAD_GATEWAY, "FastCGI unknown role %s", stream->rx->uri);
             return;
         }
-        packet = httpCreateEndPacket();
+        httpLog(proxy->trace, "fast.rx.eof", "detail", "msg:'FastCGI end request', id:%d", stream->reqID);
+        httpFinalizeOutput(stream);
 
     } else if (type == FAST_STDOUT) {
         if (!rx->seenFastHeaders) {
@@ -458,11 +459,11 @@ static void fastHandlerResponse(HttpPacket *packet)
         }
     }
     if (type == FAST_REAP) {
-        ; /* Nothing to do -- just call httpProcess below */
-
-    } else if (httpGetPacketLength(packet) == 0) {
-        httpLog(proxy->trace, "fast.rx.eof", "detail", "msg:'FastCGI EOF', id:%d", stream->reqID);
-        httpFinalizeOutput(stream);
+        if (stream->state <= HTTP_STATE_BEGIN || stream->rx->route == NULL) {
+            /* Request already complete */
+            return;
+        }
+        /* Nothing to do -- just call httpProcess below */
 
     } else {
         httpLogPacket(proxy->trace, "fast.rx.data", "packet", 0, packet, "id:%d, len:%ld", stream->reqID,
