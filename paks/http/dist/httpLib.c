@@ -13002,10 +13002,12 @@ static int decodeHuff(uchar *state, uchar *src, int len, uchar *dst, uint last)
         if (decodeBits(state, &ending, ch & 0xf, &dstp) < 0) {
             return MPR_ERR_BAD_STATE;
         }
+#if UNUSED
         if (dstp == marker) {
             //  More than 7 bits of padding
             return MPR_ERR_BAD_STATE;
         }
+#endif
     }
     if (last) {
         if (!ending) {
@@ -13047,11 +13049,6 @@ PUBLIC cchar *httpHuffDecode(uchar *src, int len)
     if ((size = decodeHuff(&state, src, len, value, 1)) < 0) {
         return 0;
     }
-#if 0
-    if (size != len) {
-        return 0;
-    }
-#endif
     assert(size < alen);
     return (cchar*) value;
 }
