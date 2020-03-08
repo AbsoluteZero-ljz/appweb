@@ -109,7 +109,7 @@ static char     hex2Char(char *s);
 static int      getVars(char ***cgiKeys, char *buf, size_t len);
 static int      getPostData(char **buf, size_t *len);
 static int      getQueryString(char **buf, size_t *len);
-static int      parseArgs(int argc, char **argv);
+static int      parseArgs();
 static void     printEnv(char **env);
 static void     printQuery();
 static void     printPost(char *buf, size_t len);
@@ -124,40 +124,41 @@ int main(int argc, char **argv, char **envp)
     char            *method;
     int             l, i, err;
 
-    err = 0;
-    // sleep(30);
-
-    outputArgs = outputQuery = outputEnv = outputPost = 0;
-    outputLines = outputHeaderLines = responseStatus = 0;
-    outputLocation = 0;
-    responseMsg = 0;
-    hasError = 0;
-    timeout = 0;
-    queryBuf = 0;
-    queryLen = 0;
-    numQueryKeys = numPostKeys = 0;
+    originalArgc = argc;
+    originalArgv = argv;
 
     FCGX_Init();
     FCGX_InitRequest(&request, 0, 0);
 
     while (1) {
+        err = 0;
+        outputArgs = outputQuery = outputEnv = outputPost = 0;
+        outputLines = outputHeaderLines = responseStatus = 0;
+        outputLocation = 0;
+        responseMsg = 0;
+        hasError = 0;
+        timeout = 0;
+        queryBuf = 0;
+        queryLen = 0;
+        postBuf = 0;
+        postBufLen = 0;
+        numQueryKeys = numPostKeys = 0;
+        timeout = 0;
+        argvList[0] = NULL;
+        postKeys = 0;
+        queryKeys = 0;
+
         if (FCGX_Accept_r(&request) < 0) {
             if (errno == EAGAIN) {
                 continue;
             }
-            FCGX_FPrintF(request.err, "Cannot accept a new connection errno :%d\n", errno);
+            error("Cannot accept a new connection errno :%d\n", errno);
             break;
         }
-        if (parseArgs(argc, argv) < 0) {
-            exit(255);
+        if (parseArgs() < 0) {
+            exit(4);
             break;
         }
-#if KEEP
-        char **xp;
-        for (xp = request.envp; *xp; xp++) {
-            printf("ENV %s\n", *xp);
-        }
-#endif
         if ((method = FCGX_GetParam("REQUEST_METHOD", request.envp)) != 0 && strcmp(method, "POST") == 0) {
             if (getPostData(&postBuf, &postBufLen) < 0) {
                 error("Cannot read FAST input");
@@ -166,11 +167,10 @@ int main(int argc, char **argv, char **envp)
                 numPostKeys = getVars(&postKeys, postBuf, postBufLen);
             }
         }
-
         if (hasError) {
             FCGX_FPrintF(request.out, "HTTP/1.0 %d %s\r\n\r\n", responseStatus, responseMsg);
             FCGX_FPrintF(request.out, "<HTML><BODY><p>Error: %d -- %s</p></BODY></HTML>\r\n", responseStatus, responseMsg);
-            FCGX_FPrintF(request.err, "fastProgram: ERROR: %s\n", responseMsg);
+            error("fastProgram: ERROR: %s\n", responseMsg);
             exit(2);
         }
 
@@ -193,7 +193,7 @@ int main(int argc, char **argv, char **envp)
             }
         }
         if (outputLocation) {
-            printf("@@@@ LOCATION %s", outputLocation);
+            printf("@@@@ REDIRECT %s\n", outputLocation);
             FCGX_FPrintF(request.out, "Location: %s\r\n", outputLocation);
         }
         if (responseStatus) {
@@ -207,6 +207,7 @@ int main(int argc, char **argv, char **envp)
             outputQuery++;
             outputPost++;
         }
+
         if (outputLines) {
             for (l = 0; l < outputLines; l++) {
                 FCGX_FPrintF(request.out, "%09d\n", l);
@@ -215,12 +216,15 @@ int main(int argc, char **argv, char **envp)
         } else {
             FCGX_FPrintF(request.out, "<HTML><TITLE>fastProgram: Output</TITLE><BODY>\r\n");
             if (outputArgs) {
-    #if _WIN32
+#if _WIN32
                 FCGX_FPrintF(request.out, "<P>CommandLine: %s</P>\r\n", GetCommandLine());
-    #endif
+#endif
                 FCGX_FPrintF(request.out, "<H2>Args</H2>\r\n");
+                for (i = 0; i < originalArgc; i++) {
+                    FCGX_FPrintF(request.out, "<P>ARG[%d]=%s</P>\r\n", i, originalArgv[i]);
+                }
                 for (i = 0; i < argc; i++) {
-                    FCGX_FPrintF(request.out, "<P>ARG[%d]=%s</P>\r\n", i, argv[i]);
+                    FCGX_FPrintF(request.out, "<P>XARG[%d]=%s</P>\r\n", i, argv[i]);
                 }
             }
             printEnv(request.envp);
@@ -232,21 +236,19 @@ int main(int argc, char **argv, char **envp)
             }
             FCGX_FPrintF(request.out, "</BODY></HTML>\r\n");
         }
-        // FCGX_FFlush(request.err);
-        // FCGX_FFlush(request.out);
         FCGX_Finish_r(&request);
     }
     return 0;
 }
 
 
-static int parseArgs(int argc, char **argv)
+static int parseArgs()
 {
+    char    **argv;
     char    *cp;
-    int     i, err;
+    int     argc, i, err;
 
-    originalArgc = argc;
-    originalArgv = argv;
+    err = 0;
 
     if (getArgv(&argc, &argv, originalArgc, originalArgv) < 0) {
         error("Cannot read FAST input");
@@ -323,18 +325,18 @@ static int parseArgs(int argc, char **argv)
         }
     }
     if (err) {
-        FCGX_FPrintF(request.err, "usage: fastProgram -aenp [-b bytes] [-h lines]\n"
+        error("usage: fastProgram -aenp [-b bytes] [-h lines]\n"
             "\t[-l location] [-s status] [-t timeout]\n"
             "\tor set the HTTP_SWITCHES environment variable\n");
-        FCGX_FPrintF(request.err, "Error at fastProgram:%d\n", __LINE__);
-        exit(255);
+        error("Error at fastProgram:%d\n", __LINE__);
+        exit(3);
     }
     return 0;
 }
 
 
 /*
-    If there is a HTTP_SWITCHES argument in the query string, examine that instead of the original argv
+    If there is a SWITCHES argument in the query string, examine that instead of the original argv
  */
 static int getArgv(int *pargc, char ***pargv, int originalArgc, char **originalArgv)
 {
@@ -355,7 +357,6 @@ static int getArgv(int *pargc, char ***pargv, int originalArgc, char **originalA
             break;
         }
     }
-
     if (switches == 0) {
         switches = FCGX_GetParam("HTTP_SWITCHES", request.envp);
     }
@@ -456,8 +457,7 @@ static void printPost(char *buf, size_t len)
     } else if (buf) {
         if (len < (50 * 1000)) {
             FCGX_FPrintF(request.out, "<H2>Post Data %d bytes found (data below)</H2>\r\n", (int) len);
-            FCGX_FFlush(request.out);
-            if (write(1, buf, (int) len) != len) {}
+            FCGX_PutStr(buf, (int) len, request.out);
         } else {
             FCGX_FPrintF(request.out, "<H2>Post Data %d bytes found</H2>\r\n", (int) len);
         }
@@ -516,20 +516,21 @@ static int getPostData(char **bufp, size_t *lenp)
             }
             bufsize = len + size + 1;
         }
-        bytes = read(0, &buf[len], (int) size);
+        bytes = FCGX_GetStr(&buf[len], (int) size, request.in);
+#if KEEP
+        printf("@@@ After read %d, errno %d, sofar %ld / %ld\n", (int) bytes, errno, len, limit);
+        printf("@@@ isClosed %d, isReader %d, size %ld, errno %d, closedCalled %d\n", request.in->isClosed, request.in->isReader, size,
+            request.in->FCGI_errno, request.in->wasFCloseCalled);
+        fflush(stdout);
+#endif
         if (bytes < 0) {
-            error("Could not read FAST input %d", errno);
+            error("Could not read FAST input %d", request.in->FCGI_errno);
             return -1;
         } else if (bytes == 0) {
             /* EOF */
-#if UNUSED
-            /*
-                If using multipart-mime, the CONTENT_LENGTH won't match the length of the data actually received
-             */
-            if (contentLength && len != limit) {
-                error("Missing content data (Content-Length: %s)", contentLength ? contentLength : "unspecified");
+            if (request.in->FCGI_errno) {
+                error("Error reading stdin %d", request.in->FCGI_errno);
             }
-#endif
             break;
         }
         len += bytes;
@@ -651,7 +652,8 @@ static void error(char *fmt, ...)
 
     if (responseMsg == 0) {
         va_start(args, fmt);
-        FCGX_FPrintF(request.out, buf, fmt, args);
+        vsprintf(buf, fmt, args);
+        FCGX_FPrintF(request.err, "%s\n", buf);
         responseStatus = 400;
         responseMsg = strdup(buf);
         va_end(args);
@@ -659,6 +661,19 @@ static void error(char *fmt, ...)
     hasError++;
 }
 
+
+#if KEEP
+static int waitForData(int fd, int timeout)
+{
+    fd_set          read_fds;
+    struct timeval  tval = { 0, timeout * 1000 };
+    int             rc;
+
+    FD_ZERO(&read_fds);
+    FD_SET(0, &read_fds);
+    return select(1, &read_fds, NULL, NULL, &tval);
+}
+#endif
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
