@@ -90,7 +90,7 @@ typedef struct Fast {
     int             multiplex;              //  Maximum number of requests to send to each FastCGI proxy
     int             minProxies;             //  Minumum number of proxies to maintain
     int             maxProxies;             //  Maximum number of proxies to spawn
-    int             maxRequests;            //  Maximum number of requests per proxy before respawning
+    int             maxRequests;            //  Maximum number of requests for launched proxies before respawning
     MprTicks        proxyTimeout;           //  Timeout for an idle proxy to be maintained
     MprList         *proxies;               //  List of active proxies
     MprList         *idleProxies;           //  Idle proxies
@@ -144,7 +144,7 @@ static void copyFastInner(HttpPacket *packet, cchar *key, cchar *value, cchar *p
 static void copyFastParams(HttpPacket *packet, MprJson *params, cchar *prefix);
 static void copyFastVars(HttpPacket *packet, MprHash *vars, cchar *prefix);
 static HttpPacket *createFastPacket(HttpQueue *q, int type, HttpPacket *packet);
-static MprSocket *createListener(FastConnector *connector);
+static MprSocket *createListener(FastConnector *connector, HttpStream *stream);
 static void destroyFastProxy(FastProxy *proxy);
 static void enableFastConnectorEvents(FastConnector *connector);
 static void fastConnectorRequestPacket(HttpPacket *packet);
@@ -696,8 +696,8 @@ static FastProxy *getFastProxy(Fast *fast, HttpStream *stream)
     if (proxy) {
         mprAddItem(proxy->streams, stream);
         stream->reqID = proxy->nextID++;
+        proxy->lastActive = mprGetTicks();
     }
-    proxy->lastActive = mprGetTicks();
     unlock(fast);
     return proxy;
 }
@@ -719,11 +719,12 @@ static void releaseFastProxy(Fast *fast, FastProxy *proxy)
         httpLog(proxy->trace, "fast", "error", "msg:'Cannot find proxy in list'");
     }
     destroyProxy = 0;
-    if (connector->destroy || proxy->nextID >= fast->maxRequests ||
+    if (connector->destroy || (fast->maxRequests < MAXINT && proxy->nextID >= fast->maxRequests) ||
             (mprGetListLength(fast->proxies) + mprGetListLength(fast->idleProxies) >= fast->minProxies)) {
         destroyProxy = 1;
     }
     if (destroyProxy) {
+        //  Note: if not lanching the proxy, this simple releases the waitHandler. The socket is closed above.
         msg = "Destroy FastCGI proxy";
         destroyFastProxy(proxy);
 
@@ -766,8 +767,7 @@ static FastProxy *startFastProxy(Fast *fast, HttpStream *stream)
         }
         httpLog(stream->trace, "fast", "context", "msg:'Start FastCGI proxy', command:'%s'", command);
 
-        if ((listen = createListener(connector)) < 0) {
-            httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot create proxy listening endpoint for %s", command);
+        if ((listen = createListener(connector, stream)) == NULL) {
             return NULL;
         }
         if (!connector->signal) {
@@ -805,7 +805,6 @@ static FastProxy *startFastProxy(Fast *fast, HttpStream *stream)
     }
     return proxy;
 }
-
 
 
 /*
@@ -944,16 +943,15 @@ static void destroyFastProxy(FastProxy *proxy)
 
     lock(proxy->fast);
     connector = proxy->connector;
+    if (connector->socket) {
+        mprRemoveSocketHandler(connector->socket);
+    }
     if (connector->pid) {
         httpLog(proxy->trace, "fast", "context", "msg: 'Kill FastCGI process', pid:%d", connector->pid);
-        mprSleep(10);
         if (connector->pid) {
             kill(connector->pid, SIGTERM);
         }
         reapProxyProcess(connector, NULL);
-    }
-    if (connector->socket) {
-        mprRemoveSocketHandler(connector->socket);
     }
     unlock(proxy->fast);
 }
@@ -1149,7 +1147,7 @@ static void fastConnectorRequestPacket(HttpPacket *packet)
     FastProxy   *proxy;
 
     proxy = packet->data;
-    httpPutForService(proxy->connector->writeq, packet, HTTP_SCHEDULE_QUEUE);
+    httpPutForService(proxy->connector->writeq, packet, 0);
     /*
         Must explicitly service queue. NetConnector queues are scheduled via httpProcess.
         This private queue must be serviced here.
@@ -1630,7 +1628,7 @@ static int fastConnectDirective(MaState *state, cchar *key, cchar *value)
 }
 
 
-static MprSocket *createListener(FastConnector *connector)
+static MprSocket *createListener(FastConnector *connector, HttpStream *stream)
 {
     Fast        *fast;
     FastProxy   *proxy;
@@ -1642,12 +1640,14 @@ static MprSocket *createListener(FastConnector *connector)
     listen = mprCreateSocket();
     if (mprListenOnSocket(listen, fast->ip, fast->port, MPR_SOCKET_BLOCK | MPR_SOCKET_NODELAY) == SOCKET_ERROR) {
         if (mprGetError() == EADDRINUSE) {
-            httpLog(proxy->trace, "fast.rx", "error", "msg:'Cannot open a socket, already bound', address: '%s:%d'",
+            httpLog(proxy->trace, "fast.rx", "error",
+                "msg:'Cannot open listening socket for FastCGI, already bound', address: '%s:%d'",
                 fast->ip ? fast->ip : "*", fast->port);
         } else {
-            httpLog(proxy->trace, "fast.rx", "error", "msg:'Cannot open a socket', address: '%s:%d'",
+            httpLog(proxy->trace, "fast.rx", "error", "msg:'Cannot open listening socket for FastCGI', address: '%s:%d'",
                 fast->ip ? fast->ip : "*", fast->port);
         }
+        httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot create listening endpoint");
         return NULL;
     }
     if (fast->port == 0) {
