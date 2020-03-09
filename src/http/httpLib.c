@@ -17611,7 +17611,7 @@ PUBLIC void httpScheduleQueue(HttpQueue *q)
     HttpQueue     *head;
 
     head = q->net->serviceq;
-
+    assert(q != q->net->serviceq);
     if (q->scheduleNext == q && !(q->flags & HTTP_QUEUE_SUSPENDED)) {
         q->scheduleNext = head;
         q->schedulePrev = head->schedulePrev;
@@ -17627,8 +17627,13 @@ PUBLIC void httpServiceQueue(HttpQueue *q)
         Hold the queue for GC while scheduling.
         Not typically required as the queue is typically linked into a pipeline.
      */
+    assert(q != q->net->serviceq);
     if (q->net) {
         q->net->holdq = q;
+        assert(q != q->net->serviceq);
+        if (q->net->serviceq == q) {
+            return;
+        }
     }
     if (q->servicing) {
         q->flags |= HTTP_QUEUE_RESERVICE;
@@ -29006,4 +29011,3 @@ static void traceErrorProc(HttpStream *stream, cchar *fmt, ...)
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
  */
-
