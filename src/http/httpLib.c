@@ -23664,7 +23664,7 @@ static void outgoingTail(HttpQueue *q, HttpPacket *packet)
     tx = stream->tx;
     net = q->net;
 
-    if (stream->state < HTTP_STATE_PARSED) {
+    if (httpIsServer(stream) && stream->state < HTTP_STATE_PARSED) {
         assert(stream->state >= HTTP_STATE_PARSED);
         return;
     }
