@@ -5290,7 +5290,7 @@ static void parseSslCertificate(HttpRoute *route, cchar *key, MprJson *prop)
     path = httpExpandRouteVars(route, prop->value);
     if (path && *path) {
         if (!mprPathExists(path, R_OK)) {
-            httpParseError(route, "Cannot find ssl.certificate %s", path);
+            httpParseError(route, "Cannot find ssl certificate %s", path);
         } else {
             mprSetSslCertFile(route->ssl, path);
         }
@@ -23663,6 +23663,11 @@ static void outgoingTail(HttpQueue *q, HttpPacket *packet)
     stream = q->stream;
     tx = stream->tx;
     net = q->net;
+
+    if (stream->state < HTTP_STATE_PARSED) {
+        assert(stream->state >= HTTP_STATE_PARSED);
+        return;
+    }
     stream->lastActivity = stream->http->now;
 
     if (!(tx->flags & HTTP_TX_HEADERS_CREATED)) {
@@ -29001,3 +29006,4 @@ static void traceErrorProc(HttpStream *stream, cchar *fmt, ...)
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
  */
+
