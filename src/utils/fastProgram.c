@@ -193,7 +193,6 @@ int main(int argc, char **argv, char **envp)
             }
         }
         if (outputLocation) {
-            printf("@@@@ REDIRECT %s\n", outputLocation);
             FCGX_FPrintF(request.out, "Location: %s\r\n", outputLocation);
         }
         if (responseStatus) {
