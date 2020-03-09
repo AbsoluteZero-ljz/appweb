@@ -5290,7 +5290,7 @@ static void parseSslCertificate(HttpRoute *route, cchar *key, MprJson *prop)
     path = httpExpandRouteVars(route, prop->value);
     if (path && *path) {
         if (!mprPathExists(path, R_OK)) {
-            httpParseError(route, "Cannot find ssl.certificate %s", path);
+            httpParseError(route, "Cannot find ssl certificate %s", path);
         } else {
             mprSetSslCertFile(route->ssl, path);
         }
@@ -17415,6 +17415,9 @@ PUBLIC void httpDiscardQueueData(HttpQueue *q, bool removePackets)
                 }
                 q->count -= httpGetPacketLength(packet);
                 assert(q->count >= 0);
+                if (q->flags & HTTP_QUEUE_SUSPENDED && q->count < q->max) {
+                    httpResumeQueue(q, 1);
+                }
                 continue;
             } else {
                 len = httpGetPacketLength(packet);
@@ -17425,6 +17428,9 @@ PUBLIC void httpDiscardQueueData(HttpQueue *q, bool removePackets)
                 assert(q->count >= 0);
                 if (packet->content) {
                     mprFlushBuf(packet->content);
+                }
+                if (q->flags & HTTP_QUEUE_SUSPENDED && q->count < q->max) {
+                    httpResumeQueue(q, 1);
                 }
             }
         }
@@ -17818,7 +17824,7 @@ static HttpPacket *createRangePacket(HttpStream *stream, HttpRange *range);
 static HttpPacket *createFinalRangePacket(HttpStream *stream);
 static void manageRange(HttpRange *range, int flags);
 static void outgoingRangeService(HttpQueue *q);
-static bool fixRangeLength(HttpStream *stream, HttpQueue *q);
+static int fixRangeLength(HttpStream *stream, HttpQueue *q);
 static int matchRange(HttpStream *stream, HttpRoute *route, int dir);
 static void startRange(HttpQueue *q);
 
@@ -17906,6 +17912,7 @@ static void outgoingRangeService(HttpQueue *q)
     HttpPacket  *packet;
     HttpStream  *stream;
     HttpTx      *tx;
+    int         rc;
 
     stream = q->stream;
     tx = stream->tx;
@@ -17914,12 +17921,14 @@ static void outgoingRangeService(HttpQueue *q)
         /*
             The httpContentNotModified routine can set outputRanges to zero if returning not-modified.
          */
-        if (!fixRangeLength(stream, q)) {
+        if ((rc = fixRangeLength(stream, q)) <= 0) {
             if (!q->servicing) {
                 httpRemoveQueue(q);
             }
             tx->outputRanges = 0;
-            tx->status = HTTP_CODE_OK;
+            if (rc == 0) {
+                tx->status = HTTP_CODE_OK;
+            }
         }
     }
     for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
@@ -18064,7 +18073,7 @@ static void createRangeBoundary(HttpStream *stream)
 /*
     Ensure all the range limits are within the entity size limits. Fixup negative ranges.
  */
-static bool fixRangeLength(HttpStream *stream, HttpQueue *q)
+static int fixRangeLength(HttpStream *stream, HttpQueue *q)
 {
     HttpTx      *tx;
     HttpRange   *range;
@@ -18100,7 +18109,8 @@ static bool fixRangeLength(HttpStream *stream, HttpQueue *q)
                 range->end = length;
             }
             if (range->start > length) {
-                range->start = length;
+                httpBadRequestError(stream, HTTP_CLOSE | HTTP_CODE_RANGE_NOT_SATISFIABLE, "Bad content range");
+                return MPR_ERR_CANT_COMPLETE;
             }
         }
         if (range->start < 0) {
@@ -23653,6 +23663,11 @@ static void outgoingTail(HttpQueue *q, HttpPacket *packet)
     stream = q->stream;
     tx = stream->tx;
     net = q->net;
+
+    if (stream->state < HTTP_STATE_PARSED) {
+        assert(stream->state >= HTTP_STATE_PARSED);
+        return;
+    }
     stream->lastActivity = stream->http->now;
 
     if (!(tx->flags & HTTP_TX_HEADERS_CREATED)) {
