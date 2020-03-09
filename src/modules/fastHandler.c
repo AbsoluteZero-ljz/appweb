@@ -42,6 +42,11 @@
 #define FAST_UNKNOWN_TYPE       11          //  Unknown management request
 #define FAST_MAX                11          //  Max type
 
+/*
+    Pseudo types
+ */
+ #define FAST_COMMS_ERROR       12          //  Communications error
+
 static cchar *fastTypes[FAST_MAX + 1] = {
     "invalid", "begin", "abort", "end", "params", "stdin", "stdout", "stderr",
     "data", "get-values", "get-values-result", "unknown",
@@ -142,11 +147,10 @@ static HttpPacket *createFastPacket(HttpQueue *q, int type, HttpPacket *packet);
 static MprSocket *createListener(FastConnector *connector);
 static void destroyFastProxy(FastProxy *proxy);
 static void enableFastConnectorEvents(FastConnector *connector);
-static void fastConnectorData(HttpPacket *packet);
+static void fastConnectorRequestPacket(HttpPacket *packet);
 static void fastConnectorIO(FastConnector *connector, MprEvent *event);
 static void fastConnectorIncoming(HttpQueue *q, HttpPacket *packet);
 static void fastConnectorIncomingService(HttpQueue *q);
-static void fastConnectorOutgoing(HttpQueue *q, HttpPacket *packet);
 static void fastConnectorOutgoingService(HttpQueue *q);
 static void fastHandlerResponse(HttpPacket *packet);
 static void fastIncoming(HttpQueue *q, HttpPacket *packet);
@@ -203,7 +207,6 @@ PUBLIC int httpFastHandlerInit(Http *http, MprModule *module)
     http->fastConnector = connector;
     connector->incoming = fastConnectorIncoming;
     connector->incomingService = fastConnectorIncomingService;
-    connector->outgoing = fastConnectorOutgoing;
     connector->outgoingService = fastConnectorOutgoingService;
 
     return 0;
@@ -240,7 +243,6 @@ static int openFast(HttpQueue *q)
         httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot connect to fast proxy: %d", errno);
         return MPR_ERR_CANT_CONNECT;
     }
-
     prepFastRequestStart(q);
     prepFastRequestParams(q);
     enableFastConnectorEvents(proxy->connector);
@@ -415,8 +417,13 @@ static void fastHandlerResponse(HttpPacket *packet)
         /* Request already complete */
         return;
     }
+    if (type == FAST_COMMS_ERROR) {
+        httpError(stream, HTTP_ABORT | HTTP_CODE_COMMS_ERROR, "FastConnector: comms error");
 
-    if (type == FAST_END_REQUEST) {
+    } else if (type == FAST_REAP) {
+        // httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "FastCGI app closed prematurely");
+
+    } else if (type == FAST_END_REQUEST) {
         if (httpGetPacketLength(packet) < 8) {
             httpError(stream, HTTP_CODE_BAD_GATEWAY, "FastCGI bad request end packet");
             return;
@@ -451,15 +458,11 @@ static void fastHandlerResponse(HttpPacket *packet)
             }
             rx->seenFastHeaders = 1;
         }
-    }
-    if (type == FAST_REAP) {
-        /* Nothing to do -- just call httpProcess below */
-        ;
-
-    } else {
-        httpLogPacket(proxy->trace, "fast.rx.data", "packet", 0, packet, "id:%d, len:%ld", stream->reqID,
-            httpGetPacketLength(packet));
-        httpPutPacketToNext(stream->writeq, packet);
+        if (httpGetPacketLength(packet) > 0) {
+            httpLogPacket(proxy->trace, "fast.rx.data", "packet", 0, packet, "type:%d, id:%d, len:%ld", type, stream->reqID,
+                httpGetPacketLength(packet));
+            httpPutPacketToNext(stream->writeq, packet);
+        }
     }
     httpProcess(stream->inputq);
 }
@@ -761,13 +764,6 @@ static FastProxy *startFastProxy(Fast *fast, HttpStream *stream)
             httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot find Fast proxy command");
             return NULL;
         }
-#if UNUSED
-        fast->command = mprGetMimeProgram(route->mimeTypes, stream->tx->ext);
-        if ((argc = mprMakeArgv(mprGetPathBase(fast->command), &argv, 0)) < 0 || argv == 0) {
-            httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot make Fast proxy command: %s", fast->command);
-            return NULL;
-        }
-#endif
         httpLog(stream->trace, "fast", "context", "msg:'Start FastCGI proxy', command:'%s'", command);
 
         if ((listen = createListener(connector)) < 0) {
@@ -931,13 +927,10 @@ static void reapProxyProcess(FastConnector *connector, MprSignal *sp)
 
     for (ITERATE_ITEMS(connector->proxy->streams, stream, next)) {
         if (HTTP_STATE_BEGIN < stream->state && stream->state <= HTTP_STATE_RUNNING) {
-            if (!stream->tx->finalized) {
-                httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "FastCGI app closed prematurely");
-            }
             packet = httpCreateDataPacket(0);
+            packet->type = FAST_REAP;
             packet->data = connector->proxy;
             packet->stream = stream;
-            packet->type = FAST_REAP;
             mprCreateEvent(stream->dispatcher, "fast.reap", 0, fastHandlerResponse, packet, 0);
         }
     }
@@ -949,17 +942,20 @@ static void destroyFastProxy(FastProxy *proxy)
 {
     FastConnector   *connector;
 
+    lock(proxy->fast);
     connector = proxy->connector;
     if (connector->pid) {
-        lock(proxy->fast);
         httpLog(proxy->trace, "fast", "context", "msg: 'Kill FastCGI process', pid:%d", connector->pid);
         mprSleep(10);
         if (connector->pid) {
             kill(connector->pid, SIGTERM);
         }
         reapProxyProcess(connector, NULL);
-        unlock(proxy->fast);
     }
+    if (connector->socket) {
+        mprRemoveSocketHandler(connector->socket);
+    }
+    unlock(proxy->fast);
 }
 
 
@@ -978,10 +974,8 @@ static int connectFastProxy(FastProxy *proxy)
     do {
         httpLog(proxy->trace, "fast.rx", "request", "FastCGI try to connect to %s:%d pid %d",
             fast->ip, fast->port, connector->pid);
-
         connector->socket = mprCreateSocket();
         if ((connected = mprConnectSocket(connector->socket, fast->ip, fast->port, 0)) == 0) {
-            mprLog("fast info", 0, "FastCGI connected to %s:%d", fast->ip, fast->port);
             return 0;
         }
         mprSleep(50 * tries++);
@@ -1143,21 +1137,22 @@ static void fastConnectorIncoming(HttpQueue *q, HttpPacket *packet)
 static void putToConnectorWriteq(FastConnector *connector, HttpPacket *packet)
 {
     packet->data = connector->proxy;
-    mprCreateEvent(connector->dispatcher, "fast", 0, fastConnectorData, packet, 0);
+    mprCreateEvent(connector->dispatcher, "fast", 0, fastConnectorRequestPacket, packet, 0);
 }
 
 
 /*
     Called via CreateEvent to transfer packets from the handler's dispatcher to the connector's dispatcher
  */
-static void fastConnectorData(HttpPacket *packet)
+static void fastConnectorRequestPacket(HttpPacket *packet)
 {
     FastProxy   *proxy;
 
     proxy = packet->data;
     httpPutForService(proxy->connector->writeq, packet, HTTP_SCHEDULE_QUEUE);
     /*
-        Must explicitly service queue. NetConnector queues are scheduled via httpProcess. This private queue must be serviced here.
+        Must explicitly service queue. NetConnector queues are scheduled via httpProcess.
+        This private queue must be serviced here.
      */
     httpServiceQueue(proxy->connector->writeq);
 }
@@ -1185,7 +1180,6 @@ static void fastConnectorIncomingService(HttpQueue *q)
         if (mprGetBufLength(buf) < FAST_PACKET_SIZE) {
             /* Insufficient data */
             httpPutBackPacket(q, packet);
-            // httpLog(proxy->trace, "fast", "context", "msg: 'FastCGI waiting for rest of header frame'");
             break;
         }
         version = mprGetCharFromBuf(buf);
@@ -1284,6 +1278,7 @@ static void enableFastConnectorEvents(FastConnector *connector)
     int         eventMask;
 
     sp = connector->socket;
+    lock(connector->proxy->fast);
 
     if (!connector->eof && !(sp->flags & MPR_SOCKET_CLOSED)) {
         eventMask = 0;
@@ -1303,14 +1298,7 @@ static void enableFastConnectorEvents(FastConnector *connector)
             mprWaitOn(sp->handler, eventMask);
         }
     }
-}
-
-
-//  MOB UNUSED?
-static void fastConnectorOutgoing(HttpQueue *q, HttpPacket *packet)
-{
-    assert(0);
-    httpPutForService(q, packet, HTTP_SCHEDULE_QUEUE);
+    unlock(connector->proxy->fast);
 }
 
 
@@ -1319,11 +1307,21 @@ static void fastConnectorOutgoing(HttpQueue *q, HttpPacket *packet)
  */
 static void fastConnectorOutgoingService(HttpQueue *q)
 {
+    Fast            *fast;
+    FastProxy       *proxy;
     FastConnector   *connector;
+    HttpStream      *stream;
+    HttpPacket      *packet;
     ssize           written;
-    int             errCode;
+    int             errCode, next;
 
     connector = q->queueData;
+    proxy = connector->proxy;
+    fast = proxy->fast;
+
+    if (connector->eof) {
+        return;
+    }
     connector->writeBlocked = 0;
 
     while (q->first || q->ioIndex) {
@@ -1339,9 +1337,17 @@ static void fastConnectorOutgoingService(HttpQueue *q)
                 connector->writeBlocked = 1;
                 break;
             }
-            httpLog(connector->proxy->trace, "fast", "error", "msg='Write error', errno:%d", errCode);
             connector->eof = 1;
             connector->destroy = 1;
+            httpLog(connector->proxy->trace, "fast", "error", "msg='Write error', errno:%d", errCode);
+
+            for (ITERATE_ITEMS(proxy->streams, stream, next)) {
+                packet = httpCreateDataPacket(0);
+                packet->type = FAST_COMMS_ERROR;
+                packet->data = connector->proxy;
+                packet->stream = stream;
+                mprCreateEvent(stream->dispatcher, "fast.reap", 0, fastHandlerResponse, packet, 0);
+            }
             break;
 
         } else if (written > 0) {
@@ -1534,7 +1540,7 @@ static void copyFastInner(HttpPacket *packet, cchar *key, cchar *value, cchar *p
     if (prefix) {
         key = sjoin(prefix, key, NULL);
     }
-    httpLog(proxy->trace, "fast.tx", "info", "msg:'FastCGI env', key:'%s', value:'%s'", key, value);
+    httpLog(proxy->trace, "fast.tx", "detail", "msg:'FastCGI env', key:'%s', value:'%s'", key, value);
     encodeFastName(packet, key, value);
 }
 

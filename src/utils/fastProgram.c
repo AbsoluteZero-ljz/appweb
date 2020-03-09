@@ -492,7 +492,7 @@ static int getPostData(char **bufp, size_t *lenp)
     if ((contentLength = FCGX_GetParam("CONTENT_LENGTH", request.envp)) != 0) {
         size = atoi(contentLength);
         if (size < 0 || size >= INT_MAX) {
-            error("Bad content length");
+            error("Bad content length: %ld", size);
             return -1;
         }
         limit = size;
@@ -502,7 +502,7 @@ static int getPostData(char **bufp, size_t *lenp)
     }
     bufsize = size + 1;
     if ((buf = malloc(bufsize)) == 0) {
-        error("Could not allocate memory to read post data");
+        error("Could not allocate memory to read post data: bufsize %ld", bufsize);
         return -1;
     }
     len = 0;
