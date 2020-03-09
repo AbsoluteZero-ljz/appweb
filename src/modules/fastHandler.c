@@ -711,7 +711,6 @@ static void releaseFastProxy(Fast *fast, FastProxy *proxy)
 
     if (connector->socket) {
         mprCloseSocket(connector->socket, 1);
-        connector->socket = 0;
     }
     if (mprRemoveItem(fast->proxies, proxy) < 0) {
         httpLog(proxy->trace, "fast", "error", "msg:'Cannot find proxy in list'");
@@ -729,6 +728,8 @@ static void releaseFastProxy(Fast *fast, FastProxy *proxy)
         msg = "Release FastCGI proxy";
         proxy->lastActive = mprGetTicks();
         mprAddItem(fast->idleProxies, proxy);
+        assert(!connector->eof);
+        assert(!connector->destroy);
     }
     httpLog(proxy->trace, "fast", "context",
         "msg:'%s', pid:%d, idle:%d, active:%d, id:%d, maxRequests:%d, destroy:%d, nextId:%d",
@@ -1263,14 +1264,15 @@ static void fastConnectorIO(FastConnector *connector, MprEvent *event)
         packet = httpCreateDataPacket(ME_PACKET_SIZE);
         nbytes = mprReadSocket(connector->socket, mprGetBufEnd(packet->content), ME_PACKET_SIZE);
         connector->eof = mprIsSocketEof(connector->socket);
-
         if (nbytes > 0) {
             mprAdjustBufEnd(packet->content, nbytes);
             httpJoinPacketForService(connector->readq, packet, 0);
             httpServiceQueue(connector->readq);
         }
     }
-    if (!connector->eof) {
+    if (connector->eof) {
+        connector->destroy = 1;
+    } else {
         enableFastConnectorEvents(connector);
     }
 }
@@ -1283,7 +1285,7 @@ static void enableFastConnectorEvents(FastConnector *connector)
 
     sp = connector->socket;
 
-    if (!connector->eof && sp) {
+    if (!connector->eof && !(sp->flags & MPR_SOCKET_CLOSED)) {
         eventMask = 0;
         if (connector->writeq->count > 0) {
             eventMask |= MPR_WRITABLE;
@@ -1351,9 +1353,7 @@ static void fastConnectorOutgoingService(HttpQueue *q)
             break;
         }
     }
-    if ((q->first || q->ioIndex) && connector->writeBlocked) {
-        enableFastConnectorEvents(connector);
-    }
+    enableFastConnectorEvents(connector);
 }
 
 
