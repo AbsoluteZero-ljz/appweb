@@ -17612,6 +17612,7 @@ PUBLIC void httpScheduleQueue(HttpQueue *q)
 
     head = q->net->serviceq;
 
+    assert(q != head);
     if (q->scheduleNext == q && !(q->flags & HTTP_QUEUE_SUSPENDED)) {
         q->scheduleNext = head;
         q->schedulePrev = head->schedulePrev;
@@ -17629,6 +17630,10 @@ PUBLIC void httpServiceQueue(HttpQueue *q)
      */
     if (q->net) {
         q->net->holdq = q;
+        assert(q != q->net->serviceq);
+        if (q->net->serviceq == q) {
+            return;
+        }
     }
     if (q->servicing) {
         q->flags |= HTTP_QUEUE_RESERVICE;
