@@ -111,7 +111,6 @@ static void *worker(State *state)
     char            *method;
     int             l, i, rc;
 
-    printf("@@ START worker %p\n", pthread_self());
     FCGX_InitRequest(&request, 0, 0);
 
     while (1) {
@@ -119,10 +118,8 @@ static void *worker(State *state)
         state->request = &request;
 
         pthread_mutex_lock(&accept_mutex);
-        printf("@@ START worker %p, ACCPETING ...\n", pthread_self());
         rc = FCGX_Accept_r(state->request);
         pthread_mutex_unlock(&accept_mutex);
-        printf("@@ worker %p, ACCEPTED rc %d\n", pthread_self(), rc);
 
         if (rc < 0) {
             if (errno == EAGAIN) {
@@ -152,9 +149,7 @@ static void *worker(State *state)
             exit(2);
         }
         if (state->delay) {
-            printf("@@ DELAYING\n");
             sleep(state->delay);
-            printf("@@ AWAKE\n");
         }
 #if KEEP
         if (nonParsedHeader) {
