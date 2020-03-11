@@ -27,6 +27,7 @@ Me.load({
             libraries: [ 'fcgi' ],
             action: true,
             generate: false,
+            _enable: `Path('/usr/local/lib').files('libfcgi*').length > 0`,
         },
 	},
 })

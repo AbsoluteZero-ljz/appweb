@@ -43,7 +43,6 @@ samples/*/roots.crt
 cache/
 .local.mk
 src/utils/fcgi
-test/fast
 test/web/big*.txt
 test/web/huge*.txt
 test/web/100K.txt
