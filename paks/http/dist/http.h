@@ -2622,7 +2622,7 @@ typedef int (*HttpParse)(cchar *key, char *value, void *state);
     Configuration is not thread safe and must occur at initialization time when the application is single threaded.
     If the configuration is modified when the application is multithreaded, all requests must be first be quiesced.
     @defgroup HttpStage HttpStage
-    @see HttpStream HttpQueue HttpStage httpCloneStage httpCreateStreamector httpCreateFilter httpCreateHandler
+    @see HttpStream HttpQueue HttpStage httpCloneStage httpCreateConnector httpCreateFilter httpCreateHandler
         httpCreateStage httpDefaultOutgoingServiceStage httpGetStageData httpHandleOptionsTrace httpLookupStage
         httpLookupStageData httpSetStageData
     @stability Internal
@@ -2804,7 +2804,7 @@ PUBLIC HttpStage *httpCloneStage(HttpStage *stage);
     @ingroup HttpStage
     @stability Stable
  */
-PUBLIC HttpStage *httpCreateStreamector(cchar *name, MprModule *module);
+PUBLIC HttpStage *httpCreateConnector(cchar *name, MprModule *module);
 
 /**
     Create a filter stage
@@ -3626,7 +3626,6 @@ typedef struct HttpStream {
     int             keepAliveCount;         /**< Count of remaining Keep-Alive requests for this connection */
     int             port;                   /**< Remote port */
     int             streamID;               /**< Http/2 stream */
-    int             reqID;                  /**< Generic request ID for handler use */
     int             timeout;                /**< Timeout indication */
 
     bool            authRequested: 1;       /**< Authorization requested based on user credentials */
@@ -6727,7 +6726,6 @@ typedef struct HttpRx {
     bool            parsedHeaders: 1;       /**< Parsed HTTP/2 headers */
     bool            renameUploads: 1;       /**< Rename uploaded files to the client specified filename */
     bool            seenRegularHeader: 1;   /**< Seen a regular HTTP/2 header (non pseudo) */
-    bool            seenFastHeaders: 1;     /**< Seen a FastCGI headers */
     bool            sessionProbed: 1;       /**< Session has been resolved */
     bool            streaming: 1;           /**< Stream incoming content. Forms typically buffer and dont stream */
     bool            upload: 1;              /**< Request is using file upload */
