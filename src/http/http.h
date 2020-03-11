@@ -3626,7 +3626,6 @@ typedef struct HttpStream {
     int             keepAliveCount;         /**< Count of remaining Keep-Alive requests for this connection */
     int             port;                   /**< Remote port */
     int             streamID;               /**< Http/2 stream */
-    int             reqID;                  /**< Generic request ID for handler use */
     int             timeout;                /**< Timeout indication */
 
     bool            authRequested: 1;       /**< Authorization requested based on user credentials */
@@ -6727,7 +6726,6 @@ typedef struct HttpRx {
     bool            parsedHeaders: 1;       /**< Parsed HTTP/2 headers */
     bool            renameUploads: 1;       /**< Rename uploaded files to the client specified filename */
     bool            seenRegularHeader: 1;   /**< Seen a regular HTTP/2 header (non pseudo) */
-    bool            seenFastHeaders: 1;     /**< Seen a FastCGI headers */
     bool            sessionProbed: 1;       /**< Session has been resolved */
     bool            streaming: 1;           /**< Stream incoming content. Forms typically buffer and dont stream */
     bool            upload: 1;              /**< Request is using file upload */
