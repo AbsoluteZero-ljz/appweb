@@ -144,7 +144,7 @@ typedef struct FastComm {
 static void addFastPacket(HttpQueue *q, HttpPacket *packet);
 static void addToFastVector(HttpQueue *q, char *ptr, ssize bytes);
 static void adjustFastVec(HttpQueue *q, ssize written);
-static Fast *allocFast();
+static Fast *allocFast(void);
 static FastComm *allocFastComm(FastProxy *proxy, HttpStream *stream);
 static FastProxy *allocFastProxy(Fast *fast, HttpStream *stream);
 static cchar *buildProxyArgs(HttpStream *stream, int *argcp, cchar ***argvp);
@@ -325,7 +325,7 @@ static void closeFast(HttpQueue *q)
 }
 
 
-static Fast *allocFast()
+static Fast *allocFast(void)
 {
     Fast    *fast;
 
