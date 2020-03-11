@@ -25,7 +25,7 @@ try {
     //  Check appweb.conf LimitRequestHeader. This must be sufficient to accept the write the header.
 }
 
-/* Server should just close the connection without a response */
+// Server should just close the connection without a response
 response = new ByteArray
 while ((n = s.read(response, -1)) != null ) {}
 ttrue(response.toString() == '')
