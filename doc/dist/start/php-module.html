@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Embedding</title>
+    <title>Building with the PHP module</title>
     
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-    <meta name="description" content="Embedding">
+    <meta name="description" content="Building with the PHP module">
     <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     
@@ -173,13 +173,13 @@
             <a class="section" href="../">Home</a>
             
             <div class="divider">/</div>
-            <a class="section" href="../developers/">
-                Developer's Guide
+            <a class="section" href="../start/">
+                Getting Started
             </a>
             
             
             <div class="divider">/</div>
-            <a class="active section" href="embedding.html">Embedding</a>
+            <a class="active section" href="php-module.html">Building with the PHP module</a>
             
         </div>
         
@@ -188,140 +188,57 @@
     </div>
     <div class="content">
 
-            <h1 class="title">Embedding Appweb</h1>
-            <p>When extending and embedding Appweb in your application or system, you have three options:</p>
-            <ol>
-                <li>Use the existing Appweb main program and extend Appweb via a loadable module.</li>
-                <li>Use the existing Appweb main program and extend Appweb via the ESP web framework.</li>
-                <li>Link the Appweb HTTP library with your application main program.</li>
-            </ol>
+            <h1>Building Appweb with PHP Support</h1>
 
-            <a id="loadable"></a>
-            <h2>Extending via a Loadable Module</h2>
-            <p>You can extend the Appweb server program by creating an Appweb loadable module. You do this by creating
-            a shared library that contains your application and some Appweb module interface code. This module is then
-            specified in the Appweb configuration file so that the Appweb program will load it. It requires about 10
-            lines of code to create an Appweb module.</p>
+            <p><b>The Appweb PHP modules is deprecated. Please use the <a href="php.html">FastCGI handler for PHP</a> support instead.</b></p>
 
-            <h2>Extending via ESP</h2>
-            <p>The Embedded Server Pages (ESP) web framework allows the direct embedding of "C" language code in
-            HTML web pages. This is the easiest way to invoke "C" APIs in your program. ESP also supports the loading
-            of Model/View/Controller (MVC-based) applications. ESP will compile and load controller source code. Controllers
-            provide an easy and efficient way to invoke "C" code when requests are made to certain URIs.</p>
+            <p>Appweb includes support for the <a href="https://php.net/">PHP Web Framework</a> via a the FastCGI handler which runs the PHP php-cgi program.</p>
 
-            <h2>Embed the Appweb Library</h2>
-            <p>You can link the Appweb library with your application to enable it to listen for HTTP requests and thus
-            become a HTTP server itself. Embedding the Appweb library is easy and can be done with as little as one
-            line of code.</p>
-            
-            <a id="appwebProgram"></a>
-            <h2>The Appweb Server Program</h2>
-            <p>The Appweb product includes a fully-featured HTTP server program that uses the Appweb HTTP library. This
-            server (called <b>appweb</b>) is run by default when you install the Appweb binary distribution or run
-            "make install" after building from source.</p>
-            <p>The Appweb server program is ideal for embedded systems as it offers the following features:</p>
-            <ul>
-                <li>High performance</li>
-                <li>Extendable via loadable modules</li>
-                <li>Deterministic memory footprint and CPU loads</li>
-                <li>Configurable sandbox limits that control memory usage</li>
-                <li>Monitored and managed by the Appweb manager process</li>
-            </ul>
-            
-            <a id="module"></a>
-            <h2>Creating a Module</h2>
-            <p>You can extend the Appweb program by creating a loadable module for your application code.</p>
-            <p>To initialize your module and register with Appweb, you must create an initialization function that is
-            called when Appweb loads your module. This must be named according to the form:</p>
-            <code>
-http<b>Name</b>Init(MaHttp *http, MprModule *module)
-</code>
-            <p>Where <b>Name</b> is the name of your module.</p>
-            <code>
-int httpSimpleInit(Http *http, MprModule *module)
-{
-    /* Put custom code here */
-    return 0;
-}
-</code>
-            <p>See <a href="modules.html">Creating Appweb Modules</a> for more details.</p>
+            <h3>Using PHP</h3>
+            <p>If you wish to use PHP handler, build with FastCGI and enable the fastHandler in your appweb.conf.</p>
 
-            <a id="library"></a>
-            <h2>Embed the Appweb Library</h2>
-            <p>You can link the Appweb HTTP library with your main program to enable it to function as a HTTP
-            server itself. This is ideal if your application is large and/or has a complex I/O, eventing or threading
-            paradigm.</p>
-            <h3>Linking with the Appweb Library</h3>
-            <p>To include the Appweb library in your program you need to do the following things:</p>
-            <ol>
-                <li>Add <b>#include "appweb/appweb.h"</b> to the relevant source files.</li>
-                <li>Add the Appweb library to your Makefiles or Windows project files. This will mean adding
-                    libappweb.dll on Windows or libappweb.so on Unix.</li>
-                <li>Use one of the embedding APIs to create the HTTP server.</li>
-            </ol>
-            <h3>One Line Embedding</h3>
-            <p>The following code demonstrates the one-line Appweb embedding API. This will create and configure a web
-            server based on the "server.conf" configuration file.</p>
-            <code>
-#include "appweb/appweb.h"
-int main(int argc, char** argv)
-{
-    return maRunWebServer("server.conf");
-}
-</code>
-            <p>To build this sample and link with the Appweb library:</p>
-            <code>
-cc -o server server.c -lappweb
-</code>
-            <h3>Full Control API</h3>
-            <p>The Appweb library also provides a lower level embedding interface where you can precisely control how
-            the web server is created and configured. This API also exposes the inner event and threading
-            mechanisms.</p>
-            <p>This example creates a web server using the "server.conf" configuration file and will service events
-            until terminated. </p>
-            <code>
-#include "appweb/appweb.h"
-int main(int argc, char **argv)
-{
-    Mpr     *mpr;
+            <p>To build Appweb with FastCGI support consult <a href="./fastcgi.html">Building with CGI</a>.</p>
 
-    /*
-        Initialize and start the portable runtime services.
-     */
-    if ((mpr = mprCreate(argc, argv, MPR_USER_EVENTS_THREAD)) == 0) {
-        mprError("Cannot create the web server runtime");
-        return -1;
-    }
-    if (mprStart() &lt; 0) {
-        mprError("Cannot start the web server runtime");
-        return -1;
-    }
-    if (httpCreate(HTTP_CLIENT_SIDE | HTTP_SERVER_SIDE) == 0) {
-        mprError("Cannot create the Http server");
-        return -1;
-    }
-    if (maLoadModules() &lt; 0) {
-        mprError("Cannot load modules");
-        return -1;
-    }
-    if (maParseConfig("server.conf") &lt; 0) {
-        mprError("Cannot parse the config file %s", "server.conf");
-        return -1;
-    }
-    if (httpStartEndpoints() &lt; 0) {
-        mprError("Cannot start the web server");
-        return -1;
-    }
-    mprServiceEvents(-1, 0);
-    mprDestroy();
-    return 0;
-}
-</code>
-            <p>The Appweb <a href="https://github.com/embedthis/appweb/tree/dev/samples/typical-server">Typical 
-            Server</a> sample demonstrates this technique more fully.</p>
-            <h3>More Details</h3>
-            <p>For more details about the embedding API, please consult the <a href="../ref/api/appweb.html">Appweb
-            API</a> and the <a href="../ref/native.html">Native APIs</a>.</p>
+            <h3>Using the in-memory PHP handler</h3>
+            <p>The appweb-php package implements the Appweb in-memory handler for PHP 5.X and does not include the source code for PHP which is very large. PHP 7 is not supported.</p>
+
+            <p>The Appweb PHP handler is called mod_php.so and the handler loads the actual external PHP library which is called libphp*.so on Linux and libphp*.dll on Windows.
+
+            <h3>Building Appweb with PHP</h3>
+
+            <p>Perform the following steps at the top level of the appweb source tree.</p>
+
+            <p>Starting with Appweb 7.1.1 and 8.0, the appweb-php package is included with the Appweb source distribution. Some earlier releases may have included the package which resides at src/appweb-php. If your distribution does not include appweb-php, use the following steps to download it.</p>
+
+            <h3>Download appweb-php</h3>
+            <pre class="ui code segment">pak install appweb-php</pre>
+
+            <p>Alternatively, if you wish to install appweb-php manually:</p>
+<pre class="ui code segment">
+cd appweb-src-home
+curl https://github.com/embedthis/appweb-php/archive/master.tar.gz >appweb-php.tgz
+mkdir src/appweb-php
+cd src/appweb-php
+tar --strip-components 1 -xvf ../appweb-php.tgz
+</pre>
+
+            <h3>Building with PHP</h3>
+            <p>Visit: <a href="https://php.net/">https://php.net/</a> to access the PHP source and instructions for building.</p>
+
+            <h3>Configuring and building with PHP</h3>
+            <p>Once PHP is built, you can configure Appweb for building with PHP. If you are building with <a href="https://www.embedthis.com/makeme">MakeMe</a>, then use the following:</p>
+            <pre class="ui code segment">
+./configure --with php=/path/to/php-source
+me</pre>
+            <p>If you are building with <em>make</em> first copy the built PHP library into your build/*/bin directory. Then use:</p>
+<pre class="ui code segment">
+make ME_COM_PHP=1 ME_COM_PHP_PATH=/path/to/php</pre>
+
+            <h3>Configuration</h3>
+            <p>The PHP handler is enabled via the <em>appweb.conf</em> configuration file directives:</p>
+<pre class="ui code segment">
+LoadModule phpHandler libmod_php
+AddHandler phpHandler php</pre>
 
     </div>
     <div class="terms ui basic center aligned segment">
