@@ -67,7 +67,7 @@ static cchar *fastTypes[FAST_MAX + 1] = {
  */
 #define FAST_MAX_PROXIES        1           //  Max of one proxy
 #define FAST_MIN_PROXIES        1           //  Min of one proxy (keep running after started)
-#define FAST_MAX_REQUESTS       500         //  Max number of requests per proxy instance
+#define FAST_MAX_REQUESTS       MAXINT64    //  Max number of requests per proxy instance
 #define FAST_MAX_MULTIPLEX      1           //  Max number of concurrent requests per proxy instance
 
 #define FAST_PACKET_SIZE        8           //  Size of minimal FastCGI packet
@@ -95,7 +95,7 @@ typedef struct Fast {
     int             multiplex;              //  Maximum number of requests to send to each FastCGI proxy
     int             minProxies;             //  Minumum number of proxies to maintain
     int             maxProxies;             //  Maximum number of proxies to spawn
-    int             maxRequests;            //  Maximum number of requests for launched proxies before respawning
+    uint64          maxRequests;            //  Maximum number of requests for launched proxies before respawning
     MprTicks        proxyTimeout;           //  Timeout for an idle proxy to be maintained
     MprList         *proxies;               //  List of active proxies
     MprList         *idleProxies;           //  Idle proxies
@@ -116,8 +116,8 @@ typedef struct FastProxy {
     MprSignal       *signal;                // Mpr signal handler for child death
     bool            destroy;                // Must destroy proxy
     int             inUse;                  // In use counter
-    int             nextID;                 // Next request ID for this proxy
     int             pid;                    // Process ID of the FastCGI proxy app
+    uint64          nextID;                 // Next request ID for this proxy
     MprList         *comms;                 // Connectors for each request
 } FastProxy;
 
@@ -133,7 +133,7 @@ typedef struct FastComm {
     HttpQueue       *writeq;                // Queue to write to the FastCGI app
     HttpQueue       *readq;                 // Queue to hold read data from the FastCGI app
     HttpTrace       *trace;                 // Default tracing configuration
-    int             reqID;                  // FastCGI request ID - assigned from FastProxy.nextID
+    uint64          reqID;                  // FastCGI request ID - assigned from FastProxy.nextID
     bool            eof;                    // Socket is closed
     bool            parsedHeaders;          // Parsed the FastCGI app header response
     bool            writeBlocked;           // Socket is full of write data
@@ -306,7 +306,7 @@ static void closeFast(HttpQueue *q)
         if (mprRemoveItem(fast->proxies, proxy) < 0) {
             httpLog(proxy->trace, "fast", "error", "msg:'Cannot find proxy in list'");
         }
-        if (proxy->destroy || (fast->maxRequests < MAXINT && proxy->nextID >= fast->maxRequests) ||
+        if (proxy->destroy || (fast->maxRequests < MAXINT64 && proxy->nextID >= fast->maxRequests) ||
                 (mprGetListLength(fast->proxies) + mprGetListLength(fast->idleProxies) >= fast->minProxies)) {
             msg = "Destroy FastCGI proxy";
             killFastProxy(proxy);
@@ -316,7 +316,7 @@ static void closeFast(HttpQueue *q)
             mprAddItem(fast->idleProxies, proxy);
         }
         httpLog(proxy->trace, "fast", "context",
-            "msg:'%s', pid:%d, idle:%d, active:%d, id:%d, maxRequests:%d, destroy:%d, nextId:%d",
+            "msg:'%s', pid:%d, idle:%d, active:%d, id:%lld, maxRequests:%lld, destroy:%d, nextId:%lld",
             msg, proxy->pid, mprGetListLength(fast->idleProxies), mprGetListLength(fast->proxies),
             proxy->nextID, fast->maxRequests, proxy->destroy, proxy->nextID);
         mprSignalCond(fast->cond);
@@ -476,7 +476,7 @@ static void fastHandlerResponse(FastComm *comm, int type, HttpPacket *packet)
         mprAdjustBufStart(buf, 3);
 
         if (protoStatus == FAST_REQUEST_COMPLETE) {
-            httpLog(proxy->trace, "fast.rx", "context", "msg:'Request complete', id:%d, status:%d", comm->reqID, status);
+            httpLog(proxy->trace, "fast.rx", "context", "msg:'Request complete', id:%lld, status:%d", comm->reqID, status);
 
         } else if (protoStatus == FAST_CANT_MPX_CONN) {
             httpError(stream, HTTP_CODE_BAD_GATEWAY, "FastCGI cannot multiplex requests %s", rx->uri);
@@ -490,7 +490,7 @@ static void fastHandlerResponse(FastComm *comm, int type, HttpPacket *packet)
             httpError(stream, HTTP_CODE_BAD_GATEWAY, "FastCGI unknown role %s", rx->uri);
             return;
         }
-        httpLog(proxy->trace, "fast.rx.eof", "detail", "msg:'FastCGI end request', id:%d", comm->reqID);
+        httpLog(proxy->trace, "fast.rx.eof", "detail", "msg:'FastCGI end request', id:%lld", comm->reqID);
         httpFinalizeOutput(stream);
 
     } else if (type == FAST_STDOUT && packet) {
@@ -501,7 +501,7 @@ static void fastHandlerResponse(FastComm *comm, int type, HttpPacket *packet)
             comm->parsedHeaders = 1;
         }
         if (httpGetPacketLength(packet) > 0) {
-            httpLogPacket(proxy->trace, "fast.rx.data", "packet", 0, packet, "type:%d, id:%d, len:%ld", type, comm->reqID,
+            httpLogPacket(proxy->trace, "fast.rx.data", "packet", 0, packet, "type:%d, id:%lld, len:%ld", type, comm->reqID,
                 httpGetPacketLength(packet));
             httpPutPacketToNext(stream->writeq, packet);
         }
@@ -537,7 +537,7 @@ static bool parseFastHeaders(HttpPacket *packet)
         if ((endHeaders = sncontains(headers, "\n\n", blen)) == NULL) {
             if (slen(headers) < ME_MAX_HEADERS) {
                 /* Not EOF and less than max headers and have not yet seen an end of headers delimiter */
-                httpLog(comm->trace, "fast.rx", "detail", "msg:'FastCGI incomplete headers', id:%d", comm->reqID);
+                httpLog(comm->trace, "fast.rx", "detail", "msg:'FastCGI incomplete headers', id:%lld", comm->reqID);
                 return 0;
             }
         }
@@ -1007,7 +1007,7 @@ static HttpPacket *createFastPacket(HttpQueue *q, int type, HttpPacket *packet)
     *buf++ = (uchar) pad;
     mprAdjustBufEnd(packet->prefix, 8);
 
-    httpLog(comm->trace, "fast.tx", "packet", "msg:FastCGI send packet', type:%d, id:%d, lenth:%ld", type, comm->reqID, len);
+    httpLog(comm->trace, "fast.tx", "packet", "msg:FastCGI send packet', type:%d, id:%lld, lenth:%ld", type, comm->reqID, len);
     return packet;
 }
 
@@ -1541,7 +1541,7 @@ static int fastConnectDirective(MaState *state, cchar *key, cchar *value)
         ovalue = strim(ovalue, "\"'", MPR_TRIM_BOTH);
 
         if (smatch(option, "count")) {
-            fast->maxRequests = httpGetInt(ovalue);
+            fast->maxRequests = httpGetNumber(ovalue);
             if (fast->maxRequests < 1) {
                 fast->maxRequests = 1;
             }
