@@ -2622,7 +2622,7 @@ typedef int (*HttpParse)(cchar *key, char *value, void *state);
     Configuration is not thread safe and must occur at initialization time when the application is single threaded.
     If the configuration is modified when the application is multithreaded, all requests must be first be quiesced.
     @defgroup HttpStage HttpStage
-    @see HttpStream HttpQueue HttpStage httpCloneStage httpCreateStreamector httpCreateFilter httpCreateHandler
+    @see HttpStream HttpQueue HttpStage httpCloneStage httpCreateConnector httpCreateFilter httpCreateHandler
         httpCreateStage httpDefaultOutgoingServiceStage httpGetStageData httpHandleOptionsTrace httpLookupStage
         httpLookupStageData httpSetStageData
     @stability Internal
@@ -2804,7 +2804,7 @@ PUBLIC HttpStage *httpCloneStage(HttpStage *stage);
     @ingroup HttpStage
     @stability Stable
  */
-PUBLIC HttpStage *httpCreateStreamector(cchar *name, MprModule *module);
+PUBLIC HttpStage *httpCreateConnector(cchar *name, MprModule *module);
 
 /**
     Create a filter stage
