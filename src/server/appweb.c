@@ -66,7 +66,7 @@ static int checkEnvironment(cchar *program);
 static int findConfigFile(void);
 static void manageApp(AppwebApp *app, int flags);
 static int createEndpoints(int argc, char **argv);
-static int loadModules();
+static int loadModules(void);
 static void usageError(void);
 
 #if ME_UNIX_LIKE
@@ -328,7 +328,7 @@ static int changeRoot(cchar *jail)
 }
 
 
-static int loadModules()
+static int loadModules(void)
 {
     int     rc;
 
