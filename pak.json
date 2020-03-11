@@ -27,7 +27,6 @@
         "url": "https://www.embedthis.com/licensing/"
     },
     "dependencies": {
-        "appweb-php": "~1",
         "assist": "~1",
         "http": "~8",
         "makerom": "~1",
