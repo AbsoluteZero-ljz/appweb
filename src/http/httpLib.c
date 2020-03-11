@@ -8851,7 +8851,7 @@ PUBLIC int httpOpenHttp1Filter()
 {
     HttpStage     *filter;
 
-    if ((filter = httpCreateStreamector("Http1Filter", NULL)) == 0) {
+    if ((filter = httpCreateConnector("Http1Filter", NULL)) == 0) {
         return MPR_ERR_CANT_CREATE;
     }
     HTTP->http1Filter = filter;
@@ -9636,7 +9636,7 @@ PUBLIC int httpOpenHttp2Filter()
 {
     HttpStage     *filter;
 
-    if ((filter = httpCreateStreamector("Http2Filter", NULL)) == 0) {
+    if ((filter = httpCreateConnector("Http2Filter", NULL)) == 0) {
         return MPR_ERR_CANT_CREATE;
     }
     HTTP->http2Filter = filter;
@@ -14378,7 +14378,7 @@ PUBLIC int httpOpenNetConnector()
 {
     HttpStage     *stage;
 
-    if ((stage = httpCreateStreamector("netConnector", NULL)) == 0) {
+    if ((stage = httpCreateConnector("netConnector", NULL)) == 0) {
         return MPR_ERR_CANT_CREATE;
     }
     stage->outgoing = netOutgoing;
@@ -22757,7 +22757,7 @@ PUBLIC HttpStage *httpCreateFilter(cchar *name, MprModule *module)
 }
 
 
-PUBLIC HttpStage *httpCreateStreamector(cchar *name, MprModule *module)
+PUBLIC HttpStage *httpCreateConnector(cchar *name, MprModule *module)
 {
     return httpCreateStage(name, HTTP_STAGE_CONNECTOR, module);
 }
@@ -29011,4 +29011,3 @@ static void traceErrorProc(HttpStream *stream, cchar *fmt, ...)
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
  */
-
