@@ -7,6 +7,7 @@
         fastProgram [switches]
             -a                  Output the args (used for ISINDEX queries)
             -b bytes            Output content "bytes" long
+            -d secs             Delay for given number of seconds
             -e                  Output the environment
             -h lines            Output header "lines" long
             -l location         Output "location" header
@@ -23,18 +24,6 @@
 
 #include "fcgiapp.h"
 
-#define _CRT_SECURE_NO_WARNINGS 1
-#ifndef _VSB_CONFIG_FILE
-    #define _VSB_CONFIG_FILE "vsbConfig.h"
-#endif
-#if _WIN32 || WINCE
-/* Work-around to allow the windows 7.* SDK to be used with VS 2014 */
-#if _MSC_VER >= 1700
-    #define SAL_SUPP_H
-    #define SPECSTRING_SUPP_H
-#endif
-#endif
-
 #include <errno.h>
 #include <ctype.h>
 #include <fcntl.h>
@@ -43,77 +32,55 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
-#if _WIN32 || WINCE
-#include <fcntl.h>
-#include <io.h>
-#include <windows.h>
-
-    #define access   _access
-    #define close    _close
-    #define fileno   _fileno
-    #define fstat    _fstat
-    #define getpid   _getpid
-    #define open     _open
-    #define putenv   _putenv
-    #define read     _read
-    #define stat     _stat
-    #define umask    _umask
-    #define unlink   _unlink
-    #define write    _write
-    #define strdup   _strdup
-    #define lseek    _lseek
-    #define getcwd   _getcwd
-    #define chdir    _chdir
-    #define strnset  _strnset
-    #define chmod    _chmod
-
-    #define mkdir(a,b)  _mkdir(a)
-    #define rmdir(a)    _rmdir(a)
-    typedef int ssize_t;
-#else
+#include <pthread.h>
+#include <sys/types.h>
 #include <unistd.h>
-
-#endif
 
 /*********************************** Locals ***********************************/
 
-#define MAX_ARGV 64
+#define MAX_ARGV    64
+#define MAX_THREADS 2
 
-static char     *argvList[MAX_ARGV];
-static int      getArgv(int *argc, char ***argv, int originalArgc, char **originalArgv);
-static int      hasError;
-static int      numPostKeys;
-static int      numQueryKeys;
-static int      originalArgc;
-static char     **originalArgv;
-static int      outputArgs, outputEnv, outputPost, outputQuery;
-static int      outputLines, outputHeaderLines, responseStatus;
-static char     *outputLocation;
-static char     *postBuf;
-static size_t   postBufLen;
-static char     **postKeys;
-static char     *queryBuf;
-static size_t   queryLen;
-static char     **queryKeys;
-static char     *responseMsg;
-static int      timeout;
+typedef struct State {
+    char         *argvList[MAX_ARGV];
+    int          delay;
+    int          hasError;
+    int          numPostKeys;
+    int          numQueryKeys;
+    int          outputArgs, outputEnv, outputPost, outputQuery;
+    int          outputLines, outputHeaderLines, responseStatus;
+    char         *outputLocation;
+    char         *postBuf;
+    size_t       postBufLen;
+    char         **postKeys;
+    char         *queryBuf;
+    size_t       queryLen;
+    char         **queryKeys;
+    FCGX_Request *request;
+    char         *errorMsg;
+    int          timeout;
+} State;
 
-static FCGX_Request request;
+static pthread_mutex_t accept_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static int       originalArgc;
+static char      **originalArgv;
 
 /***************************** Forward Declarations ***************************/
 
-static void     error(char *fmt, ...);
+static void     error(State *state, char *fmt, ...);
 static void     descape(char *src);
+static int      getArgv(State *state, int *argc, char ***argv, int originalArgc, char **originalArgv);
+static int      getVars(State *state, char ***cgiKeys, char *buf, size_t len);
+static int      getPostData(State *state);
+static int      getQueryString(State *state);
 static char     hex2Char(char *s);
-static int      getVars(char ***cgiKeys, char *buf, size_t len);
-static int      getPostData(char **buf, size_t *len);
-static int      getQueryString(char **buf, size_t *len);
-static int      parseArgs();
-static void     printEnv(char **env);
-static void     printQuery();
-static void     printPost(char *buf, size_t len);
-static char     *safeGetenv(char *key);
+static int      parseArgs(State *state);
+static void     printEnv(State *state);
+static void     printQuery(State *state);
+static void     printPost(State *state);
+static char     *safeGetenv(State *state, char *key);
+static void     *worker(State *state);
 
 /******************************************************************************/
 /*
@@ -121,65 +88,80 @@ static char     *safeGetenv(char *key);
  */
 int main(int argc, char **argv, char **envp)
 {
-    char            *method;
-    int             l, i, err;
+    pthread_t   ids[MAX_THREADS];
+    State       states[MAX_THREADS];
+    int         i;
 
     originalArgc = argc;
     originalArgv = argv;
+    memset(&states, 0, sizeof(states));
 
     FCGX_Init();
+    for (i = 1; i < MAX_THREADS; i++) {
+        pthread_create(&ids[i], NULL, (void*) worker, (void*) &states[i]);
+    }
+    worker(&states[0]);
+    return 0;
+}
+
+
+static void *worker(State *state)
+{
+    FCGX_Request    request;
+    char            *method;
+    int             l, i, rc;
+
+    printf("@@ START worker %p\n", pthread_self());
     FCGX_InitRequest(&request, 0, 0);
 
     while (1) {
-        err = 0;
-        outputArgs = outputQuery = outputEnv = outputPost = 0;
-        outputLines = outputHeaderLines = responseStatus = 0;
-        outputLocation = 0;
-        responseMsg = 0;
-        hasError = 0;
-        timeout = 0;
-        queryBuf = 0;
-        queryLen = 0;
-        postBuf = 0;
-        postBufLen = 0;
-        numQueryKeys = numPostKeys = 0;
-        timeout = 0;
-        argvList[0] = NULL;
-        postKeys = 0;
-        queryKeys = 0;
+        memset((void*) state, 0, sizeof(State));
+        state->request = &request;
 
-        if (FCGX_Accept_r(&request) < 0) {
+        pthread_mutex_lock(&accept_mutex);
+        printf("@@ START worker %p, ACCPETING ...\n", pthread_self());
+        rc = FCGX_Accept_r(state->request);
+        pthread_mutex_unlock(&accept_mutex);
+        printf("@@ worker %p, ACCEPTED rc %d\n", pthread_self(), rc);
+
+        if (rc < 0) {
             if (errno == EAGAIN) {
                 continue;
             }
-            error("Cannot accept a new connection errno :%d\n", errno);
+            error(state, "Cannot accept a new connection errno :%d\n", errno);
             break;
         }
-        if (parseArgs() < 0) {
+
+        if (parseArgs(state) < 0) {
             exit(4);
             break;
         }
         if ((method = FCGX_GetParam("REQUEST_METHOD", request.envp)) != 0 && strcmp(method, "POST") == 0) {
-            if (getPostData(&postBuf, &postBufLen) < 0) {
-                error("Cannot read FAST input");
+            if (getPostData(state) < 0) {
+                error(state, "Cannot read FAST input");
             }
-            if (strcmp(safeGetenv("CONTENT_TYPE"), "application/x-www-form-urlencoded") == 0) {
-                numPostKeys = getVars(&postKeys, postBuf, postBufLen);
+            if (strcmp(safeGetenv(state, "CONTENT_TYPE"), "application/x-www-form-urlencoded") == 0) {
+                state->numPostKeys = getVars(state, &state->postKeys, state->postBuf, state->postBufLen);
             }
         }
-        if (hasError) {
-            FCGX_FPrintF(request.out, "HTTP/1.0 %d %s\r\n\r\n", responseStatus, responseMsg);
-            FCGX_FPrintF(request.out, "<HTML><BODY><p>Error: %d -- %s</p></BODY></HTML>\r\n", responseStatus, responseMsg);
-            error("fastProgram: ERROR: %s\n", responseMsg);
+        if (state->hasError) {
+            FCGX_FPrintF(request.out, "HTTP/1.0 %d %s\r\n\r\n", state->responseStatus, state->errorMsg);
+            FCGX_FPrintF(request.out, "<HTML><BODY><p>Error: %d -- %s</p></BODY></HTML>\r\n",
+                state->responseStatus, state->errorMsg);
+            error(state, "fastProgram: ERROR: %s\n", state->errorMsg);
             exit(2);
         }
-
+        if (state->delay) {
+            printf("@@ DELAYING\n");
+            sleep(state->delay);
+            printf("@@ AWAKE\n");
+        }
 #if KEEP
         if (nonParsedHeader) {
-            if (responseStatus == 0) {
+            if (state->responseStatus == 0) {
                 FCGX_FPrintF(request.out, "HTTP/1.0 200 OK\r\n");
             } else {
-                FCGX_FPrintF(request.out, "HTTP/1.0 %d %s\r\n", responseStatus, responseMsg ? responseMsg: "");
+                FCGX_FPrintF(request.out, "HTTP/1.0 %d %s\r\n", state->responseStatus, state->errorMsg ? state->errorMsg: "");
             }
             FCGX_FPrintF(request.out, "Connection: close\r\n");
             FCGX_FPrintF(request.out, "X-FAST-CustomHeader: Any value at all\r\n");
@@ -187,61 +169,61 @@ int main(int argc, char **argv, char **envp)
 #endif
         FCGX_FPrintF(request.out, "Content-Type: %s\r\n", "text/html");
 
-        if (outputHeaderLines) {
-            for (i = 0; i < outputHeaderLines; i++) {
+        if (state->outputHeaderLines) {
+            for (i = 0; i < state->outputHeaderLines; i++) {
                 FCGX_FPrintF(request.out, "X-FAST-%d: A loooooooooooooooooooooooong string\r\n", i);
             }
         }
-        if (outputLocation) {
-            FCGX_FPrintF(request.out, "Location: %s\r\n", outputLocation);
+        if (state->outputLocation) {
+            FCGX_FPrintF(request.out, "Location: %s\r\n", state->outputLocation);
         }
-        if (responseStatus) {
-            FCGX_FPrintF(request.out, "Status: %d\r\n", responseStatus);
+        if (state->responseStatus) {
+            FCGX_FPrintF(request.out, "Status: %d\r\n", state->responseStatus);
         }
         FCGX_FPrintF(request.out, "\r\n");
 
-        if ((outputLines + outputArgs + outputEnv + outputQuery + outputPost + outputLocation + responseStatus) == 0) {
-            outputArgs++;
-            outputEnv++;
-            outputQuery++;
-            outputPost++;
+        if ((state->outputLines + state->outputArgs + state->outputEnv + state->outputQuery +
+                state->outputPost + state->outputLocation + state->responseStatus) == 0) {
+            state->outputArgs++;
+            state->outputEnv++;
+            state->outputQuery++;
+            state->outputPost++;
         }
 
-        if (outputLines) {
-            for (l = 0; l < outputLines; l++) {
+        if (state->outputLines) {
+            for (l = 0; l < state->outputLines; l++) {
                 FCGX_FPrintF(request.out, "%09d\n", l);
             }
 
         } else {
             FCGX_FPrintF(request.out, "<HTML><TITLE>fastProgram: Output</TITLE><BODY>\r\n");
-            if (outputArgs) {
-#if _WIN32
-                FCGX_FPrintF(request.out, "<P>CommandLine: %s</P>\r\n", GetCommandLine());
-#endif
+            if (state->outputArgs) {
                 FCGX_FPrintF(request.out, "<H2>Args</H2>\r\n");
                 for (i = 0; i < originalArgc; i++) {
                     FCGX_FPrintF(request.out, "<P>ARG[%d]=%s</P>\r\n", i, originalArgv[i]);
                 }
+#if UNUSED
                 for (i = 0; i < argc; i++) {
                     FCGX_FPrintF(request.out, "<P>XARG[%d]=%s</P>\r\n", i, argv[i]);
                 }
+#endif
             }
-            printEnv(request.envp);
-            if (outputQuery) {
-                printQuery();
+            printEnv(state);
+            if (state->outputQuery) {
+                printQuery(state);
             }
-            if (outputPost) {
-                printPost(postBuf, postBufLen);
+            if (state->outputPost) {
+                printPost(state);
             }
             FCGX_FPrintF(request.out, "</BODY></HTML>\r\n");
         }
         FCGX_Finish_r(&request);
     }
-    return 0;
+    return NULL;
 }
 
 
-static int parseArgs()
+static int parseArgs(State *state)
 {
     char    **argv;
     char    *cp;
@@ -249,8 +231,8 @@ static int parseArgs()
 
     err = 0;
 
-    if (getArgv(&argc, &argv, originalArgc, originalArgv) < 0) {
-        error("Cannot read FAST input");
+    if (getArgv(state, &argc, &argv, originalArgc, originalArgv) < 0) {
+        error(state, "Cannot read FAST input");
     }
     for (i = 1; i < argc; i++) {
         if (argv[i][0] != '-') {
@@ -259,26 +241,33 @@ static int parseArgs()
         for (cp = &argv[i][1]; *cp; cp++) {
             switch (*cp) {
             case 'a':
-                outputArgs++;
+                state->outputArgs++;
                 break;
 
             case 'b':
                 if (++i >= argc) {
                     err = __LINE__;
                 } else {
-                    outputLines = atoi(argv[i]);
+                    state->outputLines = atoi(argv[i]);
                 }
                 break;
 
+            case 'd':
+                if (++i >= argc) {
+                    err = __LINE__;
+                } else {
+                    state->delay = atoi(argv[i]);
+                }
+                break;
             case 'e':
-                outputEnv++;
+                state->outputEnv++;
                 break;
 
             case 'h':
                 if (++i >= argc) {
                     err = __LINE__;
                 } else {
-                    outputHeaderLines = atoi(argv[i]);
+                    state->outputHeaderLines = atoi(argv[i]);
                 }
                 break;
 
@@ -286,26 +275,26 @@ static int parseArgs()
                 if (++i >= argc) {
                     err = __LINE__;
                 } else {
-                    outputLocation = argv[i];
-                    if (responseStatus == 0) {
-                        responseStatus = 302;
+                    state->outputLocation = argv[i];
+                    if (state->responseStatus == 0) {
+                        state->responseStatus = 302;
                     }
                 }
                 break;
 
             case 'p':
-                outputPost++;
+                state->outputPost++;
                 break;
 
             case 'q':
-                outputQuery++;
+                state->outputQuery++;
                 break;
 
             case 's':
                 if (++i >= argc) {
                     err = __LINE__;
                 } else {
-                    responseStatus = atoi(argv[i]);
+                    state->responseStatus = atoi(argv[i]);
                 }
                 break;
 
@@ -313,7 +302,7 @@ static int parseArgs()
                 if (++i >= argc) {
                     err = __LINE__;
                 } else {
-                    timeout = atoi(argv[i]);
+                    state->timeout = atoi(argv[i]);
                 }
                 break;
 
@@ -324,10 +313,10 @@ static int parseArgs()
         }
     }
     if (err) {
-        error("usage: fastProgram -aenp [-b bytes] [-h lines]\n"
+        error(state, "usage: fastProgram -aenp [-b bytes] [-h lines]\n"
             "\t[-l location] [-s status] [-t timeout]\n"
             "\tor set the HTTP_SWITCHES environment variable\n");
-        error("Error at fastProgram:%d\n", __LINE__);
+        error(state, "Error at fastProgram:%d\n", __LINE__);
         exit(3);
     }
     return 0;
@@ -337,27 +326,27 @@ static int parseArgs()
 /*
     If there is a SWITCHES argument in the query string, examine that instead of the original argv
  */
-static int getArgv(int *pargc, char ***pargv, int originalArgc, char **originalArgv)
+static int getArgv(State *state, int *pargc, char ***pargv, int originalArgc, char **originalArgv)
 {
     static char sbuf[1024];
     char        *switches, *next;
     int         i;
 
     *pargc = 0;
-    if (getQueryString(&queryBuf, &queryLen) < 0) {
+    if (getQueryString(state) < 0) {
         return -1;
     }
-    numQueryKeys = getVars(&queryKeys, queryBuf, queryLen);
+    state->numQueryKeys = getVars(state, &state->queryKeys, state->queryBuf, state->queryLen);
 
     switches = 0;
-    for (i = 0; i < numQueryKeys; i += 2) {
-        if (strcmp(queryKeys[i], "SWITCHES") == 0) {
-            switches = queryKeys[i+1];
+    for (i = 0; i < state->numQueryKeys; i += 2) {
+        if (strcmp(state->queryKeys[i], "SWITCHES") == 0) {
+            switches = state->queryKeys[i+1];
             break;
         }
     }
     if (switches == 0) {
-        switches = FCGX_GetParam("HTTP_SWITCHES", request.envp);
+        switches = FCGX_GetParam("HTTP_SWITCHES", state->request->envp);
     }
     if (switches) {
         strncpy(sbuf, switches, sizeof(sbuf) - 1);
@@ -365,11 +354,11 @@ static int getArgv(int *pargc, char ***pargv, int originalArgc, char **originalA
         next = strtok(sbuf, " \t\n");
         i = 1;
         for (i = 1; next && i < (MAX_ARGV - 1); i++) {
-            argvList[i] = strdup(next);
+            state->argvList[i] = strdup(next);
             next = strtok(0, " \t\n");
         }
-        argvList[0] = originalArgv[0];
-        *pargv = argvList;
+        state->argvList[0] = originalArgv[0];
+        *pargv = state->argvList;
         *pargc = i;
 
     } else {
@@ -380,119 +369,130 @@ static int getArgv(int *pargc, char ***pargv, int originalArgc, char **originalA
 }
 
 
-static void printEnv(char **envp)
+static void printEnv(State *state)
 {
-    FCGX_FPrintF(request.out, "<H2>Environment Variables</H2>\r\n");
-    FCGX_FPrintF(request.out, "<P>AUTH_TYPE=%s</P>\r\n", safeGetenv("AUTH_TYPE"));
-    FCGX_FPrintF(request.out, "<P>CONTENT_LENGTH=%s</P>\r\n", safeGetenv("CONTENT_LENGTH"));
-    FCGX_FPrintF(request.out, "<P>CONTENT_TYPE=%s</P>\r\n", safeGetenv("CONTENT_TYPE"));
-    FCGX_FPrintF(request.out, "<P>DOCUMENT_ROOT=%s</P>\r\n", safeGetenv("DOCUMENT_ROOT"));
-    FCGX_FPrintF(request.out, "<P>GATEWAY_INTERFACE=%s</P>\r\n", safeGetenv("GATEWAY_INTERFACE"));
-    FCGX_FPrintF(request.out, "<P>HTTP_ACCEPT=%s</P>\r\n", safeGetenv("HTTP_ACCEPT"));
-    FCGX_FPrintF(request.out, "<P>HTTP_CONNECTION=%s</P>\r\n", safeGetenv("HTTP_CONNECTION"));
-    FCGX_FPrintF(request.out, "<P>HTTP_HOST=%s</P>\r\n", safeGetenv("HTTP_HOST"));
-    FCGX_FPrintF(request.out, "<P>HTTP_USER_AGENT=%s</P>\r\n", safeGetenv("HTTP_USER_AGENT"));
-    FCGX_FPrintF(request.out, "<P>PATH_INFO=%s</P>\r\n", safeGetenv("PATH_INFO"));
-    FCGX_FPrintF(request.out, "<P>PATH_TRANSLATED=%s</P>\r\n", safeGetenv("PATH_TRANSLATED"));
-    FCGX_FPrintF(request.out, "<P>QUERY_STRING=%s</P>\r\n", safeGetenv("QUERY_STRING"));
-    FCGX_FPrintF(request.out, "<P>REMOTE_ADDR=%s</P>\r\n", safeGetenv("REMOTE_ADDR"));
-    FCGX_FPrintF(request.out, "<P>REQUEST_METHOD=%s</P>\r\n", safeGetenv("REQUEST_METHOD"));
-    FCGX_FPrintF(request.out, "<P>REQUEST_URI=%s</P>\r\n", safeGetenv("REQUEST_URI"));
-    FCGX_FPrintF(request.out, "<P>REMOTE_USER=%s</P>\r\n", safeGetenv("REMOTE_USER"));
-    FCGX_FPrintF(request.out, "<P>SCRIPT_NAME=%s</P>\r\n", safeGetenv("SCRIPT_NAME"));
-    FCGX_FPrintF(request.out, "<P>SCRIPT_FILENAME=%s</P>\r\n", safeGetenv("SCRIPT_FILENAME"));
-    FCGX_FPrintF(request.out, "<P>SERVER_ADDR=%s</P>\r\n", safeGetenv("SERVER_ADDR"));
-    FCGX_FPrintF(request.out, "<P>SERVER_NAME=%s</P>\r\n", safeGetenv("SERVER_NAME"));
-    FCGX_FPrintF(request.out, "<P>SERVER_PORT=%s</P>\r\n", safeGetenv("SERVER_PORT"));
-    FCGX_FPrintF(request.out, "<P>SERVER_PROTOCOL=%s</P>\r\n", safeGetenv("SERVER_PROTOCOL"));
-    FCGX_FPrintF(request.out, "<P>SERVER_SOFTWARE=%s</P>\r\n", safeGetenv("SERVER_SOFTWARE"));
+    FCGX_Stream     *out;
+    char            **envp;
+
+    out = state->request->out;
+
+    FCGX_FPrintF(out, "<H2>Environment Variables</H2>\r\n");
+    FCGX_FPrintF(out, "<P>AUTH_TYPE=%s</P>\r\n", safeGetenv(state, "AUTH_TYPE"));
+    FCGX_FPrintF(out, "<P>CONTENT_LENGTH=%s</P>\r\n", safeGetenv(state, "CONTENT_LENGTH"));
+    FCGX_FPrintF(out, "<P>CONTENT_TYPE=%s</P>\r\n", safeGetenv(state, "CONTENT_TYPE"));
+    FCGX_FPrintF(out, "<P>DOCUMENT_ROOT=%s</P>\r\n", safeGetenv(state, "DOCUMENT_ROOT"));
+    FCGX_FPrintF(out, "<P>GATEWAY_INTERFACE=%s</P>\r\n", safeGetenv(state, "GATEWAY_INTERFACE"));
+    FCGX_FPrintF(out, "<P>HTTP_ACCEPT=%s</P>\r\n", safeGetenv(state, "HTTP_ACCEPT"));
+    FCGX_FPrintF(out, "<P>HTTP_CONNECTION=%s</P>\r\n", safeGetenv(state, "HTTP_CONNECTION"));
+    FCGX_FPrintF(out, "<P>HTTP_HOST=%s</P>\r\n", safeGetenv(state, "HTTP_HOST"));
+    FCGX_FPrintF(out, "<P>HTTP_USER_AGENT=%s</P>\r\n", safeGetenv(state, "HTTP_USER_AGENT"));
+    FCGX_FPrintF(out, "<P>PATH_INFO=%s</P>\r\n", safeGetenv(state, "PATH_INFO"));
+    FCGX_FPrintF(out, "<P>PATH_TRANSLATED=%s</P>\r\n", safeGetenv(state, "PATH_TRANSLATED"));
+    FCGX_FPrintF(out, "<P>QUERY_STRING=%s</P>\r\n", safeGetenv(state, "QUERY_STRING"));
+    FCGX_FPrintF(out, "<P>REMOTE_ADDR=%s</P>\r\n", safeGetenv(state, "REMOTE_ADDR"));
+    FCGX_FPrintF(out, "<P>REQUEST_METHOD=%s</P>\r\n", safeGetenv(state, "REQUEST_METHOD"));
+    FCGX_FPrintF(out, "<P>REQUEST_URI=%s</P>\r\n", safeGetenv(state, "REQUEST_URI"));
+    FCGX_FPrintF(out, "<P>REMOTE_USER=%s</P>\r\n", safeGetenv(state, "REMOTE_USER"));
+    FCGX_FPrintF(out, "<P>SCRIPT_NAME=%s</P>\r\n", safeGetenv(state, "SCRIPT_NAME"));
+    FCGX_FPrintF(out, "<P>SCRIPT_FILENAME=%s</P>\r\n", safeGetenv(state, "SCRIPT_FILENAME"));
+    FCGX_FPrintF(out, "<P>SERVER_ADDR=%s</P>\r\n", safeGetenv(state, "SERVER_ADDR"));
+    FCGX_FPrintF(out, "<P>SERVER_NAME=%s</P>\r\n", safeGetenv(state, "SERVER_NAME"));
+    FCGX_FPrintF(out, "<P>SERVER_PORT=%s</P>\r\n", safeGetenv(state, "SERVER_PORT"));
+    FCGX_FPrintF(out, "<P>SERVER_PROTOCOL=%s</P>\r\n", safeGetenv(state, "SERVER_PROTOCOL"));
+    FCGX_FPrintF(out, "<P>SERVER_SOFTWARE=%s</P>\r\n", safeGetenv(state, "SERVER_SOFTWARE"));
 
     /*
         This is not supported on VxWorks as you cannot get "envp" in main()
      */
-    FCGX_FPrintF(request.out, "\r\n<H2>All Defined Environment Variables</H2>\r\n");
+    FCGX_FPrintF(out, "\r\n<H2>All Defined Environment Variables</H2>\r\n");
+    envp = state->request->envp;
     if (envp) {
         char    *p;
         int     i;
         for (i = 0, p = envp[0]; envp[i]; i++) {
             p = envp[i];
-            FCGX_FPrintF(request.out, "<P>%s</P>\r\n", p);
+            FCGX_FPrintF(out, "<P>%s</P>\r\n", p);
         }
     }
-    FCGX_FPrintF(request.out, "\r\n");
+    FCGX_FPrintF(out, "\r\n");
 }
 
 
-static void printQuery()
+static void printQuery(State *state)
 {
-    int     i;
+    FCGX_Stream     *out;
+    int             i;
 
-    if (numQueryKeys == 0) {
-        FCGX_FPrintF(request.out, "<H2>No Query String Found</H2>\r\n");
+    out = state->request->out;
+
+    if (state->numQueryKeys == 0) {
+        FCGX_FPrintF(out, "<H2>No Query String Found</H2>\r\n");
     } else {
-        FCGX_FPrintF(request.out, "<H2>Decoded Query String Variables</H2>\r\n");
-        for (i = 0; i < (numQueryKeys * 2); i += 2) {
-            if (queryKeys[i+1] == 0) {
-                FCGX_FPrintF(request.out, "<p>QVAR %s=</p>\r\n", queryKeys[i]);
+        FCGX_FPrintF(out, "<H2>Decoded Query String Variables</H2>\r\n");
+        for (i = 0; i < (state->numQueryKeys * 2); i += 2) {
+            if (state->queryKeys[i+1] == 0) {
+                FCGX_FPrintF(out, "<p>QVAR %s=</p>\r\n", state->queryKeys[i]);
             } else {
-                FCGX_FPrintF(request.out, "<p>QVAR %s=%s</p>\r\n", queryKeys[i], queryKeys[i+1]);
+                FCGX_FPrintF(out, "<p>QVAR %s=%s</p>\r\n", state->queryKeys[i], state->queryKeys[i+1]);
             }
         }
     }
-    FCGX_FPrintF(request.out, "\r\n");
+    FCGX_FPrintF(out, "\r\n");
 }
 
 
-static void printPost(char *buf, size_t len)
+static void printPost(State *state)
 {
-    int     i;
+    FCGX_Stream     *out;
+    int             i;
 
-    if (numPostKeys) {
-        FCGX_FPrintF(request.out, "<H2>Decoded Post Variables</H2>\r\n");
-        for (i = 0; i < (numPostKeys * 2); i += 2) {
-            FCGX_FPrintF(request.out, "<p>PVAR %s=%s</p>\r\n", postKeys[i], postKeys[i+1]);
+    out = state->request->out;
+
+    if (state->numPostKeys) {
+        FCGX_FPrintF(out, "<H2>Decoded Post Variables</H2>\r\n");
+        for (i = 0; i < (state->numPostKeys * 2); i += 2) {
+            FCGX_FPrintF(out, "<p>PVAR %s=%s</p>\r\n", state->postKeys[i], state->postKeys[i+1]);
         }
 
-    } else if (buf) {
-        if (len < (50 * 1000)) {
-            FCGX_FPrintF(request.out, "<H2>Post Data %d bytes found (data below)</H2>\r\n", (int) len);
-            FCGX_PutStr(buf, (int) len, request.out);
+    } else if (state->postBuf) {
+        if (state->postBufLen < (50 * 1000)) {
+            FCGX_FPrintF(out, "<H2>Post Data %d bytes found (data below)</H2>\r\n", (int) state->postBufLen);
+            FCGX_PutStr(state->postBuf, (int) state->postBufLen, out);
         } else {
-            FCGX_FPrintF(request.out, "<H2>Post Data %d bytes found</H2>\r\n", (int) len);
+            FCGX_FPrintF(out, "<H2>Post Data %d bytes found</H2>\r\n", (int) state->postBufLen);
         }
 
     } else {
-        FCGX_FPrintF(request.out, "<H2>No Post Data Found</H2>\r\n");
+        FCGX_FPrintF(out, "<H2>No Post Data Found</H2>\r\n");
     }
-    FCGX_FPrintF(request.out, "\r\n");
+    FCGX_FPrintF(out, "\r\n");
 }
 
 
-static int getQueryString(char **buf, size_t *buflen)
+static int getQueryString(State *state)
 {
-    *buflen = 0;
-    *buf = 0;
-
-    if (FCGX_GetParam("QUERY_STRING", request.envp) == 0) {
-        *buf = "";
-        *buflen = 0;
+    if (FCGX_GetParam("QUERY_STRING", state->request->envp) == 0) {
+        state->queryBuf = "";
+        state->queryLen = 0;
     } else {
-        *buf = FCGX_GetParam("QUERY_STRING", request.envp);
-        *buflen = (int) strlen(*buf);
+        state->queryBuf = FCGX_GetParam("QUERY_STRING", state->request->envp);
+        state->queryLen = (int) strlen(state->queryBuf);
     }
     return 0;
 }
 
 
-static int getPostData(char **bufp, size_t *lenp)
+static int getPostData(State *state)
 {
-    char    *contentLength, *buf;
-    ssize_t bufsize, bytes, size, limit, len;
+    FCGX_Stream     *in;
+    char            *contentLength, *buf;
+    ssize_t         bufsize, bytes, size, limit, len;
 
-    if ((contentLength = FCGX_GetParam("CONTENT_LENGTH", request.envp)) != 0) {
+    in = state->request->in;
+    if ((contentLength = FCGX_GetParam("CONTENT_LENGTH", state->request->envp)) != 0) {
         size = atoi(contentLength);
         if (size < 0 || size >= INT_MAX) {
-            error("Bad content length: %ld", size);
+            error(state, "Bad content length: %ld", size);
             return -1;
         }
         limit = size;
@@ -502,7 +502,7 @@ static int getPostData(char **bufp, size_t *lenp)
     }
     bufsize = size + 1;
     if ((buf = malloc(bufsize)) == 0) {
-        error("Could not allocate memory to read post data: bufsize %ld", bufsize);
+        error(state, "Could not allocate memory to read post data: bufsize %ld", bufsize);
         return -1;
     }
     len = 0;
@@ -510,45 +510,45 @@ static int getPostData(char **bufp, size_t *lenp)
     while (len < limit) {
         if ((len + size + 1) > bufsize) {
             if ((buf = realloc(buf, len + size + 1)) == 0) {
-                error("Could not allocate memory to read post data");
+                error(state, "Could not allocate memory to read post data");
                 return -1;
             }
             bufsize = len + size + 1;
         }
-        bytes = FCGX_GetStr(&buf[len], (int) size, request.in);
+        bytes = FCGX_GetStr(&buf[len], (int) size, in);
 #if KEEP
         printf("@@@ After read %d, errno %d, sofar %ld / %ld\n", (int) bytes, errno, len, limit);
-        printf("@@@ isClosed %d, isReader %d, size %ld, errno %d, closedCalled %d\n", request.in->isClosed, request.in->isReader, size,
-            request.in->FCGI_errno, request.in->wasFCloseCalled);
+        printf("@@@ isClosed %d, isReader %d, size %ld, errno %d, closedCalled %d\n",
+            in->isClosed, in->isReader, size, in->FCGI_errno, in->wasFCloseCalled);
         fflush(stdout);
 #endif
         if (bytes < 0) {
-            error("Could not read FAST input %d", request.in->FCGI_errno);
+            error(state, "Could not read FAST input %d", in->FCGI_errno);
             return -1;
         } else if (bytes == 0) {
             /* EOF */
-            if (request.in->FCGI_errno) {
-                error("Error reading stdin %d", request.in->FCGI_errno);
+            if (in->FCGI_errno) {
+                error(state, "Error reading stdin %d", in->FCGI_errno);
             }
             break;
         }
         len += bytes;
     }
     buf[len] = 0;
-    *lenp = len;
-    *bufp = buf;
+    state->postBufLen = len;
+    state->postBuf = buf;
     return 0;
 }
 
 
-static int getVars(char ***cgiKeys, char *buf, size_t buflen)
+static int getVars(State *state, char ***cgiKeys, char *buf, size_t buflen)
 {
     char    **keyList, *eq, *cp, *pp, *newbuf;
     int     i, keyCount;
 
     if (buflen > 0) {
         if ((newbuf = malloc(buflen + 1)) == 0) {
-            error("Cannot allocate memory");
+            error(state, "Cannot allocate memory");
             return 0;
         }
         strncpy(newbuf, buf, buflen);
@@ -632,11 +632,11 @@ static void descape(char *src)
 }
 
 
-static char *safeGetenv(char *key)
+static char *safeGetenv(State *state, char *key)
 {
     char    *cp;
 
-    cp = FCGX_GetParam(key, request.envp);
+    cp = FCGX_GetParam(key, state->request->envp);
     if (cp == 0) {
         return "";
     }
@@ -644,20 +644,20 @@ static char *safeGetenv(char *key)
 }
 
 
-static void error(char *fmt, ...)
+static void error(State *state, char *fmt, ...)
 {
     va_list args;
     char    buf[4096];
 
-    if (responseMsg == 0) {
+    if (state->errorMsg == 0) {
         va_start(args, fmt);
         vsprintf(buf, fmt, args);
-        FCGX_FPrintF(request.err, "%s\n", buf);
-        responseStatus = 400;
-        responseMsg = strdup(buf);
+        FCGX_FPrintF(state->request->err, "%s\n", buf);
+        state->responseStatus = 400;
+        state->errorMsg = strdup(buf);
         va_end(args);
     }
-    hasError++;
+    state->hasError++;
 }
 
 
