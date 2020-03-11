@@ -129,9 +129,6 @@ typedef struct FastComm {
     Fast            *fast;                  // Parent pointer
     FastProxy       *proxy;                 // Owning proxy
     MprSocket       *socket;                // I/O socket
-#if ZZ
-    MprDispatcher   *dispatcher;            // Dispatcher for comms. Different to handler if multiplexing
-#endif
     HttpStream      *stream;                // Owning client request stream
     HttpQueue       *writeq;                // Queue to write to the FastCGI app
     HttpQueue       *readq;                 // Queue to hold read data from the FastCGI app
@@ -209,10 +206,6 @@ PUBLIC int httpFastHandlerInit(Http *http, MprModule *module)
     handler->close = closeFast;
     handler->open = openFast;
     handler->incoming = fastIncoming;
-#if UNUSED
-    //  MOB ZZ this is already the default
-    handler->outgoingService = httpDefaultOutgoingServiceStage;
-#endif
 
     /*
         Create FastCGI connector. The connector manages communication to the FastCGI application.
@@ -379,7 +372,6 @@ static void terminateIdleFastProxies(Fast *fast)
     for (ITERATE_ITEMS(fast->idleProxies, proxy, next)) {
         if (proxy->pid && ((now - proxy->lastActive) > fast->proxyTimeout)) {
             killFastProxy(proxy);
-            //ZZ reapFastProxy(proxy, FAST_REAP_TIMEOUT);
         }
     }
     unlock(fast);
@@ -932,7 +924,6 @@ static void killFastProxy(FastProxy *proxy)
         if (proxy->pid) {
             kill(proxy->pid, SIGTERM);
         }
-        //ZZ reapFastProxy(proxy, FAST_REAP_TIMEOUT);
     }
     unlock(proxy->fast);
 }
