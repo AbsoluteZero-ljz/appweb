@@ -24,8 +24,8 @@ Appweb is a compact embedded HTTP web server.  It is a fast, small-footprint, mu
 portable server developed for use by embedded devices and applications.  It can run as a stand-alone
 web server or the Appweb library can be embedded in applications.
 .P
-Appweb supports HTTP/1.1, SSL, digest and basic authentication, virtual hosting, ranged requests, chunked transfers,
-file upload and security limits.  Appweb has an Apache style configuration file and supports the ESP and PHP web frameworks. 
+Appweb supports HTTP/1.1, HTTP/2, SSL, digest and basic authentication, virtual hosting, ranged requests, chunked transfers,
+file upload, CGI, FastCGI and security limits.  Appweb has an Apache style configuration file and supports the ESP and PHP web frameworks.
 .P
 Appweb normally reads the \fBappweb.conf\fR file for configuration directives. However, if appweb is invoked with
 an IP address or port number on the command line, Appweb will not read the configuration file. Rather it will
@@ -45,7 +45,7 @@ any files outside the given directory.
 .TP
 \fB\--debugger\fR
 Run Appweb in debug mode and disable all timeouts. This disables request and session timeouts.
-The \fB-d\fR option is an alias for --debug.
+The \fB-D\fR option is an alias for --debug.
 .TP
 \fB\--exe path\fR
 Set the path to the appweb.exe executable image. This may be required on VxWorks so that Appweb can
@@ -80,6 +80,9 @@ Shorthand for --log stdout:4. The \fB-v\fR option is an alias for --verbose.
 .TP
 \fB\--version\fR
 Output the product version number.
+.TP
+\fB\--DIGIT\fR
+Shorthand for --log stdout:DIGIT --trace stdout:DIGIT.
 .PP
 .SH FILES
 .PD 0

@@ -43,7 +43,7 @@ Me.load({
                     trace('Patch', f)
                     f.write(data)
                 }
-                for each (f in Path('public/man').files('*.html')) {
+                for each (f in Path('contents/man').files('*.html')) {
                     f.write(f.readString().toLowerCase())
                 }
                 trace('Listen', 'expansive --nowatch')
