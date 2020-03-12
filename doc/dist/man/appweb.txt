@@ -21,6 +21,7 @@ SYNOPSIS
            --trace traceSpec
            --version
            --verbose
+           --DIGIT
            [IP][:port] [documentRoot]
 
 DESCRIPTION
