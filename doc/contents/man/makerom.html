@@ -3,4 +3,38 @@
 <head>
 <title>Makerom Man Page</title>
 </head>
+Usage: man2html [ options ] < infile > outfile
+Options:
+  -bare            : Do not put in HTML, HEAD, BODY tags
+  -belem <elem>    : HTML Element for overstriked text (def: "B")
+  -botm <#>        : Number of lines for bottom margin (def: 7)
+  -cgiurl <url>    : URL for linking to other manpages
+  -cgiurlexp <url> : Perl expression URL for linking to other manpages
+  -compress        : Compress consective blank lines
+  -headmap <file>  : Filename of user section head map file
+  -help            : This message
+  -k               : Process a keyword search result
+  -leftm <#>       : Character width of left margin (def: 0)
+  -nodepage        : Do not remove pagination lines
+  -noheads         : Turn off section head detection
+  -pgsize <#>      : Number of lines in a page (def: 66)
+  -seealso         : Link to other manpages only in the SEE ALSO section
+  -solaris         : Process keyword search result in Solaris format
+  -sun             : Section heads are not overstriked in input
+  -title <string>  : Title of manpage (def: Not defined)
+  -topm <#>        : Number of lines for top margin (def: 7)
+  -uelem <elem>    : HTML Element for underlined text (def: "I")
+
+Description:
+  man2html takes formatted manpages from STDIN and converts it to HTML sent
+  to STDOUT.  The -topm and -botm arguments are the number of lines to the
+  main body text and NOT to the running headers/footers.
+
+Version:
+  3.0.1
+  Copyright (C) 1995-1997  Earl Hood, ehood@medusa.acs.uci.edu
+  man2html comes with ABSOLUTELY NO WARRANTY and man2html may be copied only
+  under the terms of the GNU General Public License, which may be found in
+  the man2html distribution.
+
 </html>
