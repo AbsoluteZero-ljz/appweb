@@ -365,13 +365,16 @@ static void terminateIdleFastProxies(Fast *fast)
 {
     FastProxy   *proxy;
     MprTicks    now;
-    int         next;
+    int         count, next;
 
     lock(fast);
     now = mprGetTicks();
+    count = mprGetListLength(fast->proxies) + mprGetListLength(fast->idleProxies);
     for (ITERATE_ITEMS(fast->idleProxies, proxy, next)) {
         if (proxy->pid && ((now - proxy->lastActive) > fast->proxyTimeout)) {
-            killFastProxy(proxy);
+            if (count-- > fast->minProxies) {
+                killFastProxy(proxy);
+            }
         }
     }
     unlock(fast);

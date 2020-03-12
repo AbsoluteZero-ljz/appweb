@@ -32,6 +32,7 @@ ttrue(response.toString() == '')
 s.close()
 
 //  Check server still up
+App.sleep(2000)
 http = new Http
 http.get(HTTP + "/index.html")
 ttrue(http.status == 200)
