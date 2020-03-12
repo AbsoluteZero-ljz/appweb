@@ -28,10 +28,13 @@ if (tdepth() >= 6) {
             s.close()
         }
     }
+    App.sleep(5000)
 
     //  Check server still there
     http = new Http
     http.get(HTTP + "/index.html")
     ttrue(http.status == 200)
     http.close()
+} else {
+    tskip('Runs at depth 6')
 }

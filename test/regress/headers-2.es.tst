@@ -4,36 +4,37 @@
     This tries to crash the server
  */
 
-let IP = tget('TM_HTTP') || "127.0.0.1:4100"
-let ip = IP.replace('http://', '')
+if (tdepth() >= 6) {
+    let IP = tget('TM_HTTP') || "127.0.0.1:4100"
+    let ip = IP.replace('http://', '')
 
-let response = new ByteArray
-let iterations = [ 1, 2, 4, 8, 16, 32, 64, 128, 256, 512 ]
+    let response = new ByteArray
+    let iterations = [ 1, 2, 4, 8, 16, 32, 64, 128, 256, 512 ]
 
-let count = iterations[tdepth()] * 1000
-let s = new Socket
+    let count = iterations[tdepth()] * 1000
+    let s = new Socket
 
-for (let i = 0; i < count; i++) {
-    /*
-        Send a valid request 
-     */
-    try {
-        s.connect(ip)
-        s.write('GET / HTTP/1.1\r
-Accept: application/xhtml+xml;v=2.0\r
-Connection: keep-alive\r\n\r\n')
-        s.read(response, -1)
-    } catch (e) {
-        print("CATCH1", e)
-        s.close()
-        s = new Socket
-    }
+    for (let i = 0; i < count; i++) {
+        /*
+            Send a valid request 
+         */
+        try {
+            s.connect(ip)
+            s.write('GET / HTTP/1.1\r
+    Accept: application/xhtml+xml;v=2.0\r
+    Connection: keep-alive\r\n\r\n')
+            s.read(response, -1)
+        } catch (e) {
+            print("CATCH1", e)
+            s.close()
+            s = new Socket
+        }
 
-    /*
-        Send an invalid request
-     */
-    try {
-        s.write('GET http://[::A:A:A:\r
+        /*
+            Send an invalid request
+         */
+        try {
+            s.write('GET http://[::A:A:A:\r
 A:A:A:\r
 A:A:A:\r
 A:A:A:\r
@@ -57,10 +58,13 @@ Accept-Encoding: gzip,deflate\r
 Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7\r
 Keep-Alive: 300\r
 Connection: keep-alive\r\n\r\n')
-        s.read(response, -1)
-    } catch (e) {
-        /* ignore error and continue */
-        s.close()
-        s = new Socket
+            s.read(response, -1)
+        } catch (e) {
+            /* ignore error and continue */
+            s.close()
+            s = new Socket
+        }
     }
+} else {
+    tskip('Skip test -- Runs at depth 6')
 }
