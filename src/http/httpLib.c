@@ -14184,7 +14184,6 @@ PUBLIC void httpNetTimeout(HttpNet *net)
     assert(!net->destroyed);
     assert(!net->error);
     assert(!net->eof);
-
     if (!net->timeoutEvent && !net->destroyed) {
         /*
             Will run on the HttpNet dispatcher unless shutting down and it is destroyed already
