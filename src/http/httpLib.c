@@ -650,11 +650,11 @@ static void httpTimer(Http *http, MprEvent *event)
                     httpStreamTimeout(stream);
                 }
             }
-            if ((http->now - net->lastActivity) > net->limits->inactivityTimeout) {
-                if (!mprGetDebugMode()) {
-                    net->timeout = HTTP_INACTIVITY_TIMEOUT;
-                    httpNetTimeout(net);
-                }
+        }
+        if ((http->now - net->lastActivity) > net->limits->inactivityTimeout) {
+            if (!mprGetDebugMode()) {
+                net->timeout = HTTP_INACTIVITY_TIMEOUT;
+                httpNetTimeout(net);
             }
         }
     }
@@ -7458,6 +7458,7 @@ static void errorv(HttpStream *stream, int flags, cchar *fmt, va_list args)
         }
         if (flags & HTTP_ABORT) {
             stream->disconnect = 1;
+            httpDiscardData(stream, HTTP_QUEUE_RX);
         }
         httpFinalize(stream);
     }
@@ -8962,8 +8963,8 @@ static HttpPacket *parseHeaders1(HttpQueue *q, HttpPacket *packet)
         return 0;
     }
     if (!gotHeaders(q, packet)) {
-        /* Don't yet have a complete header */
-        return packet;
+        /* Don't yet have a complete header, or error */
+        return (q->stream->error) ? NULL : packet;
     }
     rx->headerPacket = packet;
 
@@ -14180,12 +14181,28 @@ PUBLIC void httpRemoveStream(HttpNet *net, HttpStream *stream)
 
 PUBLIC void httpNetTimeout(HttpNet *net)
 {
+    assert(!net->destroyed);
+    assert(!net->error);
+    assert(!net->eof);
+
     if (!net->timeoutEvent && !net->destroyed) {
         /*
             Will run on the HttpNet dispatcher unless shutting down and it is destroyed already
          */
         net->timeoutEvent = mprCreateEvent(net->dispatcher, "netTimeout", 0, netTimeout, net, 0);
     }
+}
+
+
+static void netTimeout(HttpNet *net, MprEvent *mprEvent)
+{
+    if (net->destroyed) {
+        return;
+    }
+    /* This will trigger an I/O event which will then destroy the network */
+    mprDisconnectSocket(net->sock);
+    httpEnableNetEvents(net);
+    assert(net->eventMask);
 }
 
 
@@ -14210,16 +14227,6 @@ PUBLIC void httpSetIOCallback(HttpNet *net, HttpIOCallback fn)
 PUBLIC void httpSetNetContext(HttpNet *net, void *context)
 {
     net->context = context;
-}
-
-
-static void netTimeout(HttpNet *net, MprEvent *mprEvent)
-{
-    if (net->destroyed) {
-        return;
-    }
-    /* This will trigger an I/O event which will then destroy the network */
-    mprDisconnectSocket(net->sock);
 }
 
 
@@ -28343,7 +28350,7 @@ static int processWebSocketFrame(HttpQueue *q, HttpPacket *packet)
     assert(content);
 
     mprAddNullToBuf(content);
-    httpLog(stream->trace, "websockets.rx.packet", "context", "wsSeq:%d, wsTypeName:'%s', wsType:%d, wsLast:%d, wsLength:%zu",
+    httpLog(stream->trace, "websockets.rx.packet", "packet", "wsSeq:%d, wsTypeName:'%s', wsType:%d, wsLast:%d, wsLength:%zu",
          ws->rxSeq++, codetxt[packet->type], packet->type, packet->last, mprGetBufLength(content));
 
     switch (packet->type) {
@@ -29011,4 +29018,3 @@ static void traceErrorProc(HttpStream *stream, cchar *fmt, ...)
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
  */
-
