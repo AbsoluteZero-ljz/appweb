@@ -14181,9 +14181,6 @@ PUBLIC void httpRemoveStream(HttpNet *net, HttpStream *stream)
 
 PUBLIC void httpNetTimeout(HttpNet *net)
 {
-    assert(!net->destroyed);
-    assert(!net->error);
-    assert(!net->eof);
     if (!net->timeoutEvent && !net->destroyed) {
         /*
             Will run on the HttpNet dispatcher unless shutting down and it is destroyed already
@@ -14201,7 +14198,6 @@ static void netTimeout(HttpNet *net, MprEvent *mprEvent)
     /* This will trigger an I/O event which will then destroy the network */
     mprDisconnectSocket(net->sock);
     httpEnableNetEvents(net);
-    assert(net->eventMask);
 }
 
 
@@ -29017,3 +29013,4 @@ static void traceErrorProc(HttpStream *stream, cchar *fmt, ...)
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
  */
+
