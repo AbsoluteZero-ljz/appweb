@@ -10483,7 +10483,7 @@ static bool addHeaderToSet(HttpStream *stream, cchar *key, cchar *value)
             sendGoAway(net->socketq, HTTP2_PROTOCOL_ERROR, "Invalid connection header");
         } else if (scaselessmatch(key, "te") && !smatch(value, "trailers")) {
             sendGoAway(net->socketq, HTTP2_PROTOCOL_ERROR, "Invalid connection header");
-        } else if (scaselessmatch(key, "set-cookie")) {
+        } else if (scaselessmatch(key, "set-cookie") || scaselessmatch(key, "cookie")) {
             mprAddDuplicateKey(rx->headers, key, value);
         } else if (scaselessmatch(key, "content-length")) {
             rx->http2ContentLength = stoi(value);
