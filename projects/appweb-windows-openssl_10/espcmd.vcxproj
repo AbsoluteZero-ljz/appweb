@@ -14,7 +14,7 @@
       </ItemDefinitionGroup>
 
       <PropertyGroup Label="Globals">
-        <ProjectGuid>{f2d41ee0-3b27-4ab1-9a9c-37b3baac2a64}</ProjectGuid>
+        <ProjectGuid>{54cc97ef-13f9-4c72-a53d-813e563e3cc8}</ProjectGuid>
         <RootNamespace />
         <Keyword>Win32Proj</Keyword>
       </PropertyGroup>
@@ -122,7 +122,7 @@
 
     <ItemGroup>
       <ProjectReference Include="libesp.vcxproj">
-      <Project>53a6c412-c0dc-4619-ad6f-a1acd1d69860</Project>
+      <Project>f673bb42-d6d5-401a-b6e6-e78522287af5</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       </ProjectReference>
     </ItemGroup>
