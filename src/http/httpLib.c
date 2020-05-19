@@ -15918,7 +15918,7 @@ PUBLIC void httpCreateTxPipeline(HttpStream *stream, HttpRoute *route)
     tx->connector = http->netConnector;
 
     /*
-        Open the pipeline stages. This calls the open entrypoints on all stages.
+        Open the pipeline stages. This calls the open entry points on all stages.
      */
     tx->flags |= HTTP_TX_PIPELINE;
     httpOpenQueues(stream);
@@ -19551,8 +19551,10 @@ PUBLIC void httpSetRouteCookiePersist(HttpRoute *route, int enable)
 
 PUBLIC void httpSetRouteCookieSame(HttpRoute *route, cchar *value)
 {
-    route->flags &= ~(HTTP_ROUTE_LAX_COOKIE | HTTP_ROUTE_STRICT_COOKIE);
-    if (smatch(value, "lax")) {
+    route->flags &= ~(HTTP_ROUTE_NONE_COOKIE | HTTP_ROUTE_LAX_COOKIE | HTTP_ROUTE_STRICT_COOKIE);
+    if (smatch(value, "none")) {
+        route->flags |= HTTP_ROUTE_NONE_COOKIE;
+    } else if (smatch(value, "lax")) {
         route->flags |= HTTP_ROUTE_LAX_COOKIE;
     } else if (smatch(value, "strict")) {
         route->flags |= HTTP_ROUTE_STRICT_COOKIE;
@@ -22335,7 +22337,9 @@ PUBLIC HttpSession *httpGetSession(HttpStream *stream, int create)
             if (stream->secure) {
                 flags |= HTTP_COOKIE_SECURE;
             }
-            if (route->flags & HTTP_ROUTE_LAX_COOKIE) {
+            if (route->flags & HTTP_ROUTE_NONE_COOKIE) {
+                flags |= HTTP_COOKIE_SAME_NONE;
+            } else if (route->flags & HTTP_ROUTE_LAX_COOKIE) {
                 flags |= HTTP_COOKIE_SAME_LAX;
             } else if (route->flags & HTTP_ROUTE_STRICT_COOKIE) {
                 flags |= HTTP_COOKIE_SAME_STRICT;
@@ -25070,7 +25074,9 @@ PUBLIC void httpSetCookie(HttpStream *stream, cchar *name, cchar *value, cchar *
     secure = (stream->secure & (flags & HTTP_COOKIE_SECURE)) ? "; secure" : "";
     httpOnly = (flags & HTTP_COOKIE_HTTP) ?  "; httponly" : "";
     sameSite = "";
-    if (flags & HTTP_COOKIE_SAME_LAX) {
+    if (flags & HTTP_COOKIE_SAME_NONE) {
+        sameSite = "; SameSite=None";
+    } else if (flags & HTTP_COOKIE_SAME_LAX) {
         sameSite = "; SameSite=Lax";
     } else if (flags & HTTP_COOKIE_SAME_STRICT) {
         sameSite = "; SameSite=Strict";
