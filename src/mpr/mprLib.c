@@ -7110,7 +7110,6 @@ static void cmdTaskEntry(char *program, MprCmdTaskFn entry, int cmdArg)
 {
     MprCmd          *cmd;
     MprCmdFile      *files;
-    WIND_TCB        *tcb;
     char            *item;
     int             inFd, outFd, errFd, id, next;
 
@@ -7146,36 +7145,22 @@ static void cmdTaskEntry(char *program, MprCmdTaskFn entry, int cmdArg)
     for (ITERATE_ITEMS(cmd->env, item, next)) {
         putenv(item);
     }
-
-#if !VXWORKS
-{
-    char    *dir;
-    int     rc;
-
-    /*
-        Set current directory if required
-        WARNING: Setting working directory on VxWorks is global
-     */
-    if (cmd->dir) {
-        rc = chdir(cmd->dir);
-    } else {
-        dir = mprGetPathDir(cmd->program);
-        rc = chdir(dir);
-    }
-    if (rc < 0) {
-        mprLog("error mpr cmd", 0, "Cannot change directory to %s", cmd->dir);
-        exit(255);
-    }
-}
-#endif
-
     /*
         Call the user's entry point
      */
     (entry)(cmd->argc, (char**) cmd->argv, (char**) cmd->env);
 
-    tcb = taskTcb(id);
-    cmd->status = tcb->exitCode;
+    {
+#if _WRS_VXWORKS_MAJOR >= 6
+        TASK_DESC td;
+        taskInfoGet(id, &td);
+        cmd->status = td.td_status;
+#else
+        WIND_TCB *tcb;
+        tcb = taskTcb(id);
+        cmd->status = tcb->exitCode;
+#endif
+    }
 
     /*
         Cleanup
@@ -7186,8 +7171,6 @@ static void cmdTaskEntry(char *program, MprCmdTaskFn entry, int cmdArg)
     close(errFd);
     semGive(cmd->exitCond);
 }
-
-
 #endif /* VXWORKS */
 
 
