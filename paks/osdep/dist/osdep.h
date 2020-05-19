@@ -473,6 +473,7 @@
     #include    <taskHookLib.h>
     #include    <unldLib.h>
     #if _WRS_VXWORKS_MAJOR >= 6
+        #include    <taskLibCommon.h>
         #include    <wait.h>
     #endif
     #if _WRS_VXWORKS_MAJOR > 6 || (_WRS_VXWORKS_MAJOR == 6 && _WRS_VXWORKS_MINOR >= 8)
