@@ -4980,6 +4980,7 @@ PUBLIC void httpSetStreaming(struct HttpHost *host, cchar *mime, cchar *uri, boo
 #define HTTP_ROUTE_UTILITY              0x100000    /**< Route hosted by a utility */
 #define HTTP_ROUTE_LAX_COOKIE           0x200000    /**< Session cookie is SameSite=lax */
 #define HTTP_ROUTE_STRICT_COOKIE        0x400000    /**< Session cookie is SameSite=strict */
+#define HTTP_ROUTE_NONE_COOKIE          0x800000    /**< Session cookie is SameSite=none */
 
 /*
     Route hook types
@@ -7708,6 +7709,7 @@ PUBLIC void httpSetContentType(HttpStream *stream, cchar *mimeType);
 #define HTTP_COOKIE_HTTP        0x2         /**< Flag for Set-Cookie httponly. Not visible to Javascript */
 #define HTTP_COOKIE_SAME_LAX    0x4         /**< Flag for Set-Cookie SameSite=Lax */
 #define HTTP_COOKIE_SAME_STRICT 0x8         /**< Flag for Set-Cookie SameSite=Strict */
+#define HTTP_COOKIE_SAME_NONE   0x10        /**< Flag for Set-Cookie SameSite=None */
 
 /**
     Set a transmission cookie
