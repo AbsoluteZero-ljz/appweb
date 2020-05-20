@@ -17939,13 +17939,15 @@ static void outgoingRangeService(HttpQueue *q)
         }
     }
     for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
-        if (packet->flags & HTTP_PACKET_DATA) {
-            if ((packet = selectBytes(q, packet)) == 0) {
-                continue;
-            }
-        } else if (packet->flags & HTTP_PACKET_END) {
-            if (tx->rangeBoundary) {
-                httpPutPacketToNext(q, createFinalRangePacket(stream));
+        if (tx->outputRanges) {
+            if (packet->flags & HTTP_PACKET_DATA) {
+                if ((packet = selectBytes(q, packet)) == 0) {
+                    continue;
+                }
+            } else if (packet->flags & HTTP_PACKET_END) {
+                if (tx->rangeBoundary) {
+                    httpPutPacketToNext(q, createFinalRangePacket(stream));
+                }
             }
         }
         if (!httpWillNextQueueAcceptPacket(q, packet)) {
