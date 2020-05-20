@@ -12278,23 +12278,26 @@ static void outgoingRangeService(HttpQueue *q)
         }
     }
     for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
-        if (packet->flags & HTTP_PACKET_DATA) {
-            if (!applyRange(q, packet)) {
-                return;
+        if (tx->outputRanges) {
+            if (packet->flags & HTTP_PACKET_DATA) {
+                if (!applyRange(q, packet)) {
+                    return;
+                }
+                continue;
+            } else {
+                /*
+                    Send headers and end packet downstream
+                 */
+                if (packet->flags & HTTP_PACKET_END && tx->rangeBoundary) {
+                    httpPutPacketToNext(q, createFinalRangePacket(conn));
+                }
             }
-        } else {
-            /*
-                Send headers and end packet downstream
-             */
-            if (packet->flags & HTTP_PACKET_END && tx->rangeBoundary) {
-                httpPutPacketToNext(q, createFinalRangePacket(conn));
-            }
-            if (!httpWillNextQueueAcceptPacket(q, packet)) {
-                httpPutBackPacket(q, packet);
-                return;
-            }
-            httpPutPacketToNext(q, packet);
         }
+        if (!httpWillNextQueueAcceptPacket(q, packet)) {
+            httpPutBackPacket(q, packet);
+            return;
+        }
+        httpPutPacketToNext(q, packet);
     }
 }
 
