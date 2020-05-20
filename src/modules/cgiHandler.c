@@ -447,7 +447,7 @@ static void readFromCgi(Cgi *cgi, int channel)
             mprAdjustBufEnd(packet->content, nbytes);
         }
         if (channel == MPR_CMD_STDERR) {
-            mprLog("error cgi", 0, "CGI failed uri=\"%s\", details: %s", conn->rx->uri, mprGetBufStart(packet->content));
+            mprLog("error cgi", 0, "CGI failed uri=\"%s\", details: %s", conn->rx->uri, mprBufToString(packet->content));
             httpSetStatus(conn, HTTP_CODE_SERVICE_UNAVAILABLE);
             cgi->seenHeader = 1;
         }
