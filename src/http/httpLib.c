@@ -22092,7 +22092,7 @@ PUBLIC HttpLang *httpGetLanguage(HttpStream *stream, MprHash *spoken, cchar *def
 
 
 /*
-    Trim extra path information after the uri extension. This is used by CGI and PHP only. The strategy is to
+    Trim extra path information after the uri extension. This is used by CGI. The strategy is to
     heuristically find the script name in the uri. This is assumed to be the original uri up to and including
     first path component containing a "." Any path information after that is regarded as extra path.
     WARNING: Extra path is an old, unreliable, CGI specific technique. Do not use directories with embedded periods.
@@ -29021,4 +29021,3 @@ static void traceErrorProc(HttpStream *stream, cchar *fmt, ...)
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
  */
-
