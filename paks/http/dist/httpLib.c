@@ -20945,7 +20945,10 @@ static char *expandRequestTokens(HttpStream *stream, char *str)
     char        *tok, *cp, *key, *value, *field, *header, *defaultValue, *state, *v, *p;
 
     assert(stream);
-    assert(str);
+
+    if (!str || *str == '\0') {
+        return sclone("");
+    }
 
     rx = stream->rx;
     route = rx->route;
@@ -21085,7 +21088,6 @@ static char *expandRequestTokens(HttpStream *stream, char *str)
             }
         }
     }
-    assert(cp);
     if (tok) {
         if (tok > cp) {
             mprPutBlockToBuf(buf, tok, tok - cp);
@@ -23041,16 +23043,16 @@ PUBLIC void httpResetClientStream(HttpStream *stream, bool keepHeaders)
             /* Residual data from past request, cannot continue on this socket */
             stream->sock = 0;
         }
+        if (stream->tx) {
+            stream->tx->stream = 0;
+        }
+        if (stream->rx) {
+            stream->rx->stream = 0;
+        }
+        headers = (keepHeaders && stream->tx) ? stream->tx->headers: NULL;
+        stream->tx = httpCreateTx(stream, headers);
+        stream->rx = httpCreateRx(stream);
     }
-    if (stream->tx) {
-        stream->tx->stream = 0;
-    }
-    if (stream->rx) {
-        stream->rx->stream = 0;
-    }
-    headers = (keepHeaders && stream->tx) ? stream->tx->headers: NULL;
-    stream->tx = httpCreateTx(stream, headers);
-    stream->rx = httpCreateRx(stream);
     commonPrep(stream);
 }
 
