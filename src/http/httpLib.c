@@ -20945,7 +20945,10 @@ static char *expandRequestTokens(HttpStream *stream, char *str)
     char        *tok, *cp, *key, *value, *field, *header, *defaultValue, *state, *v, *p;
 
     assert(stream);
-    assert(str);
+
+    if (!str || *str == '\0') {
+        return sclone("");
+    }
 
     rx = stream->rx;
     route = rx->route;
@@ -21085,7 +21088,6 @@ static char *expandRequestTokens(HttpStream *stream, char *str)
             }
         }
     }
-    assert(cp);
     if (tok) {
         if (tok > cp) {
             mprPutBlockToBuf(buf, tok, tok - cp);
@@ -22092,7 +22094,7 @@ PUBLIC HttpLang *httpGetLanguage(HttpStream *stream, MprHash *spoken, cchar *def
 
 
 /*
-    Trim extra path information after the uri extension. This is used by CGI. The strategy is to
+    Trim extra path information after the uri extension. This is used by CGI and PHP only. The strategy is to
     heuristically find the script name in the uri. This is assumed to be the original uri up to and including
     first path component containing a "." Any path information after that is regarded as extra path.
     WARNING: Extra path is an old, unreliable, CGI specific technique. Do not use directories with embedded periods.
@@ -23041,16 +23043,16 @@ PUBLIC void httpResetClientStream(HttpStream *stream, bool keepHeaders)
             /* Residual data from past request, cannot continue on this socket */
             stream->sock = 0;
         }
+        if (stream->tx) {
+            stream->tx->stream = 0;
+        }
+        if (stream->rx) {
+            stream->rx->stream = 0;
+        }
+        headers = (keepHeaders && stream->tx) ? stream->tx->headers: NULL;
+        stream->tx = httpCreateTx(stream, headers);
+        stream->rx = httpCreateRx(stream);
     }
-    if (stream->tx) {
-        stream->tx->stream = 0;
-    }
-    if (stream->rx) {
-        stream->rx->stream = 0;
-    }
-    headers = (keepHeaders && stream->tx) ? stream->tx->headers: NULL;
-    stream->tx = httpCreateTx(stream, headers);
-    stream->rx = httpCreateRx(stream);
     commonPrep(stream);
 }
 
@@ -29021,3 +29023,4 @@ static void traceErrorProc(HttpStream *stream, cchar *fmt, ...)
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
  */
+
