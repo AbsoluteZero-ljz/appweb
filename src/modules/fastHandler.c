@@ -18,8 +18,6 @@
 
 /*********************************** Includes *********************************/
 
-#define ME_COM_FAST 1
-
 #include    "appweb.h"
 
 #if ME_COM_FAST && ME_UNIX_LIKE
@@ -187,7 +185,7 @@ static void terminateIdleFastProxies(Fast *fast);
 /*
     Loadable module initialization
  */
-PUBLIC int httpFastHandlerInit(Http *http, MprModule *module)
+PUBLIC int httpFastInit(Http *http, MprModule *module)
 {
     HttpStage   *handler, *connector;
 
