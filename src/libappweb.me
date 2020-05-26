@@ -7,14 +7,8 @@ Me.load({
         libappweb: {
             type: 'lib',
             headers: [ '*.h' ],
-            sources: [ '*.c', 'modules/cgiHandler.c', 'modules/espHandler.c' ],
+            sources: [ '*.c', 'modules/cgiHandler.c', 'modules/espHandler.c', 'modules/fastHandler.c' ],
             depends: [ 'libesp', 'libhttp', 'libmpr' ],
-        },
-        libmod_fast: {
-            type:   'lib',
-            sources: [ 'modules/fastHandler.c' ],
-            depends: [ 'libappweb' ],
-            ifdef: [ 'fast' ],
-        },
+        }
 	}
 })

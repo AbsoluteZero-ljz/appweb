@@ -41,6 +41,9 @@ PUBLIC int maLoadModules(void)
 #if ME_COM_ESP
     rc += httpEspInit(HTTP, mprCreateModule("esp", NULL, NULL, HTTP));
 #endif
+#if ME_COM_FAST
+    rc += httpFastInit(HTTP, mprCreateModule("cgi", NULL, NULL, HTTP));
+#endif
     return rc;
 }
 
@@ -53,7 +56,10 @@ PUBLIC int configureHandlers(HttpRoute *route)
 #if ME_COM_CGI
     if (httpLookupStage("cgiHandler")) {
         char    *path;
-        httpAddRouteHandler(route, "cgiHandler", "cgi cgi-nph bat cmd pl py");
+        /*
+            Disabled by default so files are not served from the documents directory by default.
+            httpAddRouteHandler(route, "cgiHandler", "cgi cgi-nph bat cmd pl py");
+         */
         /*
             Add cgi-bin with a route for the /cgi-bin URL prefix.
          */

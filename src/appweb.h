@@ -37,6 +37,9 @@ extern "C" {
 #ifndef ME_COM_ESP
     #define ME_COM_ESP 0
 #endif
+#ifndef ME_COM_FAST
+    #define ME_COM_FAST 0
+#endif
 #ifndef ME_COM_MDB
     #define ME_COM_MDB 0
 #endif
@@ -259,8 +262,15 @@ PUBLIC int maWriteAuthFile(HttpAuth *auth, char *path);
 /*
     Internal
  */
-PUBLIC int httpCgiInit(Http *http, MprModule *mp);
-PUBLIC int httpEspInit(Http *http, MprModule *mp);
+#if ME_COM_CGI
+    PUBLIC int httpCgiInit(Http *http, MprModule *mp);
+#endif
+#if ME_COM_FAST
+    PUBLIC int httpFastInit(Http *http, MprModule *mp);
+#endif
+#if ME_COM_ESP
+    PUBLIC int httpEspInit(Http *http, MprModule *mp);
+#endif
 
 #ifdef __cplusplus
 } /* extern C */
