@@ -21296,7 +21296,7 @@ PUBLIC int mprCreateNotifierService(MprWaitService *ws)
         /*
             Cygwin & VxWorks don't work with INADDR_ANY
          */
-        ws->breakAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
+        ws->breakAddress.sin_addr.s_addr = inet_addr(ME_WAKEUP_ADDR);
 #else
         ws->breakAddress.sin_addr.s_addr = INADDR_ANY;
 #endif
@@ -21535,7 +21535,7 @@ PUBLIC void mprWakeNotifier()
         if (rc < 0) {
             static int warnOnce = 0;
             if (warnOnce++ == 0) {
-                mprLog("error mpr event", 0, "Cannot send wakeup to breakout socket: errno %d", errno);
+                mprLog("error mpr event", 0, "FATAL: Cannot send wakeup to breakout socket: errno %d", errno);
             }
         }
     }
