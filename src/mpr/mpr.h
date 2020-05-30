@@ -3239,7 +3239,7 @@ PUBLIC char *mprFormatLocalTime(cchar *fmt, MprTime time);
         platform to platform. Strftime should supports some of these these formats described below.
     @param time Time to format. Use mprGetTime to retrieve the current time.
     @param fmt Time format string
-            \n 
+            \n
          %A ... full weekday name (Monday)
             \n
          %a ... abbreviated weekday name (Mon)

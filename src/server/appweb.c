@@ -26,6 +26,10 @@
 
 #include    "appweb.h"
 
+/*
+    Rather than customizing this file, add your local main code here
+    Then if you define the ME_LOCAL_MODULE symbol, it will be invoked during loadModules below.
+ */
 #ifdef ME_LOCAL_MAIN
     #include ME_LOCAL_MAIN
 #endif
