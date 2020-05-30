@@ -928,9 +928,9 @@ typedef int64 Ticks;
 #endif
 
 #if VXWORKS
-/*
-    Old VxWorks can't do array[]
- */
+    /*
+        Old VxWorks cannot do array[]
+     */
     #define ARRAY_FLEX 0
 #else
     #define ARRAY_FLEX
@@ -944,6 +944,8 @@ typedef int64 Ticks;
 #else
     #define ME_DEPRECATED(MSG)
 #endif
+
+#define NOT_USED(x) ((void*) x)
 
 /********************************** Tunables *********************************/
 /*

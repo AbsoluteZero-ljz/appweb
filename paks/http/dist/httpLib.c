@@ -14599,6 +14599,7 @@ static void netOutgoingService(HttpQueue *q)
 
         } else {
             /* Socket full or SSL negotiate */
+            net->writeBlocked = 1;
             break;
         }
     }
@@ -23650,11 +23651,11 @@ static void incomingTail(HttpQueue *q, HttpPacket *packet)
     count = stream->readq->count + httpGetPacketLength(packet);
     if ((rx->form || rx->upload) && count >= stream->limits->rxFormSize && stream->limits->rxFormSize != HTTP_UNLIMITED) {
         httpLimitError(stream, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
-            "Request form of %ld bytes is too big. Limit %lld", count, stream->limits->rxFormSize);
+            "Request form of %d bytes is too big. Limit %lld", (int) count, stream->limits->rxFormSize);
 
     } else if (count >= stream->limits->rxBodySize && stream->limits->rxBodySize != HTTP_UNLIMITED) {
         httpLimitError(stream, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
-            "Request body of %ld bytes is too big. Limit %lld", count, stream->limits->rxFormSize);
+            "Request body of %d bytes is too big. Limit %lld", (int) count, stream->limits->rxFormSize);
 
     } else {
         httpPutPacketToNext(q, packet);

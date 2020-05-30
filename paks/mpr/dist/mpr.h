@@ -109,6 +109,9 @@ struct  MprXml;
 /*
     Select wakeup port. Port can be any free port number. If this is not free, the MPR will use the next free port.
  */
+#ifndef ME_WAKEUP_ADDR
+    #define ME_WAKEUP_ADDR      "127.0.0.1"
+#endif
 #ifndef ME_WAKEUP_PORT
     #define ME_WAKEUP_PORT      9473
 #endif
@@ -3239,7 +3242,7 @@ PUBLIC char *mprFormatLocalTime(cchar *fmt, MprTime time);
         platform to platform. Strftime should supports some of these these formats described below.
     @param time Time to format. Use mprGetTime to retrieve the current time.
     @param fmt Time format string
-            \n 
+            \n
          %A ... full weekday name (Monday)
             \n
          %a ... abbreviated weekday name (Mon)
