@@ -159,6 +159,8 @@ MAIN(appweb, int argc, char **argv, char **envp)
             }
             mpr->argv[0] = mprGetAbsPath(argv[++argind]);
             mprSetAppPath(mpr->argv[0]);
+            mpr->name = mprTrimPathExt(mprGetPathBase(mpr->argv[0]));
+            mpr->title = sfmt("%s %s", stitle(ME_COMPANY), stitle(mpr->name));
             mprSetModuleSearchPath(NULL);
 
         } else if (smatch(argp, "--home")) {
