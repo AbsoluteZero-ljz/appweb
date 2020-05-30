@@ -2576,6 +2576,7 @@ ENABLE_TESTABILITY = YES;
     
     				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_FILE_OFFSET_BITS=64",
+					"_FILE_OFFSET_BITS=64",
 					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=1",
 					"$(inherited)"
@@ -2595,6 +2596,7 @@ ENABLE_TESTABILITY = YES;
     				PRODUCT_NAME = appweb;
     
     				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_FILE_OFFSET_BITS=64",
 					"_FILE_OFFSET_BITS=64",
 					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=0",
@@ -2616,6 +2618,7 @@ ENABLE_TESTABILITY = YES;
     
     				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_FILE_OFFSET_BITS=64",
+					"_FILE_OFFSET_BITS=64",
 					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=1",
 					"$(inherited)"
@@ -2635,6 +2638,7 @@ ENABLE_TESTABILITY = YES;
     				PRODUCT_NAME = authpass;
     
     				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_FILE_OFFSET_BITS=64",
 					"_FILE_OFFSET_BITS=64",
 					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=0",
@@ -2656,6 +2660,7 @@ ENABLE_TESTABILITY = YES;
     
     				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_FILE_OFFSET_BITS=64",
+					"_FILE_OFFSET_BITS=64",
 					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=1",
 					"$(inherited)"
@@ -2675,6 +2680,7 @@ ENABLE_TESTABILITY = YES;
     				PRODUCT_NAME = appweb-esp;
     
     				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_FILE_OFFSET_BITS=64",
 					"_FILE_OFFSET_BITS=64",
 					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=0",
@@ -2728,6 +2734,7 @@ ENABLE_TESTABILITY = YES;
     
     				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_FILE_OFFSET_BITS=64",
+					"_FILE_OFFSET_BITS=64",
 					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=1",
 					"$(inherited)"
@@ -2747,6 +2754,7 @@ ENABLE_TESTABILITY = YES;
     				PRODUCT_NAME = http;
     
     				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_FILE_OFFSET_BITS=64",
 					"_FILE_OFFSET_BITS=64",
 					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=0",
@@ -2801,6 +2809,7 @@ ENABLE_TESTABILITY = YES;
 
     				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_FILE_OFFSET_BITS=64",
+					"_FILE_OFFSET_BITS=64",
 					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=1",
 					"$(inherited)"
@@ -2821,6 +2830,7 @@ ENABLE_TESTABILITY = YES;
     				EXECUTABLE_EXTENSION = a;
 
     				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_FILE_OFFSET_BITS=64",
 					"_FILE_OFFSET_BITS=64",
 					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=0",
@@ -2843,6 +2853,7 @@ ENABLE_TESTABILITY = YES;
 
     				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_FILE_OFFSET_BITS=64",
+					"_FILE_OFFSET_BITS=64",
 					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=1",
 					"$(inherited)"
@@ -2863,6 +2874,7 @@ ENABLE_TESTABILITY = YES;
     				EXECUTABLE_EXTENSION = a;
 
     				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_FILE_OFFSET_BITS=64",
 					"_FILE_OFFSET_BITS=64",
 					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=0",
@@ -2885,6 +2897,7 @@ ENABLE_TESTABILITY = YES;
 
     				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_FILE_OFFSET_BITS=64",
+					"_FILE_OFFSET_BITS=64",
 					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=1",
 					"$(inherited)"
@@ -2905,6 +2918,7 @@ ENABLE_TESTABILITY = YES;
     				EXECUTABLE_EXTENSION = a;
 
     				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_FILE_OFFSET_BITS=64",
 					"_FILE_OFFSET_BITS=64",
 					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=0",
@@ -2963,6 +2977,7 @@ ENABLE_TESTABILITY = YES;
 
     				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_FILE_OFFSET_BITS=64",
+					"_FILE_OFFSET_BITS=64",
 					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=1",
 					"$(inherited)"
@@ -2981,6 +2996,7 @@ ENABLE_TESTABILITY = YES;
     				EXECUTABLE_EXTENSION = a;
 
     				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_FILE_OFFSET_BITS=64",
 					"_FILE_OFFSET_BITS=64",
 					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=0",
@@ -3108,6 +3124,7 @@ ENABLE_TESTABILITY = YES;
     
     				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_FILE_OFFSET_BITS=64",
+					"_FILE_OFFSET_BITS=64",
 					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=1",
 					"$(inherited)"
@@ -3126,6 +3143,7 @@ ENABLE_TESTABILITY = YES;
     
     				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_FILE_OFFSET_BITS=64",
+					"_FILE_OFFSET_BITS=64",
 					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=0",
 					"$(inherited)"
@@ -3143,6 +3161,7 @@ ENABLE_TESTABILITY = YES;
     				PRODUCT_NAME = server;
     
     				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_FILE_OFFSET_BITS=64",
 					"_FILE_OFFSET_BITS=64",
 					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=1",
@@ -3163,6 +3182,7 @@ ENABLE_TESTABILITY = YES;
     				PRODUCT_NAME = server;
     
     				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_FILE_OFFSET_BITS=64",
 					"_FILE_OFFSET_BITS=64",
 					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=0",
@@ -3216,6 +3236,7 @@ ENABLE_TESTABILITY = YES;
     
     				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_FILE_OFFSET_BITS=64",
+					"_FILE_OFFSET_BITS=64",
 					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=1",
 					"$(inherited)"
@@ -3233,6 +3254,7 @@ ENABLE_TESTABILITY = YES;
     				PRODUCT_NAME = appman;
     
     				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_FILE_OFFSET_BITS=64",
 					"_FILE_OFFSET_BITS=64",
 					"MBEDTLS_USER_CONFIG_FILE=\\\"embedtls.h\\\"",
 					"ME_DEBUG=0",
