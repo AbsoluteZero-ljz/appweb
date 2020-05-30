@@ -14599,6 +14599,7 @@ static void netOutgoingService(HttpQueue *q)
 
         } else {
             /* Socket full or SSL negotiate */
+            net->writeBlocked = 1;
             break;
         }
     }
