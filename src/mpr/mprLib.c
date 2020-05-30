@@ -21296,7 +21296,7 @@ PUBLIC int mprCreateNotifierService(MprWaitService *ws)
         /*
             Cygwin & VxWorks don't work with INADDR_ANY
          */
-        ws->breakAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
+        ws->breakAddress.sin_addr.s_addr = inet_addr(ME_WAKEUP_ADDR);
 #else
         ws->breakAddress.sin_addr.s_addr = INADDR_ANY;
 #endif

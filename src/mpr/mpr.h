@@ -109,6 +109,9 @@ struct  MprXml;
 /*
     Select wakeup port. Port can be any free port number. If this is not free, the MPR will use the next free port.
  */
+#ifndef ME_WAKEUP_ADDR
+    #define ME_WAKEUP_ADDR      "127.0.0.1"
+#endif
 #ifndef ME_WAKEUP_PORT
     #define ME_WAKEUP_PORT      9473
 #endif
