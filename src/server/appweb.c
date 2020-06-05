@@ -34,7 +34,12 @@
     #include ME_LOCAL_MAIN
 #endif
 
-#if ME_STATIC && ME_COM_ESP
+/*
+    Set ESP_APP to 1 if you are doing a static build with ESP applications
+ */
+#define ESP_APP 0
+
+#if ME_STATIC && ME_COM_ESP && ESP_APP
 /*
     Generate cache/server.c via: appweb-esp --combine compile.
     This compiles ESP pages into a single source file that can be included here.
@@ -277,7 +282,7 @@ MAIN(appweb, int argc, char **argv, char **envp)
             httpLogRoutes(host, app->show > 1);
         }
     }
-#if ME_STATIC && ME_COM_ESP
+#if ME_STATIC && ME_COM_ESP && ESP_APP
     /*
         Invoke ESP initializers here
      */
