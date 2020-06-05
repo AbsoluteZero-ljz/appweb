@@ -3725,27 +3725,27 @@ PUBLIC void mprWaitForIO(MprWaitService *ws, MprTicks timeout)
         timeout = 30000;
     }
 #endif
-    if (ws->needRecall) {
-        mprDoWaitRecall(ws);
-
-    } else if ((hwnd = mprGetWindow(0)) == 0) {
+    if ((hwnd = mprGetWindow(0)) == 0) {
         mprLog("critical mpr event", 0, "mprWaitForIO: Cannot get window");
+        return;
+    }
 
+    if (ws->needRecall && mprDoWaitRecall(ws)) {
+        timeout = 0;
+    }
+    /*
+        Timer must be after yield
+     */
+    mprYield(MPR_YIELD_STICKY);
+    SetTimer(hwnd, 0, (UINT) timeout, NULL);
+    if (GetMessage(&msg, NULL, 0, 0) == 0) {
+        mprResetYield();
+        mprShutdown(MPR_EXIT_NORMAL, 0, MPR_EXIT_TIMEOUT);
     } else {
-        /*
-            Timer must be after yield
-         */
-        mprYield(MPR_YIELD_STICKY);
-        SetTimer(hwnd, 0, (UINT) timeout, NULL);
-        if (GetMessage(&msg, NULL, 0, 0) == 0) {
-            mprResetYield();
-            mprShutdown(MPR_EXIT_NORMAL, 0, MPR_EXIT_TIMEOUT);
-        } else {
-            mprClearWaiting();
-            mprResetYield();
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
+        mprClearWaiting();
+        mprResetYield();
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
     }
     ws->wakeRequested = 0;
 }
@@ -11012,9 +11012,8 @@ PUBLIC void mprWaitForIO(MprWaitService *ws, MprTicks timeout)
         timeout = 30000;
     }
 #endif
-    if (ws->needRecall) {
-        mprDoWaitRecall(ws);
-        return;
+    if (ws->needRecall && mprDoWaitRecall(ws)) {
+        timeout = 0;
     }
     mprYield(MPR_YIELD_STICKY);
 
@@ -14819,10 +14818,6 @@ PUBLIC void mprWaitForIO(MprWaitService *ws, MprTicks timeout)
     struct kevent   events[ME_MAX_EVENTS];
     int             nevents;
 
-    if (ws->needRecall) {
-        mprDoWaitRecall(ws);
-        return;
-    }
     if (timeout < 0 || timeout > MAXINT) {
         timeout = MAXINT;
     }
@@ -14831,6 +14826,9 @@ PUBLIC void mprWaitForIO(MprWaitService *ws, MprTicks timeout)
         timeout = 30000;
     }
 #endif
+    if (ws->needRecall && mprDoWaitRecall(ws)) {
+        timeout = 0;
+    }
     ts.tv_sec = ((int) (timeout / 1000));
     ts.tv_nsec = ((int) ((timeout % 1000) * 1000 * 1000));
 
@@ -21292,7 +21290,7 @@ PUBLIC int mprCreateNotifierService(MprWaitService *ws)
         fcntl(breakSock, F_SETFD, FD_CLOEXEC);
 #endif
         ws->breakAddress.sin_family = AF_INET;
-#if CYGWIN || VXWORKS
+#if CYGWIN || VXWORKS || FREEBSD
         /*
             Cygwin & VxWorks don't work with INADDR_ANY
          */
@@ -21450,13 +21448,12 @@ PUBLIC void mprWaitForIO(MprWaitService *ws, MprTicks timeout)
     /* Minimize worst-case VxWorks task starvation */
     timeout = max(timeout, 50);
 #endif
+    if (ws->needRecall && mprDoWaitRecall(ws)) {
+        timeout = 0;
+    }
     tval.tv_sec = (int) (timeout / 1000);
     tval.tv_usec = (int) ((timeout % 1000) * 1000);
 
-    if (ws->needRecall) {
-        mprDoWaitRecall(ws);
-        return;
-    }
     lock(ws);
     readMask = ws->readMask;
     writeMask = ws->writeMask;
@@ -25962,6 +25959,7 @@ static void pruneWorkers(MprWorkerService *ws, MprEvent *timer)
     int           index, pruned;
 
     if (mprGetDebugMode()) {
+        mprRescheduleEvent(timer, 15 * 60 * TPS);
         return;
     }
     lock(ws);
@@ -28608,25 +28606,28 @@ PUBLIC void mprRecallWaitHandler(MprWaitHandler *wp)
 /*
     Recall a handler which may have buffered data. Only called by notifiers.
  */
-PUBLIC void mprDoWaitRecall(MprWaitService *ws)
+PUBLIC int mprDoWaitRecall(MprWaitService *ws)
 {
     MprWaitHandler      *wp;
-    int                 index;
+    int                 count, index;
 
     if (!ws) {
-        return;
+        return 0;
     }
     lock(ws);
     ws->needRecall = 0;
+    count = 0;
     for (index = 0; (wp = (MprWaitHandler*) mprGetNextItem(ws->handlers, &index)) != 0; ) {
         if ((wp->flags & MPR_WAIT_RECALL_HANDLER) && (wp->desiredMask & MPR_READABLE)) {
             wp->presentMask |= MPR_READABLE;
             wp->flags &= ~MPR_WAIT_RECALL_HANDLER;
             mprNotifyOn(wp, 0);
             mprQueueIOEvent(wp);
+            count++;
         }
     }
     unlock(ws);
+    return count;
 }
 
 

@@ -7402,7 +7402,7 @@ PUBLIC void mprWaitOn(MprWaitHandler *wp, int desiredMask);
 /*
    Internal
  */
-PUBLIC void mprDoWaitRecall(MprWaitService *ws);
+PUBLIC int mprDoWaitRecall(MprWaitService *ws);
 
 /******************************* Notification *********************************/
 /**
