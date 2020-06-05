@@ -1,8 +1,8 @@
 FILE=200M.txt
-SITE=http://127.0.0.1:4100
-# SITE=https://127.0.0.1:4443
+# SITE=http://127.0.0.1:4100
+SITE=https://127.0.0.1:4443
 DEST=/dev/null
-COUNT=20
+COUNT=40
 
 let count=${COUNT}
 
