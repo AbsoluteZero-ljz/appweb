@@ -614,6 +614,11 @@ static void httpTimer(Http *http, MprEvent *event)
 
     active = 0;
 
+    if (mprGetDebugMode()) {
+        mprRescheduleEvent(event, 15 * 60 * TPS);
+        return;
+    }
+
     updateCurrentDate();
     lock(http->networks);
 
@@ -9684,7 +9689,7 @@ static void incomingHttp2(HttpQueue *q, HttpPacket *packet)
         /*
             Try to push out any pending responses here. This keeps the socketq packet count down.
          */
-        httpServiceNetQueues(net, 0);
+        httpServiceNetQueues(net, HTTP_BLOCK);
         if (done) {
             break;
         }
@@ -11479,7 +11484,7 @@ static int setState(HttpStream *stream, int event)
     state = StateMatrix[event][stream->h2State];
 
     if (state == H2_ERR) {
-        httpLog(net->trace, "http2.rx", "trace", "State change ERROR for stream %d from \"%s\" (%d) via event \"%s\" (%d)",
+        httpLog(net->trace, "http2.rx", "error", "State change ERROR for stream %d from \"%s\" (%d) via event \"%s\" (%d)",
             stream->streamID, States[stream->h2State], stream->h2State, Events[event], event);
         return H2_ERR;
     }
@@ -14490,7 +14495,7 @@ PUBLIC void httpIOEvent(HttpNet *net, MprEvent *event)
             httpResumeQueue(net->socketq, 1);
         }
     }
-    if (event->mask & MPR_READABLE) {
+    if (event->mask & MPR_READABLE && !mprIsSocketEof(net->sock)) {
         httpReadIO(net);
     }
     httpServiceNetQueues(net, 0);
@@ -14572,7 +14577,7 @@ static void netOutgoingService(HttpQueue *q)
     written = 0;
 
     while (q->first || q->ioIndex) {
-        if (q->ioIndex == 0 && buildNetVec(q) <= 0) {
+        if (q->ioIndex == 0 && buildNetVec(q) <= (MprOff) 0) {
             freeNetPackets(q, 0);
             break;
         }
@@ -16265,6 +16270,16 @@ static void processHttp(HttpQueue *q)
     }
     for (count = 0, more = 1; more && count < 10; count++) {
         switch (stream->state) {
+        case HTTP_STATE_BEGIN:
+        case HTTP_STATE_FIRST:
+        case HTTP_STATE_CONNECTED:
+            if (stream->error) {
+                httpSetState(stream, HTTP_STATE_FINALIZED);
+            } else {
+                more = 0;
+            }
+            break;
+                
         case HTTP_STATE_PARSED:
             httpProcessHeaders(q);
             break;
@@ -23044,16 +23059,16 @@ PUBLIC void httpResetClientStream(HttpStream *stream, bool keepHeaders)
             /* Residual data from past request, cannot continue on this socket */
             stream->sock = 0;
         }
-        if (stream->tx) {
-            stream->tx->stream = 0;
-        }
-        if (stream->rx) {
-            stream->rx->stream = 0;
-        }
-        headers = (keepHeaders && stream->tx) ? stream->tx->headers: NULL;
-        stream->tx = httpCreateTx(stream, headers);
-        stream->rx = httpCreateRx(stream);
     }
+    if (stream->tx) {
+        stream->tx->stream = 0;
+    }
+    if (stream->rx) {
+        stream->rx->stream = 0;
+    }
+    headers = (keepHeaders && stream->tx) ? stream->tx->headers: NULL;
+    stream->tx = httpCreateTx(stream, headers);
+    stream->rx = httpCreateRx(stream);
     commonPrep(stream);
 }
 
@@ -23071,6 +23086,7 @@ static void commonPrep(HttpStream *stream)
     stream->error = 0;
     stream->errorMsg = 0;
     stream->state = 0;
+    stream->h2State = 0;
     stream->authRequested = 0;
     stream->complete = 0;
 
@@ -23826,8 +23842,8 @@ static HttpPacket *createAltBodyPacket(HttpQueue *q)
     Copyright (c) All Rights Reserved. See copyright notice at the bottom of the file.
 
     Event types and trace levels:
-    0: debug
-    1: request, result, error
+    0: debug, error
+    1: request, result
     2: headers
     3: context
     4: packet
@@ -23871,14 +23887,14 @@ PUBLIC HttpTrace *httpCreateTrace(HttpTrace *parent)
         if ((trace->events = mprCreateHash(0, MPR_HASH_STATIC_VALUES)) == 0) {
             return 0;
         }
-        mprAddKey(trace->events, "debug", ITOP(0));
-        mprAddKey(trace->events, "request", ITOP(1));
+        mprAddKey(trace->events, "debug", ITOP(1));
         mprAddKey(trace->events, "error", ITOP(1));
-        mprAddKey(trace->events, "result", ITOP(1));
-        mprAddKey(trace->events, "headers", ITOP(2));
-        mprAddKey(trace->events, "context", ITOP(3));
-        mprAddKey(trace->events, "packet", ITOP(4));
-        mprAddKey(trace->events, "detail", ITOP(5));
+        mprAddKey(trace->events, "request", ITOP(2));
+        mprAddKey(trace->events, "result", ITOP(2));
+        mprAddKey(trace->events, "headers", ITOP(3));
+        mprAddKey(trace->events, "context", ITOP(4));
+        mprAddKey(trace->events, "packet", ITOP(5));
+        mprAddKey(trace->events, "detail", ITOP(6));
 
         /*
             Max log file size
