@@ -14495,8 +14495,12 @@ PUBLIC void httpIOEvent(HttpNet *net, MprEvent *event)
             httpResumeQueue(net->socketq, 1);
         }
     }
-    if (event->mask & MPR_READABLE && !mprIsSocketEof(net->sock)) {
-        httpReadIO(net);
+    if (event->mask & MPR_READABLE) {
+        if (!mprIsSocketEof(net->sock)) {
+            httpReadIO(net);
+        } else {
+            net->eof = 1;
+        }
     }
     httpServiceNetQueues(net, 0);
 
