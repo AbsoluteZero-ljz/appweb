@@ -3589,7 +3589,7 @@ typedef struct HttpStream {
     HttpQueue       *txHead;                /**< Transmit queue head */
     HttpQueue       *inputq;                /**< Start of the read pipeline (tailFilter-rx) */
     HttpQueue       *outputq;               /**< End of the write pipeline (tailFilter-tx) */
-    HttpQueue       *readq;                 /**< Application queue to old incoming data for reading (qhead) */
+    HttpQueue       *readq;                 /**< Application queue reading (qhead) */
     HttpQueue       *writeq;                /**< Application queue to write outgoing data (handler) */
 
     MprSocket       *sock;                  /**< Underlying socket handle */
