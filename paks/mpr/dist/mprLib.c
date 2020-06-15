@@ -21255,29 +21255,40 @@ void romDummy() {}
 
 
 
-#if ME_EVENT_NOTIFIER == MPR_EVENT_SELECT
+#if ME_EVENT_NOTIFIER == MPR_EVENT_SELECT || ME_EVENT_NOTIFIER == MPR_EVENT_SELECT_PIPE
 
 /********************************** Forwards **********************************/
 
+static int createWakeup(MprWaitService *ws);
 static void serviceIO(MprWaitService *ws, fd_set *readMask, fd_set *writeMask, int maxfd);
-static void readPipe(MprWaitService *ws);
+static void readWakeup(MprWaitService *ws);
+static int sendWakeup(MprWaitService *ws);
 
 /************************************ Code ************************************/
 
 PUBLIC int mprCreateNotifierService(MprWaitService *ws)
 {
-    int     rc, retries, breakPort, breakSock, maxTries;
-
     ws->highestFd = 0;
     if ((ws->handlerMap = mprCreateList(MPR_FD_MIN, 0)) == 0) {
         return MPR_ERR_CANT_INITIALIZE;
     }
     FD_ZERO(&ws->readMask);
     FD_ZERO(&ws->writeMask);
+    ws->breakFd[0] = -1;
+    ws->breakFd[1] = -1;
 
-    /*
-        Try to find a good port to use to break out of the select wait
-     */
+    return createWakeup(ws);
+}
+
+
+#if ME_EVENT_NOTIFIER == MPR_EVENT_SELECT
+/*
+    Try to find a good port to use to break out of the select wait
+ */
+static int createWakeup(MprWaitService *ws)
+{
+    int     rc, retries, breakPort, breakSock, maxTries;
+
     maxTries = 100;
     breakPort = ME_WAKEUP_PORT;
     for (rc = retries = 0; retries < maxTries; retries++) {
@@ -21316,11 +21327,34 @@ PUBLIC int mprCreateNotifierService(MprWaitService *ws)
         mprLog("critical mpr select", 0, "Cannot bind any port to use for select. Tried %d-%d", breakPort, breakPort - maxTries);
         return MPR_ERR_CANT_OPEN;
     }
-    ws->breakSock = breakSock;
     FD_SET(breakSock, &ws->readMask);
     ws->highestFd = breakSock;
+    ws->breakFd[0] = breakSock;
     return 0;
 }
+
+
+#elif ME_EVENT_NOTIFIER == MPR_EVENT_SELECT_PIPE
+/*
+    Create a wakeup pipe
+ */
+static int createWakeup(MprWaitService *ws)
+{
+    /*
+        The pipe() returns two file descriptors. fds[0] is the read side fds[1] is the write side
+     */
+    if (pipe(ws->breakFd)) {
+        mprLog("critical mpr select", 0, "Cannot create pipe to use for select");
+        return MPR_ERR_CANT_OPEN;
+    }
+    /*
+        Add the read side to the select mask
+     */
+    FD_SET(ws->breakFd[0], &ws->readMask);
+    ws->highestFd = ws->breakFd[0];
+    return 0;
+}
+#endif
 
 
 PUBLIC void mprManageSelect(MprWaitService *ws, int flags)
@@ -21329,9 +21363,13 @@ PUBLIC void mprManageSelect(MprWaitService *ws, int flags)
         mprMark(ws->handlerMap);
 
     } else if (flags & MPR_MANAGE_FREE) {
-        if (ws->breakSock >= 0) {
-            close(ws->breakSock);
-            ws->breakSock = -1;
+        if (ws->breakFd[0] >= 0) {
+            close(ws->breakFd[0]);
+            ws->breakFd[0] = -1;
+        }
+        if (ws->breakFd[1] >= 0) {
+            close(ws->breakFd[1]);
+            ws->breakFd[1] = -1;
         }
     }
 }
@@ -21487,14 +21525,14 @@ static void serviceIO(MprWaitService *ws, fd_set *readMask, fd_set *writeMask, i
             mask |= MPR_WRITABLE;
         }
         if (mask) {
-            if (fd == ws->breakSock) {
-                readPipe(ws);
+            if (fd == ws->breakFd[0]) {
+                readWakeup(ws);
                 continue;
             }
             if (fd < 0 || (wp = mprGetItem(ws->handlerMap, fd)) == 0) {
                 /*
                     This can happen if a writable event has been triggered (e.g. MprCmd command stdin pipe) and the pipe is closed.
-                    Also may happen if fd == ws->breakSock and breakSock is the highest fd.
+                    Also may happen if fd == ws->breakFd[0] and breakFd[0] is the highest fd.
                     This thread may have waked before the pipe is closed and the wait handler removed from the map.
                  */
                 continue;
@@ -21515,21 +21553,18 @@ static void serviceIO(MprWaitService *ws, fd_set *readMask, fd_set *writeMask, i
 
 
 /*
-    Wake the wait service. WARNING: This routine must not require locking. MprEvents in scheduleDispatcher depends on this.
+    Wake the wait service.
+    WARNING: This routine must not require locking. MprEvents in scheduleDispatcher depends on this.
     Must be async-safe.
  */
 PUBLIC void mprWakeNotifier()
 {
     MprWaitService  *ws;
-    ssize           rc;
-    int             c;
 
     ws = MPR->waitService;
     if (!ws->wakeRequested) {
         ws->wakeRequested = 1;
-        c = 0;
-        rc = sendto(ws->breakSock, (char*) &c, 1, 0, (struct sockaddr*) &ws->breakAddress, (int) sizeof(ws->breakAddress));
-        if (rc < 0) {
+        if (sendWakeup(ws) < 0) {
             static int warnOnce = 0;
             if (warnOnce++ == 0) {
                 mprLog("error mpr event", 0, "FATAL: Cannot send wakeup to breakout socket: errno %d", errno);
@@ -21539,23 +21574,50 @@ PUBLIC void mprWakeNotifier()
 }
 
 
-static void readPipe(MprWaitService *ws)
+/*
+    Read any wakeup bytes from the socket / pipe
+ */
+static void readWakeup(MprWaitService *ws)
 {
     char        buf[128];
 
-#if VXWORKS
-    int len = sizeof(ws->breakAddress);
-    (void) recvfrom(ws->breakSock, buf, (int) sizeof(buf), 0, (struct sockaddr*) &ws->breakAddress, (int*) &len);
-#else
-    socklen_t   len = sizeof(ws->breakAddress);
-    (void) recvfrom(ws->breakSock, buf, (int) sizeof(buf), 0, (struct sockaddr*) &ws->breakAddress, (socklen_t*) &len);
+#if ME_EVENT_NOTIFIER == MPR_EVENT_SELECT
+    #if VXWORKS
+        int len = sizeof(ws->breakAddress);
+        (void) recvfrom(ws->breakFd[0], buf, (int) sizeof(buf), 0, (struct sockaddr*) &ws->breakAddress, (int*) &len);
+    #else
+        socklen_t len = sizeof(ws->breakAddress);
+        (void) recvfrom(ws->breakFd[0], buf, (int) sizeof(buf), 0, (struct sockaddr*) &ws->breakAddress, (socklen_t*) &len);
+    #endif
+#elif ME_EVENT_NOTIFIER == MPR_EVENT_SELECT_PIPE
+    (void) read(ws->breakFd[0], (char*) buf, sizeof(buf));
 #endif
+}
+
+
+/*
+    Send a byte to the wakeup socket / pipe
+ */
+static int sendWakeup(MprWaitService *ws)
+{
+    int     c, rc;
+
+    c = 0;
+#if ME_EVENT_NOTIFIER == MPR_EVENT_SELECT
+    rc = (int) sendto(ws->breakFd[0], (char*) &c, 1, 0, (struct sockaddr*) &ws->breakAddress, (int) sizeof(ws->breakAddress));
+#elif ME_EVENT_NOTIFIER == MPR_EVENT_SELECT_PIPE
+    /*
+        The write side of the pipe is [1]
+     */
+    rc = (int) write(ws->breakFd[1], (char*) &c, 1);
+#endif
+    return rc;
 }
 
 #else
 void selectDummy() {}
 
-#endif /* MPR_EVENT_SELECT */
+#endif /* MPR_EVENT_SELECT || MPR_EVENT_SELECT_PIPE */
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.

@@ -189,6 +189,7 @@ struct  MprXml;
 #define MPR_EVENT_EPOLL         2           /**< epoll_wait */
 #define MPR_EVENT_KQUEUE        3           /**< BSD kqueue */
 #define MPR_EVENT_SELECT        4           /**< traditional select() */
+#define MPR_EVENT_SELECT_PIPE   5           /**< Select with pipe for wakeup */
 
 #ifndef ME_EVENT_NOTIFIER
     #if MACOSX || SOLARIS
@@ -7228,13 +7229,13 @@ typedef struct MprWaitService {
     int             breakFd[2];             /* Event or pipe to wakeup */
 #elif ME_EVENT_NOTIFIER == MPR_EVENT_KQUEUE
     int             kq;                     /* Kqueue() return descriptor */
-#elif ME_EVENT_NOTIFIER == MPR_EVENT_SELECT
+#elif ME_EVENT_NOTIFIER == MPR_EVENT_SELECT || ME_EVENT_NOTIFIER == MPR_EVENT_SELECT_PIPE
     fd_set          readMask;               /* Current read events mask */
     fd_set          writeMask;              /* Current write events mask */
     int             highestFd;              /* Highest socket in masks + 1 */
-    int             breakSock;              /* Socket to wakeup select */
+    int             breakFd[2];             /* Socket to wakeup select in [0] */
     struct sockaddr_in breakAddress;        /* Address of wakeup socket */
-#endif /* EVENT_SELECT */
+#endif /* EVENT_SELECT || MPR_EVENT_SELECT_PIPE */
     MprMutex        *mutex;                 /* General multi-thread sync */
     MprSpin         *spin;                  /* Fast short locking */
 } MprWaitService;
