@@ -1118,9 +1118,7 @@ static void prepHeaders(HttpStream *stream)
     char            *seq;
     int             next;
 
-    if (stream->net->protocol == 1 || 1) {
-        httpResetClientStream(stream, 0);
-    }
+    httpResetClientStream(stream, 0);
     for (next = 0; (header = mprGetNextItem(app->headers, &next)) != 0; ) {
         if (scaselessmatch(header->key, "User-Agent")) {
             httpSetHeaderString(stream, header->key, header->value);
