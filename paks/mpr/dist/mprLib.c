@@ -2048,6 +2048,10 @@ static void allocException(int cause, size_t size)
         } else if (heap->allocPolicy == MPR_ALLOC_POLICY_EXIT) {
             mprLog("critical mpr memory", 0, "Application exiting due to memory depletion.");
             mprShutdown(MPR_EXIT_NORMAL, -1, MPR_EXIT_TIMEOUT);
+
+        } else if (heap->allocPolicy == MPR_ALLOC_POLICY_ABORT) {
+            //  kill(getpid(), SIGSEGV);
+            abort();
         }
     }
     heap->stats.inMemException = 0;
@@ -6132,6 +6136,9 @@ PUBLIC bool mprAreCmdEventsEnabled(MprCmd *cmd, int channel)
     MprWaitHandler  *wp;
 
     int mask = (channel == MPR_CMD_STDIN) ? MPR_WRITABLE : MPR_READABLE;
+    if (cmd == 0) {
+        return 0;
+    }
     return ((wp = cmd->handlers[channel]) != 0) && (wp->desiredMask & mask);
 }
 
@@ -6140,6 +6147,9 @@ PUBLIC void mprEnableCmdOutputEvents(MprCmd *cmd, bool on)
 {
     int     mask;
 
+    if (cmd == 0) {
+        return;
+    }
     mask = on ? MPR_READABLE : 0;
     if (cmd->handlers[MPR_CMD_STDOUT]) {
         mprWaitOn(cmd->handlers[MPR_CMD_STDOUT], mask);
@@ -6152,6 +6162,9 @@ PUBLIC void mprEnableCmdOutputEvents(MprCmd *cmd, bool on)
 
 PUBLIC void mprEnableCmdEvents(MprCmd *cmd, int channel)
 {
+    if (cmd == 0) {
+        return;
+    }
     int mask = (channel == MPR_CMD_STDIN) ? MPR_WRITABLE : MPR_READABLE;
     if (cmd->handlers[channel]) {
         mprWaitOn(cmd->handlers[channel], mask);
@@ -6161,6 +6174,9 @@ PUBLIC void mprEnableCmdEvents(MprCmd *cmd, int channel)
 
 PUBLIC void mprDisableCmdEvents(MprCmd *cmd, int channel)
 {
+    if (cmd == 0) {
+        return;
+    }
     if (cmd->handlers[channel]) {
         mprWaitOn(cmd->handlers[channel], 0);
     }
@@ -7050,7 +7066,7 @@ PUBLIC int startProcess(MprCmd *cmd)
     char            *entryPoint, *program, *pair;
     int             pri, next;
 
-    mprLog("info mpr cmd", 4, "Program %s", cmd->program);
+    mprLog("info mpr cmd", 6, "Program %s", cmd->program);
     entryPoint = 0;
     if (cmd->env) {
         for (ITERATE_ITEMS(cmd->env, pair, next)) {
@@ -16185,11 +16201,13 @@ PUBLIC int mprStartLogging(cchar *logSpec, int flags)
         if (MPR->logBackup > 0) {
             mprGetPathInfo(path, &info);
             if (MPR->logSize <= 0 || (info.valid && info.size > MPR->logSize) || (flags & MPR_LOG_ANEW)) {
-                mprBackupLog(path, MPR->logBackup);
+                if (mprBackupLog(path, MPR->logBackup) < 0) {
+                    mprPrintf("Cannot backup log %s, errno=%d\n", path, errno);
+                }
             }
         }
         if ((file = mprOpenFile(path, mode, 0664)) == 0) {
-            mprLog("error mpr log", 0, "Cannot open log file %s, errno=%d", path, errno);
+            mprPrintf("Cannot open log file %s, errno=%d", path, errno);
             return MPR_ERR_CANT_OPEN;
         }
 #endif
@@ -16332,7 +16350,9 @@ static void backupLog()
     if (info.valid && info.size > MPR->logSize) {
         lock(MPR);
         mprSetLogFile(0);
-        mprBackupLog(MPR->logPath, MPR->logBackup);
+        if (mprBackupLog(MPR->logPath, MPR->logBackup) < 0) {
+            mprPrintf("Cannot backup log %s, errno=%d\n", MPR->logPath, errno);
+        }
         mode = O_CREAT | O_WRONLY | O_TEXT;
         if ((file = mprOpenFile(MPR->logPath, mode, 0664)) == 0) {
             mprLog("error mpr log", 0, "Cannot open log file %s, errno=%d", MPR->logPath, errno);
@@ -23888,6 +23908,25 @@ PUBLIC void mprAddSslCiphers(MprSsl *ssl, cchar *ciphers)
 }
 
 
+PUBLIC int mprPreloadSsl(MprSsl *ssl, int flags)
+{
+    MprSocketService    *ss;
+
+    assert(ssl);
+
+    if (!ssl) {
+        mprLog("error mpr", 0, "Missing SSL context configuration");
+        return MPR_ERR_BAD_ARGS;
+    }
+    ss = MPR->socketService;
+    if (!ss->loaded && mprLoadSsl() < 0) {
+        mprLog("error mpr", 0, "Cannot load SSL provider");
+        return MPR_ERR_CANT_INITIALIZE;
+    }
+    return ss->sslProvider->preload(ssl, flags);
+}
+
+
 PUBLIC void mprSetSslAlpn(MprSsl *ssl, cchar *protocols)
 {
     char    *next, *protocol;
@@ -26962,13 +27001,12 @@ static void decodeTime(struct tm *tp, MprTime when, bool local)
     offset = dst = 0;
 
     if (local) {
-        //  OPT -- cache the results somehow
         timeForZoneCalc = when;
         secs = when / MS_PER_SEC;
         if (secs < MIN_TIME || secs > MAX_TIME) {
             /*
                 On some systems, localTime won't work for very small (negative) or very large times.
-                Cannot be certain localTime will work for all O/Ss with this year.  Map to an a date with a valid year.
+                Cannot be certain localTime will work for all O/Ss with this year.  Map to a date with a valid year.
              */
             decodeTime(&t, when, 0);
             t.tm_year = 111;
@@ -26978,6 +27016,8 @@ static void decodeTime(struct tm *tp, MprTime when, bool local)
         if (localTime(&t, timeForZoneCalc) == 0) {
             offset = getTimeZoneOffsetFromTm(&t);
             dst = t.tm_isdst;
+        } else {
+            printf("ERROR: Cannot get local time\n");
         }
 #if ME_UNIX_LIKE && !CYGWIN
         zoneName = (char*) t.tm_zone;
