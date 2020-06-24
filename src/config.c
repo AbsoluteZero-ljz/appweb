@@ -2511,6 +2511,17 @@ static int sslProtocolDirective(MaState *state, cchar *key, cchar *value)
 }
 #endif /* ME_COM_SSL */
 
+
+static int sslPreload(MaState *state, cchar *key, cchar *value)
+{
+    if (mprPreloadSsl(state->route->ssl, MPR_SOCKET_SERVER) < 0) {
+        mprLog("error appweb config", 0, "Cannot preload SSL configuration");
+        return MPR_ERR_BAD_SYNTAX;
+    }
+    return 0;
+}
+
+
 /*
     Stealth on|off
  */
@@ -3410,6 +3421,7 @@ static int parseInit(void)
     maAddDirective("SSLCertificateFile", sslCertificateFileDirective);
     maAddDirective("SSLCertificateKeyFile", sslCertificateKeyFileDirective);
     maAddDirective("SSLCipherSuite", sslCipherSuiteDirective);
+    maAddDirective("SSLPreload", sslPreload);
     maAddDirective("SSLProtocol", sslProtocolDirective);
     maAddDirective("SSLVerifyClient", sslVerifyClientDirective);
     maAddDirective("SSLVerifyIssuer", sslVerifyIssuerDirective);
