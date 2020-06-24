@@ -6008,7 +6008,7 @@ PUBLIC int httpDigestParse(HttpStream *stream, cchar **username, cchar **passwor
             httpLog(stream->trace, "auth.digest.error", "error", "msg:'Access denied, Bad qop'");
             return MPR_ERR_BAD_STATE;
 
-        } else if ((when + (5 * 60)) < time(0)) {
+        } else if ((when + ME_DIGEST_NONCE_DURATION) < time(0)) {
             httpLog(stream->trace, "auth.digest.error", "error", "msg:'Access denied, Nonce is stale'");
             return MPR_ERR_BAD_STATE;
         }
@@ -20969,7 +20969,6 @@ static char *expandRequestTokens(HttpStream *stream, char *str)
     if (!str || *str == '\0') {
         return sclone("");
     }
-
     rx = stream->rx;
     route = rx->route;
     tx = stream->tx;
@@ -20987,7 +20986,9 @@ static char *expandRequestTokens(HttpStream *stream, char *str)
         if ((key = stok(&tok[2], ".:}", &value)) == 0) {
             continue;
         }
-        if ((stok(value, "}", &cp)) == 0) {
+        if ((stok(value, "}", &p)) != 0) {
+            cp = p;
+        } else {
             continue;
         }
         if (smatch(key, "header")) {
@@ -23669,9 +23670,13 @@ static void incomingTail(HttpQueue *q, HttpPacket *packet)
         httpSetEof(stream);
     }
     count = stream->readq->count + httpGetPacketLength(packet);
-    if ((rx->form || rx->upload) && count >= stream->limits->rxFormSize && stream->limits->rxFormSize != HTTP_UNLIMITED) {
+    if (rx->form && count >= stream->limits->rxFormSize && stream->limits->rxFormSize != HTTP_UNLIMITED) {
         httpLimitError(stream, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
             "Request form of %d bytes is too big. Limit %lld", (int) count, stream->limits->rxFormSize);
+
+    } else if (rx->upload && count >= stream->limits->uploadSize && stream->limits->uploadSize != HTTP_UNLIMITED) {
+        httpLimitError(stream, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
+            "Request upload of %d bytes is too big. Limit %lld", (int) count, stream->limits->uploadSize);
 
     } else if (count >= stream->limits->rxBodySize && stream->limits->rxBodySize != HTTP_UNLIMITED) {
         httpLimitError(stream, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
