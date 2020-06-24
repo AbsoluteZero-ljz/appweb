@@ -7066,7 +7066,7 @@ PUBLIC int startProcess(MprCmd *cmd)
     char            *entryPoint, *program, *pair;
     int             pri, next;
 
-    mprLog("info mpr cmd", 4, "Program %s", cmd->program);
+    mprLog("info mpr cmd", 6, "Program %s", cmd->program);
     entryPoint = 0;
     if (cmd->env) {
         for (ITERATE_ITEMS(cmd->env, pair, next)) {
@@ -27001,13 +27001,12 @@ static void decodeTime(struct tm *tp, MprTime when, bool local)
     offset = dst = 0;
 
     if (local) {
-        //  OPT -- cache the results somehow
         timeForZoneCalc = when;
         secs = when / MS_PER_SEC;
         if (secs < MIN_TIME || secs > MAX_TIME) {
             /*
                 On some systems, localTime won't work for very small (negative) or very large times.
-                Cannot be certain localTime will work for all O/Ss with this year.  Map to an a date with a valid year.
+                Cannot be certain localTime will work for all O/Ss with this year.  Map to a date with a valid year.
              */
             decodeTime(&t, when, 0);
             t.tm_year = 111;
@@ -27017,6 +27016,8 @@ static void decodeTime(struct tm *tp, MprTime when, bool local)
         if (localTime(&t, timeForZoneCalc) == 0) {
             offset = getTimeZoneOffsetFromTm(&t);
             dst = t.tm_isdst;
+        } else {
+            printf("ERROR: Cannot get local time\n");
         }
 #if ME_UNIX_LIKE && !CYGWIN
         zoneName = (char*) t.tm_zone;
