@@ -16201,11 +16201,13 @@ PUBLIC int mprStartLogging(cchar *logSpec, int flags)
         if (MPR->logBackup > 0) {
             mprGetPathInfo(path, &info);
             if (MPR->logSize <= 0 || (info.valid && info.size > MPR->logSize) || (flags & MPR_LOG_ANEW)) {
-                mprBackupLog(path, MPR->logBackup);
+                if (mprBackupLog(path, MPR->logBackup) < 0) {
+                    mprPrintf("Cannot backup log %s, errno=%d\n", path, errno);
+                }
             }
         }
         if ((file = mprOpenFile(path, mode, 0664)) == 0) {
-            mprLog("error mpr log", 0, "Cannot open log file %s, errno=%d", path, errno);
+            mprPrintf("Cannot open log file %s, errno=%d", path, errno);
             return MPR_ERR_CANT_OPEN;
         }
 #endif
@@ -16348,7 +16350,9 @@ static void backupLog()
     if (info.valid && info.size > MPR->logSize) {
         lock(MPR);
         mprSetLogFile(0);
-        mprBackupLog(MPR->logPath, MPR->logBackup);
+        if (mprBackupLog(MPR->logPath, MPR->logBackup) < 0) {
+            mprPrintf("Cannot backup log %s, errno=%d\n", MPR->logPath, errno);
+        }
         mode = O_CREAT | O_WRONLY | O_TEXT;
         if ((file = mprOpenFile(MPR->logPath, mode, 0664)) == 0) {
             mprLog("error mpr log", 0, "Cannot open log file %s, errno=%d", MPR->logPath, errno);
