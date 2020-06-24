@@ -20969,7 +20969,6 @@ static char *expandRequestTokens(HttpStream *stream, char *str)
     if (!str || *str == '\0') {
         return sclone("");
     }
-
     rx = stream->rx;
     route = rx->route;
     tx = stream->tx;
@@ -20987,7 +20986,9 @@ static char *expandRequestTokens(HttpStream *stream, char *str)
         if ((key = stok(&tok[2], ".:}", &value)) == 0) {
             continue;
         }
-        if ((stok(value, "}", &cp)) == 0) {
+        if ((stok(value, "}", &p)) != 0) {
+            cp = p;
+        } else {
             continue;
         }
         if (smatch(key, "header")) {
