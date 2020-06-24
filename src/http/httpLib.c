@@ -23670,9 +23670,13 @@ static void incomingTail(HttpQueue *q, HttpPacket *packet)
         httpSetEof(stream);
     }
     count = stream->readq->count + httpGetPacketLength(packet);
-    if ((rx->form || rx->upload) && count >= stream->limits->rxFormSize && stream->limits->rxFormSize != HTTP_UNLIMITED) {
+    if (rx->form && count >= stream->limits->rxFormSize && stream->limits->rxFormSize != HTTP_UNLIMITED) {
         httpLimitError(stream, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
             "Request form of %d bytes is too big. Limit %lld", (int) count, stream->limits->rxFormSize);
+
+    } else if (rx->upload && count >= stream->limits->uploadSize && stream->limits->uploadSize != HTTP_UNLIMITED) {
+        httpLimitError(stream, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
+            "Request upload of %d bytes is too big. Limit %lld", (int) count, stream->limits->uploadSize);
 
     } else if (count >= stream->limits->rxBodySize && stream->limits->rxBodySize != HTTP_UNLIMITED) {
         httpLimitError(stream, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
