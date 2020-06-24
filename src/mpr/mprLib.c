@@ -2048,6 +2048,10 @@ static void allocException(int cause, size_t size)
         } else if (heap->allocPolicy == MPR_ALLOC_POLICY_EXIT) {
             mprLog("critical mpr memory", 0, "Application exiting due to memory depletion.");
             mprShutdown(MPR_EXIT_NORMAL, -1, MPR_EXIT_TIMEOUT);
+
+        } else if (heap->allocPolicy == MPR_ALLOC_POLICY_ABORT) {
+            //  kill(getpid(), SIGSEGV);
+            abort();
         }
     }
     heap->stats.inMemException = 0;

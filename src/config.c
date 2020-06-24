@@ -1756,6 +1756,9 @@ static int memoryPolicyDirective(MaState *state, cchar *key, cchar *value)
     } else if (scmp(policy, "continue") == 0) {
         flags = MPR_ALLOC_POLICY_PRUNE;
 
+    } else if (scmp(policy, "abort") == 0) {
+        flags = MPR_ALLOC_POLICY_ABORT;
+
     } else {
         mprLog("error appweb config", 0, "Unknown memory depletion policy '%s'", policy);
         return MPR_ERR_BAD_SYNTAX;
