@@ -9074,7 +9074,7 @@ static void parseRequestLine(HttpQueue *q, HttpPacket *packet)
 
     uri = getToken(packet, NULL, TOKEN_URI);
     if (uri == NULL || *uri == '\0') {
-        httpBadRequestError(stream, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad HTTP request. Empty URI");
+        httpBadRequestError(stream, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad HTTP request. Invalid URI");
         return;
     }
     len = slen(uri);
@@ -21110,7 +21110,7 @@ static char *expandRequestTokens(HttpStream *stream, char *str)
         }
     }
     if (tok) {
-        if (tok > cp) {
+        if (cp && tok > cp) {
             mprPutBlockToBuf(buf, tok, tok - cp);
         }
     } else {
