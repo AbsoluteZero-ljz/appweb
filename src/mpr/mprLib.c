@@ -23892,6 +23892,25 @@ PUBLIC void mprAddSslCiphers(MprSsl *ssl, cchar *ciphers)
 }
 
 
+PUBLIC int mprPreloadSsl(MprSsl *ssl, int flags)
+{
+    MprSocketService    *ss;
+
+    assert(ssl);
+
+    if (!ssl) {
+        mprLog("error mpr", 0, "Missing SSL context configuration");
+        return MPR_ERR_BAD_ARGS;
+    }
+    ss = MPR->socketService;
+    if (!ss->loaded && mprLoadSsl() < 0) {
+        mprLog("error mpr", 0, "Cannot load SSL provider");
+        return MPR_ERR_CANT_INITIALIZE;
+    }
+    return ss->sslProvider->preload(ssl, flags);
+}
+
+
 PUBLIC void mprSetSslAlpn(MprSsl *ssl, cchar *protocols)
 {
     char    *next, *protocol;

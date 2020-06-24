@@ -7471,6 +7471,15 @@ typedef struct MprSocketProvider {
     ssize   (*flushSocket)(struct MprSocket *socket);
 
     /**
+        Preload SSL configuration
+        @param ssl SSL configurations to use.
+        @param flags Set to MPR_SOCKET_SERVER for server side use.
+        @returns Zero if successful, otherwise a negative MPR error code.
+        @stability Prototype
+     */
+    int  (*preload)(struct MprSsl *ssl, int flags);
+
+    /**
         Read from a socket
         @description Read data from a socket. The read will return with whatever bytes are available. If none and the socket
             is in blocking mode, it will block untill there is some data available or the socket is disconnected.
@@ -8235,6 +8244,13 @@ PUBLIC int mprLoadSsl(void);
     @stability Stable
  */
 PUBLIC int mprSslInit(void *unused, MprModule *module);
+
+/**
+    Preload SSL configuration
+    @ingroup MprSsl
+    @stability Prototype
+ */
+PUBLIC int mprPreloadSsl(struct MprSsl *ssl, int flags);
 
 /**
     Set the ALPN protocols for SSL
