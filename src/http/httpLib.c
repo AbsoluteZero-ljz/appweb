@@ -6008,7 +6008,7 @@ PUBLIC int httpDigestParse(HttpStream *stream, cchar **username, cchar **passwor
             httpLog(stream->trace, "auth.digest.error", "error", "msg:'Access denied, Bad qop'");
             return MPR_ERR_BAD_STATE;
 
-        } else if ((when + (5 * 60)) < time(0)) {
+        } else if ((when + ME_DIGEST_NONCE_DURATION) < time(0)) {
             httpLog(stream->trace, "auth.digest.error", "error", "msg:'Access denied, Nonce is stale'");
             return MPR_ERR_BAD_STATE;
         }
