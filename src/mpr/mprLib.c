@@ -6136,6 +6136,9 @@ PUBLIC bool mprAreCmdEventsEnabled(MprCmd *cmd, int channel)
     MprWaitHandler  *wp;
 
     int mask = (channel == MPR_CMD_STDIN) ? MPR_WRITABLE : MPR_READABLE;
+    if (cmd == 0) {
+        return 0;
+    }
     return ((wp = cmd->handlers[channel]) != 0) && (wp->desiredMask & mask);
 }
 
@@ -6144,6 +6147,9 @@ PUBLIC void mprEnableCmdOutputEvents(MprCmd *cmd, bool on)
 {
     int     mask;
 
+    if (cmd == 0) {
+        return;
+    }
     mask = on ? MPR_READABLE : 0;
     if (cmd->handlers[MPR_CMD_STDOUT]) {
         mprWaitOn(cmd->handlers[MPR_CMD_STDOUT], mask);
@@ -6156,6 +6162,9 @@ PUBLIC void mprEnableCmdOutputEvents(MprCmd *cmd, bool on)
 
 PUBLIC void mprEnableCmdEvents(MprCmd *cmd, int channel)
 {
+    if (cmd == 0) {
+        return;
+    }
     int mask = (channel == MPR_CMD_STDIN) ? MPR_WRITABLE : MPR_READABLE;
     if (cmd->handlers[channel]) {
         mprWaitOn(cmd->handlers[channel], mask);
@@ -6165,6 +6174,9 @@ PUBLIC void mprEnableCmdEvents(MprCmd *cmd, int channel)
 
 PUBLIC void mprDisableCmdEvents(MprCmd *cmd, int channel)
 {
+    if (cmd == 0) {
+        return;
+    }
     if (cmd->handlers[channel]) {
         mprWaitOn(cmd->handlers[channel], 0);
     }

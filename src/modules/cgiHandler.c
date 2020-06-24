@@ -248,6 +248,7 @@ static void browserToCgiData(HttpQueue *q, HttpPacket *packet)
             /* Short incoming body data. Just kill the CGI process */
             if (cgi->cmd) {
                 mprDestroyCmd(cgi->cmd);
+                cgi->cmd = 0;
             }
             httpError(stream, HTTP_CODE_BAD_REQUEST, "Client supplied insufficient body data");
         } else {
@@ -343,7 +344,9 @@ static void cgiToBrowserService(HttpQueue *q)
     stream = q->stream;
     assert(q == stream->writeq);
     cmd = cgi->cmd;
-
+    if (cmd == 0) {
+        return;
+    }
     /*
         This will copy outgoing packets downstream toward the network stream and on to the browser.
         This may disable the CGI queue if the downstream net stream queue overflows because the socket
@@ -462,7 +465,8 @@ static void readFromCgi(Cgi *cgi, int channel)
             mprAdjustBufEnd(packet->content, nbytes);
         }
         if (channel == MPR_CMD_STDERR) {
-            mprLog("error cgi", 0, "CGI failed uri=\"%s\", details: %s", stream->rx->uri, mprBufToString(packet->content));
+            httpLog(stream->trace, "cgi.error", "error", "msg=\"CGI failed uri=\'%s\',details: %s",
+                stream->rx->uri, mprBufToString(packet->content));
             httpSetStatus(stream, HTTP_CODE_SERVICE_UNAVAILABLE);
             cgi->seenHeader = 1;
         }
