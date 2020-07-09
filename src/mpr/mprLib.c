@@ -2034,8 +2034,12 @@ static void allocException(int cause, size_t size)
         /*
             Allocation failed
          */
-        mprLog("critical mpr memory", 0, "Application exiting immediately due to memory depletion.");
-        mprShutdown(MPR_EXIT_ABORT, -1, 0);
+        if (heap->allocPolicy == MPR_ALLOC_POLICY_ABORT) {
+            abort();
+        } else {
+            mprLog("critical mpr memory", 0, "Application exiting immediately due to memory depletion.");
+            mprShutdown(MPR_EXIT_ABORT, -1, 0);
+        }
 
     } else if (cause & MPR_MEM_LIMIT) {
         /*
