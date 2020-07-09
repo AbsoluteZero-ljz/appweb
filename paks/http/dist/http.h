@@ -4445,6 +4445,7 @@ typedef struct HttpUser {
     char            *password;              /**< User password for "internal" auth store - (actually the password hash */
     MprHash         *roles;                 /**< List of roles */
     MprHash         *abilities;             /**< User abilities defined by roles */
+    void            *data;                  /**< Unmanaged custom data */
 } HttpUser;
 
 /**
