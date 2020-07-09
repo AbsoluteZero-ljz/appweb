@@ -7743,7 +7743,8 @@ static void startFileHandler(HttpQueue *q)
     } else if (stream->rx->flags & (HTTP_GET | HTTP_POST)) {
         if ((!(tx->flags & HTTP_TX_NO_BODY)) && (tx->entityLength >= 0 && !stream->error)) {
             /*
-                Create a single data packet based on the actual entity (file) length
+                Create a single dummy data packet based to hold the remaining data length and file seek possition.
+                This is used to trigger the outgoing file service. It is not transmitted to the client.
              */
             packet = httpCreateEntityPacket(0, tx->entityLength, readFileData);
 
@@ -7826,7 +7827,7 @@ static void outgoingFileService(HttpQueue *q)
     tx = stream->tx;
 
     /*
-        The queue will contain an entity packet which holds the position from which to read in the file.
+        The queue will contain a dummy entity packet which holds the position from which to read in the file.
         If the downstream queue is full, the data packet will be put onto the queue ahead of the entity packet.
         When EOF, and END packet will be added to the queue via httpFinalizeOutput which will then be sent.
      */
@@ -7864,7 +7865,7 @@ static void outgoingFileService(HttpQueue *q)
         }
         if (!tx->finalizedOutput && !q->first) {
             /*
-                Do manually rather than call httpFinalizeOutput because we want to ensure the HTTP/2 protocol
+                Do manually to optimize rather than call httpFinalizeOutput because we want to ensure the HTTP/2 protocol
                 can see the END_DATA packet and set an END_DATA flag on the last data frame. httpFinalize puts the
                 END_DATA packet on this service queue.
              */
@@ -7874,9 +7875,6 @@ static void outgoingFileService(HttpQueue *q)
                 httpFinalize(stream);
             }
             httpServiceNetQueues(stream->net, 0);
-#if OLD
-            httpFinalizeOutput(stream);
-#endif
         }
     }
     if (!tx->finalized && tx->finalizedOutput && (tx->finalizedInput || !(rx->flags & HTTP_PUT))) {
@@ -16283,7 +16281,7 @@ static void processHttp(HttpQueue *q)
                 more = 0;
             }
             break;
-                
+
         case HTTP_STATE_PARSED:
             httpProcessHeaders(q);
             break;
