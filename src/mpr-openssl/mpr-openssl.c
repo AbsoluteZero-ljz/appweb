@@ -261,6 +261,7 @@ static void     manageOpenConfig(OpenConfig *cfg, int flags);
 static void     manageOpenProvider(MprSocketProvider *provider, int flags);
 static void     manageOpenSocket(OpenSocket *ssp, int flags);
 static cchar    *mapCipherNames(cchar *ciphers);
+static int      preloadOss(MprSsl *ssl, int flags);
 static ssize    readOss(MprSocket *sp, void *buf, ssize len);
 static void     setSecured(MprSocket *sp);
 static int      setCertFile(SSL_CTX *ctx, cchar *certFile);
@@ -302,6 +303,7 @@ PUBLIC int mprSslInit(void *unused, MprModule *module)
         return MPR_ERR_MEMORY;
     }
     openProvider->name = sclone("openssl");
+    openProvider->preload = preloadOss;
     openProvider->upgradeSocket = upgradeOss;
     openProvider->closeSocket = closeOss;
     openProvider->disconnectSocket = disconnectOss;
@@ -889,6 +891,26 @@ static void closeOss(MprSocket *sp, bool gracefully)
         SSL_free(osp->handle);
         osp->handle = 0;
     }
+}
+
+
+static int preloadOss(MprSsl *ssl, int flags)
+{
+    char    *errorMsg;
+
+    assert(ssl);
+
+    if (ssl == 0) {
+        ssl = mprCreateSsl(flags & MPR_SOCKET_SERVER);
+    }
+    lock(ssl);
+    if (configOss(ssl, flags, &errorMsg) < 0) {
+        mprLog("error mpr ssl openssl", 4, "Cannot configure SSL %s", errorMsg);
+        unlock(ssl);
+        return MPR_ERR_CANT_INITIALIZE;
+    }
+    unlock(ssl);
+    return 0;
 }
 
 
