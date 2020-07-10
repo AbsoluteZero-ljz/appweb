@@ -436,7 +436,7 @@ DEPS_15 = $(DEPS_15) src\server\cache\server.c
 build\$(CONFIG)\obj\appweb.obj: \
     src\server\appweb.c $(DEPS_15)
 	@echo .. [Compile] build\$(CONFIG)\obj\appweb.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\appweb.obj -Fd$(BUILD)\obj\appweb.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\server\appweb.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\appweb.obj -Fd$(BUILD)\obj\appweb.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\server\appweb.c $(LOG)
 
 #
 #   appwebMonitor.obj
@@ -446,7 +446,7 @@ DEPS_16 = $(DEPS_16) build\$(CONFIG)\inc\mpr.h
 build\$(CONFIG)\obj\appwebMonitor.obj: \
     src\server\windows\appwebMonitor.c $(DEPS_16)
 	@echo .. [Compile] build\$(CONFIG)\obj\appwebMonitor.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\appwebMonitor.obj -Fd$(BUILD)\obj\appwebMonitor.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\server\windows\appwebMonitor.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\appwebMonitor.obj -Fd$(BUILD)\obj\appwebMonitor.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\server\windows\appwebMonitor.c $(LOG)
 
 #
 #   appwebMonitor.res
@@ -465,7 +465,7 @@ DEPS_18 = $(DEPS_18) build\$(CONFIG)\inc\appweb.h
 build\$(CONFIG)\obj\authpass.obj: \
     src\utils\authpass.c $(DEPS_18)
 	@echo .. [Compile] build\$(CONFIG)\obj\authpass.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\authpass.obj -Fd$(BUILD)\obj\authpass.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\utils\authpass.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\authpass.obj -Fd$(BUILD)\obj\authpass.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\utils\authpass.c $(LOG)
 
 #
 #   appweb.h
@@ -481,7 +481,7 @@ DEPS_20 = $(DEPS_20) src\appweb.h
 build\$(CONFIG)\obj\cgiHandler.obj: \
     src\modules\cgiHandler.c $(DEPS_20)
 	@echo .. [Compile] build\$(CONFIG)\obj\cgiHandler.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\cgiHandler.obj -Fd$(BUILD)\obj\cgiHandler.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\modules\cgiHandler.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\cgiHandler.obj -Fd$(BUILD)\obj\cgiHandler.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\modules\cgiHandler.c $(LOG)
 
 #
 #   cgiProgram.obj
@@ -501,7 +501,7 @@ DEPS_22 = $(DEPS_22) build\$(CONFIG)\inc\pcre.h
 build\$(CONFIG)\obj\config.obj: \
     src\config.c $(DEPS_22)
 	@echo .. [Compile] build\$(CONFIG)\obj\config.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\config.obj -Fd$(BUILD)\obj\config.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\config.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\config.obj -Fd$(BUILD)\obj\config.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\config.c $(LOG)
 
 #
 #   convenience.obj
@@ -511,7 +511,7 @@ DEPS_23 = $(DEPS_23) src\appweb.h
 build\$(CONFIG)\obj\convenience.obj: \
     src\convenience.c $(DEPS_23)
 	@echo .. [Compile] build\$(CONFIG)\obj\convenience.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\convenience.obj -Fd$(BUILD)\obj\convenience.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\convenience.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\convenience.obj -Fd$(BUILD)\obj\convenience.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\convenience.c $(LOG)
 
 #
 #   esp.h
@@ -528,7 +528,7 @@ DEPS_25 = $(DEPS_25) build\$(CONFIG)\inc\mpr-version.h
 build\$(CONFIG)\obj\esp.obj: \
     src\esp\esp.c $(DEPS_25)
 	@echo .. [Compile] build\$(CONFIG)\obj\esp.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\esp.obj -Fd$(BUILD)\obj\esp.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\esp\esp.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\esp.obj -Fd$(BUILD)\obj\esp.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\esp\esp.c $(LOG)
 
 #
 #   espHandler.obj
@@ -539,7 +539,7 @@ DEPS_26 = $(DEPS_26) build\$(CONFIG)\inc\esp.h
 build\$(CONFIG)\obj\espHandler.obj: \
     src\modules\espHandler.c $(DEPS_26)
 	@echo .. [Compile] build\$(CONFIG)\obj\espHandler.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\espHandler.obj -Fd$(BUILD)\obj\espHandler.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\modules\espHandler.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\espHandler.obj -Fd$(BUILD)\obj\espHandler.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\modules\espHandler.c $(LOG)
 
 #
 #   espLib.obj
@@ -551,7 +551,7 @@ DEPS_27 = $(DEPS_27) build\$(CONFIG)\inc\http.h
 build\$(CONFIG)\obj\espLib.obj: \
     src\esp\espLib.c $(DEPS_27)
 	@echo .. [Compile] build\$(CONFIG)\obj\espLib.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\espLib.obj -Fd$(BUILD)\obj\espLib.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\esp\espLib.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\espLib.obj -Fd$(BUILD)\obj\espLib.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\esp\espLib.c $(LOG)
 
 #
 #   http.h
@@ -567,7 +567,7 @@ DEPS_29 = $(DEPS_29) src\http\http.h
 build\$(CONFIG)\obj\http.obj: \
     src\http\http.c $(DEPS_29)
 	@echo .. [Compile] build\$(CONFIG)\obj\http.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\http.obj -Fd$(BUILD)\obj\http.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\http\http.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\http.obj -Fd$(BUILD)\obj\http.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\http\http.c $(LOG)
 
 #
 #   httpLib.obj
@@ -578,7 +578,7 @@ DEPS_30 = $(DEPS_30) build\$(CONFIG)\inc\pcre.h
 build\$(CONFIG)\obj\httpLib.obj: \
     src\http\httpLib.c $(DEPS_30)
 	@echo .. [Compile] build\$(CONFIG)\obj\httpLib.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\httpLib.obj -Fd$(BUILD)\obj\httpLib.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\http\httpLib.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\httpLib.obj -Fd$(BUILD)\obj\httpLib.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\http\httpLib.c $(LOG)
 
 #
 #   makerom.obj
@@ -588,7 +588,7 @@ DEPS_31 = $(DEPS_31) build\$(CONFIG)\inc\mpr.h
 build\$(CONFIG)\obj\makerom.obj: \
     src\makerom\makerom.c $(DEPS_31)
 	@echo .. [Compile] build\$(CONFIG)\obj\makerom.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\makerom.obj -Fd$(BUILD)\obj\makerom.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\makerom\makerom.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\makerom.obj -Fd$(BUILD)\obj\makerom.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\makerom\makerom.c $(LOG)
 
 #
 #   mbedtls.h
@@ -657,7 +657,7 @@ DEPS_39 = $(DEPS_39) src\mpr\mpr.h
 build\$(CONFIG)\obj\mprLib.obj: \
     src\mpr\mprLib.c $(DEPS_39)
 	@echo .. [Compile] build\$(CONFIG)\obj\mprLib.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\mprLib.obj -Fd$(BUILD)\obj\mprLib.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\mpr\mprLib.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\mprLib.obj -Fd$(BUILD)\obj\mprLib.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\mpr\mprLib.c $(LOG)
 
 #
 #   pcre.h
@@ -684,7 +684,7 @@ DEPS_42 = $(DEPS_42) build\$(CONFIG)\inc\appweb.h
 build\$(CONFIG)\obj\phpHandler5.obj: \
     src\appweb-php\phpHandler5.c $(DEPS_42)
 	@echo .. [Compile] build\$(CONFIG)\obj\phpHandler5.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\phpHandler5.obj -Fd$(BUILD)\obj\phpHandler5.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" "-I$(ME_COM_PHP_PATH)" "-I$(ME_COM_PHP_PATH)\main" "-I$(ME_COM_PHP_PATH)\Zend" "-I$(ME_COM_PHP_PATH)\TSRM" src\appweb-php\phpHandler5.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\phpHandler5.obj -Fd$(BUILD)\obj\phpHandler5.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" "-I$(ME_COM_PHP_PATH)" "-I$(ME_COM_PHP_PATH)\main" "-I$(ME_COM_PHP_PATH)\Zend" "-I$(ME_COM_PHP_PATH)\TSRM" src\appweb-php\phpHandler5.c $(LOG)
 
 #
 #   phpHandler7.obj
@@ -694,7 +694,7 @@ DEPS_43 = $(DEPS_43) build\$(CONFIG)\inc\appweb.h
 build\$(CONFIG)\obj\phpHandler7.obj: \
     src\appweb-php\phpHandler7.c $(DEPS_43)
 	@echo .. [Compile] build\$(CONFIG)\obj\phpHandler7.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\phpHandler7.obj -Fd$(BUILD)\obj\phpHandler7.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" "-I$(ME_COM_PHP_PATH)" "-I$(ME_COM_PHP_PATH)\main" "-I$(ME_COM_PHP_PATH)\Zend" "-I$(ME_COM_PHP_PATH)\TSRM" src\appweb-php\phpHandler7.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\phpHandler7.obj -Fd$(BUILD)\obj\phpHandler7.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" "-I$(ME_COM_PHP_PATH)" "-I$(ME_COM_PHP_PATH)\main" "-I$(ME_COM_PHP_PATH)\Zend" "-I$(ME_COM_PHP_PATH)\TSRM" src\appweb-php\phpHandler7.c $(LOG)
 
 #
 #   rom.obj
@@ -704,7 +704,7 @@ DEPS_44 = $(DEPS_44) build\$(CONFIG)\inc\mpr.h
 build\$(CONFIG)\obj\rom.obj: \
     src\rom.c $(DEPS_44)
 	@echo .. [Compile] build\$(CONFIG)\obj\rom.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\rom.obj -Fd$(BUILD)\obj\rom.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\rom.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\rom.obj -Fd$(BUILD)\obj\rom.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\rom.c $(LOG)
 
 #
 #   watchdog.obj
@@ -714,7 +714,7 @@ DEPS_45 = $(DEPS_45) build\$(CONFIG)\inc\mpr.h
 build\$(CONFIG)\obj\watchdog.obj: \
     src\watchdog\watchdog.c $(DEPS_45)
 	@echo .. [Compile] build\$(CONFIG)\obj\watchdog.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\watchdog.obj -Fd$(BUILD)\obj\watchdog.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\watchdog\watchdog.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\watchdog.obj -Fd$(BUILD)\obj\watchdog.pdb $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) -D_FILE_OFFSET_BITS=64 -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\watchdog\watchdog.c $(LOG)
 
 !IF "$(ME_COM_MBEDTLS)" == "1"
 #
