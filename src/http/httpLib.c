@@ -25318,6 +25318,10 @@ PUBLIC void httpPrepareHeaders(HttpStream *stream)
             }
         }
     }
+    if (stream->net->protocol >= 2) {
+        httpRemoveHeader(stream, "Connection");
+        httpRemoveHeader(stream, "Keep-Alive");
+    }
 }
 
 
