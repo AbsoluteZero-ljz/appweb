@@ -43,7 +43,7 @@ ME_COM_DIR            = 0
 ME_COM_EJS            = 0
 !ENDIF
 !IF "$(ME_COM_ESP)" == ""
-ME_COM_ESP            = 1
+ME_COM_ESP            = 0
 !ENDIF
 !IF "$(ME_COM_FAST)" == ""
 ME_COM_FAST           = 0
@@ -64,7 +64,7 @@ ME_COM_MATRIXSSL      = 0
 ME_COM_MBEDTLS        = 1
 !ENDIF
 !IF "$(ME_COM_MDB)" == ""
-ME_COM_MDB            = 1
+ME_COM_MDB            = 0
 !ENDIF
 !IF "$(ME_COM_MPR)" == ""
 ME_COM_MPR            = 1

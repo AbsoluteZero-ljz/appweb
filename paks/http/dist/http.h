@@ -44,25 +44,25 @@ struct HttpWebSocket;
 /********************************** Tunables **********************************/
 
 #ifndef ME_HTTP_BASIC
-    #define ME_HTTP_BASIC           0
+    #define ME_HTTP_BASIC           1
 #endif
 #ifndef ME_HTTP_CACHE
     #define ME_HTTP_CACHE           1
 #endif
 #ifndef ME_HTTP_DIGEST
-    #define ME_HTTP_DIGEST          0
+    #define ME_HTTP_DIGEST          1
 #endif
 #ifndef ME_HTTP_PAM
-    #define ME_HTTP_PAM             0
+    #define ME_HTTP_PAM             1
 #endif
 #ifndef ME_HTTP_HTTP2
-    #define ME_HTTP_HTTP2           0
+    #define ME_HTTP_HTTP2           1
 #endif
 #ifndef ME_HTTP_UPLOAD
-    #define ME_HTTP_UPLOAD          0
+    #define ME_HTTP_UPLOAD          1
 #endif
 #ifndef ME_HTTP_WEB_SOCKETS
-    #define ME_HTTP_WEB_SOCKETS     0
+    #define ME_HTTP_WEB_SOCKETS     1
 #endif
 
 /*
