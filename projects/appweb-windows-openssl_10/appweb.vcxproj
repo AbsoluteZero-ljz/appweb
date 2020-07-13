@@ -112,7 +112,7 @@
         
 
       <Link>
-        <AdditionalDependencies>libappweb.lib;libesp.lib;libmpr-version.lib;libhttp.lib;libpcre.lib;libmpr.lib;libmpr-openssl.lib;gdi32.lib;libeay32.lib;ssleay32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+        <AdditionalDependencies>libappweb.lib;libhttp.lib;libpcre.lib;libmpr.lib;libmpr-openssl.lib;gdi32.lib;libeay32.lib;ssleay32.lib;%(AdditionalDependencies)</AdditionalDependencies>
         <AdditionalLibraryDirectories>$(OutDir);build\$(Cfg)\bin;$(ME_COM_OPENSSL_PATH)\out32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       </Link>
   </ItemDefinitionGroup>
