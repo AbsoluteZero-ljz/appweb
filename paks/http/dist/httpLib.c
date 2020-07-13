@@ -16317,6 +16317,9 @@ static void processHttp(HttpQueue *q)
         httpServiceNetQueues(stream->net, HTTP_BLOCK);
     }
     if (stream->complete && httpServerStream(stream)) {
+        /*
+            These functions will call the notifier with HTTP_EVENT_DESTROY
+         */
         if (stream->keepAliveCount <= 0 || stream->net->protocol >= 2) {
             httpDestroyStream(stream);
         } else {
@@ -23032,6 +23035,8 @@ PUBLIC void httpResetServerStream(HttpStream *stream)
         stream->state = HTTP_STATE_BEGIN;
         return;
     }
+    HTTP_NOTIFY(stream, HTTP_EVENT_DESTROY, 0);
+
     if (stream->tx) {
         stream->tx->stream = 0;
     }

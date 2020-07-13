@@ -319,6 +319,7 @@ struct HttpWebSocket;
                 Use #httpRead to read the data. For WebSockets, use #httpGetPacket.</li>
             <li>HTTP_EVENT_WRITABLE. The output queue is now writable.</li>
             <li>HTTP_EVENT_ERROR. The stream has an error. </li>
+            <li>HTTP_EVENT_DESTROY. The stream is being destroyed. NOTE: this is not the network / socket.</li>
         </ul>
     @param stream HttpStream stream object created via #httpCreateStream
     @param event Http state
