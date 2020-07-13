@@ -28,9 +28,6 @@ extern "C" {
 #ifndef ME_COM_CGI
     #define ME_COM_CGI 0
 #endif
-#ifndef ME_COM_DIR
-    #define ME_COM_DIR 0
-#endif
 #ifndef ME_COM_EJSCRIPT
     #define ME_COM_EJSCRIPT 0
 #endif

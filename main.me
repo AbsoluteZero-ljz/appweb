@@ -21,14 +21,14 @@ Me.load({
 
     configure: {
         requires:  [ 'osdep', 'http', 'mpr', 'pcre'],
-        discovers: [ 'esp', 'mdb', 'ssl', 'watchdog' ],
-        extras:    [ 'cgi', 'dir', 'ejs', 'fast', 'php', 'sqlite' ],
+        discovers: [ 'ssl', 'watchdog' ],
+        extras:    [ 'cgi', 'dir', 'ejs', 'esp', 'fast', 'mdb', 'php', 'sqlite' ],
     },
 
     customize: [
-        /* 
+        /*
             The optional custom.me file is loaded after main.me is fully processed. It can
-            thus override any setting. Feel free to create and customize. 
+            thus override any setting. Feel free to create and customize.
          */
         'custom.me',
     ],
@@ -82,10 +82,14 @@ Me.load({
         },
 
         http: {
-            /* Use PAM (Plugable Authentication Module) to store passwords */
+            basic: true,
+            cache: true,
             cmd: true,
+            digest: true,
+            dir: true,
             pam: true,
             http2: true,
+            upload: true,
             webSockets: true,
         },
 
@@ -143,8 +147,6 @@ Me.load({
 
     usage: {
         'configFile':           'Path of the appweb.conf file',
-        'http.pam':             'Enable Unix Pluggable Auth Module (true|false)',
-        'http.webSockets':      'Enable WebSockets (true|false)',                
         'mpr.logging':          'Enable application logging (true|false)',
         'serverRoot':           'Home directory for the server ',
     },
@@ -161,13 +163,14 @@ Me.load({
             configurable: true,
             description: 'Directory Listing Module',
         },
-
+        
         fast: {
             configurable: true,
             description: 'FastCGI Module',
             path: 'src/modules/fastHandler.c',
             depends: [ 'libmod_fast' ],
         },
+
         /*
             See src/server/server.me for the appweb targets
             See src/libappweb.me for the appweb library target
@@ -192,12 +195,11 @@ Me.load({
 
         mine: {
             action: `genProjects('--with cgi', 'mine', Config.OS + '-' + Config.CPU)`,
-        }
+        },
+
     },
 
     usage: {
         'rom':          'Build without a file system (true|false)',
     }
 })
-
-
