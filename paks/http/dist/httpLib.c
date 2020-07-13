@@ -158,11 +158,17 @@ PUBLIC Http *httpCreate(int flags)
         http->addresses = mprCreateHash(-1, MPR_HASH_STABLE);
         http->defenses = mprCreateHash(-1, MPR_HASH_STABLE);
         http->remedies = mprCreateHash(-1, MPR_HASH_CASELESS | MPR_HASH_STATIC_VALUES | MPR_HASH_STABLE);
+#if ME_HTTP_UPLOAD
         httpOpenUploadFilter();
+#endif
+#if ME_HTTP_CACHE
         httpOpenCacheHandler();
+#endif
         httpOpenPassHandler();
         httpOpenActionHandler();
+#if ME_HTTP_DIR
         httpOpenDirHandler();
+#endif
         httpOpenFileHandler();
         http->serverLimits = httpCreateLimits(1);
         httpDefineRouteBuiltins();
@@ -1445,8 +1451,12 @@ PUBLIC void httpInitAuth()
     /*
         Auth protocol types: basic, digest, form, app
      */
+#if ME_HTTP_BASIC
     httpCreateAuthType("basic", httpBasicLogin, httpBasicParse, httpBasicSetHeaders);
+#endif
+#if ME_HTTP_DIGEST
     httpCreateAuthType("digest", httpDigestLogin, httpDigestParse, httpDigestSetHeaders);
+#endif
     httpCreateAuthType("form", formLogin, formParse, NULL);
     httpCreateAuthType("app", NULL, NULL, NULL);
 
@@ -2165,6 +2175,7 @@ PUBLIC int formParse(HttpStream *stream, cchar **username, cchar **password)
 
 
 
+#if ME_HTTP_BASIC
 /*********************************** Code *************************************/
 /*
     Parse the 'Authorization' header and the server 'Www-Authenticate' header
@@ -2236,6 +2247,7 @@ PUBLIC bool httpBasicSetHeaders(HttpStream *stream, cchar *username, cchar *pass
     return 1;
 }
 
+#endif /* ME_HTTP_BASIC */
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
@@ -2263,6 +2275,7 @@ PUBLIC bool httpBasicSetHeaders(HttpStream *stream, cchar *username, cchar *pass
 
 
 
+#if ME_HTTP_CACHE
 /********************************** Forwards **********************************/
 
 static void cacheAtClient(HttpStream *stream);
@@ -2787,6 +2800,7 @@ static cchar *setHeadersFromCache(HttpStream *stream, cchar *content)
     return data;
 }
 
+#endif /* ME_HTTP_CACHE */
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
@@ -4213,6 +4227,7 @@ static void parseAutoFinalize(HttpRoute *route, cchar *key, MprJson *prop)
 
 static void parseCache(HttpRoute *route, cchar *key, MprJson *prop)
 {
+#if ME_HTTP_CACHE
     MprJson     *child;
     MprTicks    clientLifespan, serverLifespan;
     cchar       *methods, *extensions, *urls, *mimeTypes, *client, *server;
@@ -4247,6 +4262,9 @@ static void parseCache(HttpRoute *route, cchar *key, MprJson *prop)
             httpAddCache(route, methods, urls, extensions, mimeTypes, clientLifespan, serverLifespan, flags);
         }
     }
+#else
+    mprLog("error http config", 0, "Cache directive not built in binary");
+#endif
 }
 
 
@@ -5795,6 +5813,7 @@ PUBLIC int httpInitParser()
 
 
 
+#if ME_HTTP_DIGEST
 /********************************** Locals ************************************/
 /*
     Per-request digest authorization data
@@ -6180,6 +6199,7 @@ static char *calcDigest(HttpStream *stream, HttpDigest *dp, cchar *username)
     return mprGetMD5(digestBuf);
 }
 
+#endif /* ME_HTTP_DIGEST */
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
     This software is distributed under commercial and open source licenses.
@@ -6207,6 +6227,7 @@ static char *calcDigest(HttpStream *stream, HttpDigest *dp, cchar *username)
 
 
 
+#if ME_HTTP_DIR
 /********************************** Defines ***********************************/
 
 #define DIR_NAME "dirHandler"
@@ -6820,6 +6841,7 @@ PUBLIC HttpDir *httpGetDirObj(HttpRoute *route)
 }
 
 
+#endif /* ME_HTTP_DIR */
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
     This software is distributed under commercial and open source licenses.
@@ -8061,7 +8083,7 @@ PUBLIC int httpHandleDirectory(HttpStream *stream)
             return HTTP_ROUTE_REROUTE;
         }
     }
-#if ME_COM_DIR
+#if ME_HTTP_DIR
     /*
         Directory Listing. Test if a directory listing should be rendered. If so, delegate to the dirHandler.
         Must use the netConnector.
@@ -18274,9 +18296,12 @@ PUBLIC HttpRoute *httpCreateRoute(HttpHost *host)
 
     httpAddRouteMethods(route, NULL);
     httpAddRouteFilter(route, http->rangeFilter->name, NULL, HTTP_STAGE_TX);
+
+#if ME_HTTP_UPLOAD
     if (http->uploadFilter) {
         httpAddRouteFilter(route, http->uploadFilter->name, NULL, HTTP_STAGE_TX);
     }
+#endif
     /*
         Standard headers for all routes. These should not break typical content
         Users then vary via header directives
@@ -22907,9 +22932,11 @@ PUBLIC HttpStream *httpCreateStream(HttpNet *net, bool peerCreated)
     if (net->protocol < 2) {
         q = httpCreateQueue(net, stream, http->chunkFilter, HTTP_QUEUE_RX, q);
     }
+#if ME_HTTP_UPLOAD
     if (httpIsServer(net)) {
         q = httpCreateQueue(net, stream, http->uploadFilter, HTTP_QUEUE_RX, q);
     }
+#endif
     stream->inputq = stream->rxHead->nextQ;
     stream->readq = stream->rxHead;
 
@@ -23737,7 +23764,7 @@ static void outgoingTail(HttpQueue *q, HttpPacket *packet)
 }
 
 
-static bool canSreamAbsorb(HttpQueue *q, HttpPacket *packet, ssize window)
+static bool canStreamAbsorb(HttpQueue *q, HttpPacket *packet, ssize window)
 {
     HttpStream  *stream;
     HttpQueue   *nextQ;
@@ -23798,14 +23825,13 @@ static bool canSreamAbsorb(HttpQueue *q, HttpPacket *packet, ssize window)
 static void outgoingTailService(HttpQueue *q)
 {
     HttpPacket  *packet;
-    HttpStream  *stream;
-    ssize       window;
+    ssize       window = 0;
 
-    stream = q->stream;
-    window = stream->outputq->window;
-
+#if ME_HTTP_HTTP2
+    window = q->stream->outputq->window;
+#endif
     for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
-        if (!canSreamAbsorb(q, packet, window)) {
+        if (!canStreamAbsorb(q, packet, window)) {
             httpPutBackPacket(q, packet);
             return;
         }
@@ -23813,9 +23839,11 @@ static void outgoingTailService(HttpQueue *q)
             httpPutBackPacket(q, packet);
             return;
         }
+#if ME_HTTP_HTTP2
         if (packet->flags & HTTP_PACKET_DATA && q->net->protocol >= 2) {
             window -= httpGetPacketLength(packet);
         }
+#endif
         /* Onto the http*Filter */
         httpPutPacket(q->net->outputq, packet);
     }
@@ -25527,6 +25555,7 @@ PUBLIC ssize httpWrite(HttpQueue *q, cchar *fmt, ...)
 
 
 
+#if ME_HTTP_UPLOAD
 /*********************************** Locals ***********************************/
 /*
     Upload state machine states
@@ -26229,6 +26258,8 @@ static bool validUploadChars(cchar *uri)
     }
     return 1;
 }
+
+#endif /* ME_HTTP_UPLOAD */
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.

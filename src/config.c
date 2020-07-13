@@ -1100,6 +1100,7 @@ static int includeDirective(MaState *state, cchar *key, cchar *value)
 }
 
 
+#if ME_HTTP_DIR
 /*
     IndexOrder ascending|descending name|date|size
  */
@@ -1147,6 +1148,7 @@ static int indexOptionsDirective(MaState *state, cchar *key, cchar *value)
     }
     return 0;
 }
+#endif
 
 
 /*
@@ -1263,6 +1265,7 @@ static int limitFilesDirective(MaState *state, cchar *key, cchar *value)
  */
 static int limitFrameDirective(MaState *state, cchar *key, cchar *value)
 {
+#if ME_HTTP_HTTP2
     int     size;
 
     httpGraduateLimits(state->route, 0);
@@ -1272,6 +1275,10 @@ static int limitFrameDirective(MaState *state, cchar *key, cchar *value)
     }
     state->route->limits->frameSize = size;
     return 0;
+#else
+    mprLog("error appweb config", 0, "HTTP/2 is not enabled");
+    return MPR_ERR_CANT_ACCESS;
+#endif
 }
 
 
@@ -1394,10 +1401,15 @@ static int limitSessionsDirective(MaState *state, cchar *key, cchar *value)
  */
 static int limitStreamsDirective(MaState *state, cchar *key, cchar *value)
 {
+#if ME_HTTP_HTTP2
     httpGraduateLimits(state->route, 0);
     state->route->limits->streamsMax = httpGetInt(value);
     state->route->limits->txStreamsMax = httpGetInt(value);
     return 0;
+#else
+    mprLog("error appweb config", 0, "HTTP/2 is not enabled");
+    return MPR_ERR_CANT_ACCESS;
+#endif
 }
 
 
@@ -1428,6 +1440,7 @@ static int limitUploadDirective(MaState *state, cchar *key, cchar *value)
  */
 static int limitWindowDirective(MaState *state, cchar *key, cchar *value)
 {
+#if ME_HTTP_HTTP2
     int     size;
 
     httpGraduateLimits(state->route, 0);
@@ -1437,6 +1450,10 @@ static int limitWindowDirective(MaState *state, cchar *key, cchar *value)
     }
     state->route->limits->window = size;
     return 0;
+#else
+    mprLog("error appweb config", 0, "HTTP/2 is not enabled");
+    return MPR_ERR_CANT_ACCESS;
+#endif
 }
 
 
@@ -1820,6 +1837,7 @@ static int monitorDirective(MaState *state, cchar *key, cchar *value)
 }
 
 
+#if ME_HTTP_DIR
 /*
     Options Indexes
  */
@@ -1838,6 +1856,7 @@ static int optionsDirective(MaState *state, cchar *key, cchar *value)
     }
     return 0;
 }
+#endif
 
 
 /*
@@ -2920,6 +2939,7 @@ static int preserveFramesDirective(MaState *state, cchar *key, cchar *value)
 }
 
 
+#if ME_HTTP_HTTP2
 static int limitWebSocketsDirective(MaState *state, cchar *key, cchar *value)
 {
     httpGraduateLimits(state->route, 0);
@@ -2964,6 +2984,7 @@ static int webSocketsPingDirective(MaState *state, cchar *key, cchar *value)
     state->route->webSocketsPingPeriod = httpGetTicks(value);
     return 0;
 }
+#endif
 
 
 static bool conditionalDefinition(MaState *state, cchar *key)
@@ -3010,7 +3031,7 @@ static bool conditionalDefinition(MaState *state, cchar *key)
             result = ME_COM_CGI;
 
         } else if (scaselessmatch(key, "DIR_MODULE")) {
-            result = ME_COM_DIR;
+            result = ME_HTTP_DIR;
 
 #if DEPRECATED || 1
         } else if (scaselessmatch(key, "EJS_MODULE")) {
@@ -3027,6 +3048,21 @@ static bool conditionalDefinition(MaState *state, cchar *key)
 
         } else if (scaselessmatch(key, "SSL_MODULE")) {
             result = ME_COM_SSL;
+
+        } else if (scaselessmatch(key, "BASIC")) {
+            result = ME_HTTP_BASIC;
+        } else if (scaselessmatch(key, "DIGEST")) {
+            result = ME_HTTP_DIGEST;
+        } else if (scaselessmatch(key, "DIR")) {
+            result = ME_HTTP_DIR;
+        } else if (scaselessmatch(key, "HTTP2")) {
+            result = ME_HTTP_HTTP2;
+        } else if (scaselessmatch(key, "PAM")) {
+            result = ME_HTTP_PAM;
+        } else if (scaselessmatch(key, "UPLOAD")) {
+            result = ME_HTTP_UPLOAD;
+        } else if (scaselessmatch(key, "WEB_SOCKETS")) {
+            result = ME_HTTP_WEB_SOCKETS;
         }
     }
     return (not) ? !result : result;
@@ -3349,8 +3385,6 @@ static int parseInit(void)
     maAddDirective("IgnoreEncodingErrors", ignoreEncodingErrorsDirective);
     maAddDirective("InactivityTimeout", inactivityTimeoutDirective);
     maAddDirective("Include", includeDirective);
-    maAddDirective("IndexOrder", indexOrderDirective);
-    maAddDirective("IndexOptions", indexOptionsDirective);
     maAddDirective("LimitCache", limitCacheDirective);
     maAddDirective("LimitCacheItem", limitCacheItemDirective);
     maAddDirective("LimitChunk", limitChunkDirective);
@@ -3372,10 +3406,6 @@ static int parseInit(void)
     maAddDirective("LimitStreams", limitStreamsDirective);
     maAddDirective("LimitUri", limitUriDirective);
     maAddDirective("LimitUpload", limitUploadDirective);
-    maAddDirective("LimitWebSockets", limitWebSocketsDirective);
-    maAddDirective("LimitWebSocketsMessage", limitWebSocketsMessageDirective);
-    maAddDirective("LimitWebSocketsFrame", limitWebSocketsFrameDirective);
-    maAddDirective("LimitWebSocketsPacket", limitWebSocketsPacketDirective);
     maAddDirective("LimitWindow", limitWindowDirective);
     maAddDirective("LimitWorkers", limitWorkersDirective);
     maAddDirective("Listen", listenDirective);
@@ -3389,7 +3419,6 @@ static int parseInit(void)
     maAddDirective("Methods", methodsDirective);
     maAddDirective("MinWorkers", minWorkersDirective);
     maAddDirective("Monitor", monitorDirective);
-    maAddDirective("Options", optionsDirective);
     maAddDirective("Order", orderDirective);
     maAddDirective("Param", paramDirective);
     maAddDirective("Prefix", prefixDirective);
@@ -3445,9 +3474,21 @@ static int parseInit(void)
     maAddDirective("UserAccount", userAccountDirective);
     maAddDirective("<VirtualHost", virtualHostDirective);
     maAddDirective("</VirtualHost", closeVirtualHostDirective);
+
+#if ME_HTTP_WEB_SOCKETS
+    maAddDirective("LimitWebSockets", limitWebSocketsDirective);
+    maAddDirective("LimitWebSocketsMessage", limitWebSocketsMessageDirective);
+    maAddDirective("LimitWebSocketsFrame", limitWebSocketsFrameDirective);
+    maAddDirective("LimitWebSocketsPacket", limitWebSocketsPacketDirective);
     maAddDirective("WebSocketsProtocol", webSocketsProtocolDirective);
     maAddDirective("WebSocketsPing", webSocketsPingDirective);
+#endif
 
+#if ME_HTTP_DIR
+    maAddDirective("IndexOrder", indexOrderDirective);
+    maAddDirective("IndexOptions", indexOptionsDirective);
+    maAddDirective("Options", optionsDirective);
+#endif
     /*
         Fixes
      */

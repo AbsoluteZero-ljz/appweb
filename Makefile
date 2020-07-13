@@ -72,7 +72,6 @@ help:
 	@echo '  ME_MPR_LOGGING    # Enable application logging' >&2
 	@echo '  ME_MPR_TRACING    # Enable debug tracing' >&2
 	@echo '  ME_COM_CGI        # Enable the CGI handler' >&2
-	@echo '  ME_COM_DIR        # Enable the directory listing handler' >&2
 	@echo '  ME_COM_ESP        # Enable the ESP web framework' >&2
 	@echo '  ME_COM_MBEDTLS    # Enable the mbed TLS stack' >&2
 	@echo '  ME_COM_OPENSSL    # Enable the OpenSSL SSL stack, must set ME_COM_OPENSS_PATH' >&2
