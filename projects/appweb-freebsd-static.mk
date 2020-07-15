@@ -3,7 +3,7 @@
 #
 
 NAME                  := appweb
-VERSION               := 8.1.0
+VERSION               := 8.1.1
 PROFILE               ?= static
 ARCH                  ?= $(shell uname -m | sed 's/i.86/x86/;s/x86_64/x64/;s/arm.*/arm/;s/mips.*/mips/')
 CC_ARCH               ?= $(shell echo $(ARCH) | sed 's/x86/i686/;s/x64/x86_64/')
@@ -19,7 +19,7 @@ ME_COM_CGI            ?= 0
 ME_COM_COMPILER       ?= 1
 ME_COM_DIR            ?= 0
 ME_COM_EJS            ?= 0
-ME_COM_ESP            ?= 0
+ME_COM_ESP            ?= 1
 ME_COM_FAST           ?= 0
 ME_COM_HTTP           ?= 1
 ME_COM_LIB            ?= 1
