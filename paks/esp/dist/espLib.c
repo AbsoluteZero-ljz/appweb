@@ -5223,9 +5223,10 @@ PUBLIC bool espRenderView(HttpStream *stream, cchar *target, int flags)
  */
 static cchar *checkView(HttpStream *stream, cchar *target, cchar *filename, cchar *ext)
 {
-    HttpRx      *rx;
-    HttpRoute   *route;
-    EspRoute    *eroute;
+    HttpRx          *rx;
+    HttpRoute       *route;
+    EspRoute        *eroute;
+    MprFileSystem   *fs;
 
     assert(target);
 
@@ -5239,8 +5240,15 @@ static cchar *checkView(HttpStream *stream, cchar *target, cchar *filename, ccha
     assert(target && *target);
 
     if (ext && *ext) {
-        if (!smatch(mprGetPathExt(target), ext)) {
-            target = sjoin(target, ".", ext, NULL);
+        fs = mprLookupFileSystem("/");
+        if (fs->caseSensitive) {
+            if (!smatch(mprGetPathExt(target), ext)) {
+                target = sjoin(target, ".", ext, NULL);
+            }
+        } else {
+            if (!scaselessmatch(mprGetPathExt(target), ext)) {
+                target = sjoin(target, ".", ext, NULL);
+            }
         }
     }
     /*
