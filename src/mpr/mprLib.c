@@ -5476,7 +5476,7 @@ static void manageCmdService(MprCmdService *cmd, int flags);
 static void manageCmd(MprCmd *cmd, int flags);
 static void prepWinCommand(MprCmd *cmd);
 static void prepWinProgram(MprCmd *cmd);
-static void reapCmd(MprCmd *cmd, bool finalizing);
+static bool reapCmd(MprCmd *cmd);
 static void resetCmd(MprCmd *cmd, bool finalizing);
 static int startProcess(MprCmd *cmd);
 static void stdinCallback(MprCmd *cmd, MprEvent *event);
@@ -5618,8 +5618,9 @@ static void manageCmd(MprCmd *cmd, int flags)
 
 static void resetCmd(MprCmd *cmd, bool finalizing)
 {
-    MprCmdFile      *files;
-    int             i;
+    MprCmdFile  *files;
+    MprTicks    mark, timeout;
+    int         i;
 
     assert(cmd);
     files = cmd->files;
@@ -5652,8 +5653,18 @@ static void resetCmd(MprCmd *cmd, bool finalizing)
 
     if (cmd->pid && (!(cmd->flags & MPR_CMD_DETACH) || finalizing)) {
         mprStopCmd(cmd, -1);
-        reapCmd(cmd, finalizing);
-        cmd->pid = 0;
+        mark = mprGetTicks();
+        timeout = 20 * TPS;
+        do {
+            if (reapCmd(cmd)) {
+                break;
+            }
+            mprYield(0);
+            mprNap(1);
+        } while (mprGetRemainingTicks(mark, timeout) > 0);
+    }
+    if (cmd->pid) {
+        mprLog("error cmd", 0, "Could not reap command pid %d", cmd->pid);
     }
     if (cmd->signal) {
         mprRemoveSignalHandler(cmd->signal);
@@ -5719,7 +5730,7 @@ PUBLIC void mprCloseCmdFd(MprCmd *cmd, int channel)
             cmd->eofCount++;
             if (cmd->eofCount >= cmd->requiredEof) {
 #if VXWORKS || XCODE_DEBUG
-                reapCmd(cmd, 0);
+                reapCmd(cmd);
 #endif
                 if (cmd->pid == 0) {
                     completeCommand(cmd);
@@ -6230,7 +6241,7 @@ static void pollWinCmd(MprCmd *cmd, MprTicks timeout)
             mprYield(MPR_YIELD_STICKY);
             if (WaitForSingleObject(cmd->process, (DWORD) delay) == WAIT_OBJECT_0) {
                 mprResetYield();
-                reapCmd(cmd, 0);
+                reapCmd(cmd);
                 break;
             } else {
                 mprResetYield();
@@ -6305,10 +6316,10 @@ PUBLIC int mprWaitForCmd(MprCmd *cmd, MprTicks timeout)
     WARNING: this may be called with a false-positive, ie. SIGCHLD will get invoked for all process deaths and not just
     when this cmd has completed.
  */
-static void reapCmd(MprCmd *cmd, bool finalizing)
+static bool reapCmd(MprCmd *cmd)
 {
     if (cmd->pid == 0) {
-        return;
+        return 0;
     }
 #if ME_UNIX_LIKE
 {
@@ -6344,7 +6355,7 @@ static void reapCmd(MprCmd *cmd, bool finalizing)
     if (!cmd->stopped) {
         if (semTake(cmd->exitCond, MPR_TIMEOUT_STOP_TASK) != OK) {
             mprLog("error mpr cmd", 0, "Child %s did not exit, errno %d", cmd->program, errno);
-            return;
+            return 0;
         }
     }
     semDelete(cmd->exitCond);
@@ -6359,7 +6370,7 @@ static void reapCmd(MprCmd *cmd, bool finalizing)
 
     if (GetExitCodeProcess(cmd->process, (ulong*) &status) == 0) {
         mprLog("error mpr cmd", 0, "GetExitProcess error");
-        return;
+        return 0;
     }
     if (status != STILL_ACTIVE) {
         cmd->status = status;
@@ -6383,6 +6394,7 @@ static void reapCmd(MprCmd *cmd, bool finalizing)
             (cmd->callback)(cmd, -1, cmd->callbackData);
         }
     }
+    return cmd->pid == 0 ? 1 : 0;
 }
 
 
@@ -6973,7 +6985,7 @@ static int makeChannel(MprCmd *cmd, int index)
  */
 static void cmdChildDeath(MprCmd *cmd, MprSignal *sp)
 {
-    reapCmd(cmd, 0);
+    reapCmd(cmd);
 }
 
 
