@@ -243,6 +243,9 @@ int main(int argc, char **argv, char **envp)
         if (strcmp(safeGetenv("CONTENT_TYPE"), "application/x-www-form-urlencoded") == 0) {
             numPostKeys = getVars(&postKeys, postBuf, postBufLen);
         }
+        if (strstr(safeGetenv("CONTENT_TYPE"), "multipart/form-data") != 0) {
+            numPostKeys = getVars(&postKeys, postBuf, postBufLen);
+        }
     }
 
     if (hasError) {
