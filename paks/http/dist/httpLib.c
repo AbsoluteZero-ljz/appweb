@@ -24186,7 +24186,7 @@ PUBLIC void httpDetailFormatter(HttpTrace *trace, cchar *event, cchar *type, int
 
     now = mprGetTime();
     if (trace->lastMark < (now + TPS) || trace->lastTime == 0) {
-        trace->lastTime = mprGetDate("%T");
+        trace->lastTime = mprGetDate("%D %T");
         trace->lastMark = now;
     }
 
