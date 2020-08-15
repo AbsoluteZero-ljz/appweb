@@ -5962,7 +5962,10 @@ PUBLIC int httpDigestParse(HttpStream *stream, cchar **username, cchar **passwor
             if (scaselesscmp(key, "realm") == 0) {
                 dp->realm = sclone(value);
             } else if (scaselesscmp(key, "response") == 0) {
-                /* Store the response digest in the password field. This is MD5(user:realm:password) */
+                /*
+                    Store the response digest in the password field. This is MD5(HA1:nonce:HA2) where
+                    HA1 is MD5(user:realm:password) and HA2 is MD5(method:digestUri)
+                 */
                 if (password) {
                     *password = sclone(value);
                 }
@@ -6177,16 +6180,12 @@ static char *calcDigest(HttpStream *stream, HttpDigest *dp, cchar *username)
     /*
         HA2
      */
-#if PROTOTYPE || 1
     if (stream->rx->route->flags & HTTP_ROUTE_DOTNET_DIGEST_FIX) {
         char *uri = stok(sclone(dp->uri), "?", 0);
         ha2 = mprGetMD5(sfmt("%s:%s", stream->rx->method, uri));
     } else {
         ha2 = mprGetMD5(sfmt("%s:%s", stream->rx->method, dp->uri));
     }
-#else
-    ha2 = mprGetMD5(sfmt("%s:%s", stream->rx->method, dp->uri));
-#endif
 
     /*
         H(HA1:nonce:HA2)
@@ -13494,16 +13493,19 @@ PUBLIC HttpAddress *httpMonitorAddress(HttpNet *net, int counterIndex)
         return address;
     }
     http = net->http;
-    count = mprGetHashLength(http->addresses);
-    if (count > net->limits->clientMax) {
-        mprLog("net info", 3, "Too many concurrent clients, active: %d, max:%d", count, net->limits->clientMax);
-        return 0;
-    }
     if (counterIndex <= 0) {
         counterIndex = HTTP_COUNTER_MAX;
     }
     lock(http->addresses);
     address = mprLookupKey(http->addresses, net->ip);
+    if (!address) {
+        count = mprGetHashLength(http->addresses);
+        if (count > net->limits->clientMax) {
+            mprLog("net info", 3, "Too many concurrent clients, active: %d, max:%d", count, net->limits->clientMax);
+            unlock(http->addresses);
+            return 0;
+        }
+    }
     if ((address = growAddresses(net, address, counterIndex)) == 0) {
         unlock(http->addresses);
         return 0;
@@ -16731,18 +16733,19 @@ static void processParsed(HttpQueue *q)
             httpError(stream, HTTP_CLOSE | HTTP_CODE_NOT_FOUND, "No listening endpoint for request for %s", rx->hostHeader);
             /* continue */
         }
-        if (!rx->upload && rx->length >= stream->limits->rxBodySize && stream->limits->rxBodySize != HTTP_UNLIMITED) {
-            httpLimitError(stream, HTTP_ABORT | HTTP_CODE_REQUEST_TOO_LARGE,
-                "Request content length %lld bytes is too big. Limit %lld", rx->length, stream->limits->rxBodySize);
-            return;
-        }
         rx->streaming = httpGetStreaming(stream);
-        if (!rx->streaming && rx->length >= stream->limits->rxFormSize && stream->limits->rxFormSize != HTTP_UNLIMITED) {
-            httpLimitError(stream, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
-                "Request form of %lld bytes is too big. Limit %lld", rx->length, stream->limits->rxFormSize);
-            /* continue */
+        if (!rx->upload) {
+            if (rx->length >= stream->limits->rxBodySize && stream->limits->rxBodySize != HTTP_UNLIMITED) {
+                httpLimitError(stream, HTTP_ABORT | HTTP_CODE_REQUEST_TOO_LARGE,
+                    "Request content length %lld bytes is too big. Limit %lld", rx->length, stream->limits->rxBodySize);
+                return;
+            }
+            if (!rx->streaming && rx->length >= stream->limits->rxFormSize && stream->limits->rxFormSize != HTTP_UNLIMITED) {
+                httpLimitError(stream, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
+                    "Request form of %lld bytes is too big. Limit %lld", rx->length, stream->limits->rxFormSize);
+                /* continue */
+            }
         }
-
         if (!rx->originalUri) {
             rx->originalUri = rx->uri;
         }
@@ -18913,7 +18916,14 @@ PUBLIC void httpMapFile(HttpStream *stream)
     if (lang && lang->path) {
         filename = mprJoinPath(lang->path, filename);
     }
-    filename = mprJoinPath(stream->rx->route->documents, filename);
+    /*
+        Cannot use JoinPath as it will normalize the filename and remove trailing "/"
+        filename = mprJoinPath(stream->rx->route->documents, filename);
+     */
+    if (!mprIsPathAbs(filename)) {
+        filename = sjoin(stream->rx->route->documents, "/", filename, NULL);
+    }
+
     /*
         Sets tx->fileInfo
         Set header for zipped
@@ -22080,14 +22090,19 @@ PUBLIC char *httpGetPathExt(cchar *path)
  */
 PUBLIC char *httpGetExt(HttpStream *stream)
 {
-    HttpRx  *rx;
-    char    *ext;
+    HttpRx          *rx;
+    MprFileSystem   *fs;
+    char            *ext;
 
     rx = stream->rx;
     if ((ext = httpGetPathExt(rx->pathInfo)) == 0) {
         if (stream->tx->filename) {
             ext = httpGetPathExt(stream->tx->filename);
         }
+    }
+    fs = mprLookupFileSystem("/");
+    if (!fs->caseSensitive) {
+        ext = slower(ext);
     }
     return ext;
 }
@@ -23700,13 +23715,13 @@ static void incomingTail(HttpQueue *q, HttpPacket *packet)
         httpSetEof(stream);
     }
     count = stream->readq->count + httpGetPacketLength(packet);
-    if (rx->form && count >= stream->limits->rxFormSize && stream->limits->rxFormSize != HTTP_UNLIMITED) {
-        httpLimitError(stream, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
-            "Request form of %d bytes is too big. Limit %lld", (int) count, stream->limits->rxFormSize);
-
-    } else if (rx->upload && count >= stream->limits->uploadSize && stream->limits->uploadSize != HTTP_UNLIMITED) {
+    if (rx->upload && count >= stream->limits->uploadSize && stream->limits->uploadSize != HTTP_UNLIMITED) {
         httpLimitError(stream, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
             "Request upload of %d bytes is too big. Limit %lld", (int) count, stream->limits->uploadSize);
+
+    } else if (rx->form && count >= stream->limits->rxFormSize && stream->limits->rxFormSize != HTTP_UNLIMITED) {
+        httpLimitError(stream, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
+            "Request form of %d bytes is too big. Limit %lld", (int) count, stream->limits->rxFormSize);
 
     } else if (count >= stream->limits->rxBodySize && stream->limits->rxBodySize != HTTP_UNLIMITED) {
         httpLimitError(stream, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
@@ -26113,9 +26128,9 @@ static int processUploadData(HttpQueue *q)
             if (packet == 0) {
                 packet = httpCreatePacket(ME_BUFSIZE);
             }
-            if (httpGetPacketLength(packet) > 0) {
+            if (httpGetPacketLength(packet) > 0 || q->nextQ->count > 0) {
                 /*
-                    Need to add www-form-urlencoding separators
+                    Need to add back www-form-urlencoding separators so CGI/PHP can see normal POST body
                  */
                 mprPutCharToBuf(packet->content, '&');
             } else {
