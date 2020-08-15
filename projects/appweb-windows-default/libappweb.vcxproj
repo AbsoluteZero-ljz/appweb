@@ -110,6 +110,7 @@
     <ClCompile Include="..\..\src\modules\cgiHandler.c" />
     <ClCompile Include="..\..\src\modules\espHandler.c" />
     <ClCompile Include="..\..\src\modules\fastHandler.c" />
+    <ClCompile Include="..\..\src\modules\proxyHandler.c" />
     <ClCompile Include="..\..\src\rom.c" />
   </ItemGroup>
 
