@@ -44,6 +44,9 @@ PUBLIC int maLoadModules(void)
 #if ME_COM_FAST
     rc += httpFastInit(HTTP, mprCreateModule("cgi", NULL, NULL, HTTP));
 #endif
+#if ME_COM_PROXY
+    rc += httpProxyInit(HTTP, mprCreateModule("cgi", NULL, NULL, HTTP));
+#endif
     return rc;
 }
 
