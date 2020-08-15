@@ -43,6 +43,9 @@ extern "C" {
 #ifndef ME_COM_PHP
     #define ME_COM_PHP 0
 #endif
+#ifndef ME_COM_PROXY
+    #define ME_COM_PROXY 0
+#endif
 #ifndef ME_COM_SDB
     #define ME_COM_SDB 0
 #endif
@@ -267,6 +270,9 @@ PUBLIC int maWriteAuthFile(HttpAuth *auth, char *path);
 #endif
 #if ME_COM_ESP
     PUBLIC int httpEspInit(Http *http, MprModule *mp);
+#endif
+#if ME_COM_PROXY
+    PUBLIC int httpProxyInit(Http *http, MprModule *mp);
 #endif
 
 #ifdef __cplusplus
