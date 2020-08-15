@@ -1252,6 +1252,16 @@ static int limitConnectionsDirective(MaState *state, cchar *key, cchar *value)
 
 
 /*
+    LimitConnectionsPerClient count
+ */
+static int limitConnectionsPerClientDirective(MaState *state, cchar *key, cchar *value)
+{
+    httpGraduateLimits(state->route, 0);
+    state->route->limits->connectionsPerClientMax = httpGetInt(value);
+    return 0;
+}
+
+/*
     LimitFiles count
  */
 static int limitFilesDirective(MaState *state, cchar *key, cchar *value)
@@ -3393,6 +3403,7 @@ static int parseInit(void)
     maAddDirective("LimitChunk", limitChunkDirective);
     maAddDirective("LimitClients", limitClientsDirective);
     maAddDirective("LimitConnections", limitConnectionsDirective);
+    maAddDirective("LimitConnectionsPerClient", limitConnectionsPerClientDirective);
     maAddDirective("LimitFiles", limitFilesDirective);
     maAddDirective("LimitFrame", limitFrameDirective);
     maAddDirective("LimitKeepAlive", limitKeepAliveDirective);
