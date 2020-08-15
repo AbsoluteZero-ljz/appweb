@@ -355,6 +355,9 @@
 #ifndef ME_COM_PHP
     #define ME_COM_PHP 0
 #endif
+#ifndef ME_COM_PROXY
+    #define ME_COM_PROXY 0
+#endif
 #ifndef ME_COM_RC
     #define ME_COM_RC 1
 #endif

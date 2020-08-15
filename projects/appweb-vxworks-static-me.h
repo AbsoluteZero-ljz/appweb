@@ -370,6 +370,9 @@
 #ifndef ME_COM_PHP
     #define ME_COM_PHP 0
 #endif
+#ifndef ME_COM_PROXY
+    #define ME_COM_PROXY 0
+#endif
 #ifndef ME_COM_SQLITE
     #define ME_COM_SQLITE 0
 #endif
