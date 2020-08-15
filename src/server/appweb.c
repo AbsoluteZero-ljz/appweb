@@ -532,6 +532,7 @@ static void statusCheck(void *ignored, MprSignal *sp)
     } else {
         mprPrintMem("MPR Memory Report", 0);
     }
+    httpDumpCounters();
 }
 
 
