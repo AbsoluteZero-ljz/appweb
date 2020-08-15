@@ -52,6 +52,9 @@ struct HttpWebSocket;
 #ifndef ME_HTTP_DIGEST
     #define ME_HTTP_DIGEST          1
 #endif
+#ifndef ME_HTTP_DIR
+    #define ME_HTTP_DIR             1
+#endif
 #ifndef ME_HTTP_PAM
     #define ME_HTTP_PAM             1
 #endif
@@ -129,7 +132,7 @@ struct HttpWebSocket;
     #define ME_HTTP_DELAY           (2000)               /**< 2 second delay per request - while delay enforced */
 #endif
 #ifndef ME_DIGEST_NONCE_DURATION
-    #define ME_DIGEST_NONCE_DURATION 5                   /**< Lifespan for Digest auth request nonce */
+    #define ME_DIGEST_NONCE_DURATION 60                  /**< Lifespan for Digest auth request nonce */
 #endif
 #ifndef ME_MAX_URI
     #define ME_MAX_URI              512                  /**< Reasonable URI size */
@@ -1025,6 +1028,8 @@ typedef struct Http {
     struct HttpStage *netConnector;         /**< Default network connector */
     struct HttpStage *passHandler;          /**< Pass through handler */
     struct HttpStage *phpHandler;           /**< PHP through handler */
+    struct HttpStage *proxyHandler;         /**< Proxy handler */
+    struct HttpStage *proxyConnector;       /**< Proxy connector */
     struct HttpStage *rangeFilter;          /**< Ranged requests filter */
     struct HttpStage *tailFilter;           /**< Tail filter */
     struct HttpStage *uploadFilter;         /**< Upload filter */
@@ -3514,7 +3519,7 @@ PUBLIC void httpSetupWaitHandler(HttpNet *net, int eventMask);
 /*
     Internal hidden events. Not exposed by the Http notifier.
  */
-#define HTTP_EVENT_APP_OPEN         7       /* The request is now open */
+#define HTTP_EVENT_APP_OPEN         7       /**< The request is now open */
 #define HTTP_EVENT_MAX              8       /**< Maximum event plus one */
 
 /*

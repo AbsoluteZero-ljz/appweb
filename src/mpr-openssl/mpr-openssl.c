@@ -1037,7 +1037,7 @@ static ssize readOss(MprSocket *sp, void *buf, ssize len)
     retries = 5;
     for (i = 0; i < retries; i++) {
         rc = SSL_read(osp->handle, buf, (int) len);
-        if (rc < 0) {
+        if (rc <= 0) {
             error = SSL_get_error(osp->handle, rc);
             if (error == SSL_ERROR_WANT_READ || error == SSL_ERROR_WANT_CONNECT || error == SSL_ERROR_WANT_ACCEPT) {
                 continue;
