@@ -3200,6 +3200,7 @@ typedef struct HttpNet {
     int             totalRequests;          /**< Total number of requests serviced */
     int             window;                 /**< Default HTTP/2 flow control window size for streams tx */
 
+    bool            activeNet;              /**< Active net request (server side) */
     bool            async: 1;               /**< Network is in async mode (non-blocking) */
 #if DEPRECATED || 1
     bool            borrowed: 1;            /**< Socket has been borrowed */
@@ -3651,12 +3652,12 @@ typedef struct HttpStream {
     void            *record;                /**< Current request database record for MVC apps */
     void            *staticData;            /**< Custom data for request - must be an unmanaged reference */
 
-    int             activeRequest;          /**< Actively servicing a request */
     int             keepAliveCount;         /**< Count of remaining Keep-Alive requests for this connection */
     int             port;                   /**< Remote port */
     int             streamID;               /**< Http/2 stream */
     int             timeout;                /**< Timeout indication */
 
+    bool            activeRequest;          /**< Actively servicing a request */
     bool            authRequested: 1;       /**< Authorization requested based on user credentials */
     bool            complete: 1;            /**< Request is complete */
     bool            destroyed: 1;           /**< Stream has been destroyed */
