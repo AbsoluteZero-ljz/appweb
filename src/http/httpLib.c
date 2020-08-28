@@ -473,7 +473,7 @@ PUBLIC void httpInitLimits(HttpLimits *limits, bool serverSide)
     limits->chunkSize = ME_MAX_CHUNK;
     limits->clientMax = ME_MAX_CLIENTS;
     limits->connectionsMax = ME_MAX_CONNECTIONS;
-    limits->connectionsPerClientMax = ME_MAX_CONNECTIONS;
+    limits->connectionsPerClientMax = ME_MAX_CONNECTIONS_PER_CLIENT;
     limits->headerMax = ME_MAX_NUM_HEADERS;
     limits->headerSize = ME_MAX_HEADERS;
     limits->keepAliveMax = ME_MAX_KEEP_ALIVE;
