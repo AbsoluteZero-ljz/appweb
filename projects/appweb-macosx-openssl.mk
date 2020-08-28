@@ -893,6 +893,7 @@ ifeq ($(ME_COM_HTTP),1)
     DEPS_58 += $(BUILD)/bin/libhttp.dylib
 endif
 DEPS_58 += $(BUILD)/bin/libmpr.dylib
+DEPS_58 += $(BUILD)/bin/libmpr-version.a
 DEPS_58 += $(BUILD)/inc/appweb.h
 DEPS_58 += $(BUILD)/inc/customize.h
 DEPS_58 += $(BUILD)/obj/config.o

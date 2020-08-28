@@ -1037,6 +1037,7 @@ DEPS_62 = $(DEPS_62) build\$(CONFIG)\bin\libsql.dll
 DEPS_62 = $(DEPS_62) build\$(CONFIG)\bin\libhttp.dll
 !ENDIF
 DEPS_62 = $(DEPS_62) build\$(CONFIG)\bin\libmpr.dll
+DEPS_62 = $(DEPS_62) build\$(CONFIG)\bin\libmpr-version.lib
 DEPS_62 = $(DEPS_62) build\$(CONFIG)\inc\appweb.h
 DEPS_62 = $(DEPS_62) build\$(CONFIG)\inc\customize.h
 DEPS_62 = $(DEPS_62) build\$(CONFIG)\obj\config.obj
