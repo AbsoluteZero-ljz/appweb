@@ -10140,6 +10140,7 @@ static int dispatchEvents(MprDispatcher *dispatcher)
         }
 
         if (dispatcher->flags & MPR_DISPATCHER_DESTROYED) {
+            mprRelease(event);
             break;
         }
         event->flags &= ~MPR_EVENT_RUNNING;
@@ -11389,8 +11390,8 @@ PUBLIC void mprRescheduleEvent(MprEvent *event, MprTicks period)
         mprRemoveEvent(event);
         event->flags |= continuous;
     }
-    unlock(es);
     mprQueueEvent(dispatcher, event);
+    unlock(es);
 }
 
 
@@ -28548,7 +28549,7 @@ static MprWaitHandler *initWaitHandler(MprWaitHandler *wp, int fd, int mask, Mpr
     wp->flags           = flags;
 
     if (mprGetListLength(ws->handlers) >= FD_SETSIZE) {
-        mprLog("error mpr event", 1, 
+        mprLog("error mpr event", 1,
             "Too many io handlers: FD_SETSIZE %d, increase FD_SETSIZE or reduce limits", FD_SETSIZE);
         return 0;
     }
@@ -28627,6 +28628,7 @@ PUBLIC void mprDestroyWaitHandler(MprWaitHandler *wp)
         wp->fd = INVALID_SOCKET;
         if (wp->event) {
             mprRemoveEvent(wp->event);
+            mprRelease(wp->event);
             wp->event = 0;
         }
     }
