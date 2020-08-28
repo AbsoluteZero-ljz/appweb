@@ -473,7 +473,7 @@ PUBLIC void httpInitLimits(HttpLimits *limits, bool serverSide)
     limits->chunkSize = ME_MAX_CHUNK;
     limits->clientMax = ME_MAX_CLIENTS;
     limits->connectionsMax = ME_MAX_CONNECTIONS;
-    limits->connectionsPerClientMax = ME_MAX_CONNECTIONS;
+    limits->connectionsPerClientMax = ME_MAX_CONNECTIONS_PER_CLIENT;
     limits->headerMax = ME_MAX_NUM_HEADERS;
     limits->headerSize = ME_MAX_HEADERS;
     limits->keepAliveMax = ME_MAX_KEEP_ALIVE;
@@ -13284,7 +13284,7 @@ PUBLIC void httpPruneMonitors()
          */
         if ((address->updated + ME_HTTP_MONITOR_PERIOD) < http->now && address->banUntil == 0) {
             if (address->counters[HTTP_COUNTER_ACTIVE_CONNECTIONS].value == 0) {
-                mprLog("error http monitor", 1, "Restored access for IP %s", kp->key);
+                // mprLog("error http monitor", 1, "Restored access for IP %s", kp->key);
                 mprRemoveKey(http->addresses, kp->key);
                 /* Safe to keep iterating after removal of key */
             }
@@ -13981,7 +13981,10 @@ PUBLIC void httpDestroyNet(HttpNet *net)
                 httpDestroyStream(stream);
                 next--;
             }
-            httpMonitorNetEvent(net, HTTP_COUNTER_ACTIVE_CONNECTIONS, -1);
+            if (net->activeNet) {
+                httpMonitorNetEvent(net, HTTP_COUNTER_ACTIVE_CONNECTIONS, -1);
+                net->activeNet = 0;
+            }
         }
         httpRemoveNet(net);
         if (net->sock) {
@@ -14443,6 +14446,7 @@ PUBLIC HttpNet *httpAccept(HttpEndpoint *endpoint, MprEvent *event)
         httpDestroyNet(net);
         return 0;
     }
+    net->activeNet = 1;
     if ((value = httpMonitorNetEvent(net, HTTP_COUNTER_ACTIVE_CONNECTIONS, 1)) > limits->connectionsPerClientMax) {
         mprLog("net info", 1, "Connection denied for IP %s. Too many concurrent connections for client, active: %d, max: %d",
             net->ip, (int) (value - 1), limits->connectionsPerClientMax);
@@ -16941,8 +16945,8 @@ static void processFinalized(HttpQueue *q)
         httpMonitorEvent(stream, HTTP_COUNTER_NETWORK_IO, tx->bytesWritten);
     }
     if (httpServerStream(stream) && stream->activeRequest) {
-        httpMonitorEvent(stream, HTTP_COUNTER_ACTIVE_REQUESTS, -1);
         stream->activeRequest = 0;
+        httpMonitorEvent(stream, HTTP_COUNTER_ACTIVE_REQUESTS, -1);
     }
     measureRequest(q);
 
