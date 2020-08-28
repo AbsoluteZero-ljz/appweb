@@ -14,7 +14,7 @@
       </ItemDefinitionGroup>
 
       <PropertyGroup Label="Globals">
-        <ProjectGuid>{53a6c412-c0dc-4619-ad6f-a1acd1d69860}</ProjectGuid>
+        <ProjectGuid>{e49b03d8-9541-499a-bc61-b11fa76c89d3}</ProjectGuid>
         <RootNamespace />
         <Keyword>Win32Proj</Keyword>
       </PropertyGroup>
@@ -130,14 +130,14 @@ cd ..\..\projects\appweb-windows-openssl_11</Command>
 
     <ItemGroup>
       <ProjectReference Include="libhttp.vcxproj">
-      <Project>59f9bcb6-59d1-4952-8876-40d3ada2090b</Project>
+      <Project>44cac56f-78aa-4d36-bd2a-8967f1710b2c</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       </ProjectReference>
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="libmpr-version.vcxproj">
-      <Project>88f94e88-42a9-4a84-b1a2-a1b546e1a3b8</Project>
+      <Project>b9acdefb-4a2e-4db4-a80d-328fddc4217b</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       </ProjectReference>
     </ItemGroup>
