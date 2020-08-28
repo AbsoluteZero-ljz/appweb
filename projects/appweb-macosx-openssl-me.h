@@ -286,7 +286,7 @@
 
 /* Profile */
 #ifndef ME_CONFIG_CMD
-    #define ME_CONFIG_CMD "me -d -q -platform macosx-x64-openssl -configure . --with openssl -gen xcode"
+    #define ME_CONFIG_CMD "me -d -q -platform macosx-x64-openssl -configure . --with openssl --with esp --with cgi --with fast --with ssl -gen xcode"
 #endif
 #ifndef ME_APPWEB_PRODUCT
     #define ME_APPWEB_PRODUCT 1
@@ -314,7 +314,7 @@
 
 /* Components */
 #ifndef ME_COM_CGI
-    #define ME_COM_CGI 0
+    #define ME_COM_CGI 1
 #endif
 #ifndef ME_COM_CC
     #define ME_COM_CC 1
@@ -326,10 +326,10 @@
     #define ME_COM_EJS 0
 #endif
 #ifndef ME_COM_ESP
-    #define ME_COM_ESP 0
+    #define ME_COM_ESP 1
 #endif
 #ifndef ME_COM_FAST
-    #define ME_COM_FAST 0
+    #define ME_COM_FAST 1
 #endif
 #ifndef ME_COM_HTTP
     #define ME_COM_HTTP 1
@@ -344,7 +344,7 @@
     #define ME_COM_MBEDTLS 0
 #endif
 #ifndef ME_COM_MDB
-    #define ME_COM_MDB 0
+    #define ME_COM_MDB 1
 #endif
 #ifndef ME_COM_MPR
     #define ME_COM_MPR 1

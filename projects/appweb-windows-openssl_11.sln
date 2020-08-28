@@ -49,6 +49,29 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmpr-version", "appweb-wi
 		{B9ACDEFB-4A2E-4DB4-A80D-328FDDC4217B} = {B9ACDEFB-4A2E-4DB4-A80D-328FDDC4217B}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libesp", "appweb-windows-openssl_11\libesp.vcxproj", "{E49B03D8-9541-499A-BC61-B11FA76C89D3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{08C43204-E9BB-461F-897F-F7E65115154F} = {08C43204-E9BB-461F-897F-F7E65115154F}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{CF912B2F-585C-4EA9-8169-97FBAB988973} = {CF912B2F-585C-4EA9-8169-97FBAB988973}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{CA62FF53-CE18-43B8-8254-BF186CA0B493} = {CA62FF53-CE18-43B8-8254-BF186CA0B493}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{45E58AC1-E249-491A-9FB8-DC90285DC600} = {45E58AC1-E249-491A-9FB8-DC90285DC600}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{44CAC56F-78AA-4D36-BD2A-8967F1710B2C} = {44CAC56F-78AA-4D36-BD2A-8967F1710B2C}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{B9ACDEFB-4A2E-4DB4-A80D-328FDDC4217B} = {B9ACDEFB-4A2E-4DB4-A80D-328FDDC4217B}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{E49B03D8-9541-499A-BC61-B11FA76C89D3} = {E49B03D8-9541-499A-BC61-B11FA76C89D3}
+	EndProjectSection
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libappweb", "appweb-windows-openssl_11\libappweb.vcxproj", "{533E70AC-25FA-40DA-920A-EE094F28D670}"
 	ProjectSection(ProjectDependencies) = postProject
 		{08C43204-E9BB-461F-897F-F7E65115154F} = {08C43204-E9BB-461F-897F-F7E65115154F}
@@ -67,6 +90,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libappweb", "appweb-windows
 	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{B9ACDEFB-4A2E-4DB4-A80D-328FDDC4217B} = {B9ACDEFB-4A2E-4DB4-A80D-328FDDC4217B}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{E49B03D8-9541-499A-BC61-B11FA76C89D3} = {E49B03D8-9541-499A-BC61-B11FA76C89D3}
 	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{533E70AC-25FA-40DA-920A-EE094F28D670} = {533E70AC-25FA-40DA-920A-EE094F28D670}
@@ -90,6 +116,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "appweb", "appweb-windows-op
 	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{B9ACDEFB-4A2E-4DB4-A80D-328FDDC4217B} = {B9ACDEFB-4A2E-4DB4-A80D-328FDDC4217B}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{E49B03D8-9541-499A-BC61-B11FA76C89D3} = {E49B03D8-9541-499A-BC61-B11FA76C89D3}
 	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{533E70AC-25FA-40DA-920A-EE094F28D670} = {533E70AC-25FA-40DA-920A-EE094F28D670}
@@ -116,6 +145,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "appwebMonitor", "appweb-win
 	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{B9ACDEFB-4A2E-4DB4-A80D-328FDDC4217B} = {B9ACDEFB-4A2E-4DB4-A80D-328FDDC4217B}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{E49B03D8-9541-499A-BC61-B11FA76C89D3} = {E49B03D8-9541-499A-BC61-B11FA76C89D3}
 	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{533E70AC-25FA-40DA-920A-EE094F28D670} = {533E70AC-25FA-40DA-920A-EE094F28D670}
@@ -152,10 +184,47 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "authpass", "appweb-windows-
 		{B9ACDEFB-4A2E-4DB4-A80D-328FDDC4217B} = {B9ACDEFB-4A2E-4DB4-A80D-328FDDC4217B}
 	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
+		{E49B03D8-9541-499A-BC61-B11FA76C89D3} = {E49B03D8-9541-499A-BC61-B11FA76C89D3}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
 		{533E70AC-25FA-40DA-920A-EE094F28D670} = {533E70AC-25FA-40DA-920A-EE094F28D670}
 	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{595313BE-93E0-4096-8820-851DC451B34F} = {595313BE-93E0-4096-8820-851DC451B34F}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "espcmd", "appweb-windows-openssl_11\espcmd.vcxproj", "{B33F8EBB-947F-470C-96EB-8682897AF3CD}"
+	ProjectSection(ProjectDependencies) = postProject
+		{08C43204-E9BB-461F-897F-F7E65115154F} = {08C43204-E9BB-461F-897F-F7E65115154F}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{CF912B2F-585C-4EA9-8169-97FBAB988973} = {CF912B2F-585C-4EA9-8169-97FBAB988973}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{CA62FF53-CE18-43B8-8254-BF186CA0B493} = {CA62FF53-CE18-43B8-8254-BF186CA0B493}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{45E58AC1-E249-491A-9FB8-DC90285DC600} = {45E58AC1-E249-491A-9FB8-DC90285DC600}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{44CAC56F-78AA-4D36-BD2A-8967F1710B2C} = {44CAC56F-78AA-4D36-BD2A-8967F1710B2C}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{B9ACDEFB-4A2E-4DB4-A80D-328FDDC4217B} = {B9ACDEFB-4A2E-4DB4-A80D-328FDDC4217B}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{E49B03D8-9541-499A-BC61-B11FA76C89D3} = {E49B03D8-9541-499A-BC61-B11FA76C89D3}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{B33F8EBB-947F-470C-96EB-8682897AF3CD} = {B33F8EBB-947F-470C-96EB-8682897AF3CD}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "extras", "appweb-windows-openssl_11\extras.vcxproj", "{E34051E4-3478-4B9C-885A-63C0F523411A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{08C43204-E9BB-461F-897F-F7E65115154F} = {08C43204-E9BB-461F-897F-F7E65115154F}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{E34051E4-3478-4B9C-885A-63C0F523411A} = {E34051E4-3478-4B9C-885A-63C0F523411A}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "httpcmd", "appweb-windows-openssl_11\httpcmd.vcxproj", "{CF4840CE-30F2-4D5C-85B6-A90C091BD59B}"
@@ -299,6 +368,14 @@ EndProject
 {B9ACDEFB-4A2E-4DB4-A80D-328FDDC4217B}.Release|Win32.Build.0 = Release|Win32
 {B9ACDEFB-4A2E-4DB4-A80D-328FDDC4217B}.Release|x64.ActiveCfg = Release|x64
 {B9ACDEFB-4A2E-4DB4-A80D-328FDDC4217B}.Release|x64.Build.0 = Release|x64
+{E49B03D8-9541-499A-BC61-B11FA76C89D3}.Debug|Win32.ActiveCfg = Debug|Win32
+{E49B03D8-9541-499A-BC61-B11FA76C89D3}.Debug|Win32.Build.0 = Debug|Win32
+{E49B03D8-9541-499A-BC61-B11FA76C89D3}.Debug|x64.ActiveCfg = Debug|x64
+{E49B03D8-9541-499A-BC61-B11FA76C89D3}.Debug|x64.Build.0 = Debug|x64
+{E49B03D8-9541-499A-BC61-B11FA76C89D3}.Release|Win32.ActiveCfg = Release|Win32
+{E49B03D8-9541-499A-BC61-B11FA76C89D3}.Release|Win32.Build.0 = Release|Win32
+{E49B03D8-9541-499A-BC61-B11FA76C89D3}.Release|x64.ActiveCfg = Release|x64
+{E49B03D8-9541-499A-BC61-B11FA76C89D3}.Release|x64.Build.0 = Release|x64
 {533E70AC-25FA-40DA-920A-EE094F28D670}.Debug|Win32.ActiveCfg = Debug|Win32
 {533E70AC-25FA-40DA-920A-EE094F28D670}.Debug|Win32.Build.0 = Debug|Win32
 {533E70AC-25FA-40DA-920A-EE094F28D670}.Debug|x64.ActiveCfg = Debug|x64
@@ -339,6 +416,22 @@ EndProject
 {595313BE-93E0-4096-8820-851DC451B34F}.Release|Win32.Build.0 = Release|Win32
 {595313BE-93E0-4096-8820-851DC451B34F}.Release|x64.ActiveCfg = Release|x64
 {595313BE-93E0-4096-8820-851DC451B34F}.Release|x64.Build.0 = Release|x64
+{B33F8EBB-947F-470C-96EB-8682897AF3CD}.Debug|Win32.ActiveCfg = Debug|Win32
+{B33F8EBB-947F-470C-96EB-8682897AF3CD}.Debug|Win32.Build.0 = Debug|Win32
+{B33F8EBB-947F-470C-96EB-8682897AF3CD}.Debug|x64.ActiveCfg = Debug|x64
+{B33F8EBB-947F-470C-96EB-8682897AF3CD}.Debug|x64.Build.0 = Debug|x64
+{B33F8EBB-947F-470C-96EB-8682897AF3CD}.Release|Win32.ActiveCfg = Release|Win32
+{B33F8EBB-947F-470C-96EB-8682897AF3CD}.Release|Win32.Build.0 = Release|Win32
+{B33F8EBB-947F-470C-96EB-8682897AF3CD}.Release|x64.ActiveCfg = Release|x64
+{B33F8EBB-947F-470C-96EB-8682897AF3CD}.Release|x64.Build.0 = Release|x64
+{E34051E4-3478-4B9C-885A-63C0F523411A}.Debug|Win32.ActiveCfg = Debug|Win32
+{E34051E4-3478-4B9C-885A-63C0F523411A}.Debug|Win32.Build.0 = Debug|Win32
+{E34051E4-3478-4B9C-885A-63C0F523411A}.Debug|x64.ActiveCfg = Debug|x64
+{E34051E4-3478-4B9C-885A-63C0F523411A}.Debug|x64.Build.0 = Debug|x64
+{E34051E4-3478-4B9C-885A-63C0F523411A}.Release|Win32.ActiveCfg = Release|Win32
+{E34051E4-3478-4B9C-885A-63C0F523411A}.Release|Win32.Build.0 = Release|Win32
+{E34051E4-3478-4B9C-885A-63C0F523411A}.Release|x64.ActiveCfg = Release|x64
+{E34051E4-3478-4B9C-885A-63C0F523411A}.Release|x64.Build.0 = Release|x64
 {CF4840CE-30F2-4D5C-85B6-A90C091BD59B}.Debug|Win32.ActiveCfg = Debug|Win32
 {CF4840CE-30F2-4D5C-85B6-A90C091BD59B}.Debug|Win32.Build.0 = Debug|Win32
 {CF4840CE-30F2-4D5C-85B6-A90C091BD59B}.Debug|x64.ActiveCfg = Debug|x64
