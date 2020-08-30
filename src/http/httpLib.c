@@ -9015,6 +9015,7 @@ static cchar *eatBlankLines(HttpPacket *packet)
         if (*start != '\r' && *start != '\n') {
             break;
         }
+        mprGetCharFromBuf(packet->content);
     }
     return mprGetBufStart(content);
 }
@@ -29129,4 +29130,3 @@ static void traceErrorProc(HttpStream *stream, cchar *fmt, ...)
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
  */
-
