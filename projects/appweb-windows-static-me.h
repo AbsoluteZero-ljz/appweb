@@ -90,6 +90,9 @@
 #ifndef ME_ESP_NAME
     #define ME_ESP_NAME "appweb-esp"
 #endif
+#ifndef ME_HTTP__UPLOAD_TIMEOUT
+    #define ME_HTTP__UPLOAD_TIMEOUT 600
+#endif
 #ifndef ME_HTTP_BASIC
     #define ME_HTTP_BASIC 1
 #endif
@@ -190,7 +193,7 @@
     #define ME_TUNE "size"
 #endif
 #ifndef ME_VERSION
-    #define ME_VERSION "8.1.1"
+    #define ME_VERSION "8.1.2"
 #endif
 #ifndef ME_WATCHDOG_NAME
     #define ME_WATCHDOG_NAME "appman"
@@ -297,10 +300,10 @@
     #define ME_MINOR_VERSION 1
 #endif
 #ifndef ME_PATCH_VERSION
-    #define ME_PATCH_VERSION 1
+    #define ME_PATCH_VERSION 2
 #endif
 #ifndef ME_VNUM
-    #define ME_VNUM 800010001
+    #define ME_VNUM 800010002
 #endif
 
 /* Components */
