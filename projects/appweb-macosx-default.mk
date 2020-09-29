@@ -3,7 +3,7 @@
 #
 
 NAME                  := appweb
-VERSION               := 8.1.1
+VERSION               := 8.2.0
 PROFILE               ?= default
 ARCH                  ?= $(shell uname -m | sed 's/i.86/x86/;s/x86_64/x64/;s/arm.*/arm/;s/mips.*/mips/')
 CC_ARCH               ?= $(shell echo $(ARCH) | sed 's/x86/i686/;s/x64/x86_64/')
@@ -20,19 +20,19 @@ ME_COM_COMPILER       ?= 1
 ME_COM_DIR            ?= 0
 ME_COM_EJS            ?= 0
 ME_COM_ESP            ?= 1
-ME_COM_FAST           ?= 0
+ME_COM_FAST           ?= 1
 ME_COM_HTTP           ?= 1
 ME_COM_LIB            ?= 1
 ME_COM_MATRIXSSL      ?= 0
 ME_COM_MBEDTLS        ?= 1
-ME_COM_MDB            ?= 0
+ME_COM_MDB            ?= 1
 ME_COM_MPR            ?= 1
 ME_COM_NANOSSL        ?= 0
 ME_COM_OPENSSL        ?= 0
 ME_COM_OSDEP          ?= 1
 ME_COM_PCRE           ?= 1
 ME_COM_PHP            ?= 0
-ME_COM_PROXY          ?= 0
+ME_COM_PROXY          ?= 1
 ME_COM_SQLITE         ?= 0
 ME_COM_SSL            ?= 1
 ME_COM_VXWORKS        ?= 0
@@ -746,7 +746,7 @@ endif
 
 $(BUILD)/bin/libmpr.dylib: $(DEPS_54)
 	@echo '      [Link] $(BUILD)/bin/libmpr.dylib'
-	$(CC) -dynamiclib -o $(BUILD)/bin/libmpr.dylib -arch $(CC_ARCH) $(LDFLAGS) $(LIBPATHS)  -install_name @rpath/libmpr.dylib -compatibility_version 8.1 -current_version 8.1 "$(BUILD)/obj/mprLib.o" $(LIBPATHS_54) $(LIBS_54) $(LIBS_54) $(LIBS) 
+	$(CC) -dynamiclib -o $(BUILD)/bin/libmpr.dylib -arch $(CC_ARCH) $(LDFLAGS) $(LIBPATHS)  -install_name @rpath/libmpr.dylib -compatibility_version 8.2 -current_version 8.2 "$(BUILD)/obj/mprLib.o" $(LIBPATHS_54) $(LIBS_54) $(LIBS_54) $(LIBS) 
 
 ifeq ($(ME_COM_PCRE),1)
 #
@@ -757,7 +757,7 @@ DEPS_55 += $(BUILD)/obj/pcre.o
 
 $(BUILD)/bin/libpcre.dylib: $(DEPS_55)
 	@echo '      [Link] $(BUILD)/bin/libpcre.dylib'
-	$(CC) -dynamiclib -o $(BUILD)/bin/libpcre.dylib -arch $(CC_ARCH) $(LDFLAGS) -compatibility_version 8.1 -current_version 8.1 $(LIBPATHS) -install_name @rpath/libpcre.dylib -compatibility_version 8.1 -current_version 8.1 "$(BUILD)/obj/pcre.o" $(LIBS) 
+	$(CC) -dynamiclib -o $(BUILD)/bin/libpcre.dylib -arch $(CC_ARCH) $(LDFLAGS) -compatibility_version 8.2 -current_version 8.2 $(LIBPATHS) -install_name @rpath/libpcre.dylib -compatibility_version 8.2 -current_version 8.2 "$(BUILD)/obj/pcre.o" $(LIBS) 
 endif
 
 ifeq ($(ME_COM_HTTP),1)
@@ -810,7 +810,7 @@ LIBS_56 += -lmpr
 
 $(BUILD)/bin/libhttp.dylib: $(DEPS_56)
 	@echo '      [Link] $(BUILD)/bin/libhttp.dylib'
-	$(CC) -dynamiclib -o $(BUILD)/bin/libhttp.dylib -arch $(CC_ARCH) $(LDFLAGS) $(LIBPATHS)  -install_name @rpath/libhttp.dylib -compatibility_version 8.1 -current_version 8.1 "$(BUILD)/obj/httpLib.o" $(LIBPATHS_56) $(LIBS_56) $(LIBS_56) $(LIBS) -lpam 
+	$(CC) -dynamiclib -o $(BUILD)/bin/libhttp.dylib -arch $(CC_ARCH) $(LDFLAGS) $(LIBPATHS)  -install_name @rpath/libhttp.dylib -compatibility_version 8.2 -current_version 8.2 "$(BUILD)/obj/httpLib.o" $(LIBPATHS_56) $(LIBS_56) $(LIBS_56) $(LIBS) -lpam 
 endif
 
 #
@@ -890,7 +890,7 @@ endif
 
 $(BUILD)/bin/libesp.dylib: $(DEPS_58)
 	@echo '      [Link] $(BUILD)/bin/libesp.dylib'
-	$(CC) -dynamiclib -o $(BUILD)/bin/libesp.dylib -arch $(CC_ARCH) $(LDFLAGS) $(LIBPATHS)  -install_name @rpath/libesp.dylib -compatibility_version 8.1 -current_version 8.1 "$(BUILD)/obj/espLib.o" $(LIBPATHS_58) $(LIBS_58) $(LIBS_58) $(LIBS) -lpam 
+	$(CC) -dynamiclib -o $(BUILD)/bin/libesp.dylib -arch $(CC_ARCH) $(LDFLAGS) $(LIBPATHS)  -install_name @rpath/libesp.dylib -compatibility_version 8.2 -current_version 8.2 "$(BUILD)/obj/espLib.o" $(LIBPATHS_58) $(LIBS_58) $(LIBS_58) $(LIBS) -lpam 
 endif
 
 #
@@ -906,6 +906,7 @@ ifeq ($(ME_COM_HTTP),1)
     DEPS_59 += $(BUILD)/bin/libhttp.dylib
 endif
 DEPS_59 += $(BUILD)/bin/libmpr.dylib
+DEPS_59 += $(BUILD)/bin/libmpr-version.a
 DEPS_59 += $(BUILD)/inc/appweb.h
 DEPS_59 += $(BUILD)/inc/customize.h
 DEPS_59 += $(BUILD)/obj/config.o
@@ -972,7 +973,7 @@ endif
 
 $(BUILD)/bin/libappweb.dylib: $(DEPS_59)
 	@echo '      [Link] $(BUILD)/bin/libappweb.dylib'
-	$(CC) -dynamiclib -o $(BUILD)/bin/libappweb.dylib -arch $(CC_ARCH) $(LDFLAGS) $(LIBPATHS)  -install_name @rpath/libappweb.dylib -compatibility_version 8.1 -current_version 8.1 "$(BUILD)/obj/config.o" "$(BUILD)/obj/convenience.o" "$(BUILD)/obj/cgiHandler.o" "$(BUILD)/obj/espHandler.o" "$(BUILD)/obj/fastHandler.o" "$(BUILD)/obj/proxyHandler.o" "$(BUILD)/obj/rom.o" $(LIBPATHS_59) $(LIBS_59) $(LIBS_59) $(LIBS) -lpam 
+	$(CC) -dynamiclib -o $(BUILD)/bin/libappweb.dylib -arch $(CC_ARCH) $(LDFLAGS) $(LIBPATHS)  -install_name @rpath/libappweb.dylib -compatibility_version 8.2 -current_version 8.2 "$(BUILD)/obj/config.o" "$(BUILD)/obj/convenience.o" "$(BUILD)/obj/cgiHandler.o" "$(BUILD)/obj/espHandler.o" "$(BUILD)/obj/fastHandler.o" "$(BUILD)/obj/proxyHandler.o" "$(BUILD)/obj/rom.o" $(LIBPATHS_59) $(LIBS_59) $(LIBS_59) $(LIBS) -lpam 
 
 #
 #   appweb
@@ -1279,7 +1280,7 @@ DEPS_67 += $(BUILD)/obj/sqlite3.o
 
 $(BUILD)/bin/libsql.dylib: $(DEPS_67)
 	@echo '      [Link] $(BUILD)/bin/libsql.dylib'
-	$(CC) -dynamiclib -o $(BUILD)/bin/libsql.dylib -arch $(CC_ARCH) $(LDFLAGS) $(LIBPATHS) -install_name @rpath/libsql.dylib -compatibility_version 8.1 -current_version 8.1 "$(BUILD)/obj/sqlite3.o" $(LIBS) 
+	$(CC) -dynamiclib -o $(BUILD)/bin/libsql.dylib -arch $(CC_ARCH) $(LDFLAGS) $(LIBPATHS) -install_name @rpath/libsql.dylib -compatibility_version 8.2 -current_version 8.2 "$(BUILD)/obj/sqlite3.o" $(LIBS) 
 endif
 
 #

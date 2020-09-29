@@ -3,7 +3,7 @@
 #
 
 NAME                  = appweb
-VERSION               = 8.1.1
+VERSION               = 8.2.0
 
 OS                    = windows
 PA                    = $(PROCESSOR_ARCHITECTURE)
@@ -31,7 +31,7 @@ BUILD                 = build\$(CONFIG)
 LBIN                  = $(BUILD)\bin
 
 !IF "$(ME_COM_CGI)" == ""
-ME_COM_CGI            = 0
+ME_COM_CGI            = 1
 !ENDIF
 !IF "$(ME_COM_COMPILER)" == ""
 ME_COM_COMPILER       = 1
@@ -46,7 +46,7 @@ ME_COM_EJS            = 0
 ME_COM_ESP            = 1
 !ENDIF
 !IF "$(ME_COM_FAST)" == ""
-ME_COM_FAST           = 0
+ME_COM_FAST           = 1
 !ENDIF
 !IF "$(ME_COM_HTTP)" == ""
 ME_COM_HTTP           = 1
@@ -64,7 +64,7 @@ ME_COM_MATRIXSSL      = 0
 ME_COM_MBEDTLS        = 0
 !ENDIF
 !IF "$(ME_COM_MDB)" == ""
-ME_COM_MDB            = 0
+ME_COM_MDB            = 1
 !ENDIF
 !IF "$(ME_COM_MPR)" == ""
 ME_COM_MPR            = 1
@@ -85,7 +85,7 @@ ME_COM_PCRE           = 1
 ME_COM_PHP            = 0
 !ENDIF
 !IF "$(ME_COM_PROXY)" == ""
-ME_COM_PROXY          = 0
+ME_COM_PROXY          = 1
 !ENDIF
 !IF "$(ME_COM_RC)" == ""
 ME_COM_RC             = 1
@@ -1051,6 +1051,7 @@ DEPS_63 = $(DEPS_63) build\$(CONFIG)\bin\libsql.dll
 DEPS_63 = $(DEPS_63) build\$(CONFIG)\bin\libhttp.dll
 !ENDIF
 DEPS_63 = $(DEPS_63) build\$(CONFIG)\bin\libmpr.dll
+DEPS_63 = $(DEPS_63) build\$(CONFIG)\bin\libmpr-version.lib
 DEPS_63 = $(DEPS_63) build\$(CONFIG)\inc\appweb.h
 DEPS_63 = $(DEPS_63) build\$(CONFIG)\inc\customize.h
 DEPS_63 = $(DEPS_63) build\$(CONFIG)\obj\config.obj
