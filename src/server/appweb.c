@@ -296,6 +296,11 @@ MAIN(appweb, int argc, char **argv, char **envp)
 
     mprLog("info appweb", 1, "Stopping Appweb ...");
     mprDestroy();
+    /*
+        Kill all children
+     */
+    signal(SIGQUIT, SIG_IGN);
+    kill(0, SIGQUIT);
     return mprGetExitStatus();
 }
 
@@ -532,7 +537,9 @@ static void statusCheck(void *ignored, MprSignal *sp)
     } else {
         mprPrintMem("MPR Memory Report", 0);
     }
+#if ME_HTTP_DEFENSE
     httpDumpCounters();
+#endif
 }
 
 
