@@ -16010,7 +16010,7 @@ PUBLIC void httpCreateTxPipeline(HttpStream *stream, HttpRoute *route)
     net = stream->net;
     rx = stream->rx;
     tx = stream->tx;
-    
+
     tx->charSet = route->charSet;
 
     tx->outputPipeline = mprCreateList(-1, MPR_LIST_STABLE);
@@ -16106,11 +16106,8 @@ static void openPipeQueues(HttpStream *stream, HttpQueue *qhead)
                     q->flags |= HTTP_QUEUE_OPEN_TRIED;
                     if (q->stage->open(q) == 0) {
                         q->flags |= HTTP_QUEUE_OPENED;
-                    } else {
-                        if (!stream->error) {
-                            httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot open stage %s", q->stage->name);
-                        }
-
+                    } else if (!stream->error) {
+                        httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot open stage %s", q->stage->name);
                     }
                 }
             }

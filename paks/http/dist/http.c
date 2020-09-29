@@ -903,7 +903,7 @@ static void threadMain(void *data, MprThread *thread)
     net = td->net = httpCreateNet(td->dispatcher, NULL, app->protocol, HTTP_NET_ASYNC);
 
     if (httpConnectNet(net, app->ip, app->port, app->ssl) < 0) {
-        httpNetError(net, "Cannot conect to %s:%d", app->ip, app->port);
+        httpNetError(net, "Cannot connect to %s:%d", app->ip, app->port);
         mprLog("error http", 0, "%s", net->errorMsg);
 
     } else {
