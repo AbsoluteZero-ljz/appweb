@@ -9434,6 +9434,7 @@ static HttpStream *findStream1(HttpQueue *q)
     } else {
         stream = q->stream;
     }
+    stream->lastActivity = stream->net->lastActivity;
     return stream;
 }
 
