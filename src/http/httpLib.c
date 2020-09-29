@@ -8528,11 +8528,18 @@ PUBLIC HttpRoute *httpGetDefaultRoute(HttpHost *host)
              return kp->type;
          }
      }
+     if ((kp = mprLookupKeyEntry(stream->host->streaming, "*")) != 0) {
+         if (kp->data == NULL || sstarts(rx->uri, kp->data)) {
+             /* Type is set to the enable value */
+             return kp->type;
+         }
+     }
      if (rx->flags & (HTTP_PUT | HTTP_POST)) {
          return 0;
      }
      return 1;
- }
+}
+
 
 /*
     Define streaming to be enabled for a given mime type that starts with the given URI for this host
