@@ -25,7 +25,7 @@
     #define ME_COMPAT 1
 #endif
 #ifndef ME_COMPATIBLE
-    #define ME_COMPATIBLE "8.1"
+    #define ME_COMPATIBLE "8.2"
 #endif
 #ifndef ME_COMPILER_FORTIFY
     #define ME_COMPILER_FORTIFY 1
@@ -113,6 +113,9 @@
 #endif
 #ifndef ME_HTTP_CMD
     #define ME_HTTP_CMD 1
+#endif
+#ifndef ME_HTTP_DEFENSE
+    #define ME_HTTP_DEFENSE 1
 #endif
 #ifndef ME_HTTP_DIGEST
     #define ME_HTTP_DIGEST 1
@@ -202,7 +205,7 @@
     #define ME_TUNE "size"
 #endif
 #ifndef ME_VERSION
-    #define ME_VERSION "8.1.1"
+    #define ME_VERSION "8.2.0"
 #endif
 #ifndef ME_WATCHDOG_NAME
     #define ME_WATCHDOG_NAME "appman"
@@ -264,7 +267,7 @@
     #define ME_VAPP_PREFIX "deploy"
 #endif
 #ifndef ME_SRC_PREFIX
-    #define ME_SRC_PREFIX "/usr/src/appweb-8.1.1"
+    #define ME_SRC_PREFIX "/usr/src/appweb-8.2.0"
 #endif
 
 /* Suffixes */
@@ -286,7 +289,7 @@
 
 /* Profile */
 #ifndef ME_CONFIG_CMD
-    #define ME_CONFIG_CMD "me -d -q -platform vxworks-x86-default -configure . -gen make"
+    #define ME_CONFIG_CMD "me -d -q -platform vxworks-x86-default -configure . --with esp --with fast -with proxy -gen make"
 #endif
 #ifndef ME_APPWEB_PRODUCT
     #define ME_APPWEB_PRODUCT 1
@@ -303,13 +306,13 @@
     #define ME_MAJOR_VERSION 8
 #endif
 #ifndef ME_MINOR_VERSION
-    #define ME_MINOR_VERSION 1
+    #define ME_MINOR_VERSION 2
 #endif
 #ifndef ME_PATCH_VERSION
-    #define ME_PATCH_VERSION 1
+    #define ME_PATCH_VERSION 0
 #endif
 #ifndef ME_VNUM
-    #define ME_VNUM 800010001
+    #define ME_VNUM 800020000
 #endif
 
 /* Components */
@@ -329,7 +332,7 @@
     #define ME_COM_ESP 1
 #endif
 #ifndef ME_COM_FAST
-    #define ME_COM_FAST 0
+    #define ME_COM_FAST 1
 #endif
 #ifndef ME_COM_HTTP
     #define ME_COM_HTTP 1
@@ -347,7 +350,7 @@
     #define ME_COM_MBEDTLS 1
 #endif
 #ifndef ME_COM_MDB
-    #define ME_COM_MDB 0
+    #define ME_COM_MDB 1
 #endif
 #ifndef ME_COM_MPR
     #define ME_COM_MPR 1
@@ -368,7 +371,7 @@
     #define ME_COM_PHP 0
 #endif
 #ifndef ME_COM_PROXY
-    #define ME_COM_PROXY 0
+    #define ME_COM_PROXY 1
 #endif
 #ifndef ME_COM_SQLITE
     #define ME_COM_SQLITE 0

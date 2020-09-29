@@ -6,7 +6,8 @@
 }
             <h1>Building Appweb with FastCGI Support</h1>
 
-            <p>Appweb includes support for <a href="https://en.wikipedia.org/wiki/FastCGI">FastCGI</a> but it is not enabled by default to minimize the security surface. If you wish to use FastCGI, you need to enable FastCGI and rebuild Appweb.</p>
+            <p>Appweb includes support for <a href="https://en.wikipedia.org/wiki/FastCGI">FastCGI</a> on Unix like systems.
+                However it is not enabled by default to minimize the security surface. If you wish to use FastCGI, you need to enable FastCGI and rebuild Appweb.</p>
 
             <p>To build Appweb with FastCGI support via <a href="https://www.embedthis.com/makeme">MakeMe</a>, use the following:</p>
 <pre class="ui code segment">
@@ -22,7 +23,6 @@ make ME_COM_FAST=1</pre>
 
             <p>For example, to run PHP scripts using FastCGI:</p>
 <pre class="ui code segment">
-LoadModule fastHandler libmod_fast
 Action application/x-php /usr/local/bin/php-cgi
 FastConnect 127.0.0.1 launch
 AddHandler fastHandler php

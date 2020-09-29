@@ -3,7 +3,7 @@
 #
 
 NAME                  := appweb
-VERSION               := 8.1.1
+VERSION               := 8.2.0
 PROFILE               ?= default
 ARCH                  ?= $(shell echo $(WIND_HOST_TYPE) | sed 's/-.*$(ME_ROOT_PREFIX)/')
 CPU                   ?= $(subst X86,PENTIUM,$(shell echo $(ARCH) | tr a-z A-Z))
@@ -21,20 +21,20 @@ ME_COM_COMPILER       ?= 1
 ME_COM_DIR            ?= 0
 ME_COM_EJS            ?= 0
 ME_COM_ESP            ?= 1
-ME_COM_FAST           ?= 0
+ME_COM_FAST           ?= 1
 ME_COM_HTTP           ?= 1
 ME_COM_LIB            ?= 1
 ME_COM_LINK           ?= 1
 ME_COM_MATRIXSSL      ?= 0
 ME_COM_MBEDTLS        ?= 1
-ME_COM_MDB            ?= 0
+ME_COM_MDB            ?= 1
 ME_COM_MPR            ?= 1
 ME_COM_NANOSSL        ?= 0
 ME_COM_OPENSSL        ?= 0
 ME_COM_OSDEP          ?= 1
 ME_COM_PCRE           ?= 1
 ME_COM_PHP            ?= 0
-ME_COM_PROXY          ?= 0
+ME_COM_PROXY          ?= 1
 ME_COM_SQLITE         ?= 0
 ME_COM_SSL            ?= 1
 ME_COM_VXWORKS        ?= 0
@@ -834,6 +834,7 @@ ifeq ($(ME_COM_HTTP),1)
     DEPS_59 += $(BUILD)/bin/libhttp.out
 endif
 DEPS_59 += $(BUILD)/bin/libmpr.out
+DEPS_59 += $(BUILD)/bin/libmpr-version.a
 DEPS_59 += $(BUILD)/inc/appweb.h
 DEPS_59 += $(BUILD)/inc/customize.h
 DEPS_59 += $(BUILD)/obj/config.o
