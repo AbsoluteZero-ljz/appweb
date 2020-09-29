@@ -15914,7 +15914,7 @@ static void incomingPass(HttpQueue *q, HttpPacket *packet)
 /********************************** Forward ***********************************/
 
 static int loadQueue(HttpQueue *q, ssize chunkSize);
-static bool matchFilter(HttpStream *stream, HttpStage *filter, HttpRoute *route, int dir);
+static int matchFilter(HttpStream *stream, HttpStage *filter, HttpRoute *route, int dir);
 static void openPipeQueues(HttpStream *stream, HttpQueue *qhead);
 static void pairQueues(HttpQueue *head1, HttpQueue *head2);
 
@@ -16010,7 +16010,7 @@ PUBLIC void httpCreateTxPipeline(HttpStream *stream, HttpRoute *route)
     net = stream->net;
     rx = stream->rx;
     tx = stream->tx;
-    
+
     tx->charSet = route->charSet;
 
     tx->outputPipeline = mprCreateList(-1, MPR_LIST_STABLE);
@@ -16295,7 +16295,7 @@ PUBLIC void httpDiscardData(HttpStream *stream, int dir)
 }
 
 
-static bool matchFilter(HttpStream *stream, HttpStage *filter, HttpRoute *route, int dir)
+static int matchFilter(HttpStream *stream, HttpStage *filter, HttpRoute *route, int dir)
 {
     HttpTx      *tx;
 
@@ -16304,9 +16304,9 @@ static bool matchFilter(HttpStream *stream, HttpStage *filter, HttpRoute *route,
         return filter->match(stream, route, dir);
     }
     if (filter->extensions && tx->ext) {
-        return mprLookupKey(filter->extensions, tx->ext) != 0;
+        return mprLookupKey(filter->extensions, tx->ext) != 0 ? HTTP_ROUTE_OK : HTTP_ROUTE_OMIT_FILTER;
     }
-    return 1;
+    return HTTP_ROUTE_OK;
 }
 
 
@@ -16404,6 +16404,7 @@ PUBLIC void httpProcess(HttpQueue *q)
  */
 static void processHttp(HttpQueue *q)
 {
+    HttpNet     *net;
     HttpStream  *stream;
     bool        more;
     int         count;
@@ -16415,6 +16416,8 @@ static void processHttp(HttpQueue *q)
     if (stream->destroyed) {
         return;
     }
+    net = stream->net;
+
     for (count = 0, more = 1; more && count < 10; count++) {
         switch (stream->state) {
         case HTTP_STATE_BEGIN:
@@ -16479,6 +16482,7 @@ static void processFirst(HttpQueue *q)
     HttpNet     *net;
     HttpStream  *stream;
     HttpRx      *rx;
+    cchar       *msg;
 
     net = q->net;
     stream = q->stream;
@@ -19120,6 +19124,7 @@ PUBLIC int httpAddRouteFilter(HttpRoute *route, cchar *name, cchar *extensions, 
 
     assert(route);
 
+    if (smatch(name, "chunkFilter")) {
         /* Already pre-loaded */
         return 0;
     }
@@ -23143,7 +23148,6 @@ PUBLIC void httpDestroyStream(HttpStream *stream)
             httpMonitorEvent(stream, HTTP_COUNTER_ACTIVE_REQUESTS, -1);
             stream->activeRequest = 0;
         }
-        httpDisconnectStream(stream);
         if (!stream->peerCreated) {
             stream->net->ownStreams--;
         }
@@ -23278,6 +23282,7 @@ static void commonPrep(HttpStream *stream)
     stream->h2State = 0;
     stream->authRequested = 0;
     stream->complete = 0;
+    stream->done = 0;
 
     httpTraceQueues(stream);
     for (q = stream->txHead->nextQ; q != stream->txHead; q = next) {
