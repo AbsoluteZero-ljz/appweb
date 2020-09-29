@@ -4272,8 +4272,8 @@ static void parseCache(HttpRoute *route, cchar *key, MprJson *prop)
 
 static void parseCanonicalName(HttpRoute *route, cchar *key, MprJson *prop)
 {
-    if (httpSetHostCanonicalName(route->host, prop->value) < 0) {
-        httpParseError(route, "Bad host canonical name: %s", prop->value);
+    if (httpSetRouteCanonicalName(route, prop->value) < 0) {
+        httpParseError(route, "Bad canonical name: %s", prop->value);
     }
 }
 
@@ -8186,7 +8186,6 @@ static void manageHost(HttpHost *host, int flags)
     if (flags & MPR_MANAGE_MARK) {
         mprMark(host->hostname);
         mprMark(host->name);
-        mprMark(host->canonical);
         mprMark(host->parent);
         mprMark(host->responseCache);
         mprMark(host->routes);
@@ -8359,21 +8358,6 @@ PUBLIC void httpLogRoutes(HttpHost *host, bool full)
         }
     }
     printf("\n");
-}
-
-
-PUBLIC int httpSetHostCanonicalName(HttpHost *host, cchar *name)
-{
-    if (!name || *name == '\0') {
-        mprLog("error http", 0, "Empty host name");
-        return MPR_ERR_BAD_ARGS;
-    }
-    if (schr(name, ':')) {
-        host->canonical = httpCreateUri(name, 0);
-    } else {
-        host->canonical = httpCreateUri(sjoin(name, ":", 0), 0);
-    }
-    return 0;
 }
 
 
@@ -25268,7 +25252,7 @@ PUBLIC void httpRedirect(HttpStream *stream, int status, cchar *targetUri)
     tx->status = status;
     msg = httpLookupStatus(status);
 
-    canonical = stream->host->canonical;
+    canonical = rx->route->canonical;
     if (canonical) {
         base = httpCloneUri(rx->parsedUri, 0);
         if (canonical->host) {
