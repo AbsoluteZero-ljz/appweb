@@ -1426,8 +1426,8 @@ static void sweep()
             INC(sweepVisited);
 
             /*
-                Racing with the allocator. Be conservative. The sweeper is the only place that mp->free is cleared.
-                The allocator is the only place that sets mp->free. If mp->free is zero, we can be sure the block is
+                Racing with the allocator. Be conservative. The sweeper is the only place that mp->free is set.
+                The allocator is the only place that clears mp->free. If mp->free is zero, we can be sure the block is
                 not free and not on a freeq. If mp->free is set, we could be racing with the allocator for the block.
              */
             if (mp->eternal) {
@@ -1444,6 +1444,9 @@ static void sweep()
                     INC(compacted);
                 }
             }
+            /*
+                Test that the block was not marked on the current mark phase
+             */
             if (!mp->free && mp->mark != heap->mark) {
                 freeLocation(mp);
                 if (joinBlocks) {
@@ -1812,9 +1815,13 @@ static void printMemReport()
 {
     MprMemStats     *ap;
     double          mb;
+    int             fd;
 
     ap = mprGetMemStats();
     mb = 1024.0 * 1024;
+
+    fd = open("/dev/null", O_RDONLY);
+    close(fd);
 
     printf("Memory Stats:\n");
     printf("  Memory          %12.1f MB\n", mprGetMem() / mb);
@@ -1833,6 +1840,7 @@ static void printMemReport()
     }
     printf("  Errors          %12d\n", (int) ap->errors);
     printf("  CPU cores       %12d\n", (int) ap->cpuCores);
+    printf("  Next free fd    %12d\n", (int) fd);
     printf("\n");
 
 #if ME_MPR_ALLOC_STATS
