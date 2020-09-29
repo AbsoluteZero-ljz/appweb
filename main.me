@@ -85,6 +85,7 @@ Me.load({
             basic: true,
             cache: true,
             cmd: true,
+            defense: true,
             digest: true,
             dir: true,
             pam: true,
@@ -163,7 +164,7 @@ Me.load({
             configurable: true,
             description: 'Directory Listing Module',
         },
-        
+
         fast: {
             configurable: true,
             description: 'FastCGI Module',
@@ -186,10 +187,10 @@ Me.load({
         projects: {
             action: `
                 if (me.settings.description == 'Embedthis Appweb Enterprise Edition') {
-                    genProjects('--set openssl.version=1.0 --with openssl', 'openssl_10', 'windows-x64')
-                    genProjects('--set openssl.version=1.1 --with openssl', 'openssl_11', 'windows-x64')
-                    genProjects('--with openssl', 'openssl', 'macosx-x64')
-                    genProjects('')
+                    genProjects('--set openssl.version=1.0 --with openssl --with esp --with cgi --with fast --with proxy', 'openssl_10', 'windows-x64')
+                    genProjects('--set openssl.version=1.1 --with openssl --with esp --with cgi --with fast --with proxy', 'openssl_11', 'windows-x64')
+                    genProjects('--with openssl --with esp --with cgi --with fast --with proxy', 'openssl', 'macosx-x64')
+                    genProjects('--with esp --with fast -with proxy')
                 } else {
                     genProjects('', ['default'])
                 }

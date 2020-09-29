@@ -53,3 +53,5 @@ test/web/500K.txt
 test/fast-bin
 test/trace.log*
 test/error.log*
+test/proxy.err
+test/proxy.log
