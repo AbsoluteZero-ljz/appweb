@@ -561,7 +561,11 @@ static bool parseCgiHeaders(Cgi *cgi, HttpPacket *packet)
                 httpSetStatus(stream, atoi(value));
 
             } else if (scaselesscmp(key, "content-type") == 0) {
-                httpSetHeaderString(stream, "Content-Type", value);
+                if (stream->tx->charSet && !scaselesscontains(value, "charset")) {
+                    httpSetHeader(stream, "Content-Type", "%s; charset=%s", value, stream->tx->charSet);
+                } else {
+                    httpSetHeaderString(stream, "Content-Type", value);
+                }
 
             } else if (scaselesscmp(key, "content-length") == 0) {
                 httpSetContentLength(stream, (MprOff) stoi(value));
