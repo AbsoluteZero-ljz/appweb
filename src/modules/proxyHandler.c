@@ -1076,6 +1076,8 @@ static int proxyLogDirective(MaState *state, cchar *key, cchar *value)
     Proxy   *proxy;
 
     proxy = getProxy(state->route);
+    proxy->trace = httpCreateTrace(proxy->trace);
+    proxy->trace->flags &= ~MPR_LOG_CMDLINE;
     return maTraceLogDirective(state, proxy->trace, key, value);
 }
 
@@ -1085,6 +1087,7 @@ static int proxyTraceDirective(MaState *state, cchar *key, cchar *value)
     Proxy   *proxy;
 
     proxy = getProxy(state->route);
+    proxy->trace->flags &= ~MPR_LOG_CMDLINE;
     return maTraceDirective(state, proxy->trace, key, value);
 }
 
