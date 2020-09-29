@@ -275,6 +275,9 @@ PUBLIC int maWriteAuthFile(HttpAuth *auth, char *path);
     PUBLIC int httpProxyInit(Http *http, MprModule *mp);
 #endif
 
+PUBLIC int maTraceDirective(MaState *state, HttpTrace *trace, cchar *key, cchar *value);
+PUBLIC int maTraceLogDirective(MaState *state, HttpTrace *trace, cchar *key, cchar *value);
+
 #ifdef __cplusplus
 } /* extern C */
 #endif

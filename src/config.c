@@ -2638,19 +2638,22 @@ static int threadStackDirective(MaState *state, cchar *key, cchar *value)
  */
 static int traceDirective(MaState *state, cchar *key, cchar *value)
 {
-    HttpRoute   *route;
-    char        *option, *ovalue, *tok;
+    state->route->trace = httpCreateTrace(state->route->trace);
+    return maTraceDirective(state, state->route->trace, key, value);
+}
 
-    route = state->route;
-    route->trace = httpCreateTrace(route->trace);
+
+PUBLIC int maTraceDirective(MaState *state, HttpTrace *trace, cchar *key, cchar *value)
+{
+    char        *option, *ovalue, *tok;
 
     for (option = stok(sclone(value), " \t", &tok); option; option = stok(0, " \t", &tok)) {
         option = ssplit(option, " =\t,", &ovalue);
         ovalue = strim(ovalue, "\"'", MPR_TRIM_BOTH);
         if (smatch(option, "content")) {
-            httpSetTraceContentSize(route->trace, (ssize) httpGetNumber(ovalue));
+            httpSetTraceContentSize(trace, (ssize) httpGetNumber(ovalue));
         } else {
-            httpSetTraceEventLevel(route->trace, option, atoi(ovalue));
+            httpSetTraceEventLevel(trace, option, atoi(ovalue));
         }
     }
     return 0;
@@ -2668,13 +2671,18 @@ static int traceDirective(MaState *state, cchar *key, cchar *value)
  */
 static int traceLogDirective(MaState *state, cchar *key, cchar *value)
 {
-    HttpRoute   *route;
+    state->route->trace = httpCreateTrace(state->route->trace);
+    return maTraceLogDirective(state, state->route->trace, key, value);
+}
+
+
+PUBLIC int maTraceLogDirective(MaState *state, HttpTrace *trace, cchar *key, cchar *value)
+{
     cchar       *path;
     char        *format, *option, *ovalue, *tok, *formatter;
     ssize       size;
     int         flags, backup, level;
 
-    route = state->route;
     size = MAXINT;
     backup = 0;
     flags = 0;
@@ -2683,7 +2691,7 @@ static int traceLogDirective(MaState *state, cchar *key, cchar *value)
     formatter = "detail";
     level = 0;
 
-    if (route->trace->flags & MPR_LOG_CMDLINE) {
+    if (trace->flags & MPR_LOG_CMDLINE) {
         mprLog("info appweb config", 4, "Already tracing. Ignoring TraceLog directive");
         return 0;
     }
@@ -2727,13 +2735,12 @@ static int traceLogDirective(MaState *state, cchar *key, cchar *value)
         return MPR_ERR_BAD_SYNTAX;
     }
     if (formatter) {
-        httpSetTraceFormatterName(route->trace, formatter);
+        httpSetTraceFormatterName(trace, formatter);
     }
     if (!smatch(path, "stdout") && !smatch(path, "stderr")) {
-        path = httpMakePath(route, state->configDir, path);
+        path = httpMakePath(state->route, state->configDir, path);
     }
-    route->trace = httpCreateTrace(route->trace);
-    if (httpSetTraceLogFile(route->trace, path, size, backup, format, flags) < 0) {
+    if (httpSetTraceLogFile(trace, path, size, backup, format, flags) < 0) {
         return MPR_ERR_CANT_OPEN;
     }
     httpSetTraceLevel(level);
