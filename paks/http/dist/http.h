@@ -44,28 +44,31 @@ struct HttpWebSocket;
 /********************************** Tunables **********************************/
 
 #ifndef ME_HTTP_BASIC
-    #define ME_HTTP_BASIC           1
+    #define ME_HTTP_BASIC           0
 #endif
 #ifndef ME_HTTP_CACHE
-    #define ME_HTTP_CACHE           1
+    #define ME_HTTP_CACHE           0
+#endif
+#ifndef ME_HTTP_DEFENSE
+    #define ME_HTTP_DEFENSE         0
 #endif
 #ifndef ME_HTTP_DIGEST
-    #define ME_HTTP_DIGEST          1
+    #define ME_HTTP_DIGEST          0
 #endif
 #ifndef ME_HTTP_DIR
-    #define ME_HTTP_DIR             1
+    #define ME_HTTP_DIR             0
 #endif
 #ifndef ME_HTTP_PAM
-    #define ME_HTTP_PAM             1
+    #define ME_HTTP_PAM             0
 #endif
 #ifndef ME_HTTP_HTTP2
-    #define ME_HTTP_HTTP2           1
+    #define ME_HTTP_HTTP2           0
 #endif
 #ifndef ME_HTTP_UPLOAD
-    #define ME_HTTP_UPLOAD          1
+    #define ME_HTTP_UPLOAD          0
 #endif
 #ifndef ME_HTTP_WEB_SOCKETS
-    #define ME_HTTP_WEB_SOCKETS     1
+    #define ME_HTTP_WEB_SOCKETS     0
 #endif
 
 /*
@@ -372,6 +375,14 @@ typedef int (*HttpListenCallback)(struct HttpEndpoint *endpoint);
     @stability Prototype
  */
 typedef cchar *(*HttpRedirectCallback)(struct HttpStream *stream, int *code, cchar *uri);
+
+/**
+    Network event callback
+    @param net HttpNetwork object
+    @ingroup HttpNet
+    @stability Evolving
+  */
+typedef void (*HttpNetCallback)(struct HttpNet *net, int event);
 
 /**
     Request completion callback
@@ -1087,7 +1098,6 @@ typedef struct Http {
     int             traceLevel;             /**< Current request trace level */
     int             startLevel;             /**< Start endpoint trace level */
     int             http2;                  /**< Enable http 2 */
-    int             upload;                 /**< Enable upload filter globally */
 
     /*
         Callbacks
@@ -1097,6 +1107,7 @@ typedef struct Http {
     HttpListenCallback   listenCallback;    /**< Invoked when creating listeners */
     HttpRedirectCallback redirectCallback;  /**< Redirect callback */
     HttpRequestCallback  requestCallback;   /**< Request completion callback */
+    HttpNetCallback      netCallback;       /**< Network event callback */
 
 } Http;
 
@@ -1509,6 +1520,15 @@ typedef struct HttpLimits {
     @stability Stable
  */
 PUBLIC void httpInitLimits(HttpLimits *limits, bool serverSide);
+
+/**
+    Clone a limits object
+    @description Clone the limits and allocate a new limits object
+    @return The allocated limits object
+    @ingroup HttpLimits
+    @stability Prototype
+ */
+PUBLIC HttpLimits *httpCloneLimits(HttpLimits *base);
 
 /**
     Create a new limits object
@@ -3132,6 +3152,15 @@ typedef void (*HttpIOCallback)(struct HttpNet *net, MprEvent *event);
 
 #define HTTP_NET_ASYNC  0x1
 
+/*
+    Net callback defines
+ */
+#define HTTP_NET_ACCEPT     1                   /**< A network connection has just been accepted */
+#define HTTP_NET_CONNECT    2                   /**< The network has just connected to a peery (client side only) */
+#define HTTP_NET_EOF        3                   /**< The network peer has disconnected */
+#define HTTP_NET_ERROR      4                   /**< The network has an unrecoverable error */
+#define HTTP_NET_DESTROY    5                   /**< The network is about to be destroyed */
+
 /**
     Control object for the network connection. A network connection may multiplex many HttpStream objects that represent
     logical streams over the connection.
@@ -3170,7 +3199,6 @@ typedef struct HttpNet {
     MprDispatcher   *dispatcher;            /**< Event dispatcher */
     MprDispatcher   *newDispatcher;         /**< New dispatcher if using a worker thread */
     MprDispatcher   *oldDispatcher;         /**< Original dispatcher if using a worker thread */
-    HttpNotifier    notifier;               /**< Default notifier to use for streams - copied from endpoint */
 
     MprEvent        *timeoutEvent;          /**< Connection or request timeout event */
     MprEvent        *workerEvent;           /**< Event for running connection via a worker thread (used by ejs) */
@@ -3197,6 +3225,7 @@ typedef struct HttpNet {
 
     bool            activeNet;              /**< Active net request (server side) */
     bool            async: 1;               /**< Network is in async mode (non-blocking) */
+    bool            autoDestroy: 1;         /**< Destroy the network automatically after IO events if appropriate */
 #if DEPRECATED || 1
     bool            borrowed: 1;            /**< Socket has been borrowed */
 #endif
@@ -3440,6 +3469,17 @@ PUBLIC bool httpQueuesNeedService(HttpNet *net);
  */
 PUBLIC void httpSetAsync(HttpNet *net, bool async);
 
+
+/**
+    Define a network event callback
+    @description This callback is invoked when networks closed or receive a peer disconnect.
+    @param callback The callback is invoked with the signature: void callback(HttpNet *net).
+    @param event HTTP_NET event indicating error or eof.
+    @ingroup HttpNet
+    @stability Evolving
+ */
+PUBLIC void httpSetNetCallback(HttpNetCallback callback);
+
 /**
     Set the network context object
     @param net HttpNet object created via #httpCreateNet
@@ -3448,6 +3488,22 @@ PUBLIC void httpSetAsync(HttpNet *net, bool async);
     @stability Evolving
  */
 PUBLIC void httpSetNetContext(HttpNet *net, void *context);
+
+/**
+    Set the EOF flag in the network to indicate a peer disconnect
+    @param net HttpNet Network object created via #httpCreateNet
+    @ingroup HttpNet
+    @stability Prototype
+ */
+PUBLIC void httpSetNetEof(HttpNet *net);
+
+/**
+    Set the error flag in the network to indicate a peer disconnect
+    @param net HttpNet Network object created via #httpCreateNet
+    @ingroup HttpNet
+    @stability Prototype
+ */
+PUBLIC void httpSetNetError(HttpNet *net);
 
 /**
     Set the Http protocol variant for this network connection
@@ -3509,18 +3565,21 @@ PUBLIC void httpSetupWaitHandler(HttpNet *net, int eventMask);
 #define HTTP_EVENT_READABLE         2       /**< The request has data available for reading */
 #define HTTP_EVENT_WRITABLE         3       /**< The request is now writable (post / put data) */
 #define HTTP_EVENT_ERROR            4       /**< The request has an error */
-#define HTTP_EVENT_DESTROY          5       /**< The HttpStream object is being closed and destroyed */
+#define HTTP_EVENT_DONE             5       /**< Request is done (all states complete) */
+#define HTTP_EVENT_TIMEOUT          6       /**< Request has timed out */
+#define HTTP_EVENT_DESTROY          7       /**< The HttpStream object is being closed and destroyed */
 
 /*
     Application level events
  */
-#define HTTP_EVENT_APP_CLOSE        6       /**< The request is now closed */
+#define HTTP_EVENT_APP_CLOSE        8       /**< The request is now closed */
 
 /*
     Internal hidden events. Not exposed by the Http notifier.
  */
-#define HTTP_EVENT_APP_OPEN         7       /**< The request is now open */
-#define HTTP_EVENT_MAX              8       /**< Maximum event plus one */
+#define HTTP_EVENT_APP_OPEN         9       /**< The request is now open */
+
+#define HTTP_EVENT_MAX              10      /**< Maximum event plus one */
 
 /*
     Stream states
@@ -3654,7 +3713,8 @@ typedef struct HttpStream {
 
     bool            activeRequest;          /**< Actively servicing a request */
     bool            authRequested: 1;       /**< Authorization requested based on user credentials */
-    bool            complete: 1;            /**< Request is complete */
+    bool            complete: 1;            /**< All request states are complete (not yet done) */
+    bool            done: 1;                /**< Request is done (complete and recycled) */
     bool            destroyed: 1;           /**< Stream has been destroyed */
     bool            disconnect;             /**< Must disconnect/reset the connection - can not continue */
     bool            encoded: 1;             /**< True if the password is MD5(username:realm:password) */
@@ -3662,6 +3722,7 @@ typedef struct HttpStream {
     bool            errorDoc: 1;            /**< Processing an error document */
     bool            followRedirects: 1;     /**< Follow redirects for client requests */
     bool            peerCreated: 1;         /**< Stream created by peer */
+    bool            proxied: 1;             /**< Stream carried by a proxy connection */
     bool            ownDispatcher: 1;       /**< Own the dispatcher and should destroy when closing connection */
     bool            secure: 1;              /**< Using https */
     bool            suppressTrace: 1;       /**< Do not trace this connection */
@@ -3970,7 +4031,7 @@ PUBLIC void httpNotify(HttpStream *stream, int event, int arg);
 
 #define HTTP_NOTIFY(stream, event, arg) \
     if (1) { \
-        if (stream->notifier) { \
+        if (stream && stream->notifier) { \
             httpNotify(stream, event, arg); \
         } \
     } else
@@ -5035,6 +5096,7 @@ PUBLIC void httpSetRouteCallback(struct HttpRoute *route, HttpRouteCallback proc
         httpTokenize httpTokenizev httpLink httpLinkEx
     @stability Internal
  */
+
 typedef struct HttpRoute {
     /* Ordered for debugging */
     struct HttpRoute *parent;               /**< Parent route */
@@ -5062,6 +5124,7 @@ typedef struct HttpRoute {
     MprJson         *config;                /**< Configuration file content */
     cchar           *mode;                  /**< Application run profile mode (debug|release) */
 
+    HttpUri         *canonical;             /**< Canonical host name (optional canonial public name for redirections) */
     cchar           *database;              /**< Name of database for route */
     cchar           *responseFormat;        /**< Client response format */
     cchar           *clientConfig;          /**< Configuration to send to the client */
@@ -5098,6 +5161,7 @@ typedef struct HttpRoute {
 
     HttpLimits      *limits;                /**< Host resource limits */
     MprHash         *mimeTypes;             /**< Hash table of mime types (key is extension) */
+    cchar           *charSet;               /**< Character set to use with the Content-Type */
 
     HttpTrace       *trace;                 /**< Per-route tracing configuration */
 
@@ -5974,6 +6038,29 @@ PUBLIC void httpSetRouteAutoDelete(HttpRoute *route, bool on);
     @stability Evolving
  */
 PUBLIC void httpSetRouteAutoFinalize(HttpRoute *route, bool on);
+
+/**
+    Set the route canonical name
+    @description The route canonical name is the public perferred name to use for the server for this route. This is
+        used when redirecting client requests for directories.
+    @param route HttpRoute object
+    @param name Host canonical name to use
+    @return Zero if successful. May return a negative MPR error code if the name is a regular expression and cannot
+        be compiled.
+    @ingroup HttpHost
+    @stability Stable
+ */
+PUBLIC int httpSetRouteCanonicalName(HttpRoute *route, cchar *name);
+
+/**
+    Set the default route character set
+    @description Set the default character set used in response Content-Types
+    @param route HttpRoute object created via #httpCreateRoute
+    @param charSet Character set string
+    @ingroup HttpTx
+    @stability Stable
+ */
+PUBLIC void httpSetRouteCharSet(HttpRoute *route, cchar *charSet);
 
 /**
     Define whether updating a request may compile from source
@@ -7296,13 +7383,14 @@ PUBLIC void httpProcessWriteEvent(HttpStream *stream);
     Tx flags
  */
 #define HTTP_TX_NO_BODY             0x1     /**< No transmission body, only send headers */
-#define HTTP_TX_HEADERS_CREATED     0x2     /**< Response headers have been created */
+#define HTTP_TX_HEADERS_CREATED     0x2     /**< Tx headers have been created */
 #define HTTP_TX_USE_OWN_HEADERS     0x8     /**< Skip adding default headers */
 #define HTTP_TX_NO_CHECK            0x10    /**< Do not check if the filename is inside the route documents directory */
 #define HTTP_TX_NO_LENGTH           0x20    /**< Do not emit a content length (used for TRACE) */
 #define HTTP_TX_NO_MAP              0x40    /**< Do not map the filename to compressed or minified alternatives */
 #define HTTP_TX_PIPELINE            0x80    /**< Created Tx pipeline */
 #define HTTP_TX_HAS_FILTERS         0x100   /**< Has output filters */
+#define HTTP_TX_HEADERS_PREPARED    0x200   /**< Tx headers have been created */
 
 /**
     Http Tx
@@ -7354,8 +7442,9 @@ typedef struct HttpTx {
     char            *etag;                  /**< Unique identifier tag */
     HttpStage       *handler;               /**< Final handler serving the request */
     MprOff          length;                 /**< Transmission content length */
-    char            *method;                /**< Client request method GET, HEAD, POST, DELETE, OPTIONS, PUT, TRACE */
-    cchar           *mimeType;              /**< Mime type of the request payload (ENV: CONTENT_TYPE) */
+    cchar           *method;                /**< Client request method GET, HEAD, POST, DELETE, OPTIONS, PUT, TRACE */
+    cchar           *mimeType;              /**< Mime type of the request payload */
+    cchar           *charSet;               /**< Character set to use with the Content-Type */
 
     /*
         Range fields
@@ -7706,6 +7795,16 @@ PUBLIC int httpRemoveHeader(HttpStream *stream, cchar *key);
     @stability Stable
  */
 PUBLIC HttpStream *httpRequest(cchar *method, cchar *uri, cchar *data, int protocol, char **err);
+
+/**
+    Set the transmission (response) character set
+    @description Set the character set used in the response Content-Type
+    @param stream HttpStream stream object created via #httpCreateStream
+    @param charSet Character set string
+    @ingroup HttpTx
+    @stability Stable
+ */
+PUBLIC void httpSetCharSet(HttpStream *stream, cchar *charSet);
 
 /**
     Define a content length header in the transmission. This will define a "Content-Length: NNN" request header and
@@ -8160,7 +8259,6 @@ typedef struct HttpHost {
      */
     cchar           *name;                  /**< Full host name with port */
     cchar           *hostname;              /**< Host name portion only */
-    HttpUri         *canonical;             /**< Canonical host name (optional canonial public name for redirections) */
     struct HttpHost *parent;                /**< Parent host to inherit aliases, dirs, routes */
     MprCache        *responseCache;         /**< Response content caching store */
     MprList         *routes;                /**< List of Route defintions */
@@ -8270,19 +8368,6 @@ PUBLIC HttpRoute *httpLookupRoute(HttpHost *host, cchar *pattern);
     @stability Stable
  */
 PUBLIC void httpResetRoutes(HttpHost *host);
-
-/**
-    Set the host canonical name
-    @description The host canonical name is the public perferred name to use for the server. This is
-    used when redirecting client requests for directories.
-    @param host HttpHost object
-    @param name Host canonical name to use
-    @return Zero if successful. May return a negative MPR error code if the name is a regular expression and cannot
-        be compiled.
-    @ingroup HttpHost
-    @stability Stable
- */
-PUBLIC int httpSetHostCanonicalName(HttpHost *host, cchar *name);
 
 /**
     Set the default host for all servers.
