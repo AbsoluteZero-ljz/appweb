@@ -91,7 +91,7 @@ typedef struct App {
     MprList     *threadData;        /* Per thread data */
     int         upload;             /* Upload using multipart mime */
     HttpUri     *uri;               /* Parsed URL */
-    cchar       *url;               /* Request URL */
+    char        *url;               /* Request URL */
     char        *username;          /* User name for authentication of requests */
     int         verifyPeer;         /* Validate server certs */
     int         verifyIssuer;       /* Validate the issuer. Permits self-signed certs if false. */
@@ -665,6 +665,17 @@ static int parseArgs(int argc, char **argv)
             app->nofollow++;
             app->showHeaders++;
 
+        } else if (smatch(argp, "--pj")) {
+            /* Post JSON */
+            if (nextArg >= argc) {
+                return showUsage();
+            } else {
+                mprAddItem(app->headers, mprCreateKeyPair("Content-Type", "application/json", 0));
+                app->method = "POST";
+                app->bodyData = mprCreateBuf(-1, -1);
+                mprPutStringToBuf(app->bodyData, argv[++nextArg]);
+            }
+
         } else if (smatch(argp, "--zero")) {
             app->zeroOnErrors++;
 
@@ -725,7 +736,7 @@ static int parseArgs(int argc, char **argv)
             if (app->target[strlen(app->target) - 1] == '/') {
                 app->url = mprJoinPath(app->target, mprGetPathBase(app->file));
             } else {
-                app->url = app->target;
+                app->url = sclone(app->target);
             }
             app->url = extendUrl(app->url);
             if (app->verbose) {
@@ -892,6 +903,7 @@ static void threadMain(void *data, MprThread *thread)
     net = td->net = httpCreateNet(td->dispatcher, NULL, app->protocol, HTTP_NET_ASYNC);
 
     if (httpConnectNet(net, app->ip, app->port, app->ssl) < 0) {
+        httpNetError(net, "Cannot conect to %s:%d", app->ip, app->port);
         mprLog("error http", 0, "%s", net->errorMsg);
 
     } else {
@@ -983,7 +995,7 @@ static void startRequest(Request *request)
     }
     request->written = 0;
 
-    app->url = request->redirect ? request->redirect : app->url;
+    app->url = request->redirect ? sclone(request->redirect) : app->url;
     request->redirect = 0;
 
     if (app->singleStep) {
@@ -1077,7 +1089,6 @@ static void checkRequestState(HttpStream *stream)
                 mprDebug("http", 4, "retry %d of %d for: %s %s", request->retries, app->maxRetries, app->method, app->url);
             }
             request->count--;
-            httpSetState(stream, HTTP_STATE_COMPLETE);
 
         } else {
             request->retries = 0;
@@ -1123,8 +1134,9 @@ static void parseStatus(HttpStream *stream)
 static void prepHeaders(HttpStream *stream)
 {
     MprKeyValue     *header;
-    char            *seq;
+    char            *seq, *url;
     int             next;
+    static int      sequence = 0;
 
     httpResetClientStream(stream, 0);
     for (next = 0; (header = mprGetNextItem(app->headers, &next)) != 0; ) {
@@ -1138,9 +1150,12 @@ static void prepHeaders(HttpStream *stream)
         httpSetHeader(stream, "Accept", "text/plain");
     }
     if (app->sequence) {
-        static int next = 0;
-        seq = itos(next++);
+        mprLock(app->mutex);
+        url = stok(app->url, "?", NULL);
+        app->url = sfmt("%s?seq=%d", url, sequence);
+        seq = itos(sequence++);
         httpSetHeaderString(stream, "X-Http-Seq", seq);
+        mprUnlock(app->mutex);
     }
     if (app->ranges) {
         httpSetHeaderString(stream, "Range", app->ranges);
