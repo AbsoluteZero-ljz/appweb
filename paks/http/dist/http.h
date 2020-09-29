@@ -708,7 +708,7 @@ PUBLIC HttpTrace *httpCreateTrace(HttpTrace *parent);
 PUBLIC void httpDetailFormatter(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *buf, ssize len, cchar *fmt, va_list args);
 
 /**
-    Simple log trace formatter for debugging
+    Pretty log trace formatter for debugging
     @param trace HttpTrace object
     @param event Event to trace
     @param type Event type to trace
@@ -720,7 +720,7 @@ PUBLIC void httpDetailFormatter(HttpTrace *trace, cchar *event, cchar *type, int
     @ingroup HttpTrace
     @stability Evolving
  */
-PUBLIC void httpSimpleFormatter(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *buf, ssize len, cchar *fmt, va_list args);
+PUBLIC void httpPrettyFormatter(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *buf, ssize len, cchar *fmt, va_list args);
 
 /**
     Convenience routine to format trace via the configured formatter
@@ -870,7 +870,7 @@ PUBLIC int httpStartTracing(cchar *traceSpec);
     @description The Http trace log is for operational request and server messages and should be used in preference to
     the MPR error log which should be used only for configuration and hard system-wide errors.
     @param trace HttpTrace object. Typically used via HttpStream.trace or HttpNet.trace.
-    @param event Event name to trace.
+    @param event Event name to trace. Typically dot separated module names.
     @param type Event type to trace. Events are grouped into types that are traced at the same level.
     The standard set of types and their default trace levels are:
     debug: 0, request:1, error: 2, result:2, context:3, packet:4, detail:5. Users can create custom types.
@@ -897,36 +897,9 @@ PUBLIC bool httpLog(HttpTrace *trace, cchar *event, cchar *type, cchar *fmt, ...
                 httpLogProc(trace, event, type, 0, __VA_ARGS__); \
             } \
         } else
-    #define httpRawLog(trace, type, ...) \
-        if (trace && HTTP->traceLevel > 0) { \
-            int __tlevel = PTOI(mprLookupKey(trace->events, type)); \
-            if (__tlevel >= 0 && __tlevel <= HTTP->traceLevel) { \
-                httpLogProc(trace, NULL, type, 0, __VA_ARGS__); \
-            } \
-        } else
-
 #endif
 
 PUBLIC bool httpLogProc(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *fmt, ...) PRINTF_ATTRIBUTE(5,6);
-
-/**
-    Log with data buffer
-    @description This is similar to #httpLog but will also log the contents of a data buffer.
-    If the buffer contains binary data, it will be displayed in hex format. The content will be logged up
-    to the maximum size defined via #httpSetTraceLogFile.
-    @param trace HttpTrace object. Typically used via HttpStream.trace or HttpNet.trace.
-    @param event Event to trace
-    @param type Event type to trace
-    @param flags Output formatting flags
-    @param buf Data buffer to trace
-    @param len Size of the data buffer.
-    @param fmt Printf style format string. String should be comma separated key=value pairs
-    @param ... Arguments for fmt
-    @return True if the event was traced
-    @ingroup HttpTrace
-    @stability Evolving
- */
-PUBLIC bool httpLogData(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *buf, ssize len, cchar *fmt, ...) PRINTF_ATTRIBUTE(7,8);
 
 /**
     Trace request packet
@@ -945,6 +918,28 @@ PUBLIC bool httpLogData(HttpTrace *trace, cchar *event, cchar *type, int flags, 
     @stability Evolving
  */
 PUBLIC bool httpLogPacket(HttpTrace *trace, cchar *event, cchar *type, int flags, struct HttpPacket *packet, cchar *values, ...) PRINTF_ATTRIBUTE(6,7);
+
+#if DEPRECATED
+/**
+    Log with data buffer
+    @description This is similar to #httpLog but will also log the contents of a data buffer.
+    If the buffer contains binary data, it will be displayed in hex format. The content will be logged up
+    to the maximum size defined via #httpSetTraceLogFile.
+    @param trace HttpTrace object. Typically used via HttpStream.trace or HttpNet.trace.
+    @param event Event to trace
+    @param type Event type to trace
+    @param flags Output formatting flags
+    @param buf Data buffer to trace
+    @param len Size of the data buffer.
+    @param fmt Printf style format string. String should be comma separated key=value pairs
+    @param ... Arguments for fmt
+    @return True if the event was traced
+    @ingroup HttpTrace
+    @stability Evolving
+ */
+PUBLIC bool httpLogData(struct HttpNet *net, struct HttpStream *stream, cchar *event, cchar *type, int flags, cchar *buf,
+    ssize len, cchar *fmt, ...) PRINTF_ATTRIBUTE(8,9);
+#endif
 
 /**
     Convenience routine to write data to the trace logger. Should only be used by formatters.

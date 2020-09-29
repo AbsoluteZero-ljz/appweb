@@ -1,6 +1,7 @@
 /*
     TOP.es.set - Server-side test setup
  */
+
 require ejs.unix
 
 if (tphase() == 'Setup') {
