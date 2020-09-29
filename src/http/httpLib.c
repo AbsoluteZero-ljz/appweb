@@ -16106,11 +16106,8 @@ static void openPipeQueues(HttpStream *stream, HttpQueue *qhead)
                     q->flags |= HTTP_QUEUE_OPEN_TRIED;
                     if (q->stage->open(q) == 0) {
                         q->flags |= HTTP_QUEUE_OPENED;
-                    } else {
-                        if (!stream->error) {
-                            httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot open stage %s", q->stage->name);
-                        }
-
+                    } else if (!stream->error) {
+                        httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot open stage %s", q->stage->name);
                     }
                 }
             }
@@ -29393,3 +29390,4 @@ static void traceErrorProc(HttpStream *stream, cchar *fmt, ...)
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
  */
+
