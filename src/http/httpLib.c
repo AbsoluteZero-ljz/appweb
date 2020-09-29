@@ -11393,6 +11393,7 @@ static HttpStream *findStream(HttpNet *net, int streamID)
 
     for (ITERATE_ITEMS(net->streams, stream, next)) {
         if (stream->streamID == streamID) {
+            stream->lastActivity = net->lastActivity;
             return stream;
         }
     }
