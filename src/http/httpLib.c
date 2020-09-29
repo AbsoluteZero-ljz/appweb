@@ -15937,6 +15937,7 @@ PUBLIC void httpCreateTxPipeline(HttpStream *stream, HttpRoute *route)
     HttpRx      *rx;
     HttpQueue   *q;
     HttpStage   *stage, *filter;
+    cchar       *pattern;
     int         next;
 
     assert(stream);
@@ -15951,6 +15952,8 @@ PUBLIC void httpCreateTxPipeline(HttpStream *stream, HttpRoute *route)
     net = stream->net;
     rx = stream->rx;
     tx = stream->tx;
+    
+    tx->charSet = route->charSet;
 
     tx->outputPipeline = mprCreateList(-1, MPR_LIST_STABLE);
     if (httpServerStream(stream)) {
@@ -15958,6 +15961,8 @@ PUBLIC void httpCreateTxPipeline(HttpStream *stream, HttpRoute *route)
             tx->handler = http->passHandler;
         }
         mprAddItem(tx->outputPipeline, tx->handler);
+    } else {
+        tx->started = 1;
     }
     if (route->outputStages) {
         for (next = 0; (filter = mprGetNextItem(route->outputStages, &next)) != 0; ) {
@@ -18395,6 +18400,8 @@ PUBLIC HttpRoute *httpCreateInheritedRoute(HttpRoute *parent)
     route->autoDelete = parent->autoDelete;
     route->autoFinalize = parent->autoFinalize;
     route->caching = parent->caching;
+    route->canonical = parent->canonical;
+    route->charSet = parent->charSet;
     route->clientConfig = parent->clientConfig;
     route->conditions = parent->conditions;
     route->config = parent->config;
@@ -18462,6 +18469,8 @@ static void manageRoute(HttpRoute *route, int flags)
     if (flags & MPR_MANAGE_MARK) {
         mprMark(route->auth);
         mprMark(route->caching);
+        mprMark(route->canonical);
+        mprMark(route->charSet);
         mprMark(route->clientConfig);
         mprMark(route->conditions);
         mprMark(route->config);
@@ -21689,6 +21698,26 @@ PUBLIC void httpSetRouteCallback(HttpRoute *route, HttpRouteCallback callback)
 }
 
 
+PUBLIC int httpSetRouteCanonicalName(HttpRoute *route, cchar *name)
+{
+    if (!name || *name == '\0') {
+        mprLog("error http", 0, "Empty host name");
+        return MPR_ERR_BAD_ARGS;
+    }
+    if (schr(name, ':')) {
+        route->canonical = httpCreateUri(name, 0);
+    } else {
+        route->canonical = httpCreateUri(sjoin(name, ":", 0), 0);
+    }
+    return 0;
+}
+
+PUBLIC void httpSetRouteCharSet(HttpRoute *route, cchar *charSet)
+{
+    route->charSet = sclone(charSet);
+}
+
+
 #undef  GRADUATE_HASH
 #undef  GRADUATE_LIST
 
@@ -24777,6 +24806,7 @@ static void manageTx(HttpTx *tx, int flags)
         mprMark(tx->cache);
         mprMark(tx->cacheBuffer);
         mprMark(tx->cachedContent);
+        mprMark(tx->charSet);
         mprMark(tx->stream);
         mprMark(tx->connector);
         mprMark(tx->cookies);
@@ -25410,39 +25440,45 @@ PUBLIC void httpPrepareHeaders(HttpStream *stream)
      */
     httpAddHeaderString(stream, "Date", stream->http->currentDate);
 
-    if (tx->ext && route) {
+    if (tx->mimeType == 0) {
         if (stream->error) {
             tx->mimeType = sclone("text/html");
-        } else if ((tx->mimeType = (char*) mprLookupMime(route->mimeTypes, tx->ext)) == 0) {
+        } else if (!route || (tx->mimeType = (char*) mprLookupMime(route->mimeTypes, tx->ext)) == 0) {
             tx->mimeType = sclone("text/html");
         }
+    }
+    if (tx->charSet) {
+        httpAddHeader(stream, "Content-Type", "%s; charset=%s", tx->mimeType, tx->charSet);
+    } else {
         httpAddHeaderString(stream, "Content-Type", tx->mimeType);
     }
     if (tx->etag) {
         httpAddHeader(stream, "ETag", "%s", tx->etag);
     }
-    length = tx->length > 0 ? tx->length : 0;
-    if (rx->flags & HTTP_HEAD) {
-        stream->tx->flags |= HTTP_TX_NO_BODY;
-        httpDiscardData(stream, HTTP_QUEUE_TX);
-        if (tx->chunkSize <= 0) {
-            httpAddHeader(stream, "Content-Length", "%lld", length);
-        }
-
-    } else if (tx->chunkSize > 0) {
-        httpSetHeaderString(stream, "Transfer-Encoding", "chunked");
-
-    } else if (httpServerStream(stream)) {
-        /* Server must not emit a content length header for 1XX, 204 and 304 status */
-        if (!((100 <= tx->status && tx->status <= 199) || tx->status == 204 || tx->status == 304 || tx->flags & HTTP_TX_NO_LENGTH)) {
-            if (length > 0 || (length == 0 && stream->net->protocol < 2)) {
+    if (!stream->upgraded) {
+        length = tx->length > 0 ? tx->length : 0;
+        if (rx->flags & HTTP_HEAD) {
+            stream->tx->flags |= HTTP_TX_NO_BODY;
+            httpDiscardData(stream, HTTP_QUEUE_TX);
+            if (tx->chunkSize <= 0) {
                 httpAddHeader(stream, "Content-Length", "%lld", length);
             }
-        }
 
-    } else if (tx->length > 0) {
-        /* client with body */
-        httpAddHeader(stream, "Content-Length", "%lld", length);
+        } else if (tx->chunkSize > 0) {
+            httpSetHeaderString(stream, "Transfer-Encoding", "chunked");
+
+        } else if (httpServerStream(stream)) {
+            /* Server must not emit a content length header for 1XX, 204 and 304 status */
+            if (!((100 <= tx->status && tx->status <= 199) || tx->status == 204 || tx->status == 304 || tx->flags & HTTP_TX_NO_LENGTH)) {
+                if (length > 0 || (length == 0 && stream->net->protocol < 2)) {
+                    httpAddHeader(stream, "Content-Length", "%lld", length);
+                }
+            }
+
+        } else if (tx->length > 0) {
+            /* client with body */
+            httpAddHeader(stream, "Content-Length", "%lld", length);
+        }
     }
     if (tx->outputRanges) {
         if (tx->outputRanges->next == 0) {
@@ -25454,7 +25490,11 @@ PUBLIC void httpPrepareHeaders(HttpStream *stream)
             }
         } else {
             tx->mimeType = sfmt("multipart/byteranges; boundary=%s", tx->rangeBoundary);
-            httpSetHeaderString(stream, "Content-Type", tx->mimeType);
+            if (tx->charSet) {
+                httpSetHeader(stream, "Content-Type", "%s; charset=%s", tx->mimeType, tx->charSet);
+            } else {
+                httpSetHeaderString(stream, "Content-Type", tx->mimeType);
+            }
         }
         httpSetHeader(stream, "Accept-Ranges", "bytes");
     }
@@ -25553,7 +25593,7 @@ PUBLIC bool httpSetFilename(HttpStream *stream, cchar *filename, int flags)
 
     if (tx->flags & HTTP_TX_PIPELINE) {
         /* Filename being revised after pipeline created */
-        httpLog(stream->trace, "http.document", "context", "filename:'%s'", tx->filename);
+        httpLog(stream->trace, "tx.http.document", "context", "filename:%s", tx->filename);
     }
     return info->valid;
 }
@@ -25572,12 +25612,23 @@ PUBLIC void httpSetStatus(HttpStream *stream, int status)
 }
 
 
+PUBLIC void httpSetCharSet(HttpStream *stream, cchar *charSet)
+{
+    stream->tx->charSet = sclone(charSet);
+}
+
+
 PUBLIC void httpSetContentType(HttpStream *stream, cchar *mimeType)
 {
     stream->tx->mimeType = sclone(mimeType);
-    httpSetHeaderString(stream, "Content-Type", stream->tx->mimeType);
+#if UNUSED
+    if (tx->charSet) {
+        httpSetHeaderString(stream, "Content-Type", "%s; charset=%s", tx->mimeType, tx->charSet);
+    } else {
+        httpSetHeaderString(stream, "Content-Type", tx->mimeType);
+    }
+#endif
 }
-
 
 
 PUBLIC bool httpFileExists(HttpStream *stream)
