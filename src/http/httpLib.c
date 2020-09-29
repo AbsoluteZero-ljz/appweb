@@ -7319,7 +7319,7 @@ PUBLIC void httpNetError(HttpNet *net, cchar *fmt, ...)
     }
     va_start(args, fmt);
     if (!net->error) {
-        net->error = 1;
+        httpSetNetError(net);
         net->errorMsg = msg = sfmtv(fmt, args);
 #if ME_HTTP_HTTP2
         if (net->protocol >= 2 && !net->eof) {
@@ -7378,7 +7378,7 @@ static void errorRedirect(HttpStream *stream, cchar *uri)
     HttpTx      *tx;
 
     tx = stream->tx;
-    if (sstarts(uri, "http") || tx->flags & HTTP_TX_HEADERS_CREATED) {
+    if (sstarts(uri, "http") || (tx->flags & HTTP_TX_HEADERS_CREATED)) {
         httpRedirect(stream, HTTP_CODE_MOVED_PERMANENTLY, uri);
     } else {
         /*
@@ -13935,8 +13935,8 @@ PUBLIC HttpNet *httpCreateNet(MprDispatcher *dispatcher, HttpEndpoint *endpoint,
 
     if (endpoint) {
         net->async = endpoint->async;
-        net->notifier = endpoint->notifier;
         net->endpoint = endpoint;
+        net->autoDestroy = 1;
         host = mprGetFirstItem(endpoint->hosts);
         if (host && (route = host->defaultRoute) != 0) {
             net->trace = route->trace;
@@ -14007,6 +14007,9 @@ PUBLIC void httpDestroyNet(HttpNet *net)
     HttpStream  *stream;
     int         next;
 
+    if (net->http->netCallback) {
+        net->http->netCallback(net, HTTP_NET_DESTROY);
+    }
     if (!net->destroyed && !net->borrowed) {
         if (httpIsServer(net)) {
             for (ITERATE_ITEMS(net->streams, stream, next)) {
@@ -14113,7 +14116,10 @@ PUBLIC int httpConnectNet(HttpNet *net, cchar *ip, int port, MprSsl *ssl)
     if (ssl) {
         secureNet(net, ssl, ip);
     }
-    httpLog(net->trace, "net.peer", "context", "peer:'%s:%d'", net->ip, net->port);
+    httpLog(net->trace, "tx.net.peer", "context", "peer:%s:%d", net->ip, net->port);
+    if (net->http->netCallback) {
+        (net->http->netCallback)(net, HTTP_NET_CONNECT);
+    }
     return 0;
 }
 
@@ -14174,6 +14180,9 @@ PUBLIC void httpSetNetProtocol(HttpNet *net, int protocol)
 }
 
 
+/*
+    Respond if the network has been closed for a client
+ */
 PUBLIC void httpNetClosed(HttpNet *net)
 {
     HttpStream  *stream;
@@ -14264,6 +14273,14 @@ PUBLIC void httpSetAsync(HttpNet *net, bool async)
 PUBLIC void httpSetIOCallback(HttpNet *net, HttpIOCallback fn)
 {
     net->ioCallback = fn;
+}
+
+
+PUBLIC void httpSetNetCallback(HttpNetCallback callback)
+{
+    if (HTTP) {
+        HTTP->netCallback = callback;
+    }
 }
 
 
@@ -14380,6 +14397,26 @@ PUBLIC cchar *httpGetProtocol(HttpNet *net)
         return "HTTP/1.1";
     }
 }
+
+
+PUBLIC void httpSetNetEof(HttpNet *net)
+{
+    net->eof = 1;
+    if (net->http->netCallback) {
+        (net->http->netCallback)(net, HTTP_NET_EOF);
+    }
+}
+
+
+PUBLIC void httpSetNetError(HttpNet *net)
+{
+    net->eof = 1;
+    net->error = 1;
+    if (net->http->netCallback) {
+        (net->http->netCallback)(net, HTTP_NET_ERROR);
+    }
+}
+
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
@@ -14524,6 +14561,9 @@ PUBLIC HttpNet *httpAccept(HttpEndpoint *endpoint, MprEvent *event)
 #endif
     event->mask = MPR_READABLE;
     event->timestamp = net->http->now;
+    if (net->http->netCallback) {
+        net->http->netCallback(net, HTTP_NET_ACCEPT);
+    }
     (net->ioCallback)(net, event);
     return net;
 }
@@ -14568,15 +14608,17 @@ PUBLIC void httpIOEvent(HttpNet *net, MprEvent *event)
         if (!mprIsSocketEof(net->sock)) {
             httpReadIO(net);
         } else {
-            net->eof = 1;
+            httpSetNetEof(net);
         }
     }
     httpServiceNetQueues(net, 0);
 
-    if (httpIsServer(net) && (net->error || net->eof || (net->sentGoaway && !net->socketq->first))) {
-        httpDestroyNet(net);
-    } else if (httpIsClient(net) && net->eof) {
-        httpNetClosed(net);
+    if (net->error || net->eof || (net->sentGoaway && !net->socketq->first)) {
+        if (net->autoDestroy) {
+            httpDestroyNet(net);
+        } else if (httpIsClient(net)){
+            httpNetClosed(net);
+        }
     } else if (net->async && !net->delay) {
         httpEnableNetEvents(net);
     }
@@ -14671,8 +14713,7 @@ static void netOutgoingService(HttpQueue *q)
             } else {
                 httpNetError(net, "netConnector: Cannot write. errno %d", errCode);
             }
-            net->eof = 1;
-            net->error = 1;
+            httpSetNetError(net);
             break;
 
         } else if (written > 0) {
@@ -16938,9 +16979,7 @@ static bool processContent(HttpQueue *q)
         httpSetState(stream, HTTP_STATE_READY);
     }
     if (rx->eof || !httpServerStream(stream)) {
-        if (stream->readq->first) {
-            HTTP_NOTIFY(stream, HTTP_EVENT_READABLE, 0);
-        }
+        HTTP_NOTIFY(stream, HTTP_EVENT_READABLE, 0);
     }
     return httpPumpOutput(q) || rx->eof || stream->error;
 }
@@ -17030,6 +17069,7 @@ static bool processCompletion(HttpQueue *q)
     HttpStream  *stream;
 
     stream = q->stream;
+    //  Can also use the notifier HTTP_EVENT_COMPLETE
     if (stream->http->requestCallback) {
         (stream->http->requestCallback)(stream);
     }
@@ -23002,12 +23042,15 @@ PUBLIC HttpStream *httpCreateStream(HttpNet *net, bool peerCreated)
     stream->lastActivity = http->now;
     stream->net = net;
     stream->endpoint = net->endpoint;
-    stream->notifier = net->notifier;
     stream->sock = net->sock;
     stream->port = net->port;
     stream->ip = net->ip;
     stream->secure = net->secure;
     stream->peerCreated = peerCreated;
+    if (stream->endpoint) {
+        stream->notifier = net->endpoint->notifier;
+    }
+
     pickStreamNumber(stream);
 
     if (net->endpoint) {
@@ -23324,6 +23367,7 @@ static void streamTimeout(HttpStream *stream, MprEvent *mprEvent)
 
     if (stream->timeoutCallback) {
         (stream->timeoutCallback)(stream);
+        HTTP_NOTIFY(stream, HTTP_EVENT_TIMEOUT, 0);
     }
     prefix = (stream->state == HTTP_STATE_BEGIN) ? "Idle connection" : "Request";
     if (stream->timeout == HTTP_PARSE_TIMEOUT) {
@@ -23331,13 +23375,10 @@ static void streamTimeout(HttpStream *stream, MprEvent *mprEvent)
         event = "timeout.parse";
 
     } else if (stream->timeout == HTTP_INACTIVITY_TIMEOUT) {
-#if KEEP
-        //  Too noisy
-        if (httpClientStream(stream) || (stream->rx && stream->rx->uri)) {
+        if (httpClientStream(stream) /* too noisy || (stream->rx && stream->rx->uri) */) {
             msg = sfmt("%s exceeded inactivity timeout of %lld sec", prefix, limits->inactivityTimeout / 1000);
             event = "timeout.inactivity";
         }
-#endif
 
     } else if (stream->timeout == HTTP_REQUEST_TIMEOUT) {
         msg = sfmt("%s exceeded timeout %lld sec", prefix, limits->requestTimeout / 1000);
@@ -24986,8 +25027,8 @@ PUBLIC void httpAppendHeaderString(HttpStream *stream, cchar *key, cchar *value)
 
 PUBLIC cchar *httpGetTxHeader(HttpStream *stream, cchar *key)
 {
-    if (stream->rx == 0) {
-        assert(stream->rx);
+    if (stream->tx == 0) {
+        assert(stream->tx);
         return 0;
     }
     return mprLookupKey(stream->tx->headers, key);
