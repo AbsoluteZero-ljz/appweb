@@ -11066,6 +11066,7 @@ PUBLIC void httpCreateHeaders2(HttpQueue *q, HttpPacket *packet)
             encodeHeader(stream, packet, kp->key, kp->data);
         }
     }
+    tx->flags |= HTTP_TX_HEADERS_CREATED;
 }
 
 
@@ -15876,8 +15877,8 @@ static void handleTraceMethod(HttpStream *stream)
     httpDiscardData(stream, HTTP_QUEUE_TX);
     traceData = httpCreateDataPacket(q->packetSize);
     httpCreateHeaders1(q, traceData);
-    tx->flags &= ~(HTTP_TX_NO_LENGTH | HTTP_TX_HEADERS_CREATED);
-
+    tx->flags &= ~(HTTP_TX_NO_LENGTH | HTTP_TX_HEADERS_CREATED | HTTP_TX_HEADERS_PREPARED);
+    httpRemoveHeader(stream, "Content-Type");
     httpSetContentType(stream, "message/http");
     httpPutPacketToNext(q, traceData);
     httpFinalize(stream);
@@ -25475,10 +25476,10 @@ PUBLIC void httpPrepareHeaders(HttpStream *stream)
     tx = stream->tx;
     route = rx->route;
 
-    if (tx->flags & HTTP_TX_HEADERS_CREATED) {
+    if (tx->flags & HTTP_TX_HEADERS_PREPARED) {
         return;
     }
-    tx->flags |= HTTP_TX_HEADERS_CREATED;
+    tx->flags |= HTTP_TX_HEADERS_PREPARED;
 
     if (stream->headersCallback) {
         /* Must be before headers below */
