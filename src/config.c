@@ -42,7 +42,7 @@ PUBLIC int maLoadModules(void)
     rc += httpEspInit(HTTP, mprCreateModule("esp", NULL, NULL, HTTP));
 #endif
 #if ME_COM_FAST
-    rc += httpFastInit(HTTP, mprCreateModule("cgi", NULL, NULL, HTTP));
+    rc += httpFastInit(HTTP, mprCreateModule("fast", NULL, NULL, HTTP));
 #endif
 #if ME_COM_PROXY
     rc += httpProxyInit(HTTP, mprCreateModule("cgi", NULL, NULL, HTTP));
@@ -3048,6 +3048,9 @@ static bool conditionalDefinition(MaState *state, cchar *key)
 
         } else if (scaselessmatch(key, "PHP_MODULE")) {
             result = ME_COM_PHP;
+
+        } else if (scaselessmatch(key, "PROXY_MODULE")) {
+            result = ME_COM_PROXY;
 
         } else if (scaselessmatch(key, "SSL_MODULE")) {
             result = ME_COM_SSL;
