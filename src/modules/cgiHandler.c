@@ -65,12 +65,12 @@ static int openCgi(HttpQueue *q)
     int         nproc;
 
     stream = q->stream;
-    if ((nproc = (int) httpMonitorEvent(stream, HTTP_COUNTER_ACTIVE_PROCESSES, 1)) >= stream->limits->processMax) {
+    if ((nproc = (int) httpMonitorEvent(stream, HTTP_COUNTER_ACTIVE_PROCESSES, 1)) > stream->limits->processMax) {
+        httpMonitorEvent(q->stream, HTTP_COUNTER_ACTIVE_PROCESSES, -1);
         httpLog(stream->trace, "cgi.limit.error", "error",
             "msg=\"Too many concurrent processes\", activeProcesses=%d, maxProcesses=%d",
-            nproc, stream->limits->processMax);
+            nproc - 1, stream->limits->processMax);
         httpError(stream, HTTP_CODE_SERVICE_UNAVAILABLE, "Server overloaded");
-        httpMonitorEvent(q->stream, HTTP_COUNTER_ACTIVE_PROCESSES, -1);
         return MPR_ERR_CANT_OPEN;
     }
     if ((cgi = mprAllocObj(Cgi, manageCgi)) == 0) {
@@ -465,7 +465,7 @@ static void readFromCgi(Cgi *cgi, int channel)
             mprAdjustBufEnd(packet->content, nbytes);
         }
         if (channel == MPR_CMD_STDERR) {
-            httpLog(stream->trace, "cgi.error", "error", "msg=\"CGI failed uri=\'%s\',details: %s",
+            httpLog(stream->trace, "cgi.error", "error", "msg:CGI failed, uri:%s, details: %s",
                 stream->rx->uri, mprBufToString(packet->content));
             httpSetStatus(stream, HTTP_CODE_SERVICE_UNAVAILABLE);
             cgi->seenHeader = 1;
