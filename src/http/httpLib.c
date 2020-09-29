@@ -10270,7 +10270,7 @@ static void parseHeaders2(HttpQueue *q, HttpStream *stream)
     }
     if (!net->sentGoaway) {
         if (!stream->error) {
-            stream->state = HTTP_STATE_PARSED;
+            httpSetState(stream, HTTP_STATE_PARSED);
         }
         rx->protocol = sclone("HTTP/2.0");
         httpProcessHeaders(stream->inputq);
