@@ -9004,6 +9004,7 @@ static cchar *eatBlankLines(HttpPacket *packet)
         if (*start != '\r' && *start != '\n') {
             break;
         }
+        mprGetCharFromBuf(packet->content);
     }
     return mprGetBufStart(content);
 }
