@@ -80,7 +80,7 @@ PUBLIC int configureHandlers(HttpRoute *route)
         httpAddRouteHandler(route, "espHandler", "esp");
     }
 #endif
-#if ME_COM_EJS
+#if ME_COM_EJS && DEPRECATED
     if (httpLookupStage("ejsHandler")) {
         httpAddRouteHandler(route, "ejsHandler", "ejs");
     }
@@ -764,6 +764,7 @@ static int crossOriginDirective(MaState *state, cchar *key, cchar *value)
 }
 
 
+#if ME_HTTP_DEFENSE
 /*
     Defense name [Arg=Value]...
 
@@ -3447,6 +3448,9 @@ static int parseInit(void)
     maAddDirective("ShowErrors", showErrorsDirective);
     maAddDirective("Source", sourceDirective);
 
+#if ME_HTTP_DEFENSE
+    maAddDirective("Defense", defenseDirective);
+#endif
 #if ME_COM_SSL
     maAddDirective("SSLCACertificateFile", sslCaCertificateFileDirective);
     maAddDirective("SSLCACertificatePath", sslCaCertificatePathDirective);
