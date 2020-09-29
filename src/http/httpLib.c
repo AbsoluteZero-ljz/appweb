@@ -475,7 +475,7 @@ PUBLIC void httpInitLimits(HttpLimits *limits, bool serverSide)
     limits->chunkSize = ME_MAX_CHUNK;
     limits->clientMax = ME_MAX_CLIENTS;
     limits->connectionsMax = ME_MAX_CONNECTIONS;
-    limits->connectionsPerClientMax = ME_MAX_CONNECTIONS;
+    limits->connectionsPerClientMax = ME_MAX_CONNECTIONS_PER_CLIENT;
     limits->headerMax = ME_MAX_NUM_HEADERS;
     limits->headerSize = ME_MAX_HEADERS;
     limits->keepAliveMax = ME_MAX_KEEP_ALIVE;
@@ -531,6 +531,12 @@ PUBLIC HttpLimits *httpCreateLimits(int serverSide)
         httpInitLimits(limits, serverSide);
     }
     return limits;
+}
+
+
+PUBLIC HttpLimits *httpCloneLimits(HttpLimits *limits)
+{
+    return (HttpLimits*) mprMemdup(limits, sizeof(HttpLimits));
 }
 
 
@@ -9131,6 +9137,7 @@ static void parseResponseLine(HttpQueue *q, HttpPacket *packet)
         httpBadRequestError(stream, HTTP_ABORT | HTTP_CODE_NOT_ACCEPTABLE, "Unsupported HTTP protocol");
         return;
     }
+    rx->protocol = supper(protocol);
     status = getToken(packet, NULL, TOKEN_NUMBER);
     if (status == NULL || *status == '\0') {
         httpBadRequestError(stream, HTTP_ABORT | HTTP_CODE_NOT_ACCEPTABLE, "Bad response status code");
