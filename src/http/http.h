@@ -377,6 +377,14 @@ typedef int (*HttpListenCallback)(struct HttpEndpoint *endpoint);
 typedef cchar *(*HttpRedirectCallback)(struct HttpStream *stream, int *code, cchar *uri);
 
 /**
+    Network event callback
+    @param net HttpNetwork object
+    @ingroup HttpNet
+    @stability Evolving
+  */
+typedef void (*HttpNetCallback)(struct HttpNet *net, int event);
+
+/**
     Request completion callback
     @param stream HttpStream object
     @ingroup HttpRx
@@ -1099,6 +1107,7 @@ typedef struct Http {
     HttpListenCallback   listenCallback;    /**< Invoked when creating listeners */
     HttpRedirectCallback redirectCallback;  /**< Redirect callback */
     HttpRequestCallback  requestCallback;   /**< Request completion callback */
+    HttpNetCallback      netCallback;       /**< Network event callback */
 
 } Http;
 
@@ -3134,6 +3143,15 @@ typedef void (*HttpIOCallback)(struct HttpNet *net, MprEvent *event);
 
 #define HTTP_NET_ASYNC  0x1
 
+/*
+    Net callback defines
+ */
+#define HTTP_NET_ACCEPT     1                   /**< A network connection has just been accepted */
+#define HTTP_NET_CONNECT    2                   /**< The network has just connected to a peery (client side only) */
+#define HTTP_NET_EOF        3                   /**< The network peer has disconnected */
+#define HTTP_NET_ERROR      4                   /**< The network has an unrecoverable error */
+#define HTTP_NET_DESTROY    5                   /**< The network is about to be destroyed */
+
 /**
     Control object for the network connection. A network connection may multiplex many HttpStream objects that represent
     logical streams over the connection.
@@ -3172,7 +3190,6 @@ typedef struct HttpNet {
     MprDispatcher   *dispatcher;            /**< Event dispatcher */
     MprDispatcher   *newDispatcher;         /**< New dispatcher if using a worker thread */
     MprDispatcher   *oldDispatcher;         /**< Original dispatcher if using a worker thread */
-    HttpNotifier    notifier;               /**< Default notifier to use for streams - copied from endpoint */
 
     MprEvent        *timeoutEvent;          /**< Connection or request timeout event */
     MprEvent        *workerEvent;           /**< Event for running connection via a worker thread (used by ejs) */
@@ -3199,6 +3216,7 @@ typedef struct HttpNet {
 
     bool            activeNet;              /**< Active net request (server side) */
     bool            async: 1;               /**< Network is in async mode (non-blocking) */
+    bool            autoDestroy: 1;         /**< Destroy the network automatically after IO events if appropriate */
 #if DEPRECATED || 1
     bool            borrowed: 1;            /**< Socket has been borrowed */
 #endif
@@ -3442,6 +3460,17 @@ PUBLIC bool httpQueuesNeedService(HttpNet *net);
  */
 PUBLIC void httpSetAsync(HttpNet *net, bool async);
 
+
+/**
+    Define a network event callback
+    @description This callback is invoked when networks closed or receive a peer disconnect.
+    @param callback The callback is invoked with the signature: void callback(HttpNet *net).
+    @param event HTTP_NET event indicating error or eof.
+    @ingroup HttpNet
+    @stability Evolving
+ */
+PUBLIC void httpSetNetCallback(HttpNetCallback callback);
+
 /**
     Set the network context object
     @param net HttpNet object created via #httpCreateNet
@@ -3450,6 +3479,22 @@ PUBLIC void httpSetAsync(HttpNet *net, bool async);
     @stability Evolving
  */
 PUBLIC void httpSetNetContext(HttpNet *net, void *context);
+
+/**
+    Set the EOF flag in the network to indicate a peer disconnect
+    @param net HttpNet Network object created via #httpCreateNet
+    @ingroup HttpNet
+    @stability Prototype
+ */
+PUBLIC void httpSetNetEof(HttpNet *net);
+
+/**
+    Set the error flag in the network to indicate a peer disconnect
+    @param net HttpNet Network object created via #httpCreateNet
+    @ingroup HttpNet
+    @stability Prototype
+ */
+PUBLIC void httpSetNetError(HttpNet *net);
 
 /**
     Set the Http protocol variant for this network connection
@@ -3511,18 +3556,21 @@ PUBLIC void httpSetupWaitHandler(HttpNet *net, int eventMask);
 #define HTTP_EVENT_READABLE         2       /**< The request has data available for reading */
 #define HTTP_EVENT_WRITABLE         3       /**< The request is now writable (post / put data) */
 #define HTTP_EVENT_ERROR            4       /**< The request has an error */
-#define HTTP_EVENT_DESTROY          5       /**< The HttpStream object is being closed and destroyed */
+#define HTTP_EVENT_DONE             5       /**< Request is done (all states complete) */
+#define HTTP_EVENT_TIMEOUT          6       /**< Request has timed out */
+#define HTTP_EVENT_DESTROY          7       /**< The HttpStream object is being closed and destroyed */
 
 /*
     Application level events
  */
-#define HTTP_EVENT_APP_CLOSE        6       /**< The request is now closed */
+#define HTTP_EVENT_APP_CLOSE        8       /**< The request is now closed */
 
 /*
     Internal hidden events. Not exposed by the Http notifier.
  */
-#define HTTP_EVENT_APP_OPEN         7       /**< The request is now open */
-#define HTTP_EVENT_MAX              8       /**< Maximum event plus one */
+#define HTTP_EVENT_APP_OPEN         9       /**< The request is now open */
+
+#define HTTP_EVENT_MAX              10      /**< Maximum event plus one */
 
 /*
     Stream states
@@ -7299,13 +7347,14 @@ PUBLIC void httpProcessWriteEvent(HttpStream *stream);
     Tx flags
  */
 #define HTTP_TX_NO_BODY             0x1     /**< No transmission body, only send headers */
-#define HTTP_TX_HEADERS_CREATED     0x2     /**< Response headers have been created */
+#define HTTP_TX_HEADERS_CREATED     0x2     /**< Tx headers have been created */
 #define HTTP_TX_USE_OWN_HEADERS     0x8     /**< Skip adding default headers */
 #define HTTP_TX_NO_CHECK            0x10    /**< Do not check if the filename is inside the route documents directory */
 #define HTTP_TX_NO_LENGTH           0x20    /**< Do not emit a content length (used for TRACE) */
 #define HTTP_TX_NO_MAP              0x40    /**< Do not map the filename to compressed or minified alternatives */
 #define HTTP_TX_PIPELINE            0x80    /**< Created Tx pipeline */
 #define HTTP_TX_HAS_FILTERS         0x100   /**< Has output filters */
+#define HTTP_TX_HEADERS_PREPARED    0x200   /**< Tx headers have been created */
 
 /**
     Http Tx
