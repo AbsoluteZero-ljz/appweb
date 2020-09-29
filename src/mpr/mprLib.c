@@ -9701,7 +9701,6 @@ PUBLIC MprDispatcher *mprCreateDispatcher(cchar *name, int flags)
     dispatcher->name = name;
     dispatcher->cond = mprCreateCond();
     dispatcher->eventQ = mprCreateEventQueue();
-    dispatcher->currentQ = mprCreateEventQueue();
     queueDispatcher(es->idleQ, dispatcher);
     return dispatcher;
 }
@@ -9720,7 +9719,6 @@ static void freeEvents(MprEvent *q)
             if (event->dispatcher) {
                 mprRemoveEvent(event);
             }
-            mprRelease(event);
         }
     }
 }
@@ -9730,12 +9728,11 @@ PUBLIC void mprDestroyDispatcher(MprDispatcher *dispatcher)
 {
     MprEventService     *es;
 
-    if (dispatcher) {
+    if (dispatcher && !(dispatcher->flags & MPR_DISPATCHER_DESTROYED)) {
         es = dispatcher->service;
         assert(es == MPR->eventService);
         lock(es);
         freeEvents(dispatcher->eventQ);
-        freeEvents(dispatcher->currentQ);
         dequeueDispatcher(dispatcher);
         dispatcher->flags |= MPR_DISPATCHER_DESTROYED;
         unlock(es);
@@ -9749,7 +9746,6 @@ static void manageDispatcher(MprDispatcher *dispatcher, int flags)
 
     if (flags & MPR_MANAGE_MARK) {
         mprMark(dispatcher->eventQ);
-        mprMark(dispatcher->currentQ);
         mprMark(dispatcher->cond);
         mprMark(dispatcher->parent);
         mprMark(dispatcher->service);
@@ -9760,17 +9756,9 @@ static void manageDispatcher(MprDispatcher *dispatcher, int flags)
                 mprMark(event);
             }
         }
-        if ((q = dispatcher->currentQ) != 0) {
-            for (event = q->next; event != q; event = next) {
-                next = event->next;
-                mprMark(event);
-            }
-        }
-
     } else if (flags & MPR_MANAGE_FREE) {
         if (!(dispatcher->flags & MPR_DISPATCHER_DESTROYED)) {
             freeEvents(dispatcher->eventQ);
-            freeEvents(dispatcher->currentQ);
         }
     }
 }
@@ -10122,56 +10110,38 @@ static int dispatchEvents(MprDispatcher *dispatcher)
         return 0;
     }
     assert(isRunning(dispatcher));
+    assert(ownedDispatcher(dispatcher));
     es = dispatcher->service;
 
-    assert(ownedDispatcher(dispatcher));
-
     /*
-        Events are removed from the dispatcher queue and put onto the currentQ. This is so they will be marked for GC.
-        If the callback calls mprRemoveEvent, it will not remove from the currentQ. If it was a continuous event,
-        mprRemoveEvent will clear the continuous flag.
-        OPT - this could all be simpler if dispatchEvents was never called recursively. Then a currentQ would not be needed,
-        and neither would a running flag. See mprRemoveEvent().
+        Events are serviced from the dispatcher queue. When serviced, they are removed.
+        If the callback calls mprRemoveEvent, it will not remove it from the queue, but will clear the continuous flag.
      */
     for (count = 0; (event = mprGetNextEvent(dispatcher)) != 0; count++) {
-        assert(!(event->flags & MPR_EVENT_RUNNING));
-        event->flags |= MPR_EVENT_RUNNING;
-
-        assert(event->proc);
         mprAtomicAdd64(&dispatcher->mark, 1);
 
+        assert(event->proc);
+        mprHold(event);
+
         (event->proc)(event->data, event);
+
+        mprRelease(event);
         event->hasRun = 1;
 
         if (event->cond) {
             mprSignalCond(event->cond);
         }
-
         if (dispatcher->flags & MPR_DISPATCHER_DESTROYED) {
             break;
         }
-        event->flags &= ~MPR_EVENT_RUNNING;
 
-        lock(es);
-        if (event->flags & MPR_EVENT_CONTINUOUS) {
-            /*
-                Reschedule if continuous
-             */
-            if (event->next) {
-                mprDequeueEvent(event);
-            }
+        if (event->flags & MPR_EVENT_CONTINUOUS && event->next == NULL) {
             event->timestamp = dispatcher->service->now;
             event->due = event->timestamp + (event->period ? event->period : 1);
             mprQueueEvent(dispatcher, event);
-        } else {
-            mprDequeueEvent(event);
         }
-        /*
-            Can release here even if continuous. Hold not needed once securely referenced by the dispatcher
-         */
-        mprRelease(event);
+        lock(es);
         es->eventCount++;
-        assert(ownedDispatcher(dispatcher));
         unlock(es);
     }
     return count;
@@ -10190,8 +10160,6 @@ static void dispatchEventsHelper(MprDispatcher *dispatcher)
     if (!reclaimDispatcher(dispatcher)) {
         return;
     }
-    assert(ownedDispatcher(dispatcher));
-
     dispatchEvents(dispatcher);
 
     if (!(dispatcher->flags & MPR_DISPATCHER_DESTROYED)) {
@@ -10199,7 +10167,6 @@ static void dispatchEventsHelper(MprDispatcher *dispatcher)
         dequeueDispatcher(dispatcher);
         mprScheduleDispatcher(dispatcher);
     }
-    assert(!ownedDispatcher(dispatcher));
 }
 
 
@@ -11218,8 +11185,8 @@ PUBLIC void mprCreateIOEvent(MprDispatcher *dispatcher, void *proc, void *data, 
     event->mask = wp->presentMask;
     event->handler = wp;
     event->sock = sock;
-    wp->event = event;
     mprQueueEvent(dispatcher, event);
+    mprRelease(event);
 }
 
 
@@ -11249,12 +11216,10 @@ PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks
         return 0;
     }
     if ((event = createEvent(dispatcher, name, period, proc, data, flags)) != NULL) {
-#if DEPRECATE || 1
-        // only for ejscript
         if (!(flags & MPR_EVENT_DONT_QUEUE)) {
             mprQueueEvent(dispatcher, event);
+            mprRelease(event);
         }
-#endif
     }
     return event;
 }
@@ -11325,6 +11290,7 @@ PUBLIC void mprQueueEvent(MprDispatcher *dispatcher, MprEvent *event)
     assert(dispatcher);
     assert(event);
     assert(event->timestamp);
+    assert(event->next == NULL);
 
     es = dispatcher->service;
     lock(es);
@@ -11361,7 +11327,7 @@ PUBLIC void mprRemoveEvent(MprEvent *event)
     if (dispatcher) {
         es = dispatcher->service;
         lock(es);
-        if (event->next && !(event->flags & MPR_EVENT_RUNNING)) {
+        if (event->next) {
             mprDequeueEvent(event);
         }
         event->dispatcher = 0;
@@ -11397,8 +11363,8 @@ PUBLIC void mprRescheduleEvent(MprEvent *event, MprTicks period)
         mprRemoveEvent(event);
         event->flags |= continuous;
     }
-    unlock(es);
     mprQueueEvent(dispatcher, event);
+    unlock(es);
 }
 
 
@@ -11431,7 +11397,8 @@ PUBLIC void mprEnableContinuousEvent(MprEvent *event, int enable)
 
 
 /*
-    Get the next due event from the front of the event queue.
+    Get the next due event from the front of the event queue and dequeue it.
+    Internal: only called by the dispatcher
  */
 PUBLIC MprEvent *mprGetNextEvent(MprDispatcher *dispatcher)
 {
@@ -11446,11 +11413,8 @@ PUBLIC MprEvent *mprGetNextEvent(MprDispatcher *dispatcher)
     next = dispatcher->eventQ->next;
     if (next != dispatcher->eventQ) {
         if (next->due <= es->now) {
-            /*
-                Hold event while executing in the current queue
-             */
             event = next;
-            queueEvent(dispatcher->currentQ, event);
+            mprDequeueEvent(event);
         }
     }
     unlock(es);
@@ -11492,7 +11456,10 @@ static void initEventQ(MprEvent *q, cchar *name)
 static void queueEvent(MprEvent *prior, MprEvent *event)
 {
     assert(prior);
-    if (!prior || !event) {
+    if (!event) {
+        return;
+    }
+    if (!prior) {
         return;
     }
     assert(event);
@@ -22905,7 +22872,7 @@ again:
             bytes = -1;
 
         } else {
-            sp->flags |= MPR_SOCKET_EOF;        /* Some other error */
+            sp->flags |= MPR_SOCKET_EOF | MPR_SOCKET_ERROR;
             bytes = -errCode;
         }
 
@@ -28556,7 +28523,7 @@ static MprWaitHandler *initWaitHandler(MprWaitHandler *wp, int fd, int mask, Mpr
     wp->flags           = flags;
 
     if (mprGetListLength(ws->handlers) >= FD_SETSIZE) {
-        mprLog("error mpr event", 1, 
+        mprLog("error mpr event", 1,
             "Too many io handlers: FD_SETSIZE %d, increase FD_SETSIZE or reduce limits", FD_SETSIZE);
         return 0;
     }
@@ -28595,7 +28562,6 @@ static void manageWaitHandler(MprWaitHandler *wp, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
         mprMark(wp->handlerData);
-        mprMark(wp->event);
         mprMark(wp->dispatcher);
         mprMark(wp->requiredWorker);
         mprMark(wp->thread);
@@ -28633,10 +28599,6 @@ PUBLIC void mprDestroyWaitHandler(MprWaitHandler *wp)
     if (wp->fd >= 0) {
         mprRemoveWaitHandler(wp);
         wp->fd = INVALID_SOCKET;
-        if (wp->event) {
-            mprRemoveEvent(wp->event);
-            wp->event = 0;
-        }
     }
     wp->dispatcher = 0;
     unlock(ws);
@@ -28666,7 +28628,6 @@ static void ioEvent(void *data, MprEvent *event)
     }
     assert(event->handler);
 
-    event->handler->event = 0;
     event->handler->proc(data, event);
 }
 

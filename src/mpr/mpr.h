@@ -5832,8 +5832,7 @@ PUBLIC int mprUnloadModule(MprModule *mp);
 #define MPR_EVENT_QUICK             0x2     /**< Execute inline without executing via a thread */
 #define MPR_EVENT_DONT_QUEUE        0x4     /**< Don't queue the event. User must call mprQueueEvent */
 #define MPR_EVENT_STATIC_DATA       0x8     /**< Event data is permanent and should not be marked by GC */
-#define MPR_EVENT_RUNNING           0x10    /**< Event currently executing */
-#define MPR_EVENT_ALWAYS            0x20    /**< Always invoke the callback even if the event not run  */
+#define MPR_EVENT_ALWAYS            0x10    /**< Always invoke the callback even if the event not run  */
 
 #define MPR_EVENT_MAX_PERIOD (MAXINT64 / 2)
 
@@ -7322,7 +7321,6 @@ typedef struct MprWaitHandler {
     int             notifierIndex;      /**< Index for notifier */
     int             flags;              /**< Control flags */
     void            *handlerData;       /**< Argument to pass to proc - managed reference */
-    MprEvent        *event;             /**< Event object to process I/O events */
     MprWaitService  *service;           /**< Wait service pointer */
     MprDispatcher   *dispatcher;        /**< Event dispatcher to use for I/O events */
     MprEventProc    proc;               /**< Callback event procedure */
