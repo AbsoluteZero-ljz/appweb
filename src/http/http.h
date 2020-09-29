@@ -3972,7 +3972,7 @@ PUBLIC void httpNotify(HttpStream *stream, int event, int arg);
 
 #define HTTP_NOTIFY(stream, event, arg) \
     if (1) { \
-        if (stream->notifier) { \
+        if (stream && stream->notifier) { \
             httpNotify(stream, event, arg); \
         } \
     } else
@@ -5100,6 +5100,7 @@ typedef struct HttpRoute {
 
     HttpLimits      *limits;                /**< Host resource limits */
     MprHash         *mimeTypes;             /**< Hash table of mime types (key is extension) */
+    cchar           *charSet;               /**< Character set to use with the Content-Type */
 
     HttpTrace       *trace;                 /**< Per-route tracing configuration */
 
@@ -7356,8 +7357,9 @@ typedef struct HttpTx {
     char            *etag;                  /**< Unique identifier tag */
     HttpStage       *handler;               /**< Final handler serving the request */
     MprOff          length;                 /**< Transmission content length */
-    char            *method;                /**< Client request method GET, HEAD, POST, DELETE, OPTIONS, PUT, TRACE */
-    cchar           *mimeType;              /**< Mime type of the request payload (ENV: CONTENT_TYPE) */
+    cchar           *method;                /**< Client request method GET, HEAD, POST, DELETE, OPTIONS, PUT, TRACE */
+    cchar           *mimeType;              /**< Mime type of the request payload */
+    cchar           *charSet;               /**< Character set to use with the Content-Type */
 
     /*
         Range fields
@@ -7708,6 +7710,16 @@ PUBLIC int httpRemoveHeader(HttpStream *stream, cchar *key);
     @stability Stable
  */
 PUBLIC HttpStream *httpRequest(cchar *method, cchar *uri, cchar *data, int protocol, char **err);
+
+/**
+    Set the transmission (response) character set
+    @description Set the character set used in the response Content-Type
+    @param stream HttpStream stream object created via #httpCreateStream
+    @param charSet Character set string
+    @ingroup HttpTx
+    @stability Stable
+ */
+PUBLIC void httpSetCharSet(HttpStream *stream, cchar *charSet);
 
 /**
     Define a content length header in the transmission. This will define a "Content-Length: NNN" request header and

@@ -625,9 +625,15 @@ static int cacheDirective(MaState *state, cchar *key, cchar *value)
  */
 static int canonicalNameDirective(MaState *state, cchar *key, cchar *value)
 {
-    return httpSetHostCanonicalName(state->host, value);
+    return httpSetRouteCanonicalName(state->route, value);
 }
 
+
+static int charSetDirective(MaState *state, cchar *key, cchar *value)
+{
+    httpSetRouteCharSet(state->route, value);
+    return 0;
+}
 
 /*
     Chroot path
@@ -791,6 +797,7 @@ static int defenseDirective(MaState *state, cchar *key, cchar *value)
     httpAddDefense(name, NULL, args);
     return 0;
 }
+#endif
 
 
 static int defaultLanguageDirective(MaState *state, cchar *key, cchar *value)
@@ -3368,11 +3375,11 @@ static int parseInit(void)
     maAddDirective("AutoFinalize", autoFinalize);
     maAddDirective("Cache", cacheDirective);
     maAddDirective("CanonicalName", canonicalNameDirective);
+    maAddDirective("CharSet", charSetDirective);
     maAddDirective("Chroot", chrootDirective);
     maAddDirective("Condition", conditionDirective);
     maAddDirective("CrossOrigin", crossOriginDirective);
     maAddDirective("DefaultLanguage", defaultLanguageDirective);
-    maAddDirective("Defense", defenseDirective);
     maAddDirective("Deny", denyDirective);
     maAddDirective("DirectoryIndex", directoryIndexDirective);
     maAddDirective("Documents", documentsDirective);
