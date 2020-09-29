@@ -2808,49 +2808,6 @@ static int updateDirective(MaState *state, cchar *key, cchar *value)
 
 
 /*
-    Upload enable
-    This applies globally for all routes.
-
-    Use StreamInput multipart/form-data URI-Prefix to disable upload for a single route
- */
-static int uploadDirective(MaState *state, cchar *key, cchar *value)
-{
-    bool    on;
-
-    if (!maTokenize(state, value, "%B", &on)) {
-        return MPR_ERR_BAD_SYNTAX;
-    }
-    HTTP->upload = on;
-    return 0;
-}
-
-
-/*
-    UploadDir path
- */
-static int uploadDirDirective(MaState *state, cchar *key, cchar *value)
-{
-    httpSetRouteUploadDir(state->route, httpMakePath(state->route, state->configDir, value));
-    return 0;
-}
-
-
-/*
-    UploadAutoDelete on|off
- */
-static int uploadAutoDeleteDirective(MaState *state, cchar *key, cchar *value)
-{
-    bool    on;
-
-    if (!maTokenize(state, value, "%B", &on)) {
-        return MPR_ERR_BAD_SYNTAX;
-    }
-    httpSetRouteAutoDelete(state->route, on);
-    return 0;
-}
-
-
-/*
     User name password roles...
  */
 static int userDirective(MaState *state, cchar *key, cchar *value)
@@ -2988,6 +2945,31 @@ static int limitWebSocketsPacketDirective(MaState *state, cchar *key, cchar *val
 {
     httpGraduateLimits(state->route, 0);
     state->route->limits->webSocketsPacketSize = httpGetInt(value);
+    return 0;
+}
+
+
+/*
+    UploadDir path
+ */
+static int uploadDirDirective(MaState *state, cchar *key, cchar *value)
+{
+    httpSetRouteUploadDir(state->route, httpMakePath(state->route, state->configDir, value));
+    return 0;
+}
+
+
+/*
+    UploadAutoDelete on|off
+ */
+static int uploadAutoDeleteDirective(MaState *state, cchar *key, cchar *value)
+{
+    bool    on;
+
+    if (!maTokenize(state, value, "%B", &on)) {
+        return MPR_ERR_BAD_SYNTAX;
+    }
+    httpSetRouteAutoDelete(state->route, on);
     return 0;
 }
 
@@ -3488,7 +3470,6 @@ static int parseInit(void)
     maAddDirective("TypesConfig", typesConfigDirective);
     maAddDirective("Update", updateDirective);
     maAddDirective("UnloadModule", unloadModuleDirective);
-    maAddDirective("Upload", uploadDirective);
     maAddDirective("UploadAutoDelete", uploadAutoDeleteDirective);
     maAddDirective("UploadDir", uploadDirDirective);
     maAddDirective("User", userDirective);

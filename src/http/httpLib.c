@@ -120,7 +120,7 @@ PUBLIC Http *httpCreate(int flags)
     http->trace = httpCreateTrace(0);
     http->startLevel = 2;
     http->localPlatform = slower(sfmt("%s-%s-%s", ME_OS, ME_CPU, ME_PROFILE));
-    http->upload = 1;
+
     httpSetPlatform(http->localPlatform);
     httpSetPlatformDir(NULL);
 
@@ -5567,12 +5567,6 @@ static void parseTrace(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
-static void parseUpload(HttpRoute *route, cchar *key, MprJson *prop)
-{
-    HTTP->upload = httpGetBoolToken(prop->value);
-}
-
-
 static void parseWebSocketsProtocol(HttpRoute *route, cchar *key, MprJson *prop)
 {
     route->webSocketsProtocol = sclone(prop->value);
@@ -5772,7 +5766,6 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.timeouts.request", parseTimeoutsRequest);
     httpAddConfig("http.timeouts.session", parseTimeoutsSession);
     httpAddConfig("http.trace", parseTrace);
-    httpAddConfig("http.upload", parseUpload);
     httpAddConfig("http.websockets.protocol", parseWebSocketsProtocol);
     httpAddConfig("http.xsrf", parseXsrf);
 
@@ -16826,10 +16819,10 @@ static void processParsed(HttpQueue *q)
             stream->keepAliveCount = 0;
         }
         if (rx->streaming) {
-            /* Disable upload if streaming, used by PHP to stream input and process file upload in PHP. */
-            rx->upload = 0;
             routeRequest(stream);
             httpStartHandler(stream);
+        } else if (rx->upload) {
+            routeRequest(stream);
         } else {
             stream->readq->max = stream->limits->rxFormSize;
         }
@@ -17031,7 +17024,6 @@ static void measureRequest(HttpQueue *q)
     HttpTx      *tx;
     MprTicks    elapsed;
     MprOff      received;
-    int         status;
 
     stream = q->stream;
     rx = stream->rx;
@@ -18368,11 +18360,6 @@ PUBLIC HttpRoute *httpCreateRoute(HttpHost *host)
     httpAddRouteMethods(route, NULL);
     httpAddRouteFilter(route, http->rangeFilter->name, NULL, HTTP_STAGE_TX);
 
-#if ME_HTTP_UPLOAD
-    if (http->uploadFilter) {
-        httpAddRouteFilter(route, http->uploadFilter->name, NULL, HTTP_STAGE_TX);
-    }
-#endif
     /*
         Standard headers for all routes. These should not break typical content
         Users then vary via header directives
@@ -19067,7 +19054,6 @@ PUBLIC int httpAddRouteFilter(HttpRoute *route, cchar *name, cchar *extensions, 
 
     assert(route);
 
-    if (smatch(name, "uploadFilter") || smatch(name, "chunkFilter")) {
         /* Already pre-loaded */
         return 0;
     }
@@ -23015,11 +23001,6 @@ PUBLIC HttpStream *httpCreateStream(HttpNet *net, bool peerCreated)
     if (net->protocol < 2) {
         q = httpCreateQueue(net, stream, http->chunkFilter, HTTP_QUEUE_RX, q);
     }
-#if ME_HTTP_UPLOAD
-    if (httpIsServer(net)) {
-        q = httpCreateQueue(net, stream, http->uploadFilter, HTTP_QUEUE_RX, q);
-    }
-#endif
     stream->inputq = stream->rxHead->nextQ;
     stream->readq = stream->rxHead;
 
@@ -23029,6 +23010,7 @@ PUBLIC HttpStream *httpCreateStream(HttpNet *net, bool peerCreated)
         q = httpCreateQueue(net, stream, http->tailFilter, HTTP_QUEUE_TX, q);
     } else {
         q = httpCreateQueue(net, stream, http->tailFilter, HTTP_QUEUE_TX, q);
+        stream->rx->remainingContent = HTTP_UNLIMITED;
     }
     stream->outputq = q;
     stream->writeq = stream->txHead->nextQ;
@@ -25749,7 +25731,7 @@ typedef struct Upload {
     char            *boundary;          /* Boundary signature */
     ssize           boundaryLen;        /* Length of boundary */
     int             contentState;       /* Input states */
-    char            *clientFilename;    /* Current file filename */
+    char            *clientFilename;    /* Current file filename (optional) */
     char            *tmpPath;           /* Current temp filename for upload data */
     char            *name;              /* Form field name keyword value */
 } Upload;
@@ -25783,7 +25765,6 @@ PUBLIC int httpOpenUploadFilter()
         return MPR_ERR_CANT_CREATE;
     }
     HTTP->uploadFilter = filter;
-    filter->flags |= HTTP_STAGE_INTERNAL;
     filter->open = openUpload;
     filter->close = closeUpload;
     filter->start = startUpload;
@@ -25933,7 +25914,9 @@ static void incomingUpload(HttpQueue *q, HttpPacket *packet)
     count = httpGetPacketLength(packet);
 
     for (done = 0, line = 0; !done; ) {
-        if  (up->contentState == HTTP_UPLOAD_BOUNDARY || up->contentState == HTTP_UPLOAD_CONTENT_HEADER) {
+        switch (up->contentState) {
+        case HTTP_UPLOAD_BOUNDARY:
+        case HTTP_UPLOAD_CONTENT_HEADER:
             /*
                 Parse the next input line
              */
@@ -25945,17 +25928,15 @@ static void incomingUpload(HttpQueue *q, HttpPacket *packet)
             *nextTok++ = '\0';
             mprAdjustBufStart(content, (int) (nextTok - line));
             line = strim(line, "\r", MPR_TRIM_END);
-        }
-        switch (up->contentState) {
-        case HTTP_UPLOAD_BOUNDARY:
-            if (processUploadBoundary(q, line) < 0) {
-                done++;
-            }
-            break;
 
-        case HTTP_UPLOAD_CONTENT_HEADER:
-            if (processUploadHeader(q, line) < 0) {
-                done++;
+            if (up->contentState == HTTP_UPLOAD_BOUNDARY) {
+                if (processUploadBoundary(q, line) < 0) {
+                    done++;
+                }
+            } else {
+                if (processUploadHeader(q, line) < 0) {
+                    done++;
+                }
             }
             break;
 
@@ -26065,6 +26046,7 @@ static int processUploadHeader(HttpQueue *q, char *line)
          */
         key = rest;
         up->name = up->clientFilename = 0;
+
         while (key && stok(key, ";\r\n", &nextPair)) {
 
             key = strim(key, " ", MPR_TRIM_BOTH);
@@ -26092,42 +26074,44 @@ static int processUploadHeader(HttpQueue *q, char *line)
                     return MPR_ERR_BAD_STATE;
                 }
                 up->clientFilename = mprNormalizePath(value);
-
-                /*
-                    Create the file to hold the uploaded data
-                 */
-                uploadDir = getUploadDir(stream);
-                up->tmpPath = mprGetTempPath(uploadDir);
-                if (up->tmpPath == 0) {
-                    if (!mprPathExists(uploadDir, X_OK)) {
-                        mprLog("http error", 0, "Cannot access upload directory %s", uploadDir);
-                    }
-                    httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR,
-                        "Cannot create upload temp file %s. Check upload temp dir %s", up->tmpPath, uploadDir);
-                    return MPR_ERR_CANT_OPEN;
-                }
-                httpLog(stream->trace, "upload.file", "context", "clientFilename:'%s', filename:'%s'",
-                    up->clientFilename, up->tmpPath);
-
-                up->file = mprOpenFile(up->tmpPath, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0600);
-                if (up->file == 0) {
-                    httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot open upload temp file %s", up->tmpPath);
-                    return MPR_ERR_BAD_STATE;
-                }
-                /*
-                    Create the file
-                 */
-                file = up->currentFile = mprAllocObj(HttpUploadFile, manageHttpUploadFile);
-                file->clientFilename = up->clientFilename;
-                file->filename = up->tmpPath;
-                file->name = up->name;
-                addUploadFile(stream, file);
             }
             key = nextPair;
         }
 
+        if (up->name && !up->tmpPath) {
+            /*
+                Create the file to hold the uploaded data
+             */
+            uploadDir = getUploadDir(stream);
+            up->tmpPath = mprGetTempPath(uploadDir);
+            if (up->tmpPath == 0) {
+                if (!mprPathExists(uploadDir, X_OK)) {
+                    mprLog("http error", 0, "Cannot access upload directory %s", uploadDir);
+                }
+                httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR,
+                    "Cannot create upload temp file %s. Check upload temp dir %s", up->tmpPath, uploadDir);
+                return MPR_ERR_CANT_OPEN;
+            }
+            httpLog(stream->trace, "rx.upload.file", "context", "name:%s, clientFilename:%s, filename:%s",
+                up->name, up->clientFilename, up->tmpPath);
+
+            up->file = mprOpenFile(up->tmpPath, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0600);
+            if (up->file == 0) {
+                httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot open upload temp file %s", up->tmpPath);
+                return MPR_ERR_BAD_STATE;
+            }
+            /*
+                Create the file
+             */
+            file = up->currentFile = mprAllocObj(HttpUploadFile, manageHttpUploadFile);
+            file->clientFilename = up->clientFilename;
+            file->filename = up->tmpPath;
+            file->name = up->name;
+            addUploadFile(stream, file);
+        }
+
     } else if (scaselesscmp(headerTok, "Content-Type") == 0) {
-        if (up->clientFilename) {
+        if (up->currentFile) {
             up->currentFile->contentType = sclone(rest);
         }
     }
@@ -26161,8 +26145,10 @@ static void defineFileFields(HttpQueue *q, Upload *up)
     up = q->queueData;
     file = up->currentFile;
     key = sjoin("FILE_CLIENT_FILENAME_", up->name, NULL);
-    httpSetParam(stream, key, file->clientFilename);
 
+    if (file->clientFilename) {
+        httpSetParam(stream, key, file->clientFilename);
+    }
     key = sjoin("FILE_CONTENT_TYPE_", up->name, NULL);
     httpSetParam(stream, key, file->contentType);
 
@@ -26240,7 +26226,7 @@ static int processUploadData(HttpQueue *q)
     }
     bp = getBoundary(mprGetBufStart(content), size, up->boundary, up->boundaryLen, &pureData);
     if (bp == 0) {
-        if (up->clientFilename) {
+        if (up->tmpPath) {
             /*
                 No signature found yet. probably more data to come. Must handle split boundaries.
              */
@@ -26266,7 +26252,7 @@ static int processUploadData(HttpQueue *q)
         if (dataLen >= 2 && data[dataLen - 2] == '\r' && data[dataLen - 1] == '\n') {
             dataLen -= 2;
         }
-        if (up->clientFilename) {
+        if (up->tmpPath) {
             /*
                 Write the last bit of file data and add to the list of files and define environment variables
              */
@@ -26298,13 +26284,13 @@ static int processUploadData(HttpQueue *q)
             mprPutToBuf(packet->content, "%s=%s", up->name, data);
         }
     }
-    if (up->clientFilename) {
+    if (up->tmpPath) {
         /*
             Now have all the data (we've seen the boundary)
          */
         mprCloseFile(up->file);
         up->file = 0;
-        up->clientFilename = 0;
+        up->tmpPath = 0;
     }
     if (packet) {
         httpPutPacketToNext(q, packet);
@@ -26393,11 +26379,13 @@ static void renameUploadedFiles(HttpStream *stream)
     for (ITERATE_ITEMS(rx->files, file, index)) {
         if (file->filename && rx->route) {
             if (rx->route->renameUploads) {
-                path = mprJoinPath(uploadDir, file->clientFilename);
-                if (rename(file->filename, path) != 0) {
-                    mprLog("http error", 0, "Cannot rename %s to %s", file->filename, path);
+                if (file->clientFilename) {
+                    path = mprJoinPath(uploadDir, file->clientFilename);
+                    if (rename(file->filename, path) != 0) {
+                        mprLog("http error", 0, "Cannot rename %s to %s", file->filename, path);
+                    }
+                    file->filename = path;
                 }
-                file->filename = path;
             }
         }
     }
@@ -26408,7 +26396,7 @@ static cchar *getUploadDir(HttpStream *stream)
 {
     cchar   *uploadDir;
 
-    if ((uploadDir = httpGetDir(stream->host->defaultRoute, "upload")) == 0) {
+    if ((uploadDir = httpGetDir(stream->rx->route, "upload")) == 0) {
 #if ME_WIN_LIKE
         uploadDir = mprNormalizePath(getenv("TEMP"));
 #else

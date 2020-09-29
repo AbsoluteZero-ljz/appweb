@@ -67,6 +67,7 @@ Me.load({
                 cp(cgiProgram, Path('cgi-bin/nph-cgiProgram${EXE}'), perms)
                 cp(cgiProgram, Path('cgi-bin/cgi Program${EXE}'), perms)
                 cp(cgiProgram, Path('web/cgiProgram.cgi'), perms)
+                cp(cgiProgram, Path('web/upload/cgiProgram.cgi'), perms)
             `,
             depends: [ 'cgiProgram' ],
             generate: false,

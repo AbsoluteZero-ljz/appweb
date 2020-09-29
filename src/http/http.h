@@ -1087,7 +1087,6 @@ typedef struct Http {
     int             traceLevel;             /**< Current request trace level */
     int             startLevel;             /**< Start endpoint trace level */
     int             http2;                  /**< Enable http 2 */
-    int             upload;                 /**< Enable upload filter globally */
 
     /*
         Callbacks
