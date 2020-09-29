@@ -172,8 +172,10 @@ PUBLIC Http *httpCreate(int flags)
         httpOpenFileHandler();
         http->serverLimits = httpCreateLimits(1);
         httpDefineRouteBuiltins();
+#if ME_HTTP_DEFENSE
         httpAddCounters();
         httpAddRemedies();
+#endif
         httpCreateDefaultHost();
     }
     if (flags & HTTP_CLIENT_SIDE) {
@@ -695,7 +697,9 @@ static void httpTimer(Http *http, MprEvent *event)
             }
         }
     }
+#if ME_HTTP_DEFENSE
     httpPruneMonitors();
+#endif
 
     if (active == 0 || mprIsStopping()) {
         if (event) {
@@ -5074,6 +5078,7 @@ static void parseServerAccount(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
+#if ME_HTTP_DEFENSE
 static void parseServerDefenses(HttpRoute *route, cchar *key, MprJson *prop)
 {
     MprJson     *child;
@@ -5083,6 +5088,7 @@ static void parseServerDefenses(HttpRoute *route, cchar *key, MprJson *prop)
         httpAddDefenseFromJson(child->name, 0, child);
     }
 }
+#endif
 
 
 static void parseServerListen(HttpRoute *route, cchar *key, MprJson *prop)
@@ -5737,7 +5743,6 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.scheme", parseScheme);
     httpAddConfig("http.server", httpParseAll);
     httpAddConfig("http.server.account", parseServerAccount);
-    httpAddConfig("http.server.defenses", parseServerDefenses);
     httpAddConfig("http.server.listen", parseServerListen);
     httpAddConfig("http.server.modules", parseServerModules);
     httpAddConfig("http.server.monitors", parseServerMonitors);
@@ -5768,6 +5773,10 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.trace", parseTrace);
     httpAddConfig("http.websockets.protocol", parseWebSocketsProtocol);
     httpAddConfig("http.xsrf", parseXsrf);
+
+#if ME_HTTP_DEFENSE
+    httpAddConfig("http.server.defenses", parseServerDefenses);
+#endif
 
 #if ME_HTTP_HTTP2
     httpAddConfig("http.limits.streams", parseLimitsStreams);
@@ -13140,6 +13149,7 @@ PUBLIC ssize httpHuffEncode(cchar *src, ssize size, char *dst, uint lower)
 
 
 
+#if ME_HTTP_DEFENSE
 /********************************** Forwards **********************************/
 
 static HttpAddress *growCounters(HttpNet *net, HttpAddress *address, int counterIndex);
@@ -14436,10 +14446,12 @@ PUBLIC HttpNet *httpAccept(HttpEndpoint *endpoint, MprEvent *event)
 {
     Http        *http;
     HttpNet     *net;
-    HttpAddress *address;
     HttpLimits  *limits;
     MprSocket   *sock;
     int64       value;
+#if ME_HTTP_DEFENSE
+    HttpAddress *address;
+#endif
 
     assert(event);
     assert(event->dispatcher);
@@ -14472,6 +14484,7 @@ PUBLIC HttpNet *httpAccept(HttpEndpoint *endpoint, MprEvent *event)
         httpDestroyNet(net);
         return 0;
     }
+#endif
     net->activeNet = 1;
     if ((value = httpMonitorNetEvent(net, HTTP_COUNTER_ACTIVE_CONNECTIONS, 1)) > limits->connectionsPerClientMax) {
         mprLog("net info", 1, "Connection denied for IP %s. Too many concurrent connections for client, active: %d, max: %d",
@@ -14485,6 +14498,7 @@ PUBLIC HttpNet *httpAccept(HttpEndpoint *endpoint, MprEvent *event)
         httpDestroyNet(net);
         return 0;
     }
+#if ME_HTTP_DEFENSE
     address = net->address;
     if (address && address->banUntil) {
         if (address->banUntil < net->http->now) {
@@ -14497,6 +14511,7 @@ PUBLIC HttpNet *httpAccept(HttpEndpoint *endpoint, MprEvent *event)
             return 0;
         }
     }
+#endif
 #if ME_COM_SSL
     if (endpoint->ssl) {
         if (mprUpgradeSocket(sock, endpoint->ssl, 0) < 0) {
