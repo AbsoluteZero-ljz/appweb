@@ -16342,6 +16342,7 @@ static bool parseRange(HttpStream *stream, char *value);
 static void parseUri(HttpStream *stream);
 static bool processCompletion(HttpQueue *q);
 static bool processContent(HttpQueue *q);
+static void processDone(HttpStream *stream);
 static void processFinalized(HttpQueue *q);
 static void processFirst(HttpQueue *q);
 static void processHeaders(HttpQueue *q);
@@ -16462,15 +16463,38 @@ static void processHttp(HttpQueue *q)
             }
             break;
         }
-        httpServiceNetQueues(stream->net, HTTP_BLOCK);
+        httpServiceNetQueues(net, HTTP_BLOCK);
     }
-    if (stream->complete && httpServerStream(stream)) {
-        /*
-            These functions will call the notifier with HTTP_EVENT_DESTROY
-         */
-        if (stream->keepAliveCount <= 0 || stream->net->protocol >= 2) {
+    if (stream->complete) {
+        processDone(stream);
+    }
+}
+
+
+static void processDone(HttpStream *stream)
+{
+    HttpNet     *net;
+
+    net = stream->net;
+    if (stream->done) {
+        return;
+    }
+    stream->done = 1;
+
+    HTTP_NOTIFY(stream, HTTP_EVENT_DONE, 0);
+
+    if (net->autoDestroy) {
+        if (net->protocol >= 2) {
+            //  DestroyStream does not impact the network
             httpDestroyStream(stream);
-        } else {
+
+        } else if (stream->keepAliveCount <= 0) {
+            //  HTTP/1 disconnect the stream and close the network/socket.
+            httpDisconnectStream(stream);
+            httpDestroyStream(stream);
+
+        } else if (httpIsServer(net)) {
+            //  HTTP/1 reuse the stream and connection
             httpResetServerStream(stream);
         }
     }
@@ -16899,14 +16923,16 @@ static void processParsed(HttpQueue *q)
             Google does responses with a body and without a Content-Length like this:
                 Connection: close
                 Location: URI
+            Don't do this for HTTP/2 which must have remainingContent == HTTP_UNLIMITED
          */
-        if (stream->keepAliveCount <= 0 && rx->length < 0 && rx->chunkState == HTTP_CHUNK_UNCHUNKED) {
+        if (stream->keepAliveCount <= 0 && rx->length < 0 && rx->chunkState == HTTP_CHUNK_UNCHUNKED &&
+                stream->net->protocol < 2) {
             rx->remainingContent = rx->redirect ? 0 : HTTP_UNLIMITED;
         }
     }
 
 #if ME_HTTP_WEB_SOCKETS
-    if (httpIsClient(stream->net) && stream->upgraded && !httpVerifyWebSocketsHandshake(stream)) {
+    if (httpIsClient(stream->net) && stream->upgraded && !stream->proxied && !httpVerifyWebSocketsHandshake(stream)) {
         httpSetState(stream, HTTP_STATE_FINALIZED);
         return;
     }
@@ -16917,6 +16943,7 @@ static void processParsed(HttpQueue *q)
         if (!rx->eof) {
             httpSetEof(stream);
         }
+        httpAddEndInputPacket(stream, q);
         httpFinalizeInput(stream);
     }
 }
@@ -23331,6 +23358,10 @@ static void pickStreamNumber(HttpStream *stream)
 }
 
 
+/*
+    This will disconnect the socket for HTTP/1 only. HTTP/2 streams are destroyed for each request.
+    For HTTP/1 they are reused via keep-alive.
+ */
 PUBLIC void httpDisconnectStream(HttpStream *stream)
 {
     HttpRx      *rx;
@@ -25565,7 +25596,7 @@ PUBLIC void httpPrepareHeaders(HttpStream *stream)
         if (!(route->flags & HTTP_ROUTE_STEALTH)) {
             httpAddHeaderString(stream, "Server", stream->http->software);
         }
-        if (stream->net->protocol < 2) {
+        if (!stream->upgraded && stream->net->protocol < 2) {
             /*
                 If keepAliveCount == 1
              */
@@ -29362,4 +29393,3 @@ static void traceErrorProc(HttpStream *stream, cchar *fmt, ...)
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
  */
-
