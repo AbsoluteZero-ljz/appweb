@@ -1522,6 +1522,15 @@ typedef struct HttpLimits {
 PUBLIC void httpInitLimits(HttpLimits *limits, bool serverSide);
 
 /**
+    Clone a limits object
+    @description Clone the limits and allocate a new limits object
+    @return The allocated limits object
+    @ingroup HttpLimits
+    @stability Prototype
+ */
+PUBLIC HttpLimits *httpCloneLimits(HttpLimits *base);
+
+/**
     Create a new limits object
     @description Create and initialize a new limits object with default values
     @param serverSide Set to "true" for server side limits. Set to "false" for client side default limits
@@ -3704,7 +3713,8 @@ typedef struct HttpStream {
 
     bool            activeRequest;          /**< Actively servicing a request */
     bool            authRequested: 1;       /**< Authorization requested based on user credentials */
-    bool            complete: 1;            /**< Request is complete */
+    bool            complete: 1;            /**< All request states are complete (not yet done) */
+    bool            done: 1;                /**< Request is done (complete and recycled) */
     bool            destroyed: 1;           /**< Stream has been destroyed */
     bool            disconnect;             /**< Must disconnect/reset the connection - can not continue */
     bool            encoded: 1;             /**< True if the password is MD5(username:realm:password) */
@@ -3712,6 +3722,7 @@ typedef struct HttpStream {
     bool            errorDoc: 1;            /**< Processing an error document */
     bool            followRedirects: 1;     /**< Follow redirects for client requests */
     bool            peerCreated: 1;         /**< Stream created by peer */
+    bool            proxied: 1;             /**< Stream carried by a proxy connection */
     bool            ownDispatcher: 1;       /**< Own the dispatcher and should destroy when closing connection */
     bool            secure: 1;              /**< Using https */
     bool            suppressTrace: 1;       /**< Do not trace this connection */
@@ -5085,6 +5096,7 @@ PUBLIC void httpSetRouteCallback(struct HttpRoute *route, HttpRouteCallback proc
         httpTokenize httpTokenizev httpLink httpLinkEx
     @stability Internal
  */
+
 typedef struct HttpRoute {
     /* Ordered for debugging */
     struct HttpRoute *parent;               /**< Parent route */
@@ -5112,6 +5124,7 @@ typedef struct HttpRoute {
     MprJson         *config;                /**< Configuration file content */
     cchar           *mode;                  /**< Application run profile mode (debug|release) */
 
+    HttpUri         *canonical;             /**< Canonical host name (optional canonial public name for redirections) */
     cchar           *database;              /**< Name of database for route */
     cchar           *responseFormat;        /**< Client response format */
     cchar           *clientConfig;          /**< Configuration to send to the client */
@@ -6025,6 +6038,29 @@ PUBLIC void httpSetRouteAutoDelete(HttpRoute *route, bool on);
     @stability Evolving
  */
 PUBLIC void httpSetRouteAutoFinalize(HttpRoute *route, bool on);
+
+/**
+    Set the route canonical name
+    @description The route canonical name is the public perferred name to use for the server for this route. This is
+        used when redirecting client requests for directories.
+    @param route HttpRoute object
+    @param name Host canonical name to use
+    @return Zero if successful. May return a negative MPR error code if the name is a regular expression and cannot
+        be compiled.
+    @ingroup HttpHost
+    @stability Stable
+ */
+PUBLIC int httpSetRouteCanonicalName(HttpRoute *route, cchar *name);
+
+/**
+    Set the default route character set
+    @description Set the default character set used in response Content-Types
+    @param route HttpRoute object created via #httpCreateRoute
+    @param charSet Character set string
+    @ingroup HttpTx
+    @stability Stable
+ */
+PUBLIC void httpSetRouteCharSet(HttpRoute *route, cchar *charSet);
 
 /**
     Define whether updating a request may compile from source
@@ -8223,7 +8259,6 @@ typedef struct HttpHost {
      */
     cchar           *name;                  /**< Full host name with port */
     cchar           *hostname;              /**< Host name portion only */
-    HttpUri         *canonical;             /**< Canonical host name (optional canonial public name for redirections) */
     struct HttpHost *parent;                /**< Parent host to inherit aliases, dirs, routes */
     MprCache        *responseCache;         /**< Response content caching store */
     MprList         *routes;                /**< List of Route defintions */
@@ -8333,19 +8368,6 @@ PUBLIC HttpRoute *httpLookupRoute(HttpHost *host, cchar *pattern);
     @stability Stable
  */
 PUBLIC void httpResetRoutes(HttpHost *host);
-
-/**
-    Set the host canonical name
-    @description The host canonical name is the public perferred name to use for the server. This is
-    used when redirecting client requests for directories.
-    @param host HttpHost object
-    @param name Host canonical name to use
-    @return Zero if successful. May return a negative MPR error code if the name is a regular expression and cannot
-        be compiled.
-    @ingroup HttpHost
-    @stability Stable
- */
-PUBLIC int httpSetHostCanonicalName(HttpHost *host, cchar *name);
 
 /**
     Set the default host for all servers.
