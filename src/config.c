@@ -2751,7 +2751,7 @@ PUBLIC int maTraceLogDirective(MaState *state, HttpTrace *trace, cchar *key, cch
     if (httpSetTraceLogFile(trace, path, size, backup, format, flags) < 0) {
         return MPR_ERR_CANT_OPEN;
     }
-    httpSetTraceLevel(level);
+    httpSetTraceLevel(trace, level);
     return 0;
 }
 
