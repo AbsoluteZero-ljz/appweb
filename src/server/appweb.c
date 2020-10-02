@@ -516,12 +516,20 @@ static void addSignals(void)
  */
 static void traceHandler(void *ignored, MprSignal *sp)
 {
-    int     level;
+    HttpHost    *host;
+    HttpRoute   *route;
+    int         level, nextHost, nextRoute;
 
     level = mprGetLogLevel() > 2 ? 2 : 4;
     mprLog("info appweb", 0, "Change log and trace level to %d", level);
     mprSetLogLevel(level);
-    httpSetTraceLevel(level);
+
+    for (ITERATE_ITEMS(HTTP->hosts, host, nextHost)) {
+        for (ITERATE_ITEMS(host->routes, route, nextRoute)) {
+            httpSetTraceLevel(route->trace, level);
+        }
+    }
+    httpSetTraceLevel(HTTP->trace, level);
 }
 
 
