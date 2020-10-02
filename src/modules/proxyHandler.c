@@ -39,12 +39,15 @@
 #ifndef PROXY_WAIT_TIMEOUT
 #define PROXY_WAIT_TIMEOUT       (30 * TPS)  //  Time to wait for a proxy
 #endif
+
 #ifndef PROXY_CONNECT_TIMEOUT
 #define PROXY_CONNECT_TIMEOUT    (10 * TPS)  //  Time to wait for Proxy to respond to a connect
 #endif
+
 #ifndef PROXY_PROXY_TIMEOUT
 #define PROXY_PROXY_TIMEOUT      (300 * TPS) //  Default inactivity time to preserve idle proxy
 #endif
+
 #ifndef PROXY_WATCHDOG_TIMEOUT
 #define PROXY_WATCHDOG_TIMEOUT   (60 * TPS)  //  Frequence to check on idle proxies
 #endif
@@ -107,7 +110,6 @@ typedef struct ProxyRequest {
 static Proxy *allocProxy(HttpRoute *route);
 static ProxyApp *allocProxyApp(Proxy *proxy);
 static ProxyRequest *allocProxyRequest(ProxyApp *app, HttpNet *net, HttpStream *stream);
-static void closeProxy(HttpQueue *q);
 static Proxy *getProxy(HttpRoute *route);
 static ProxyApp *getProxyApp(Proxy *proxy, HttpStream *stream);
 static HttpNet *getProxyNetwork(ProxyApp *app, MprDispatcher *dispatcher);
@@ -115,19 +117,21 @@ static void killProxyApp(ProxyApp *app);
 static void manageProxy(Proxy *proxy, int flags);
 static void manageProxyApp(ProxyApp *app, int flags);
 static void manageProxyRequest(ProxyRequest *proxyRequest, int flags);
-static int openProxy(HttpQueue *q);
 static void proxyCleanRequest(ProxyRequest *req);
+static void proxyCloseRequest(HttpQueue *q);
 static int proxyCloseConfigDirective(MaState *state, cchar *key, cchar *value);
 static int proxyConfigDirective(MaState *state, cchar *key, cchar *value);
 static int proxyConnectDirective(MaState *state, cchar *key, cchar *value);
 static void proxyFrontNotifier(HttpStream *stream, int event, int arg);
 static int proxyLogDirective(MaState *state, cchar *key, cchar *value);
+static int proxyOpenRequest(HttpQueue *q);
 static int proxyTraceDirective(MaState *state, cchar *key, cchar *value);
 static HttpStream *proxyCreateStream(ProxyRequest *req);
-static void proxyIncoming(HttpQueue *q, HttpPacket *packet);
+static void proxyIncomingRequestPacket(HttpQueue *q, HttpPacket *packet);
 static void proxyBackNotifier(HttpStream *stream, int event, int arg);
+static void proxyDeath(ProxyApp *app, MprSignal *sp);
 static void proxyReadResponse(HttpQueue *q);
-static void reapSignalHandler(ProxyApp *app, MprSignal *sp);
+static void proxyStartRequest(HttpQueue *q);
 static ProxyApp *startProxyApp(Proxy *proxy, HttpStream *stream);
 static void terminateIdleProxyApps(Proxy *proxy);
 static void transferClientHeaders(HttpStream *stream, HttpStream *proxyStream);
@@ -156,9 +160,10 @@ PUBLIC int httpProxyInit(Http *http, MprModule *module)
         return MPR_ERR_CANT_CREATE;
     }
     http->proxyHandler = handler;
-    handler->close = closeProxy;
-    handler->open = openProxy;
-    handler->incoming = proxyIncoming;
+    handler->close = proxyCloseRequest;
+    handler->open = proxyOpenRequest;
+    handler->start = proxyStartRequest;
+    handler->incoming = proxyIncomingRequestPacket;
     return 0;
 }
 
@@ -166,7 +171,7 @@ PUBLIC int httpProxyInit(Http *http, MprModule *module)
 /*
     Open the proxyHandler for a new client request
  */
-static int openProxy(HttpQueue *q)
+static int proxyOpenRequest(HttpQueue *q)
 {
     Http            *http;
     HttpNet         *proxyNet;
@@ -222,7 +227,7 @@ static int openProxy(HttpQueue *q)
     Release a proxy app and request when the request completes. This closes the connection to the Proxy app.
     It will destroy the Proxy app on errors or if the number of requests exceeds the maxRequests limit.
  */
-static void closeProxy(HttpQueue *q)
+static void proxyCloseRequest(HttpQueue *q)
 {
     Proxy           *proxy;
     ProxyRequest    *req;
@@ -256,6 +261,25 @@ static void closeProxy(HttpQueue *q)
         mprSignalCond(proxy->cond);
     }
     unlock(proxy);
+}
+
+
+static void proxyStartRequest(HttpQueue *q)
+{
+    ProxyRequest    *req;
+    HttpStream      *stream;
+    HttpRx          *rx;
+
+    req = q->queueData;
+    stream = q->stream;
+    rx = q->stream->rx;
+    if (smatch(rx->upgrade, "websocket")) {
+        stream->keepAliveCount = 0;
+        stream->upgraded = 1;
+        req->proxyStream->upgraded = 1;
+        rx->eof = 0;
+        rx->remainingContent = HTTP_UNLIMITED;
+    }
 }
 
 
@@ -365,9 +389,7 @@ static void proxyFrontNotifier(HttpStream *stream, int event, int arg)
     switch (event) {
     case HTTP_EVENT_READABLE:
     case HTTP_EVENT_WRITABLE:
-        break;
     case HTTP_EVENT_ERROR:
-        break;
     case HTTP_EVENT_DESTROY:
         break;
 
@@ -376,17 +398,12 @@ static void proxyFrontNotifier(HttpStream *stream, int event, int arg)
         case HTTP_STATE_BEGIN:
         case HTTP_STATE_CONNECTED:
         case HTTP_STATE_FIRST:
-            break;
         case HTTP_STATE_PARSED:
             break;
-
         case HTTP_STATE_CONTENT:
             if (stream->rx->upgrade) {
-                stream->rx->remainingContent = HTTP_UNLIMITED;
-                req->proxyStream->upgraded = 1;
-                req->proxyStream->keepAliveCount = 0;
-                //  Force headers to be sent to mproxy
-                httpPutPacketToNext(req->proxyStream->writeq, httpCreateDataPacket(0));
+                //  Cause the headers to be pushed out
+                httpPutPacket(req->proxyStream->writeq, httpCreateDataPacket(0));
                 httpServiceNetQueues(req->proxyStream->net, 0);
             }
             break;
@@ -398,7 +415,6 @@ static void proxyFrontNotifier(HttpStream *stream, int event, int arg)
             break;
         case HTTP_STATE_RUNNING:
         case HTTP_STATE_FINALIZED:
-            break;
         case HTTP_STATE_COMPLETE:
             break;
         }
@@ -409,7 +425,7 @@ static void proxyFrontNotifier(HttpStream *stream, int event, int arg)
 
 /*
     Events for communications with the proxy app
-    Confusingly this is using client side HTTP. Note that stream is the ProxyStream
+    This is using a client side HTTP to communicate with the proxy
  */
 static void proxyBackNotifier(HttpStream *proxyStream, int event, int arg)
 {
@@ -423,29 +439,31 @@ static void proxyBackNotifier(HttpStream *proxyStream, int event, int arg)
     if ((req = proxyStream->writeq->queueData) == 0) {
         return;
     }
-    // mprLog("proxyBackNotifier", 0, "Proxy Back Event %d, state %d", event, proxyStream->state);
     complete = 0;
     switch (event) {
     case HTTP_EVENT_READABLE:
         proxyReadResponse(proxyStream->readq);
         break;
+    case HTTP_EVENT_WRITABLE:
+    case HTTP_EVENT_DESTROY:
+        break;
 
     case HTTP_EVENT_DONE:
         httpLog(proxyStream->trace, "tx.proxy", "result", "msg:Request complete");
         httpDestroyStream(proxyStream);
-        net->dispatcher = mprCreateDispatcher("proxy", MPR_DISPATCHER_AUTO);
-        net->autoDestroy = 1;
-        mprPushItem(req->app->networks, net);
-        httpEnableNetEvents(net);
-        break;
-    case HTTP_EVENT_WRITABLE:
+
+        //  MOB - test HTTP/2 on the backend
+        if (net->protocol < 2 && (proxyStream->keepAliveCount <= 0 || proxyStream->upgraded)) {
+            httpDestroyNet(net);
+        } else {
+            net->dispatcher = NULL;
+            mprPushItem(req->app->networks, net);
+        }
         break;
     case HTTP_EVENT_ERROR:
         for (ITERATE_ITEMS(req->app->requests, rq, next)) {
             mprCreateEvent(req->stream->dispatcher, "proxy-reap", 0, proxyCleanRequest, req, 0);
         }
-        break;
-    case HTTP_EVENT_DESTROY:
         break;
 
     case HTTP_EVENT_STATE:
@@ -459,10 +477,8 @@ static void proxyBackNotifier(HttpStream *proxyStream, int event, int arg)
             break;
         case HTTP_STATE_CONTENT:
         case HTTP_STATE_READY:
-            break;
         case HTTP_STATE_RUNNING:
         case HTTP_STATE_FINALIZED:
-            break;
         case HTTP_STATE_COMPLETE:
             break;
         }
@@ -474,7 +490,7 @@ static void proxyBackNotifier(HttpStream *proxyStream, int event, int arg)
 /*
     Incoming data from the client destined for proxy.
  */
-static void proxyIncoming(HttpQueue *q, HttpPacket *packet)
+static void proxyIncomingRequestPacket(HttpQueue *q, HttpPacket *packet)
 {
     HttpStream      *stream;
     ProxyRequest    *req;
@@ -513,7 +529,7 @@ static void proxyReadResponse(HttpQueue *q)
     if (req == 0) {
         return;
     }
-    //  Stream back to the client
+    //  Stream for the client
     stream = req->stream;
     for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
         if (!httpWillQueueAcceptPacket(q, stream->writeq, packet)) {
@@ -678,17 +694,19 @@ static ProxyApp *getProxyApp(Proxy *proxy, HttpStream *stream)
             if (app) {
                 break;
             }
+            /*
+                Wait for a proxy to become available
+             */
             unlock(proxy);
-            //  TEST
-            if (mprWaitForCond(proxy->cond, TPS) < 0) {
-                return NULL;
-            }
+            mprWaitForCond(proxy->cond, TPS);
             lock(proxy);
         }
     }
     if (app) {
         app->lastActive = mprGetTicks();
         app->inUse++;
+    } else {
+        mprLog("proxy", 0, "Cannot acquire available proxy, running %d", mprGetListLength(proxy->apps));
     }
     unlock(proxy);
     return app;
@@ -709,9 +727,8 @@ static HttpNet *getProxyNetwork(ProxyApp *app, MprDispatcher *dispatcher)
             continue;
         }
         //  Switch to the client dispatcher to serialize requests (no locking yea!)
-        mprDestroyDispatcher(net->dispatcher);
         net->dispatcher = dispatcher;
-        net->autoDestroy = 0;
+        net->sharedDispatcher = 1;
         return net;
     }
 
@@ -724,6 +741,7 @@ static HttpNet *getProxyNetwork(ProxyApp *app, MprDispatcher *dispatcher)
     if ((net = httpCreateNet(dispatcher, NULL, protocol, HTTP_NET_ASYNC)) == 0) {
         return net;
     }
+    net->sharedDispatcher = 1;
     net->limits = httpCloneLimits(proxy->limits);
 
     timeout = mprGetTicks() + PROXY_CONNECT_TIMEOUT;
@@ -783,7 +801,7 @@ static ProxyApp *startProxyApp(Proxy *proxy, HttpStream *stream)
         httpLogProc(app->trace, "proxy", "context", 0, "msg:Start Proxy app, command:%s", command);
 
         if (!app->signal) {
-            app->signal = mprAddSignalHandler(SIGCHLD, reapSignalHandler, app, NULL, MPR_SIGNAL_BEFORE);
+            app->signal = mprAddSignalHandler(SIGCHLD, proxyDeath, app, NULL, MPR_SIGNAL_BEFORE);
         }
         if ((app->pid = fork()) < 0) {
             fprintf(stderr, "Fork failed for Proxy");
@@ -814,8 +832,9 @@ static ProxyApp *startProxyApp(Proxy *proxy, HttpStream *stream)
     WARNING: this may be called before all the data has been read from the socket, so we must not set eof = 1 here.
     WARNING: runs on the MPR dispatcher. Everyting must be "proxy" locked.
  */
-static void reapSignalHandler(ProxyApp *app, MprSignal *sp)
+static void proxyDeath(ProxyApp *app, MprSignal *sp)
 {
+    HttpNet         *net;
     Proxy           *proxy;
     ProxyRequest    *req;
     int             next, status;
@@ -842,6 +861,9 @@ static void reapSignalHandler(ProxyApp *app, MprSignal *sp)
         for (ITERATE_ITEMS(app->requests, req, next)) {
             mprCreateEvent(req->stream->dispatcher, "proxy-reap", 0, proxyCleanRequest, req, 0);
         }
+        for (ITERATE_ITEMS(app->networks, net, next)) {
+            httpDestroyNet(net);
+        }
     }
     unlock(proxy);
 }
@@ -861,7 +883,7 @@ static void proxyCleanRequest(ProxyRequest *req)
         return;
     }
     httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "Proxy comms error");
-    httpProcess(stream->inputq);
+    // httpProcess(stream->inputq);
 }
 
 

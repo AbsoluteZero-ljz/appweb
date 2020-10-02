@@ -79,7 +79,7 @@ static cchar *fastTypes[FAST_MAX + 1] = {
 #define FAST_UNKNOWN_ROLE       3           //  Request rejected -- unknown role
 
 #define FAST_WAIT_TIMEOUT       (30 * TPS)  //  Time to wait for a proxy
-#define FAST_CONNECT_TIMEOUT    (10 * TPS)  //  Time to wait for FastCGI to respond to a connect
+#define FAST_CONNECT_TIMEOUT    (20 * TPS)  //  Time to wait for FastCGI to respond to a connect
 #define FAST_PROXY_TIMEOUT      (300 * TPS) //  Default inactivity time to preserve idle proxy
 #define FAST_REAP_TIMEOUT       (10 * TPS)  //  Time to wait for kill proxy to take effect
 #define FAST_WATCHDOG_TIMEOUT   (60 * TPS)  //  Frequence to check on idle proxies
@@ -89,7 +89,7 @@ static cchar *fastTypes[FAST_MAX + 1] = {
  */
 typedef struct Fast {
     cchar           *endpoint;              //  Proxy listening endpoint
-    int             launch;                 //  Launch proxy
+    cchar           *launch;                //  Launch proxy
     int             multiplex;              //  Maximum number of requests to send to each FastCGI proxy
     int             minProxies;             //  Minumum number of proxies to maintain
     int             maxProxies;             //  Maximum number of proxies to spawn
@@ -145,7 +145,7 @@ static void adjustFastVec(HttpQueue *q, ssize written);
 static Fast *allocFast(void);
 static FastComm *allocFastComm(FastProxy *proxy, HttpStream *stream);
 static FastProxy *allocFastProxy(Fast *fast, HttpStream *stream);
-static cchar *buildProxyArgs(HttpStream *stream, int *argcp, cchar ***argvp);
+static cchar *buildFastArgs(FastProxy *proxy, HttpStream *stream, int *argcp, cchar ***argvp);
 static MprOff buildFastVec(HttpQueue *q);
 static void closeFast(HttpQueue *q);
 static FastComm *connectFastComm(FastProxy *proxy, HttpStream *stream);
@@ -175,6 +175,7 @@ static void manageFastComm(FastComm *fastConnector, int flags);
 static int openFast(HttpQueue *q);
 static bool parseFastHeaders(HttpPacket *packet);
 static bool parseFastResponseLine(HttpPacket *packet);
+static int prepFastEnv(HttpStream *stream, cchar **envv, MprHash *vars);
 static void prepFastRequestStart(HttpQueue *q);
 static void prepFastRequestParams(HttpQueue *q);
 static void reapSignalHandler(FastProxy *proxy, MprSignal *sp);
@@ -263,7 +264,6 @@ static int openFast(HttpQueue *q)
         httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot connect to fast proxy: %d", errno);
         return MPR_ERR_CANT_CONNECT;
     }
-    mprAddItem(proxy->comms, comm);
     q->queueData = q->pair->queueData = comm;
 
     /*
@@ -352,6 +352,7 @@ static void manageFast(Fast *fast, int flags)
         mprMark(fast->endpoint);
         mprMark(fast->idleProxies);
         mprMark(fast->ip);
+        mprMark(fast->launch);
         mprMark(fast->mutex);
         mprMark(fast->proxies);
         mprMark(fast->timer);
@@ -507,7 +508,7 @@ static void fastHandlerResponse(FastComm *comm, int type, HttpPacket *packet)
             httpPutPacketToNext(stream->writeq, packet);
         }
     }
-    httpProcess(stream->inputq);
+    // httpProcess(stream->inputq);
 }
 
 
@@ -757,18 +758,27 @@ static FastProxy *startFastProxy(Fast *fast, HttpStream *stream)
 {
     FastProxy   *proxy;
     HttpRoute   *route;
+    HttpRx      *rx;
     MprSocket   *listen;
-    cchar       **argv, *command;
-    int         argc, i;
+    cchar       **argv, *command, **envv;
+    int         argc, i, count;
 
+    rx = stream->rx;
     route = stream->rx->route;
     proxy = allocFastProxy(fast, stream);
 
     if (fast->launch) {
         argc = 1;                                   /* argv[0] == programName */
-        if ((command = buildProxyArgs(stream, &argc, &argv)) == 0) {
+        if ((command = buildFastArgs(proxy, stream, &argc, &argv)) == 0) {
             httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot find Fast proxy command");
             return NULL;
+        }
+        /*
+            Build environment variables
+         */
+        count = mprGetHashLength(rx->svars);
+        if ((envv = mprAlloc((count + 2) * sizeof(char*))) != 0) {
+            count = prepFastEnv(stream, envv, rx->svars);
         }
         httpLogProc(proxy->trace, "fast", "context", 0, "msg:Start FastCGI proxy, command:%s", command);
 
@@ -791,8 +801,8 @@ static FastProxy *startFastProxy(Fast *fast, HttpStream *stream)
             for (i = FAST_DEBUG ? 3 : 1; i < 128; i++) {
                 close(i);
             }
-            // FUTURE envp[0] = sfmt("FCGI_WEB_SERVER_ADDRS=%s", route->host->defaultEndpoint->ip);
-            if (execve(command, (char**) argv, NULL /* (char**) &env->items[0] */) < 0) {
+            envv = NULL;
+            if (execve(command, (char**) argv, (char*const*) envv) < 0) {
                 printf("Cannot exec fast proxy: %s\n", command);
             }
             return NULL;
@@ -808,15 +818,17 @@ static FastProxy *startFastProxy(Fast *fast, HttpStream *stream)
 /*
     Build the command arguments for the FastCGI app
  */
-static cchar *buildProxyArgs(HttpStream *stream, int *argcp, cchar ***argvp)
+static cchar *buildFastArgs(FastProxy *proxy, HttpStream *stream, int *argcp, cchar ***argvp)
 {
+    Fast        *fast;
     HttpRx      *rx;
     HttpTx      *tx;
     cchar       *actionProgram, *cp, *fileName, *query;
     char        **argv, *tok;
     ssize       len;
-    int         argc, argind, i;
+    int         argc, argind;
 
+    fast = proxy->fast;
     rx = stream->rx;
     tx = stream->tx;
     fileName = tx->filename;
@@ -825,14 +837,23 @@ static cchar *buildProxyArgs(HttpStream *stream, int *argcp, cchar ***argvp)
     argind = 0;
     argc = *argcp;
 
-    if (tx->ext) {
+    if (fast->launch && fast->launch[0]) {
+        if (mprMakeArgv(fast->launch, (cchar***) &argv, 0) != 1) {
+            mprLog("fast error", 0, "Cannot parse FastCGI launch command %s", fast->launch);
+            return 0;
+        }
+        actionProgram = argv[0];
+        argc++;
+
+    } else if (tx->ext) {
         actionProgram = mprGetMimeProgram(rx->route->mimeTypes, tx->ext);
         if (actionProgram != 0) {
             argc++;
         }
-        /* This is an Apache compatible hack for PHP 5.3 */
-        mprAddKey(rx->headers, "REDIRECT_STATUS", itos(HTTP_CODE_MOVED_TEMPORARILY));
     }
+    /* This is an Apache compatible hack for PHP 5.3 */
+    mprAddKey(rx->headers, "REDIRECT_STATUS", itos(HTTP_CODE_MOVED_TEMPORARILY));
+
     /*
         Count the args for ISINDEX queries. Only valid if there is not a "=" in the query.
         If this is so, then we must not have these args in the query env also?
@@ -855,11 +876,6 @@ static cchar *buildProxyArgs(HttpStream *stream, int *argcp, cchar ***argvp)
         argv[argind++] = sclone(actionProgram);
     }
     argv[argind++] = sclone(fileName);
-    /*
-        ISINDEX queries. Only valid if there is not a "=" in the query. If this is so, then we must not
-        have these args in the query env also?
-        FUTURE - should query vars be set in the env?
-     */
     if (query) {
         cp = stok(sclone(query), "+", &tok);
         while (cp) {
@@ -871,11 +887,6 @@ static cchar *buildProxyArgs(HttpStream *stream, int *argcp, cchar ***argvp)
     argv[argind] = 0;
     *argcp = argc;
     *argvp = (cchar**) argv;
-
-    mprDebug("http fast", 6, "Fast: command:");
-    for (i = 0; i < argind; i++) {
-        mprDebug("http fast", 6, "   argv[%d] = %s", i, argv[i]);
-    }
     return argv[0];
 }
 
@@ -951,6 +962,7 @@ static FastComm *connectFastComm(FastProxy *proxy, HttpStream *stream)
     retries = 1;
 
     comm = allocFastComm(proxy, stream);
+    mprAddItem(proxy->comms, comm);
 
     timeout = mprGetTicks() + FAST_CONNECT_TIMEOUT;
     while (1) {
@@ -968,6 +980,7 @@ static FastComm *connectFastComm(FastProxy *proxy, HttpStream *stream)
     unlock(fast);
     if (!connected) {
         mprLog("fast error", 0, "Cannot connect to FastCGI at %s:%d", fast->ip, fast->port);
+        mprRemoveItem(proxy->comms, comm);
         comm = 0;
     }
     return comm;
@@ -1051,6 +1064,7 @@ static void prepFastRequestParams(HttpQueue *q)
 
     packet = httpCreateDataPacket(stream->limits->headerSize);
     packet->data = comm;
+    //  OPTIONAL
     copyFastParams(packet, rx->params, rx->route->envPrefix);
     copyFastVars(packet, rx->svars, "");
     copyFastVars(packet, rx->headers, "HTTP_");
@@ -1226,7 +1240,6 @@ static void fastConnectorIO(FastComm *comm, MprEvent *event)
         unlock(fast);
     }
     httpServiceNetQueues(comm->stream->net, 0);
-    //httpProcess(comm->stream->inputq)
 
     if (!comm->eof) {
         enableFastCommEvents(comm);
@@ -1554,7 +1567,7 @@ static int fastConnectDirective(MaState *state, cchar *key, cchar *value)
             }
 
         } else if (smatch(option, "launch")) {
-            fast->launch = 1;
+            fast->launch = sclone(httpExpandRouteVars(state->route, ovalue));
 
         } else if (smatch(option, "max")) {
             fast->maxProxies = httpGetInt(ovalue);
@@ -1643,6 +1656,44 @@ static int getListenPort(MprSocket *socket)
     return ntohs(sin.sin_port);
 }
 
+
+static int prepFastEnv(HttpStream *stream, cchar **envv, MprHash *vars)
+{
+    HttpRoute   *route;
+    MprKey      *kp;
+    cchar       *canonical;
+    char        *cp;
+    int         i, index = 0;
+
+    route = stream->rx->route;
+
+    for (ITERATE_KEYS(vars, kp)) {
+        if (kp->data) {
+            cp = sjoin(kp->key, "=", kp->data, NULL);
+            if (stream->rx->route->flags & HTTP_ROUTE_ENV_ESCAPE) {
+                //  This will escape: "&;`'\"|*?~<>^()[]{}$\\\n" and also on windows \r%
+                cp = mprEscapeCmd(cp, 0);
+            }
+            envv[index] = cp;
+            for (; *cp != '='; cp++) {
+                if (*cp == '-') {
+                    *cp = '_';
+                } else {
+                    *cp = toupper((uchar) *cp);
+                }
+            }
+            index++;
+        }
+    }
+    canonical = route->canonical ? httpUriToString(route->canonical, 0) : route->host->defaultEndpoint->ip;
+    envv[index++] = sfmt("FCGI_WEB_SERVER_ADDRS=%s", canonical);
+    envv[index] = 0;
+
+    for (i = 0; i < index; i++) {
+        print("ENV[%d] = %s", i, envv[i]);
+    }
+    return index;
+}
 
 #endif /* ME_COM_FAST */
 
