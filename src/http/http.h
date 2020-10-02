@@ -329,8 +329,8 @@ struct HttpWebSocket;
     Flags that can be ored into the status code
  */
 #define HTTP_CODE_MASK                      0xFFFF
-#define HTTP_ABORT                          0x10000 /* Abort the request and network connection */
-#define HTTP_CLOSE                          0x20000 /* Close the stream at the completion of the request */
+#define HTTP_ABORT                          0x10000 /* Abort the request and network connection. Will try to emit a response first. */
+#define HTTP_CLOSE                          0x20000 /* Close the stream (and connection on HTTP/1) at the completion of the request */
 
 /**
     HttpStream state change notification callback
@@ -658,6 +658,7 @@ typedef struct HttpTrace {
     MprFile             *file;                          /**< Trace logger file object */
     int                 backupCount;                    /**< Trace logger backup count */
     int                 flags;                          /**< Trace control flags (append|anew) */
+    int                 level;                          /**< Trace level */
     MprOff              size;                           /**< Max log size */
     ssize               maxContent;                     /**< Maximum content size to trace */
     MprHash             *events;                        /**< Configuration of events */
@@ -786,18 +787,20 @@ PUBLIC void httpSetTraceFormat(HttpTrace *trace, cchar *format);
         traced. Trace events have an associated verbosity level at which they will be enabled.
         If the event level is greater than the defined tracing verbosity level, the event is ignored.
     @param level New tracing level. Must be 0-5 inclusive.
+    @param trace Trace object
     @ingroup HttpTrace
     @stability Evolving.
  */
-PUBLIC void httpSetTraceLevel(int level);
+PUBLIC void httpSetTraceLevel(HttpTrace *trace, int level);
 
 /**
     Get the current tracing level
     @return The tracing level 0-5
     @ingroup HttpTrace
+    @param trace Trace object
     @stability Evolving
  */
-PUBLIC int httpGetTraceLevel(void);
+PUBLIC int httpGetTraceLevel(HttpTrace *trace);
 
 /**
     Configure the tracing level for an event type
@@ -854,7 +857,7 @@ PUBLIC int httpSetTraceLogFile(HttpTrace *trace, cchar *path, ssize size, int ba
  */
 PUBLIC void httpSetTraceFormatterName(HttpTrace *trace, cchar *name);
 
-#define httpTracing(net) (net->http->traceLevel > 0)
+#define httpTracing(net) (net->trace->level > 0)
 
 /**
     Start tracing for the given trace log file when instructed via a command line switch.
@@ -902,9 +905,9 @@ PUBLIC int httpStartTracing(cchar *traceSpec);
 PUBLIC bool httpLog(HttpTrace *trace, cchar *event, cchar *type, cchar *fmt, ...);
 #else
     #define httpLog(trace, event, type, ...) \
-        if (trace && HTTP->traceLevel > 0) { \
+        if (trace && trace->level > 0) { \
             int __tlevel = PTOI(mprLookupKey(trace->events, type)); \
-            if (__tlevel >= 0 && __tlevel <= HTTP->traceLevel) { \
+            if (__tlevel >= 0 && __tlevel <= trace->level) { \
                 httpLogProc(trace, event, type, 0, __VA_ARGS__); \
             } \
         } else
@@ -1039,6 +1042,7 @@ typedef struct Http {
     struct HttpStage *phpHandler;           /**< PHP through handler */
     struct HttpStage *proxyHandler;         /**< Proxy handler */
     struct HttpStage *proxyConnector;       /**< Proxy connector */
+    struct HttpStage *queueHead;            /**< Queue head stage */
     struct HttpStage *rangeFilter;          /**< Ranged requests filter */
     struct HttpStage *tailFilter;           /**< Tail filter */
     struct HttpStage *uploadFilter;         /**< Upload filter */
@@ -1095,7 +1099,6 @@ typedef struct Http {
     int             userChanged;            /**< User name changed */
     int             groupChanged;           /**< Group name changed */
     int             staticLink;             /**< Target platform is using a static linking */
-    int             traceLevel;             /**< Current request trace level */
     int             startLevel;             /**< Start endpoint trace level */
     int             http2;                  /**< Enable http 2 */
 
@@ -2408,6 +2411,14 @@ PUBLIC void httpPutPacket(struct HttpQueue *q, HttpPacket *packet);
 PUBLIC void httpPutPacketToNext(struct HttpQueue *qp, HttpPacket *packet);
 
 /**
+    Queue head service routine for queue heads and client handlers
+    @param q Queue reference.
+    @ingroup HttpQueue
+    @stability Evolving
+ */
+PUBLIC void httpQueueHeadService(HttpQueue *q);
+
+/**
     Remove a queue
     @description Remove a queue from the request/response pipeline. This will remove a queue so that it does
         not participate in the pipeline, effectively removing the processing stage from the pipeline. This is
@@ -2645,12 +2656,13 @@ PUBLIC void httpServiceQueue(HttpQueue *q);
 #define HTTP_STAGE_CONNECTOR      0x1000            /**< Stage is a connector  */
 #define HTTP_STAGE_HANDLER        0x2000            /**< Stage is a handler  */
 #define HTTP_STAGE_FILTER         0x4000            /**< Stage is a filter  */
-#define HTTP_STAGE_MODULE         0x8000            /**< Stage is a filter  */
+#define HTTP_STAGE_MODULE         0x8000            /**< Stage is a module  */
 #define HTTP_STAGE_AUTO_DIR       0x10000           /**< Want auto directory redirection */
 #define HTTP_STAGE_UNLOADED       0x20000           /**< Stage module library has been unloaded */
 #define HTTP_STAGE_RX             0x40000           /**< Stage to be used in the Rx direction */
 #define HTTP_STAGE_TX             0x80000           /**< Stage to be used in the Tx direction */
 #define HTTP_STAGE_INTERNAL       0x100000          /**< Internal stage - hidden */
+#define HTTP_STAGE_QHEAD          0x200000          /**< Queue Head */
 
 typedef int (*HttpParse)(cchar *key, char *value, void *state);
 
@@ -2961,6 +2973,7 @@ PUBLIC void httpSetStageData(struct HttpStream *stream, cchar *key, cvoid *data)
 
 /* Internal APIs */
 PUBLIC void httpAddStage(HttpStage *stage);
+PUBLIC HttpStage *httpCreateClientHandler(cchar *name, MprModule *module);
 PUBLIC ssize httpFilterChunkData(HttpQueue *q, HttpPacket *packet);
 PUBLIC int httpOpenActionHandler(void);
 PUBLIC int httpOpenChunkFilter(void);
@@ -2977,6 +2990,7 @@ PUBLIC void httpSendOutgoingService(HttpQueue *q);
 PUBLIC int httpHandleDirectory(struct HttpStream *stream);
 PUBLIC int httpOpenHttp1Filter(void);
 PUBLIC int httpOpenHttp2Filter(void);
+PUBLIC int httpOpenQueueHead(void);
 PUBLIC int httpOpenTailFilter(void);
 
 /********************************** Http2 **************************************/
@@ -3173,6 +3187,8 @@ typedef struct HttpNet {
     HttpLimits      *limits;                /**< Service limits */
     MprSocket       *sock;                  /**< Underlying socket handle */
     MprList         *streams;               /**< List of streams */
+    struct HttpStream
+                    *stream;                /**< Single stream for HTTP/1 == streams[0] */
     struct HttpEndpoint
                     *endpoint;              /**< Endpoint object (if set - indicates server-side) */
 
@@ -3223,7 +3239,8 @@ typedef struct HttpNet {
     int             totalRequests;          /**< Total number of requests serviced */
     int             window;                 /**< Default HTTP/2 flow control window size for streams tx */
 
-    bool            activeNet;              /**< Active net request (server side) */
+    bool            active;                 /** Active httpIOEvent */
+    bool            servicing;              /**< Servicing net request (server side) */
     bool            async: 1;               /**< Network is in async mode (non-blocking) */
     bool            autoDestroy: 1;         /**< Destroy the network automatically after IO events if appropriate */
 #if DEPRECATED || 1
@@ -3242,6 +3259,7 @@ typedef struct HttpNet {
     bool            receivedGoaway: 1;      /**< Received goaway frame */
     bool            secure: 1;              /**< Using https */
     bool            sentGoaway: 1;          /**< Sent goaway frame */
+    bool            sharedDispatcher: 1;    /**< Dispatcher is shared and should not be destroyed */
     bool            skipTrace: 1;           /**< Omit trace from now on */
     bool            worker: 1;              /**< Use worker */
     bool            writeBlocked: 1;        /**< Transmission writing is blocked */
@@ -3664,6 +3682,7 @@ PUBLIC void httpSetHeadersCallback(struct HttpStream *stream, HttpHeadersCallbac
 typedef struct HttpStream {
     HttpNet         *net;
     int             state;                  /**< Stream state */
+    int             targetState;            /**< Ultimate target state */
     int             h2State;                /**< HTTP/2 stream state */
     struct HttpRx   *rx;                    /**< Rx object for HTTP/1 */
     struct HttpTx   *tx;                    /**< Tx object for HTTP/1 */
@@ -3711,10 +3730,9 @@ typedef struct HttpStream {
     int             streamID;               /**< Http/2 stream */
     int             timeout;                /**< Timeout indication */
 
-    bool            activeRequest;          /**< Actively servicing a request */
+    bool            active;                 /**< httpProcess active on this stack */
     bool            authRequested: 1;       /**< Authorization requested based on user credentials */
-    bool            complete: 1;            /**< All request states are complete (not yet done) */
-    bool            done: 1;                /**< Request is done (complete and recycled) */
+    bool            completed: 1;           /**< Request complete and completeRequest schedule */
     bool            destroyed: 1;           /**< Stream has been destroyed */
     bool            disconnect;             /**< Must disconnect/reset the connection - can not continue */
     bool            encoded: 1;             /**< True if the password is MD5(username:realm:password) */
@@ -3725,6 +3743,7 @@ typedef struct HttpStream {
     bool            proxied: 1;             /**< Stream carried by a proxy connection */
     bool            ownDispatcher: 1;       /**< Own the dispatcher and should destroy when closing connection */
     bool            secure: 1;              /**< Using https */
+    int             settingState;           /**< Running httpSetState */
     bool            suppressTrace: 1;       /**< Do not trace this connection */
     bool            upgraded: 1;            /**< Request protocol upgraded */
 
@@ -6837,7 +6856,6 @@ typedef struct HttpRx {
     bool            json: 1;                /**< Using a JSON body */
     bool            needInputPipeline: 1;   /**< Input pipeline required to process received data */
     bool            ownParams: 1;           /**< Do own parameter handling */
-    bool            parsedHeaders: 1;       /**< Parsed HTTP/2 headers */
     bool            renameUploads: 1;       /**< Rename uploaded files to the client specified filename */
     bool            seenRegularHeader: 1;   /**< Seen a regular HTTP/2 header (non pseudo) */
     bool            sessionProbed: 1;       /**< Session has been resolved */
@@ -7376,6 +7394,7 @@ PUBLIC void httpDestroyRx(HttpRx *rx);
 PUBLIC bool httpMatchEtag(HttpStream *stream, char *requestedEtag);
 PUBLIC bool httpMatchModified(HttpStream *stream, MprTime time);
 PUBLIC bool httpProcessCompletion(HttpStream *stream);
+PUBLIC int httpProcessState(HttpQueue *q);
 PUBLIC void httpProcessWriteEvent(HttpStream *stream);
 
 /********************************** HttpTx *********************************/

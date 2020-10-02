@@ -2854,9 +2854,9 @@ PUBLIC void mprShutdown(int how, int exitStatus, MprTicks timeout)
         }
         /* No continue */
     }
-    mprLog("info mpr", 6, "Application exit, waiting for existing requests to complete.");
 
     if (!mprIsIdle(0)) {
+        mprLog("info mpr", 6, "Application exit, waiting for existing requests to complete.");
         mprCreateTimerEvent(NULL, "shutdownMonitor", 0, shutdownMonitor, 0, MPR_EVENT_QUICK);
     }
     mprWakeDispatchers();
@@ -2907,7 +2907,7 @@ PUBLIC bool mprDestroy()
     /*
         Wait for events thread to exit and the app to become idle
      */
-    while (MPR->eventing) {
+    while (!mprIsIdle(0) || MPR->eventing) {
         mprWakeNotifier();
         mprWaitForCond(MPR->cond, 10);
         if (mprGetRemainingTicks(MPR->shutdownStarted, timeout) <= 0) {
@@ -11332,7 +11332,7 @@ PUBLIC void mprRemoveEvent(MprEvent *event)
         }
         event->dispatcher = 0;
         event->flags &= ~MPR_EVENT_CONTINUOUS;
-        if (event->due == es->willAwake && dispatcher->eventQ->next != dispatcher->eventQ) {
+        if (event->due == es->willAwake && dispatcher->eventQ && dispatcher->eventQ->next != dispatcher->eventQ) {
             mprScheduleDispatcher(dispatcher);
         }
         if (event->cond) {
@@ -21987,7 +21987,8 @@ static void standardSignalHandler(void *ignored, MprSignal *sp)
         mprShutdown(MPR_EXIT_ABORT, -1, 0);
 
     } else if (sp->signo == SIGUSR1) {
-        mprShutdown(MPR_EXIT_RESTART, 0, 0);
+        /* Graceful shutdown */
+        mprShutdown(MPR_EXIT_RESTART, 0, -1);
 
     } else if (sp->signo == SIGPIPE || sp->signo == SIGXFSZ) {
         /* Ignore */
@@ -26179,7 +26180,9 @@ static void workerMain(MprWorker *worker, MprThread *tp)
     worker->thread = 0;
     ws->numThreads--;
     unlock(ws);
-    mprLog("info mpr thread", 6, "Worker exiting. There are %d workers remaining in the pool.", ws->numThreads);
+    if (ws->numThreads) {
+        mprLog("info mpr thread", 6, "Worker exiting with %d workers in the pool.", ws->numThreads);
+    }
 }
 
 
