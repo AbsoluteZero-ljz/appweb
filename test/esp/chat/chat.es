@@ -7,11 +7,11 @@
 let ws = new WebSocket("ws://127.0.0.1:4100/chat/test/chat")
 
 ws.onmessage = function (event) {
-    print("GOT", event.data)
+    // print("GOT", event.data)
 }
 
 ws.onopen = function (event) {
-    print("ONOPEN")
+    // print("ONOPEN")
 }
 
 ws.onclose = function () {

@@ -24,6 +24,8 @@ if (tphase() == 'Setup') {
     if (!Path('.test-prepared').exists) {
         Cmd.run('me prep-test')
     }
+} else if (tphase() == 'Finalize') {
+    Cmd.run('killall fastProgram')
 }
 
 startStopService('appweb', {address: tget('TM_HTTP')})

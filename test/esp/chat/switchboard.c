@@ -68,7 +68,7 @@ static void chat_callback(HttpStream *stream, int event, int arg)
 
     if (event == HTTP_EVENT_READABLE) {
         packet = httpGetPacket(stream->readq);
-        if (packet->type == WS_MSG_TEXT || packet->type == WS_MSG_BINARY) {
+        if (packet && (packet->type == WS_MSG_TEXT || packet->type == WS_MSG_BINARY)) {
             for (ITERATE_ITEMS(clients, client, next)) {
                 /*
                     Send the message to each stream using the stream sequence number captured earlier.
