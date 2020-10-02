@@ -1467,10 +1467,14 @@ static bool isPort(cchar *name)
 
 static char *extendUrl(cchar *url)
 {
+    cchar   *proto;
+
+    proto = app->protocol >= 2 ? "https" : "http";
+
     if (*url == '/') {
         if (app->host) {
             if (sncaselesscmp(app->host, "http://", 7) != 0 && sncaselesscmp(app->host, "https://", 8) != 0) {
-                return sfmt("http://%s%s", app->host, url);
+                return sfmt("%s://%s%s", proto, app->host, url);
             } else {
                 return sfmt("%s%s", app->host, url);
             }
@@ -1480,11 +1484,11 @@ static char *extendUrl(cchar *url)
     }
     if (sncaselesscmp(url, "http://", 7) != 0 && sncaselesscmp(url, "https://", 8) != 0) {
         if (*url == ':' && isPort(&url[1])) {
-            return sfmt("http://127.0.0.1%s", url);
+            return sfmt("%s://127.0.0.1%s", proto, url);
         } else if (isPort(url)) {
-            return sfmt("http://127.0.0.1:%s", url);
+            return sfmt("%s://127.0.0.1:%s", proto, url);
         } else {
-            return sfmt("http://%s", url);
+            return sfmt("%s://%s", proto, url);
         }
     }
     return sclone(url);
