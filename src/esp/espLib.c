@@ -4780,6 +4780,7 @@ PUBLIC int espOpen(MprModule *module)
     handler->stageData = esp;
     esp->mutex = mprCreateLock();
     esp->local = mprCreateThreadLocal();
+    
     if (espInitParser() < 0) {
         return 0;
     }
