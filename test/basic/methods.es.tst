@@ -45,7 +45,7 @@ ttrue(http.response.contains('Content-Type: text/html'))
 ttrue(!http.response.contains('Content-Length'))
 
 /*
-//  Head 
+//  Head
 http.connect("HEAD", HTTP + "/index.html")
 ttrue(http.status == 200)
 ttrue(http.header("Content-Length") > 0)
