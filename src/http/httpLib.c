@@ -141,6 +141,7 @@ PUBLIC Http *httpCreate(int flags)
     httpOpenRangeFilter();
     httpOpenChunkFilter();
     httpOpenTailFilter();
+    httpOpenQueueHead();
 #if ME_HTTP_WEB_SOCKETS
     httpOpenWebSockFilter();
 #endif
@@ -184,6 +185,7 @@ PUBLIC Http *httpCreate(int flags)
         http->clientLimits = httpCreateLimits(0);
         http->clientRoute = httpCreateConfiguredRoute(0, 0);
         http->clientHandler = httpCreateHandler("client", 0);
+        http->clientHandler->incomingService = httpQueueHeadService;
     }
     mprGlobalUnlock();
     return http;
@@ -2929,6 +2931,7 @@ static void incomingChunk(HttpQueue *q, HttpPacket *packet)
         return;
     }
     httpJoinPacketForService(q, packet, HTTP_DELAY_SERVICE);
+    
     for (packet = httpGetPacket(q); packet && !stream->error && !rx->eof; packet = httpGetPacket(q)) {
         while (packet && !stream->error && !rx->eof) {
             switch (rx->chunkState) {
@@ -5575,7 +5578,7 @@ static void parseTrace(HttpRoute *route, cchar *key, MprJson *prop)
     httpSetTraceLogFile(route->trace, location, logSize, backup, format, anew ? MPR_LOG_ANEW : 0);
     httpSetTraceFormat(route->trace, format);
     httpSetTraceContentSize(route->trace, maxContent);
-    httpSetTraceLevel(level);
+    httpSetTraceLevel(route->trace, level);
 }
 
 
@@ -7387,12 +7390,10 @@ static void errorRedirect(HttpStream *stream, cchar *uri)
     if (sstarts(uri, "http") || (tx->flags & HTTP_TX_HEADERS_CREATED)) {
         httpRedirect(stream, HTTP_CODE_MOVED_PERMANENTLY, uri);
     } else {
-        /*
-            No response started and it is an internal redirect, so we can rerun the request.
-            Set finalized to "cap" any output. processCompletion() in rx.c will rerun the request using the errorDocument.
-         */
         tx->errorDocument = httpLinkAbs(stream, uri);
-        tx->finalized = tx->finalizedOutput = tx->finalizedConnector = 1;
+        //  Cap input and output until prepErrorDoc can reconstitute the request
+        tx->finalized = tx->finalizedInput = tx->finalizedOutput = 1;
+        httpSetState(stream, HTTP_STATE_FINALIZED);
     }
 }
 
@@ -7498,7 +7499,9 @@ static void errorv(HttpStream *stream, int flags, cchar *fmt, va_list args)
             stream->disconnect = 1;
             httpDiscardData(stream, HTTP_QUEUE_RX);
         }
-        httpFinalize(stream);
+        if (flags & (HTTP_ABORT | HTTP_CLOSE)) {
+            httpFinalize(stream);
+        }
     }
     if (stream->disconnect && stream->net->protocol < 2) {
         httpDisconnectStream(stream);
@@ -7910,7 +7913,7 @@ static void outgoingFileService(HttpQueue *q)
         }
     }
     if (!tx->finalized && tx->finalizedOutput && (tx->finalizedInput || !(rx->flags & HTTP_PUT))) {
-        tx->finalized = 1;
+        httpFinalize(stream);
     }
 }
 
@@ -8912,14 +8915,13 @@ static void incomingHttp1(HttpQueue *q, HttpPacket *packet)
                     httpJoinPacketForService(q, packet, HTTP_DELAY_SERVICE);
                     break;
                 }
-                httpProcessHeaders(stream->inputq);
             }
         }
         if (packet) {
             httpPutPacket(stream->inputq, packet);
         }
     }
-    httpProcess(stream->inputq);
+    httpServiceNetQueues(stream->net, 0);
 }
 
 
@@ -8959,17 +8961,19 @@ static void logPacket(HttpQueue *q, HttpPacket *packet)
     ssize       len;
 
     net = q->net;
-    type = (packet->type & HTTP_PACKET_HEADER) ? "headers" : "data";
+    type = (packet->flags & HTTP_PACKET_HEADER) ? "headers" : "data";
     len = httpGetPacketLength(packet) + mprGetBufLength(packet->prefix);
-    if (httpTracing(net) && !net->skipTrace) {
-        if (net->bytesWritten >= net->trace->maxContent) {
-            httpLog(q->stream->trace, "tx.http1", "packet", "msg:Abbreviating packet trace");
-            net->skipTrace = 1;
+    if (!(packet->flags & HTTP_PACKET_END)) {
+        if (httpTracing(net) && !net->skipTrace) {
+            if (net->bytesWritten >= net->trace->maxContent) {
+                httpLog(q->stream->trace, "tx.http1", "packet", "msg:Abbreviating packet trace");
+                net->skipTrace = 1;
+            } else {
+                httpLogPacket(q->stream->trace, "tx.http1", "packet", HTTP_TRACE_HEX, packet, "type:%s, length:%zd", type, len);
+            }
         } else {
-            httpLogPacket(q->stream->trace, "tx.http1", "packet", HTTP_TRACE_HEX, packet, "type:%s, length:%zd", type, len);
+            httpLog(q->stream->trace, "tx.http1", "packet", "type:%s, length:%zd,", type, len);
         }
-    } else {
-        httpLog(q->stream->trace, "tx.http1", "packet", "type:%s, length:%zd,", type, len);
     }
 }
 
@@ -9689,14 +9693,19 @@ static void incomingHttp2(HttpQueue *q, HttpPacket *packet)
             net->frame = frame;
             frameHandlers[frame->type](q, packet);
             net->frame = 0;
-            if (stream && stream->disconnect && !stream->destroyed) {
-                sendReset(q, stream, HTTP2_INTERNAL_ERROR, "Stream request error %s", stream->errorMsg);
+            if (stream) {
+                if (stream->disconnect && !stream->destroyed) {
+                    sendReset(q, stream, HTTP2_INTERNAL_ERROR, "Stream request error %s", stream->errorMsg);
+                }
+                if (stream->h2State >= H2_CLOSED) {
+                    httpSetState(stream, HTTP_STATE_COMPLETE);
+                }
             }
         }
         /*
             Try to push out any pending responses here. This keeps the socketq packet count down.
          */
-        httpServiceNetQueues(net, HTTP_BLOCK);
+        httpServiceNetQueues(net, 0);
         if (done) {
             break;
         }
@@ -10219,7 +10228,7 @@ static void parseHeaderFrame(HttpQueue *q, HttpPacket *packet)
                 invalidState(net, stream, E2_END);
                 return;
             }
-        } else if (stream->rx->parsedHeaders) {
+        } else if (stream->state > HTTP_STATE_PARSED) {
             //  Trailer must have end stream
             sendGoAway(net->socketq, HTTP2_PROTOCOL_ERROR, "Trailer headers must have end stream");
             return;
@@ -10269,13 +10278,8 @@ static void parseHeaders2(HttpQueue *q, HttpStream *stream)
         }
     }
     if (!net->sentGoaway) {
-        if (!stream->error) {
-            httpSetState(stream, HTTP_STATE_PARSED);
-        }
         rx->protocol = sclone("HTTP/2.0");
-        httpProcessHeaders(stream->inputq);
-        rx->parsedHeaders = 1;
-        httpProcess(stream->inputq);
+        httpSetState(stream, HTTP_STATE_PARSED);
     }
 }
 
@@ -10816,7 +10820,6 @@ static void processDataFrame(HttpQueue *q, HttpPacket *packet)
     } else if (httpGetPacketLength(packet) > 0) {
         httpPutPacket(stream->inputq, packet);
     }
-    httpProcess(stream->inputq);
 }
 
 
@@ -10874,14 +10877,14 @@ static void sendReset(HttpQueue *q, HttpStream *stream, int status, cchar *fmt, 
     }
     va_start(ap, fmt);
     msg = sfmtv(fmt, ap);
-    httpLog(stream->trace, "tx.http2", "context", "msg:Send stream reset, stream:%d, status:%d, msg:%s", stream->streamID, status, msg);
+    httpLog(stream->trace, "tx.http2", "context", "msg:Send stream reset, stream:%d, status:%d, msg:%s",
+        stream->streamID, status, msg);
     va_end(ap);
 
     mprPutUint32ToBuf(packet->content, status);
     sendFrame(q, defineFrame(q, packet, HTTP2_RESET_FRAME, 0, stream->streamID));
 
     httpError(stream, HTTP_CODE_COMMS_ERROR, "%s", msg);
-    httpProcess(stream->inputq);
 }
 
 
@@ -10892,7 +10895,6 @@ static void resetStream(HttpStream *stream, cchar *msg, int error)
 {
     httpLog(stream->trace, "rx.http2", "context", "msg:Receive GoAway. %s, error:%d", msg, error);
     setState(stream, E2_RESET);
-    httpProcess(stream->inputq);
 }
 
 
@@ -14019,9 +14021,9 @@ PUBLIC void httpDestroyNet(HttpNet *net)
                 httpDestroyStream(stream);
                 next--;
             }
-            if (net->activeNet) {
+            if (net->servicing) {
                 httpMonitorNetEvent(net, HTTP_COUNTER_ACTIVE_CONNECTIONS, -1);
-                net->activeNet = 0;
+                net->servicing = 0;
             }
         }
         httpRemoveNet(net);
@@ -14030,9 +14032,9 @@ PUBLIC void httpDestroyNet(HttpNet *net)
             mprLog("net info", 5, "Close connection for IP %s:%d", net->ip, net->port);
             /* Don't zero just incase another thread (in error) uses net->sock */
         }
-        if (net->dispatcher && net->dispatcher->flags & MPR_DISPATCHER_AUTO) {
+        if (net->dispatcher && !(net->sharedDispatcher) && net->dispatcher->flags & MPR_DISPATCHER_AUTO) {
             mprDestroyDispatcher(net->dispatcher);
-            /* Don't zero just incase another thread (in error) uses net->dispatcher */
+            /* Don't NULL net->dispatcher just incase another thread (in error) uses net->dispatcher */
         }
         net->destroyed = 1;
     }
@@ -14046,6 +14048,7 @@ static void manageNet(HttpNet *net, int flags)
     if (flags & MPR_MANAGE_MARK) {
         mprMark(net->address);
         mprMark(net->streams);
+        mprMark(net->stream);
         mprMark(net->context);
         mprMark(net->data);
         mprMark(net->dispatcher);
@@ -14182,27 +14185,6 @@ PUBLIC void httpSetNetProtocol(HttpNet *net, int protocol)
 }
 
 
-/*
-    Respond if the network has been closed for a client
- */
-PUBLIC void httpNetClosed(HttpNet *net)
-{
-    HttpStream  *stream;
-    int         next;
-
-    for (ITERATE_ITEMS(net->streams, stream, next)) {
-        if (stream->state < HTTP_STATE_PARSED) {
-            httpError(stream, 0, "Peer closed connection before receiving a response");
-        }
-        if (stream->rx && !stream->rx->eof) {
-            httpSetEof(stream);
-        }
-        httpSetState(stream, HTTP_STATE_COMPLETE);
-        httpProcess(stream->inputq);
-    }
-}
-
-
 #if ME_HTTP_HTTP2
 static HttpHeaderTable *createHeaderTable(int maxsize)
 {
@@ -14229,12 +14211,18 @@ PUBLIC void httpAddStream(HttpNet *net, HttpStream *stream)
 {
     mprAddItem(net->streams, stream);
     stream->net = net;
+    if (net->protocol < 2) {
+        net->stream = stream;
+    }
 }
 
 
 PUBLIC void httpRemoveStream(HttpNet *net, HttpStream *stream)
 {
     mprRemoveItem(net->streams, stream);
+    if (net->protocol < 2) {
+        net->stream = NULL;
+    }
 }
 
 
@@ -14453,6 +14441,7 @@ static void adjustNetVec(HttpQueue *q, ssize written);
 static MprOff buildNetVec(HttpQueue *q);
 static void freeNetPackets(HttpQueue *q, ssize written);
 static HttpPacket *getPacket(HttpNet *net, ssize *size);
+static void netClosed(HttpNet *net);
 static void netOutgoing(HttpQueue *q, HttpPacket *packet);
 static void netOutgoingService(HttpQueue *q);
 static HttpPacket *readPacket(HttpNet *net);
@@ -14524,7 +14513,7 @@ PUBLIC HttpNet *httpAccept(HttpEndpoint *endpoint, MprEvent *event)
         return 0;
     }
 #endif
-    net->activeNet = 1;
+    net->servicing = 1;
     if ((value = httpMonitorNetEvent(net, HTTP_COUNTER_ACTIVE_CONNECTIONS, 1)) > limits->connectionsPerClientMax) {
         mprLog("net info", 1, "Connection denied for IP %s. Too many concurrent connections for client, active: %d, max: %d",
             net->ip, (int) (value - 1), limits->connectionsPerClientMax);
@@ -14597,14 +14586,13 @@ PUBLIC bool httpReadIO(HttpNet *net)
 PUBLIC void httpIOEvent(HttpNet *net, MprEvent *event)
 {
     if (net->destroyed) {
-        /* Network connection has been destroyed */
         return;
     }
+    net->active = 1;
     net->lastActivity = net->http->now;
-    if (event->mask & MPR_WRITABLE) {
-        if (net->socketq->count > 0) {
-            httpResumeQueue(net->socketq, 1);
-        }
+
+    if (event->mask & MPR_WRITABLE && net->socketq->count > 0) {
+        httpResumeQueue(net->socketq, 1);
     }
     if (event->mask & MPR_READABLE) {
         if (!mprIsSocketEof(net->sock)) {
@@ -14613,17 +14601,21 @@ PUBLIC void httpIOEvent(HttpNet *net, MprEvent *event)
             httpSetNetEof(net);
         }
     }
+    /*
+        Process packet read above. This will propagate the packet through configured queues for the net.
+     */
     httpServiceNetQueues(net, 0);
 
     if (net->error || net->eof || (net->sentGoaway && !net->socketq->first)) {
         if (net->autoDestroy) {
             httpDestroyNet(net);
         } else if (httpIsClient(net)){
-            httpNetClosed(net);
+            netClosed(net);
         }
     } else if (net->async && !net->delay) {
         httpEnableNetEvents(net);
     }
+    net->active = 0;
 }
 
 
@@ -14667,12 +14659,12 @@ static HttpPacket *readPacket(HttpNet *net)
             if (net->sock->flags & (MPR_SOCKET_ERROR | MPR_SOCKET_CERT_ERROR)) {
                 httpLog(net->trace, "rx.net", "error", "msg:Connection error %s", net->sock->errorMsg);
             }
-            httpSetNetEof(net);
             return 0;
         }
     }
     return 0;
 }
+
 
 static void netOutgoing(HttpQueue *q, HttpPacket *packet)
 {
@@ -14716,6 +14708,7 @@ static void netOutgoingService(HttpQueue *q)
                 httpNetError(net, "netConnector: Cannot write. errno %d", errCode);
             }
             httpSetNetError(net);
+            freeNetPackets(q, MAXINT);
             break;
 
         } else if (written > 0) {
@@ -14809,7 +14802,6 @@ static void freeNetPackets(HttpQueue *q, ssize bytes)
         if (packet->flags & HTTP_PACKET_END) {
             if ((stream = packet->stream) != 0) {
                 httpFinalizeConnector(stream);
-                httpProcess(stream->inputq);
             }
         } else if (bytes > 0) {
             if (packet->prefix) {
@@ -14989,25 +14981,32 @@ static void resumeEvents(HttpNet *net, MprEvent *event)
 PUBLIC int httpGetNetEventMask(HttpNet *net)
 {
     MprSocket   *sock;
+    HttpStream  *stream;
     int         eventMask;
 
-    if ((sock = net->sock) == 0) {
+    if (net->eof || (sock = net->sock) == 0) {
         return 0;
     }
     eventMask = 0;
 
-    if (httpQueuesNeedService(net) || mprSocketHasBufferedWrite(sock) ||
-            (net->socketq && (net->socketq->count > 0 || net->socketq->ioCount > 0))) {
-        if (!mprSocketHandshaking(sock)) {
+    if (!mprSocketHandshaking(sock)) {
+        if (httpQueuesNeedService(net) || mprSocketHasBufferedWrite(sock) || (net->socketq->count + net->socketq->ioCount) > 0) {
             /* Must wait to write until handshaking is complete */
             eventMask |= MPR_WRITABLE;
         }
     }
-    if (mprSocketHasBufferedRead(sock) || !net->inputq || (net->inputq->count < net->inputq->max)) {
-        /*
-            Was testing if !writeBlocked before adding MPR_READABLE, but this is always required for HTTP/2 to read window frames.
-         */
-        if (mprSocketHandshaking(sock) || !net->eof) {
+    if (mprSocketHasBufferedRead(sock) || mprSocketHandshaking(sock) || !net->inputq) {
+        eventMask |= MPR_READABLE;
+
+    } else if (net->inputq->count < net->inputq->max) {
+        stream = net->stream;
+        if (net->protocol >= 2) {
+            eventMask |= MPR_READABLE;
+        } else if (stream) {
+            if (stream->state < HTTP_STATE_PARSED || (stream->state < HTTP_STATE_READY && stream->rx->remainingContent)) {
+                eventMask |= MPR_READABLE;
+            }
+        } else {
             eventMask |= MPR_READABLE;
         }
     }
@@ -15017,7 +15016,7 @@ PUBLIC int httpGetNetEventMask(HttpNet *net)
 
 PUBLIC void httpEnableNetEvents(HttpNet *net)
 {
-    if (mprShouldAbortRequests() || net->borrowed || net->error || netBanned(net)) {
+    if (mprShouldAbortRequests() || net->destroyed || net->borrowed || net->error || netBanned(net)) {
         return;
     }
     /*
@@ -15054,6 +15053,31 @@ PUBLIC void httpSetupWaitHandler(HttpNet *net, int eventMask)
         mprWaitOn(sp->handler, eventMask);
     }
     net->eventMask = eventMask;
+}
+
+
+/*
+    Respond if the network has been closed for a client
+ */
+static void netClosed(HttpNet *net)
+{
+    HttpStream  *stream;
+    HttpRx      *rx;
+    int         next;
+
+    for (ITERATE_ITEMS(net->streams, stream, next)) {
+        rx = stream->rx;
+        if (stream->state < HTTP_STATE_PARSED) {
+            httpError(stream, 0, "Peer closed connection before receiving a response");
+        } else if (rx && !rx->eof && rx->chunkState != HTTP_CHUNK_UNCHUNKED && rx->chunkState != HTTP_CHUNK_EOF) {
+            httpError(stream, 0, "Peer closed connection before full response received");
+        }
+        if (rx && !rx->eof) {
+            httpSetEof(stream);
+        }
+        httpSetState(stream, HTTP_STATE_COMPLETE);
+        // httpProcess(stream->inputq);
+    }
 }
 
 
@@ -15441,7 +15465,7 @@ PUBLIC void httpPutPacketToNext(HttpQueue *q, HttpPacket *packet)
     if (q->nextQ && q->nextQ->put && q != q->nextQ) {
         httpPutPacket(q->nextQ, packet);
     } else {
-        httpPutForService(q->nextQ, packet, 0);
+        httpPutForService(q->nextQ, packet, HTTP_SCHEDULE_QUEUE);
     }
 }
 
@@ -16332,178 +16356,138 @@ static int matchFilter(HttpStream *stream, HttpStage *filter, HttpRoute *route, 
 /********************************** Forwards **********************************/
 
 static void addMatchEtag(HttpStream *stream, char *etag);
-static void prepErrorDoc(HttpQueue *q);
-static bool mapMethod(HttpStream *stream);
+static void processComplete(HttpStream *stream, MprEvent *event);
 static void measureRequest(HttpQueue *q);
 static bool parseRange(HttpStream *stream, char *value);
 static void parseUri(HttpStream *stream);
-static bool processCompletion(HttpQueue *q);
-static bool processContent(HttpQueue *q);
-static void processDone(HttpStream *stream);
-static void processFinalized(HttpQueue *q);
-static void processFirst(HttpQueue *q);
+static int prepErrorDoc(HttpQueue *q);
+static int processFinalized(HttpQueue *q);
+static int processFirst(HttpQueue *q);
 static void processHeaders(HttpQueue *q);
-static void processHttp(HttpQueue *q);
-static void processParsed(HttpQueue *q);
-static void processReady(HttpQueue *q);
-static bool processRunning(HttpQueue *q);
+static int processParsed(HttpQueue *q);
+static int processReady(HttpQueue *q);
 static void routeRequest(HttpStream *stream);
 static int sendContinue(HttpQueue *q);
 
 /*********************************** Code *************************************/
+/*
+    HTTP Protocol state machine for server requests and client responses.
+    Invoked from httpSetState to react to state changes.
+    Process an incoming request/response and drive the state machine.
+ */
 
-PUBLIC bool httpProcessHeaders(HttpQueue *q)
+//TODO -- switch all args to stream and not q?
+
+static int httpStateChange(HttpQueue *q)
 {
-    HttpNet     *net;
     HttpStream  *stream;
-    HttpLimits  *limits;
-    int64       value;
+    int         state;
 
-    if (q->stream->state != HTTP_STATE_PARSED) {
-        return 0;
-    }
     stream = q->stream;
-    net = stream->net;
-    limits = net->limits;
+    state = stream->state;
 
-    if (httpServerStream(stream) && !stream->activeRequest) {
-        /*
-            ErrorDocuments may come through here twice so test activeRequest to keep counters valid.
-         */
-        stream->activeRequest = 1;
-        if ((value = httpMonitorEvent(stream, HTTP_COUNTER_ACTIVE_REQUESTS, 1)) > limits->requestsPerClientMax) {
-            httpError(stream, HTTP_ABORT | HTTP_CODE_SERVICE_UNAVAILABLE,
-                "Request denied for IP %s. Too many concurrent requests for client, active: %d max: %d", stream->ip, (int) value, limits->requestsPerClientMax);
-            return 1;
-        }
-        httpMonitorEvent(stream, HTTP_COUNTER_REQUESTS, 1);
+    switch (state) {
+    case HTTP_STATE_BEGIN:
+    case HTTP_STATE_CONNECTED:
+        break;
+
+    case HTTP_STATE_FIRST:
+        state = processFirst(q);
+        break;
+
+    case HTTP_STATE_PARSED:
+        processHeaders(q);
+        state = processParsed(q);
+        break;
+
+    case HTTP_STATE_CONTENT:
+        break;
+
+    case HTTP_STATE_READY:
+        state = processReady(q);
+        break;
+
+    case HTTP_STATE_RUNNING:
+        break;
+
+    case HTTP_STATE_FINALIZED:
+        state = processFinalized(q);
+        break;
+
+    case HTTP_STATE_COMPLETE:
+        break;
     }
-    processFirst(q);
-    processHeaders(q);
-    processParsed(q);
-    return 1;
+    return state;
 }
 
 
-PUBLIC void httpProcess(HttpQueue *q)
+static int updateState(HttpStream *stream, int newState)
 {
-    /*
-        Create an event to limit recursion when invoked by pipeline stages
-     */
-    mprCreateEvent(q->stream->dispatcher, "http", 0, processHttp, q->stream->inputq, 0);
+    int     state;
+
+    state = stream->state;
+
+    if (newState < state && stream->errorDoc) {
+        state = newState;
+    } else if (newState > state) {
+        state = newState;
+    } else {
+        state = state + 1;
+    }
+    if (newState > stream->targetState) {
+        stream->targetState = newState;
+    }
+    return state;
+}
+
+
+PUBLIC void httpSetState(HttpStream *stream, int targetState)
+{
+    HttpNet     *net;
+    int         newState, state;
+
+    if (stream->settingState) {
+        //  Recursive invocation. Update the new target.
+        if (targetState > stream->targetState) {
+            stream->targetState = targetState;
+        }
+        return;
+    }
+    stream->settingState = 1;
+    stream->targetState = targetState;
+    net = stream->net;
+
+    for (state = stream->state + 1; state <= stream->targetState; ) {
+        stream->state = state;
+        HTTP_NOTIFY(stream, HTTP_EVENT_STATE, state);
+
+        newState = httpStateChange(stream->inputq);
+
+        state = updateState(stream, newState);
+    }
+    stream->settingState = 0;
+
+    if (stream->state == HTTP_STATE_COMPLETE) {
+        processComplete(stream, NULL);
+    } else {
+        httpPumpOutput(stream->inputq);
+        if (net->protocol < 2 && net->eventMask == 0 && !net->active) {
+            //  net->active is true when invoked from httpIOEvent in which case we don't need to adjust net events
+            httpEnableNetEvents(net);
+        }
+    }
 }
 
 
 /*
-    HTTP Protocol state machine for HTTP/1 server requests and client responses.
-    Process an incoming request/response and drive the state machine.
-    This will process only one request/response.
-    All socket I/O is non-blocking, and this routine must not block.
+    Process the first line of a request or response and enforce limits
  */
-static void processHttp(HttpQueue *q)
-{
-    HttpNet     *net;
-    HttpStream  *stream;
-    bool        more;
-    int         count;
-
-    if (!q) {
-        return;
-    }
-    stream = q->stream;
-    if (stream->destroyed) {
-        return;
-    }
-    net = stream->net;
-
-    for (count = 0, more = 1; more && count < 10; count++) {
-        switch (stream->state) {
-        case HTTP_STATE_BEGIN:
-        case HTTP_STATE_FIRST:
-        case HTTP_STATE_CONNECTED:
-            if (stream->error) {
-                httpSetState(stream, HTTP_STATE_FINALIZED);
-            } else {
-                more = 0;
-            }
-            break;
-
-        case HTTP_STATE_PARSED:
-            httpProcessHeaders(q);
-            break;
-
-        case HTTP_STATE_CONTENT:
-            more = processContent(q);
-            break;
-
-        case HTTP_STATE_READY:
-            processReady(q);
-            break;
-
-        case HTTP_STATE_RUNNING:
-            more = processRunning(q);
-            break;
-
-        case HTTP_STATE_FINALIZED:
-            processFinalized(q);
-            break;
-
-        case HTTP_STATE_COMPLETE:
-            more = processCompletion(q);
-            break;
-
-        default:
-            if (stream->error) {
-                httpSetState(stream, HTTP_STATE_FINALIZED);
-            } else {
-                more = 0;
-            }
-            break;
-        }
-        httpServiceNetQueues(net, HTTP_BLOCK);
-    }
-    if (stream->complete) {
-        processDone(stream);
-    }
-}
-
-
-static void processDone(HttpStream *stream)
-{
-    HttpNet     *net;
-
-    net = stream->net;
-    if (stream->done) {
-        return;
-    }
-    stream->done = 1;
-
-    HTTP_NOTIFY(stream, HTTP_EVENT_DONE, 0);
-
-    if (net->autoDestroy) {
-        if (net->protocol >= 2) {
-            //  DestroyStream does not impact the network
-            httpDestroyStream(stream);
-
-        } else if (stream->keepAliveCount <= 0) {
-            //  HTTP/1 disconnect the stream and close the network/socket.
-            httpDisconnectStream(stream);
-            httpDestroyStream(stream);
-
-        } else if (httpIsServer(net)) {
-            //  HTTP/1 reuse the stream and connection
-            httpResetServerStream(stream);
-        }
-    }
-}
-
-
-static void processFirst(HttpQueue *q)
+static int processFirst(HttpQueue *q)
 {
     HttpNet     *net;
     HttpStream  *stream;
     HttpRx      *rx;
-    cchar       *msg;
+    int64       value;
 
     net = q->net;
     stream = q->stream;
@@ -16513,19 +16497,50 @@ static void processFirst(HttpQueue *q)
         stream->startMark = mprGetHiResTicks();
         stream->started = stream->http->now;
         stream->http->totalRequests++;
-        httpSetState(stream, HTTP_STATE_FIRST);
 
+        //TODO
 #if KEEP
     } else if (rx->status != HTTP_CODE_CONTINUE) {
-        /*
-            Ignore Expect status responses. NOTE: Clients have already created their Tx pipeline.
-         */
+        // Ignore Expect status responses. NOTE: Clients have already created their Tx pipeline.
         httpCreateRxPipeline(stream, NULL);
 #endif
     }
     if (rx->flags & HTTP_EXPECT_CONTINUE) {
         sendContinue(q);
         rx->flags &= ~HTTP_EXPECT_CONTINUE;
+    }
+
+    if (httpServerStream(stream)) {
+        if ((value = httpMonitorEvent(stream, HTTP_COUNTER_ACTIVE_REQUESTS, 1)) > net->limits->requestsPerClientMax) {
+            httpError(stream, HTTP_ABORT | HTTP_CODE_SERVICE_UNAVAILABLE,
+                "Request denied for IP %s. Too many concurrent requests for client, active: %d max: %d", stream->ip, (int) value, net->limits->requestsPerClientMax);
+            return 0;
+        }
+        httpMonitorEvent(stream, HTTP_COUNTER_REQUESTS, 1);
+    }
+    return stream->state;
+}
+
+
+static void processHeaders(HttpQueue *q)
+{
+    HttpNet     *net;
+    HttpStream  *stream;
+    HttpRx      *rx;
+    HttpTx      *tx;
+    MprKey      *kp;
+    cchar       *hostname, *msg;
+    char        *cp, *key, *value, *tok;
+    int         keepAliveHeader;
+
+    net = q->net;
+    stream = q->stream;
+    rx = stream->rx;
+    tx = stream->tx;
+    keepAliveHeader = 0;
+
+    if (stream->error) {
+        return;
     }
 
     if (httpTracing(net)) {
@@ -16538,24 +16553,6 @@ static void processFirst(HttpQueue *q)
             httpLog(stream->trace, "rx.http", "headers", "@%s", httpTraceHeaders(q, stream->rx->headers));
         }
     }
-}
-
-
-static void processHeaders(HttpQueue *q)
-{
-    HttpNet     *net;
-    HttpStream  *stream;
-    HttpRx      *rx;
-    HttpTx      *tx;
-    MprKey      *kp;
-    char        *cp, *key, *value, *tok;
-    int         keepAliveHeader;
-
-    net = q->net;
-    stream = q->stream;
-    rx = stream->rx;
-    tx = stream->tx;
-    keepAliveHeader = 0;
 
     for (ITERATE_KEYS(rx->headers, kp)) {
         key = kp->key;
@@ -16852,27 +16849,6 @@ static void processHeaders(HttpQueue *q)
             break;
         }
     }
-    if (net->protocol == 0 && !keepAliveHeader) {
-        stream->keepAliveCount = 0;
-    }
-}
-
-
-/*
-    Called once the HTTP request/response headers have been parsed
-    Queue is the inputq.
- */
-static void processParsed(HttpQueue *q)
-{
-    HttpNet     *net;
-    HttpStream  *stream;
-    HttpRx      *rx;
-    cchar       *hostname;
-
-    net = q->net;
-    stream = q->stream;
-    rx = stream->rx;
-
     if (httpServerStream(stream)) {
         hostname = rx->hostHeader;
         if (schr(rx->hostHeader, ':')) {
@@ -16888,24 +16864,40 @@ static void processParsed(HttpQueue *q)
             if (rx->length >= stream->limits->rxBodySize && stream->limits->rxBodySize != HTTP_UNLIMITED) {
                 httpLimitError(stream, HTTP_ABORT | HTTP_CODE_REQUEST_TOO_LARGE,
                     "Request content length %lld bytes is too big. Limit %lld", rx->length, stream->limits->rxBodySize);
-                return;
             }
             if (!rx->streaming && rx->length >= stream->limits->rxFormSize && stream->limits->rxFormSize != HTTP_UNLIMITED) {
                 httpLimitError(stream, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
                     "Request form of %lld bytes is too big. Limit %lld", rx->length, stream->limits->rxFormSize);
-                /* continue */
             }
         }
         if (!rx->originalUri) {
             rx->originalUri = rx->uri;
         }
+    }
+    if (net->protocol == 0 && !keepAliveHeader) {
+        stream->keepAliveCount = 0;
+    }
+}
+
+
+/*
+    Called once the HTTP request/response headers have been parsed
+    Queue is the inputq.
+ */
+static int processParsed(HttpQueue *q)
+{
+    HttpStream  *stream;
+    HttpRx      *rx;
+
+    stream = q->stream;
+    rx = stream->rx;
+
+    if (stream->disconnect) {
+        return HTTP_STATE_READY;
+    }
+    if (httpServerStream(stream)) {
         parseUri(stream);
         httpAddQueryParams(stream);
-
-        if (stream->error) {
-            /* Cannot reliably continue with keep-alive as the headers have not been correctly parsed */
-            stream->keepAliveCount = 0;
-        }
         if (rx->streaming) {
             routeRequest(stream);
             httpStartHandler(stream);
@@ -16914,7 +16906,6 @@ static void processParsed(HttpQueue *q)
         } else {
             stream->readq->max = stream->limits->rxFormSize;
         }
-
     } else {
         /*
             Google does responses with a body and without a Content-Length like this:
@@ -16927,21 +16918,163 @@ static void processParsed(HttpQueue *q)
             rx->remainingContent = rx->redirect ? 0 : HTTP_UNLIMITED;
         }
     }
-
 #if ME_HTTP_WEB_SOCKETS
     if (httpIsClient(stream->net) && stream->upgraded && !stream->proxied && !httpVerifyWebSocketsHandshake(stream)) {
-        httpSetState(stream, HTTP_STATE_FINALIZED);
-        return;
+        return HTTP_STATE_FINALIZED;
     }
 #endif
-
-    httpSetState(stream, HTTP_STATE_CONTENT);
     if (rx->remainingContent == 0) {
-        if (!rx->eof) {
-            httpSetEof(stream);
-        }
+        httpSetEof(stream);
         httpAddEndInputPacket(stream, q);
         httpFinalizeInput(stream);
+        return HTTP_STATE_READY;
+    } else {
+        return HTTP_STATE_CONTENT;
+    }
+}
+
+
+PUBLIC void httpQueueHeadService(HttpQueue *q)
+{
+    HttpStream  *stream;
+
+    stream = q->stream;
+    if (stream->rx->eof) {
+        httpSetState(stream, HTTP_STATE_READY);
+    }
+    if (stream->rx->eof || !httpServerStream(stream)) {
+        HTTP_NOTIFY(stream, HTTP_EVENT_READABLE, 0);
+    }
+}
+
+
+/*
+    The Queue head stage accepts incoming body data and initiates routing for form requests
+ */
+PUBLIC int httpOpenQueueHead()
+{
+    HttpStage   *stage;
+
+    if ((stage = httpCreateStage("queueHead", 0, NULL)) == 0) {
+        return MPR_ERR_CANT_CREATE;
+    }
+    HTTP->queueHead = stage;
+    stage->flags |= HTTP_STAGE_QHEAD | HTTP_STAGE_INTERNAL;
+    stage->incomingService = httpQueueHeadService;
+    stage->incoming = NULL;
+    return 0;
+}
+
+
+/*
+    In the ready state after all content has been received.
+    If streaming, the request will have already been routed and the handler started.
+ */
+static int processReady(HttpQueue *q)
+{
+    HttpStream  *stream;
+    HttpRx      *rx;
+
+    stream = q->stream;
+    rx = stream->rx;
+
+    if (rx->eof) {
+        if (httpServerStream(stream)) {
+            if (httpAddBodyParams(stream) < 0) {
+                httpError(stream, HTTP_CODE_BAD_REQUEST, "Bad request parameters");
+            } else {
+                if (!rx->route) {
+                    httpRouteRequest(stream);
+                    httpCreatePipeline(stream);
+                    httpStartPipeline(stream);
+                    httpTransferPackets(stream->rxHead, stream->readq);
+                }
+                httpStartHandler(stream);
+            }
+        }
+    }
+    httpReadyHandler(stream);
+    if (httpClientStream(stream) && !stream->upgraded) {
+        httpFinalize(stream);
+    }
+    return HTTP_STATE_RUNNING;
+}
+
+
+static int processFinalized(HttpQueue *q)
+{
+    HttpStream  *stream;
+    HttpRx      *rx;
+    HttpTx      *tx;
+
+    stream = q->stream;
+    rx = stream->rx;
+    tx = stream->tx;
+
+#if ME_TRACE_MEM
+    mprDebug(1, "Request complete, status %d, error %d, connError %d, %s%s, memsize %.2f MB",
+        tx->status, stream->error, stream->net->error, rx->hostHeader, rx->uri, mprGetMem() / 1024 / 1024.0);
+#endif
+    if (httpServerStream(stream) && rx) {
+        httpMonitorEvent(stream, HTTP_COUNTER_NETWORK_IO, tx->bytesWritten);
+    }
+    if (httpServerStream(stream)) {
+        httpMonitorEvent(stream, HTTP_COUNTER_ACTIVE_REQUESTS, -1);
+    }
+    httpClosePipeline(stream);
+
+    if (tx->errorDocument && !smatch(tx->errorDocument, rx->uri)) {
+        return prepErrorDoc(q);
+    }
+    if (rx->session) {
+        httpWriteSession(stream);
+    }
+    if (stream->net->eof) {
+        if (!stream->errorMsg) {
+            stream->errorMsg = stream->sock->errorMsg ? stream->sock->errorMsg : sclone("Server close");
+        }
+        httpLog(stream->trace, "http.connection.close", "network", "msg:%s", stream->errorMsg);
+    }
+    measureRequest(q);
+
+    if (stream->net->protocol >= 2) {
+        return stream->state;
+    }
+    return HTTP_STATE_COMPLETE;
+}
+
+
+/*
+    This is done as a top level event incase triggered deep in the pipeline stack.
+ */
+static void processComplete(HttpStream *stream, MprEvent *event)
+{
+    HttpNet     *net;
+
+    net = stream->net;
+
+    if (stream->completed) {
+        return;
+    }
+    stream->completed = 1;
+
+    if (stream->http->requestCallback) {
+        (stream->http->requestCallback)(stream);
+    }
+    HTTP_NOTIFY(stream, HTTP_EVENT_DONE, 0);
+
+    if (net->protocol >= 2) {
+        httpDestroyStream(stream);
+
+    } else if (net->autoDestroy) {
+        if (stream->keepAliveCount <= 0) {
+            httpDisconnectStream(stream);
+            httpDestroyStream(stream);
+            httpEnableNetEvents(net);
+
+        } else if (httpIsServer(net)) {
+            mprCreateEvent(stream->dispatcher, "http", 0, httpResetServerStream, stream, 0);
+        }
     }
 }
 
@@ -16963,6 +17096,9 @@ static void routeRequest(HttpStream *stream)
 }
 
 
+/*
+    Invoke the WRITABLE notifier and the writable() callback.
+ */
 PUBLIC bool httpPumpOutput(HttpQueue *q)
 {
     HttpStream  *stream;
@@ -16972,6 +17108,8 @@ PUBLIC bool httpPumpOutput(HttpQueue *q)
 
     stream = q->stream;
     tx = stream->tx;
+
+    httpServiceNetQueues(q->net, 0);
 
     if (tx->started && !stream->net->writeBlocked) {
         wq = stream->writeq;
@@ -16983,125 +17121,6 @@ PUBLIC bool httpPumpOutput(HttpQueue *q)
             }
         }
         return (wq->count - count) ? 1 : 0;
-    }
-    return 0;
-}
-
-
-static bool processContent(HttpQueue *q)
-{
-    HttpStream  *stream;
-    HttpRx      *rx;
-
-    stream = q->stream;
-    rx = stream->rx;
-
-    if (rx->eof) {
-        if (httpServerStream(stream)) {
-            if (httpAddBodyParams(stream) < 0) {
-                httpError(stream, HTTP_CODE_BAD_REQUEST, "Bad request parameters");
-                return 1;
-            }
-            mapMethod(stream);
-            routeRequest(stream);
-            httpStartHandler(stream);
-        }
-        httpSetState(stream, HTTP_STATE_READY);
-    }
-    if (rx->eof || !httpServerStream(stream)) {
-        HTTP_NOTIFY(stream, HTTP_EVENT_READABLE, 0);
-    }
-    return httpPumpOutput(q) || rx->eof || stream->error;
-}
-
-
-/*
-    In the ready state after all content has been received
- */
-static void processReady(HttpQueue *q)
-{
-    HttpStream  *stream;
-
-    stream = q->stream;
-    httpReadyHandler(stream);
-    httpSetState(stream, HTTP_STATE_RUNNING);
-    if (httpClientStream(stream) && !stream->upgraded) {
-        httpFinalize(stream);
-    }
-}
-
-
-static bool processRunning(HttpQueue *q)
-{
-    HttpStream  *stream;
-    HttpTx      *tx;
-
-    stream = q->stream;
-    tx = stream->tx;
-
-    if (tx->finalized && tx->finalizedConnector) {
-        httpSetState(stream, HTTP_STATE_FINALIZED);
-        return 1;
-    }
-    return httpPumpOutput(q);
-}
-
-
-static void processFinalized(HttpQueue *q)
-{
-    HttpStream  *stream;
-    HttpRx      *rx;
-    HttpTx      *tx;
-
-    stream = q->stream;
-    rx = stream->rx;
-    tx = stream->tx;
-
-    tx->finalized = 1;
-    tx->finalizedOutput = 1;
-    tx->finalizedInput = 1;
-
-#if ME_TRACE_MEM
-    mprDebug(1, "Request complete, status %d, error %d, connError %d, %s%s, memsize %.2f MB",
-        tx->status, stream->error, stream->net->error, rx->hostHeader, rx->uri, mprGetMem() / 1024 / 1024.0);
-#endif
-    if (httpServerStream(stream) && rx) {
-        httpMonitorEvent(stream, HTTP_COUNTER_NETWORK_IO, tx->bytesWritten);
-    }
-    if (httpServerStream(stream) && stream->activeRequest) {
-        stream->activeRequest = 0;
-        httpMonitorEvent(stream, HTTP_COUNTER_ACTIVE_REQUESTS, -1);
-    }
-    measureRequest(q);
-
-    if (rx->session) {
-        httpWriteSession(stream);
-    }
-    httpClosePipeline(stream);
-
-    if (stream->net->eof) {
-        if (!stream->errorMsg) {
-            stream->errorMsg = stream->sock->errorMsg ? stream->sock->errorMsg : sclone("Server close");
-        }
-        httpLog(stream->trace, "http.connection.close", "network", "msg:%s", stream->errorMsg);
-    }
-    if (tx->errorDocument && !smatch(tx->errorDocument, rx->uri)) {
-        prepErrorDoc(q);
-    } else {
-        stream->complete = 1;
-        httpSetState(stream, HTTP_STATE_COMPLETE);
-    }
-}
-
-
-static bool processCompletion(HttpQueue *q)
-{
-    HttpStream  *stream;
-
-    stream = q->stream;
-    //  Can also use the notifier HTTP_EVENT_COMPLETE
-    if (stream->http->requestCallback) {
-        (stream->http->requestCallback)(stream);
     }
     return 0;
 }
@@ -17134,20 +17153,23 @@ static void measureRequest(HttpQueue *q)
 }
 
 
-static void prepErrorDoc(HttpQueue *q)
+static int prepErrorDoc(HttpQueue *q)
 {
     HttpStream  *stream;
     HttpRx      *rx;
     HttpTx      *tx;
+    int         state;
 
     stream = q->stream;
     rx = stream->rx;
     tx = stream->tx;
+
     if (!rx->headerPacket || stream->errorDoc) {
-        return;
+        return stream->state;
     }
     httpLog(stream->trace, "tx.http.errordoc", "context", "location:%s, status:%d", tx->errorDocument, tx->status);
 
+    httpMonitorEvent(stream, HTTP_COUNTER_ACTIVE_REQUESTS, -1);
     httpClosePipeline(stream);
     httpDiscardData(stream, HTTP_QUEUE_RX);
     httpDiscardData(stream, HTTP_QUEUE_TX);
@@ -17166,13 +17188,19 @@ static void prepErrorDoc(HttpQueue *q)
     stream->error = 0;
     stream->errorMsg = 0;
     stream->upgraded = 0;
-    stream->state = HTTP_STATE_PARSED;
     stream->errorDoc = 1;
     stream->keepAliveCount = 0;
+    stream->tx->finalized = 0;
+    stream->tx->finalizedOutput = 0;
+    stream->tx->finalizedInput = 0;
+    stream->tx->finalizedConnector = 0;
 
-    parseUri(stream);
-    routeRequest(stream);
-    httpStartHandler(stream);
+    stream->state = HTTP_STATE_PARSED;
+    stream->targetState = stream->state;
+
+    state = processParsed(stream->inputq);
+    httpQueueHeadService(stream->inputq);
+    return state;
 }
 
 
@@ -17180,23 +17208,6 @@ PUBLIC void httpSetMethod(HttpStream *stream, cchar *method)
 {
     stream->rx->method = sclone(method);
     httpParseMethod(stream);
-}
-
-
-static bool mapMethod(HttpStream *stream)
-{
-    HttpRx      *rx;
-    cchar       *method;
-
-    rx = stream->rx;
-    if (rx->flags & HTTP_POST && (method = httpGetParam(stream, "-http-method-", 0)) != 0 && !rx->route) {
-        if (!scaselessmatch(method, rx->method)) {
-            httpLog(stream->trace, "rx.http.mapMethod", "context", "originalMethod:%s, method:%s", rx->method, method);
-            httpSetMethod(stream, method);
-            return 1;
-        }
-    }
-    return 0;
 }
 
 
@@ -17337,7 +17348,7 @@ static void parseUri(HttpStream *stream)
 
     rx = stream->rx;
     if (httpSetUri(stream, rx->uri) < 0) {
-        httpBadRequestError(stream, HTTP_CODE_BAD_REQUEST, "Bad URL");
+        httpBadRequestError(stream, HTTP_CLOSE | HTTP_CODE_BAD_REQUEST, "Bad URL");
         rx->parsedUri = httpCreateUri("", 0);
 
     } else {
@@ -17352,7 +17363,7 @@ static void parseUri(HttpStream *stream)
         }
         if (mprParseSocketAddress(hostname, &up->host, NULL, NULL, 0) < 0 || up->host == 0 || *up->host == '\0') {
             if (!stream->error) {
-                httpBadRequestError(stream, HTTP_CODE_BAD_REQUEST, "Bad host");
+                httpBadRequestError(stream, HTTP_CLOSE | HTTP_CODE_BAD_REQUEST, "Bad host");
             }
         } else {
             up->port = stream->sock->listenSock->port;
@@ -17732,6 +17743,9 @@ PUBLIC HttpQueue *httpFindPreviousQueue(HttpQueue *q)
 {
     while (q->prevQ && q->prevQ->stage && q->prevQ != q) {
         q = q->prevQ;
+        if (q->stage->flags & HTTP_STAGE_QHEAD) {
+            break;
+        }
         if (q->service) {
             return q;
         }
@@ -17811,7 +17825,7 @@ PUBLIC void httpScheduleQueue(HttpQueue *q)
     head = q->net->serviceq;
 
     assert(q != head);
-    if (q->scheduleNext == q && !(q->flags & HTTP_QUEUE_SUSPENDED)) {
+    if (q->service && q->scheduleNext == q && !(q->flags & HTTP_QUEUE_SUSPENDED)) {
         q->scheduleNext = head;
         q->schedulePrev = head->schedulePrev;
         head->schedulePrev->scheduleNext = q;
@@ -18731,8 +18745,10 @@ PUBLIC void httpRouteRequest(HttpStream *stream)
 
     if (stream->error) {
         tx->handler = stream->http->passHandler;
+        if (!stream->host) {
+            stream->host = mprGetFirstItem(stream->net->endpoint->hosts);
+        }
         route = rx->route = stream->host->defaultRoute;
-
     } else {
         for (next = rewrites = 0; rewrites < ME_MAX_REWRITE; ) {
             if (next >= stream->host->routes->length) {
@@ -18771,8 +18787,8 @@ PUBLIC void httpRouteRequest(HttpStream *stream)
     if (rewrites >= ME_MAX_REWRITE) {
         httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "Too many request rewrites");
     }
-    if (tx->finalized) {
-        /* Pass handler can transmit the error */
+    if (tx->finalized || tx->pendingFinalize) {
+        /* Pass handler can transmit the message */
         tx->handler = stream->http->passHandler;
     }
     if (tx->handler->module) {
@@ -18944,7 +18960,7 @@ static int checkRoute(HttpStream *stream, HttpRoute *route)
     if ((rc = (*proc)(stream, route, 0)) != HTTP_ROUTE_OK) {
         return rc;
     }
-    if (tx->finalized) {
+    if (tx->finalized || tx->pendingFinalize) {
         tx->handler = stream->http->passHandler;
     } else if (tx->handler->rewrite) {
         rc = tx->handler->rewrite(stream);
@@ -22908,7 +22924,7 @@ static void incoming(HttpQueue *q, HttpPacket *packet)
     assert(q);
     assert(packet);
 
-    if (q->nextQ->put) {
+    if (q->nextQ->put && !(q->nextQ->flags & HTTP_STAGE_QHEAD)) {
         httpPutPacketToNext(q, packet);
     } else {
         /*
@@ -22917,13 +22933,13 @@ static void incoming(HttpQueue *q, HttpPacket *packet)
          */
         if (httpGetPacketLength(packet) > 0) {
             if (packet->flags & HTTP_PACKET_SOLO) {
-                httpPutForService(q, packet, HTTP_DELAY_SERVICE);
+                httpPutForService(q, packet, HTTP_SCHEDULE_QUEUE);
             } else {
-                httpJoinPacketForService(q, packet, HTTP_DELAY_SERVICE);
+                httpJoinPacketForService(q, packet, HTTP_SCHEDULE_QUEUE);
             }
         } else {
             /* Zero length packet means eof */
-            httpPutForService(q, packet, HTTP_DELAY_SERVICE);
+            httpPutForService(q, packet, HTTP_SCHEDULE_QUEUE);
         }
     }
 }
@@ -22933,7 +22949,7 @@ PUBLIC void httpDefaultIncoming(HttpQueue *q, HttpPacket *packet)
 {
     assert(q);
     assert(packet);
-    httpPutForService(q, packet, HTTP_DELAY_SERVICE);
+    httpPutForService(q, packet, HTTP_SCHEDULE_QUEUE);
 }
 
 
@@ -22989,6 +23005,16 @@ PUBLIC HttpStage *httpCloneStage(HttpStage *stage)
 PUBLIC HttpStage *httpCreateHandler(cchar *name, MprModule *module)
 {
     return httpCreateStage(name, HTTP_STAGE_HANDLER, module);
+}
+
+
+PUBLIC HttpStage *httpCreateClientHandler(cchar *name, MprModule *module)
+{
+    HttpStage   *stage;
+
+    stage = httpCreateStage(name, HTTP_STAGE_HANDLER, module);
+    stage->incomingService = httpQueueHeadService;
+    return stage;
 }
 
 
@@ -23114,7 +23140,7 @@ PUBLIC HttpStream *httpCreateStream(HttpNet *net, bool peerCreated)
     stream->rx = httpCreateRx(stream);
     stream->tx = httpCreateTx(stream, NULL);
 
-    q = stream->rxHead = httpCreateQueueHead(net, stream, "RxHead", HTTP_QUEUE_RX);
+    q = stream->rxHead = httpCreateQueue(net, stream, http->queueHead, HTTP_QUEUE_RX, NULL);
     q = httpCreateQueue(net, stream, http->tailFilter, HTTP_QUEUE_RX, q);
     if (net->protocol < 2) {
         q = httpCreateQueue(net, stream, http->chunkFilter, HTTP_QUEUE_RX, q);
@@ -23168,9 +23194,8 @@ PUBLIC void httpDestroyStream(HttpStream *stream)
         if (stream->tx) {
             httpClosePipeline(stream);
         }
-        if (stream->activeRequest) {
+        if (httpServerStream(stream)) {
             httpMonitorEvent(stream, HTTP_COUNTER_ACTIVE_REQUESTS, -1);
-            stream->activeRequest = 0;
         }
         if (!stream->peerCreated) {
             stream->net->ownStreams--;
@@ -23305,8 +23330,7 @@ static void commonPrep(HttpStream *stream)
     stream->state = 0;
     stream->h2State = 0;
     stream->authRequested = 0;
-    stream->complete = 0;
-    stream->done = 0;
+    stream->completed = 0;
 
     httpTraceQueues(stream);
     for (q = stream->txHead->nextQ; q != stream->txHead; q = next) {
@@ -23370,9 +23394,9 @@ PUBLIC void httpDisconnectStream(HttpStream *stream)
     stream->error++;
     if (tx) {
         tx->responded = 1;
-        tx->finalized = 1;
         tx->finalizedOutput = 1;
         tx->finalizedConnector = 1;
+        httpFinalize(stream);
     }
     if (rx && !rx->eof) {
         httpSetEof(stream);
@@ -23556,24 +23580,6 @@ PUBLIC void httpSetStreamContext(HttpStream *stream, void *context)
 PUBLIC void httpSetStreamHost(HttpStream *stream, void *host)
 {
     stream->host = host;
-}
-
-
-PUBLIC void httpSetState(HttpStream *stream, int targetState)
-{
-    int     state;
-
-    if (targetState == stream->state) {
-        return;
-    }
-    if (targetState < stream->state) {
-        /* Prevent regressions */
-        return;
-    }
-    for (state = stream->state + 1; state <= targetState; state++) {
-        stream->state = state;
-        HTTP_NOTIFY(stream, HTTP_EVENT_STATE, state);
-    }
 }
 
 
@@ -24152,9 +24158,9 @@ PUBLIC void httpSetTraceEventLevel(HttpTrace *trace, cchar *type, int level)
 }
 
 
-PUBLIC int httpGetTraceLevel()
+PUBLIC int httpGetTraceLevel(HttpTrace *trace)
 {
-    return HTTP->traceLevel;
+    return trace->level;
 }
 
 
@@ -24198,14 +24204,14 @@ PUBLIC void httpSetTraceFormatterName(HttpTrace *trace, cchar *name)
 }
 
 
-PUBLIC void httpSetTraceLevel(int level)
+PUBLIC void httpSetTraceLevel(HttpTrace *trace, int level)
 {
     if (level < 0) {
         level = 0;
     } else if (level > 10) {
         level = 10;
     }
-    HTTP->traceLevel = level;
+    trace->level = level;
 }
 
 
@@ -24226,7 +24232,7 @@ PUBLIC bool httpLogProc(HttpTrace *trace, cchar *event, cchar *type, int flags, 
     assert(type && *type);
 
     level = PTOI(mprLookupKey(trace->events, type));
-    if (level >= 0 && level <= HTTP->traceLevel) {
+    if (level >= 0 && level <= trace->level) {
         va_start(args, fmt);
         httpFormatTrace(trace, event, type, flags, NULL, 0, fmt, args);
         va_end(args);
@@ -24247,7 +24253,7 @@ PUBLIC bool httpLogPacket(HttpTrace *trace, cchar *event, cchar *type, int flags
         return 0;
     }
     level = PTOI(mprLookupKey(trace->events, type));
-    if (level > HTTP->traceLevel) { \
+    if (level > trace->level) { \
         return 0;
     }
     va_start(args, fmt);
@@ -24273,11 +24279,11 @@ PUBLIC bool httpLogData(HttpNet *net, HttpTrace *stream, cchar *event, cchar *ty
     if (!net && !stream) {
         return;
     }
-    if (http->traceLevel == 0) {
+    if (net->trace->level == 0) {
         return 0;
     }
     level = PTOI(mprLookupKey(stream->trace->events, type));
-    if (level > http->traceLevel) {
+    if (level > net->trace->elevel) {
         return 0;
     }
     va_start(args, fmt);
@@ -24709,7 +24715,7 @@ PUBLIC int httpStartTracing(cchar *traceSpec)
     trace = HTTP->trace;
     trace->flags = MPR_LOG_ANEW | MPR_LOG_CMDLINE;
     trace->path = stok(sclone(traceSpec), ":", &lspec);
-    HTTP->traceLevel = (int) stoi(lspec);
+    trace->level = (int) stoi(lspec);
     return httpOpenTraceLogFile(trace);
 }
 
@@ -24843,6 +24849,7 @@ PUBLIC cchar *httpMakePrintable(HttpTrace *trace, cchar *buf, bool *hex, ssize *
 
 /***************************** Forward Declarations ***************************/
 
+static void finalizeCheck(HttpStream *stream);
 static void manageTx(HttpTx *tx, int flags);
 
 /*********************************** Code *************************************/
@@ -25106,32 +25113,24 @@ PUBLIC void httpFinalizeConnector(HttpStream *stream)
 
     tx = stream->tx;
     tx->finalizedConnector = 1;
-    httpFinalizeOutput(stream);
+    finalizeCheck(stream);
 }
 
 
 /*
-    Finalize the request. This means the caller is totally completed with the request. They have sent all
-    output and have read all input. Further input can be discarded. Note that output may not yet have drained from
-    the socket and so the connection state will not be transitioned to FINALIIZED until that happens and all
-    remaining input has been dealt with.
+    This means the handler has processed all the input
  */
-PUBLIC void httpFinalize(HttpStream *stream)
+PUBLIC void httpFinalizeInput(HttpStream *stream)
 {
     HttpTx      *tx;
 
     tx = stream->tx;
-    if (!tx || tx->finalized) {
-        return;
+    if (tx && !tx->finalizedInput) {
+        tx->finalizedInput = 1;
+        httpSetState(stream, HTTP_STATE_READY);
+        finalizeCheck(stream);
     }
-    if (stream->rx->session) {
-        httpWriteSession(stream);
-    }
-    httpFinalizeInput(stream);
-    httpFinalizeOutput(stream);
-    tx->finalized = 1;
 }
-
 
 /*
     The handler has generated the entire transmit body. Note: the data may not yet have drained from
@@ -25152,28 +25151,40 @@ PUBLIC void httpFinalizeOutput(HttpStream *stream)
         tx->pendingFinalize = 1;
         return;
     }
-    if (tx->finalizedInput) {
-        httpFinalize(stream);
-    }
     httpPutPacket(stream->writeq, httpCreateEndPacket());
     httpScheduleQueue(stream->writeq);
     httpServiceNetQueues(stream->net, 0);
+
+    finalizeCheck(stream);
 }
 
 
 /*
-    This means the handler has processed all the input
+    Finalize both input and ouput. This means the caller is totally completed with the request. They have sent all
+    output and have read all input. Further input can be discarded. Note that output may not yet have drained from the socket.
  */
-PUBLIC void httpFinalizeInput(HttpStream *stream)
+PUBLIC void httpFinalize(HttpStream *stream)
+{
+    httpFinalizeOutput(stream);
+    httpFinalizeInput(stream);
+}
+
+
+static void finalizeCheck(HttpStream *stream)
 {
     HttpTx      *tx;
 
     tx = stream->tx;
-    if (tx && !tx->finalizedInput) {
-        tx->finalizedInput = 1;
-        if (tx->finalizedOutput) {
-            httpFinalize(stream);
+    if (!tx || tx->finalized) {
+        return;
+    }
+    if (tx->finalizedInput && tx->finalizedOutput && tx->finalizedConnector) {
+        if (stream->rx->session) {
+            httpWriteSession(stream);
+            stream->rx->session = 0;
         }
+        httpSetState(stream, HTTP_STATE_FINALIZED);
+        tx->finalized = 1;
     }
 }
 
@@ -25874,7 +25885,7 @@ typedef struct Upload {
     ssize           boundaryLen;        /* Length of boundary */
     int             contentState;       /* Input states */
     char            *clientFilename;    /* Current file filename (optional) */
-    char            *contentType;       /* Content type for next file */
+    char            *contentType;       /* Content type for next item */
     char            *tmpPath;           /* Current temp filename for upload data */
     char            *name;              /* Form field name keyword value */
 } Upload;
@@ -25887,6 +25898,7 @@ static void cleanUploadedFiles(HttpStream *stream);
 static void closeUpload(HttpQueue *q);
 static int createUploadFile(HttpStream *stream, Upload *up);
 static char *getBoundary(char *buf, ssize bufLen, char *boundary, ssize boundaryLen, bool *pureData);
+static char *getNextUploadToken(MprBuf *content);
 static cchar *getUploadDir(HttpStream *stream);
 static void incomingUpload(HttpQueue *q, HttpPacket *packet);
 static void manageHttpUploadFile(HttpUploadFile *file, int flags);
@@ -26023,7 +26035,7 @@ static void incomingUpload(HttpQueue *q, HttpPacket *packet)
     HttpRx      *rx;
     MprBuf      *content;
     Upload      *up;
-    char        *line, *nextTok;
+    char        *line;
     ssize       count;
     int         done, rc;
 
@@ -26045,6 +26057,7 @@ static void incomingUpload(HttpQueue *q, HttpPacket *packet)
             httpError(stream, HTTP_CODE_BAD_REQUEST, "Client supplied insufficient upload data");
         }
         httpPutPacketToNext(q, packet);
+        httpFinalizeInput(stream);
         return;
     }
 
@@ -26058,30 +26071,20 @@ static void incomingUpload(HttpQueue *q, HttpPacket *packet)
     content = packet->content;
     count = httpGetPacketLength(packet);
 
-    for (done = 0, line = 0; !done; ) {
+    for (done = 0; !done; ) {
         switch (up->contentState) {
         case HTTP_UPLOAD_BOUNDARY:
         case HTTP_UPLOAD_CONTENT_HEADER:
-            /*
-                Parse the next input line
-             */
-            line = mprGetBufStart(content);
-            if ((nextTok = memchr(line, '\n', mprGetBufLength(content))) == 0) {
+            if ((line = getNextUploadToken(content)) == 0) {
                 /* Incomplete line */
                 break;
             }
-            *nextTok++ = '\0';
-            mprAdjustBufStart(content, (int) (nextTok - line));
-            line = strim(line, "\r", MPR_TRIM_END);
-
             if (up->contentState == HTTP_UPLOAD_BOUNDARY) {
                 if (processUploadBoundary(q, line) < 0) {
                     done++;
                 }
-            } else {
-                if (processUploadHeader(q, line) < 0) {
-                    done++;
-                }
+            } else if (processUploadHeader(q, line) < 0) {
+                done++;
             }
             break;
 
@@ -26104,19 +26107,31 @@ static void incomingUpload(HttpQueue *q, HttpPacket *packet)
     q->count -= (count - httpGetPacketLength(packet));
     assert(q->count >= 0);
 
+    /*
+        Remove or compact the buffer. Often residual data after the boundary for the next block.
+     */
     if (httpGetPacketLength(packet) == 0) {
-        /*
-            Quicker to remove the buffer so the packets don't have to be joined the next time
-         */
         httpGetPacket(q);
-    } else {
-        /*
-            Compact the buffer to prevent memory growth. There is often residual data after the boundary for the next block.
-         */
-        if (packet != rx->headerPacket) {
-            mprCompactBuf(content);
-        }
+    } else if (packet != rx->headerPacket) {
+        mprCompactBuf(content);
     }
+}
+
+
+static char *getNextUploadToken(MprBuf *content)
+{
+    char    *line, *nextTok;
+    /*
+        Parse the next input line
+     */
+    line = mprGetBufStart(content);
+    if ((nextTok = memchr(line, '\n', mprGetBufLength(content))) == 0) {
+        /* Incomplete line */
+        return 0;
+    }
+    *nextTok++ = '\0';
+    mprAdjustBufStart(content, (int) (nextTok - line));
+    return strim(line, "\r", MPR_TRIM_END);
 }
 
 
@@ -26378,6 +26393,9 @@ static int processUploadData(HttpQueue *q)
         /*  Incomplete boundary. Return and get more data */
         return 0;
     }
+    /*
+        Expect a boundary at the end of the data
+     */
     bp = getBoundary(mprGetBufStart(content), size, up->boundary, up->boundaryLen, &pureData);
     if (bp == 0) {
         if (up->tmpPath) {
@@ -26393,8 +26411,15 @@ static int processUploadData(HttpQueue *q)
             }
             mprAdjustBufStart(content, dataLen);
         }
-        return -1;       /* Get more data */
+        /*
+            Can't see boundary to mark the end of the data. Return and get more data.
+         */
+        return -1;
     }
+
+    /*
+        Have a complete data part
+     */
     data = mprGetBufStart(content);
     dataLen = (bp) ? (bp - data) : mprGetBufLength(content);
 
@@ -26416,6 +26441,9 @@ static int processUploadData(HttpQueue *q)
             defineFileFields(q, up);
 
         } else {
+            if (packet == 0) {
+                packet = httpCreatePacket(ME_BUFSIZE);
+            }
             /*
                 Normal string form data variables
              */
@@ -26424,9 +26452,6 @@ static int processUploadData(HttpQueue *q)
             data = mprUriDecode(data);
             httpSetParam(stream, key, data);
 
-            if (packet == 0) {
-                packet = httpCreatePacket(ME_BUFSIZE);
-            }
             if (httpGetPacketLength(packet) > 0 || q->nextQ->count > 0) {
                 /*
                     Need to add back www-form-urlencoding separators so CGI/PHP can see normal POST body
@@ -28007,6 +28032,7 @@ PUBLIC int httpAddBodyParams(HttpStream *stream)
     HttpRx      *rx;
     HttpQueue   *q;
     MprBuf      *content;
+    cchar       *method;
 
     rx = stream->rx;
     q = stream->readq;
@@ -28025,6 +28051,13 @@ PUBLIC int httpAddBodyParams(HttpStream *stream)
             }
         }
         rx->flags |= HTTP_ADDED_BODY_PARAMS;
+
+        if (rx->flags & HTTP_POST && (method = httpGetParam(stream, "-http-method-", 0)) != 0 && !rx->route) {
+            if (!scaselessmatch(method, rx->method)) {
+                httpLog(stream->trace, "rx.http.mapMethod", "context", "originalMethod:%s, method:%s", rx->method, method);
+                httpSetMethod(stream, method);
+            }
+        }
     }
     return 0;
 }
@@ -28282,7 +28315,7 @@ static void webSockTimeout(HttpStream *stream);
 static void traceErrorProc(HttpStream *stream, cchar *fmt, ...);
 
 #define traceError(stream, ...) \
-    if (stream->http->traceLevel > 0 && PTOI(mprLookupKey(stream->trace->events, "error")) <= stream->http->traceLevel) { \
+    if (stream->trace->level > 0 && PTOI(mprLookupKey(stream->trace->events, "error")) <= stream->trace->level) { \
         traceErrorProc(stream, __VA_ARGS__); \
     } else
 
