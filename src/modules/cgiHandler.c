@@ -177,6 +177,7 @@ static void startCgi(HttpQueue *q)
      */
     varCount = mprGetHashLength(rx->headers) + mprGetHashLength(rx->svars) + mprGetJsonLength(rx->params);
     if ((envv = mprAlloc((varCount + 1) * sizeof(char*))) != 0) {
+        //  OPTIONAL
         count = copyParams(stream, envv, 0, rx->params, route->envPrefix);
         count = copyVars(stream, envv, count, rx->svars, "");
         count = copyVars(stream, envv, count, rx->headers, "HTTP_");
@@ -406,12 +407,11 @@ static void cgiCallback(MprCmd *cmd, int channel, void *data)
     if (cmd->complete || cgi->location) {
         cgi->location = 0;
         httpFinalize(stream);
-        mprCreateEvent(stream->dispatcher, "cgiComplete", 0, httpIOEvent, stream->net, 0);
-        return;
+    } else {
+        suspended = httpIsQueueSuspended(stream->writeq);
+        assert(!suspended || stream->net->writeBlocked);
+        mprEnableCmdOutputEvents(cmd, !suspended);
     }
-    suspended = httpIsQueueSuspended(stream->writeq);
-    assert(!suspended || stream->net->writeBlocked);
-    mprEnableCmdOutputEvents(cmd, !suspended);
     mprCreateEvent(stream->dispatcher, "cgi", 0, httpIOEvent, stream->net, 0);
 }
 
