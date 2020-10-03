@@ -96,7 +96,14 @@ int main(int argc, char **argv, char **envp)
     originalArgv = argv;
     memset(&states, 0, sizeof(states));
 
-    FCGX_Init();
+    for (i = 1; i < argc; i++) {
+        if (argv[i][0] != '-') {
+            close(0);
+            FCGX_OpenSocket(":9990", 5);
+        }
+    }
+    FCGX_IsCGI();
+
     for (i = 1; i < MAX_THREADS; i++) {
         pthread_create(&ids[i], NULL, (void*) worker, (void*) &states[i]);
     }
@@ -111,18 +118,14 @@ static void *worker(State *state)
     char            *method;
     int             l, i, rc;
 
-fprintf(stderr, "@@ INIT\n");
     FCGX_InitRequest(&request, 0, 0);
 
     while (1) {
         memset((void*) state, 0, sizeof(State));
         state->request = &request;
 
-fprintf(stderr, "@@ WAITING FOR CONNECTION fd %d\n", request.ipcFd);
         pthread_mutex_lock(&accept_mutex);
-fprintf(stderr, "@@ INSIDE MUTEX\n");
         rc = FCGX_Accept_r(state->request);
-fprintf(stderr, "@@ ACCEPT %d fd %d\n", request.keepConnection, request.ipcFd);
         pthread_mutex_unlock(&accept_mutex);
 
         if (rc < 0) {
@@ -216,11 +219,8 @@ fprintf(stderr, "@@ ACCEPT %d fd %d\n", request.keepConnection, request.ipcFd);
             }
             FCGX_FPrintF(request.out, "</BODY></HTML>\r\n");
         }
-fprintf(stderr, "@@ FINALIZE keep connection %d\n", state->request->keepConnection);
         FCGX_Finish_r(&request);
-fprintf(stderr, "@@ FINISH IPC fd %d\n", state->request->ipcFd);
     }
-fprintf(stderr, "@@ WORKER EXITING\n");
     return NULL;
 }
 
