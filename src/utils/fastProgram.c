@@ -39,7 +39,7 @@
 /*********************************** Locals ***********************************/
 
 #define MAX_ARGV    64
-#define MAX_THREADS 2
+#define MAX_THREADS 1
 
 typedef struct State {
     char         *argvList[MAX_ARGV];
@@ -111,14 +111,18 @@ static void *worker(State *state)
     char            *method;
     int             l, i, rc;
 
+fprintf(stderr, "@@ INIT\n");
     FCGX_InitRequest(&request, 0, 0);
 
     while (1) {
         memset((void*) state, 0, sizeof(State));
         state->request = &request;
 
+fprintf(stderr, "@@ WAITING FOR CONNECTION fd %d\n", request.ipcFd);
         pthread_mutex_lock(&accept_mutex);
+fprintf(stderr, "@@ INSIDE MUTEX\n");
         rc = FCGX_Accept_r(state->request);
+fprintf(stderr, "@@ ACCEPT %d fd %d\n", request.keepConnection, request.ipcFd);
         pthread_mutex_unlock(&accept_mutex);
 
         if (rc < 0) {
@@ -212,8 +216,11 @@ static void *worker(State *state)
             }
             FCGX_FPrintF(request.out, "</BODY></HTML>\r\n");
         }
+fprintf(stderr, "@@ FINALIZE keep connection %d\n", state->request->keepConnection);
         FCGX_Finish_r(&request);
+fprintf(stderr, "@@ FINISH IPC fd %d\n", state->request->ipcFd);
     }
+fprintf(stderr, "@@ WORKER EXITING\n");
     return NULL;
 }
 
