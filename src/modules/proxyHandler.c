@@ -37,7 +37,7 @@
 #define PROXY_Q_SIZE             ((PROXY_PACKET_SIZE + 65535 + 8) * 2)
 
 #ifndef PROXY_WAIT_TIMEOUT
-#define PROXY_WAIT_TIMEOUT       (30 * TPS)  //  Time to wait for a proxy
+#define PROXY_WAIT_TIMEOUT       (10 * TPS)  //  Time to wait for a proxy
 #endif
 
 #ifndef PROXY_CONNECT_TIMEOUT
@@ -232,7 +232,6 @@ static void proxyCloseRequest(HttpQueue *q)
     Proxy           *proxy;
     ProxyRequest    *req;
     ProxyApp        *app;
-    cchar           *msg;
 
     req = q->queueData;
     proxy = req->proxy;
@@ -242,21 +241,22 @@ static void proxyCloseRequest(HttpQueue *q)
 
     lock(proxy);
     if (--app->inUse <= 0) {
-        if (mprRemoveItem(proxy->apps, app) < 0) {
-            httpLogProc(proxy->trace, "proxy", "error", 0, "msg:Cannot find proxy app in list");
-        }
+#if KEEP
         if (app->destroy || (proxy->maxRequests < MAXINT64 && app->nextID >= proxy->maxRequests) ||
                 (mprGetListLength(proxy->apps) + mprGetListLength(proxy->idleApps) >= proxy->minApps)) {
             msg = "Destroy Proxy app";
             killProxyApp(app);
-        } else {
-            msg = "Release Proxy app";
-            app->lastActive = mprGetTicks();
-            mprAddItem(proxy->idleApps, app);
         }
+#endif
+        if (mprRemoveItem(proxy->apps, app) < 0) {
+            httpLogProc(proxy->trace, "proxy", "error", 0, "msg:Cannot find proxy app in list");
+        }
+        app->lastActive = mprGetTicks();
+        mprAddItem(proxy->idleApps, app);
+
         httpLogProc(proxy->trace, "proxy", "context", 0,
-            "msg:%s, pid:%d, idle:%d, active:%d, id:%lld, maxRequests:%lld, destroy:%d, nextId:%lld",
-            msg, app->pid, mprGetListLength(proxy->idleApps), mprGetListLength(proxy->apps),
+            "msg:Release proxy app, pid:%d, idle:%d, active:%d, id:%lld, maxRequests:%lld, destroy:%d, nextId:%lld",
+            app->pid, mprGetListLength(proxy->idleApps), mprGetListLength(proxy->apps),
             app->nextID, proxy->maxRequests, app->destroy, app->nextID);
         mprSignalCond(proxy->cond);
     }
@@ -338,7 +338,6 @@ static void terminateIdleProxyApps(Proxy *proxy)
 
     lock(proxy);
     count = mprGetListLength(proxy->apps) + mprGetListLength(proxy->idleApps);
-
     for (ITERATE_ITEMS(proxy->idleApps, app, next)) {
         if (app->pid && ((now - app->lastActive) > proxy->proxyTimeout)) {
             if (count-- > proxy->minApps) {
@@ -694,9 +693,6 @@ static ProxyApp *getProxyApp(Proxy *proxy, HttpStream *stream)
             if (app) {
                 break;
             }
-            /*
-                Wait for a proxy to become available
-             */
             unlock(proxy);
             mprWaitForCond(proxy->cond, TPS);
             lock(proxy);
