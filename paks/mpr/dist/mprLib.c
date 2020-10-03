@@ -15549,8 +15549,10 @@ PUBLIC void *mprPopItem(MprList *lp)
     if (lp->length > 0) {
         lock(lp);
         index = lp->length - 1;
-        item = mprGetItem(lp, index);
-        mprRemoveItemAtPos(lp, index);
+        if (index >= 0) {
+            item = mprGetItem(lp, index);
+            mprRemoveItemAtPos(lp, index);
+        }
         unlock(lp);
     }
     return item;
@@ -22546,8 +22548,6 @@ static int connectSocket(MprSocket *sp, cchar *ip, int port, int initialFlags)
     datagram = sp->flags & MPR_SOCKET_DATAGRAM;
 
     if (mprGetSocketInfo(ip, port, &family, &protocol, &addr, &addrlen) < 0) {
-        closesocket(sp->fd);
-        sp->fd = INVALID_SOCKET;
         unlock(sp);
         return MPR_ERR_CANT_ACCESS;
     }
