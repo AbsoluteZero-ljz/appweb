@@ -2145,7 +2145,7 @@ static void formLogin(HttpStream *stream)
     if (stream->rx->route->auth && stream->rx->route->auth->loginPage) {
         httpRedirect(stream, HTTP_CODE_MOVED_TEMPORARILY, stream->rx->route->auth->loginPage);
     } else {
-        httpError(stream, HTTP_CODE_UNAUTHORIZED, "Access Denied. Login required");
+        httpError(stream, HTTP_CODE_UNAUTHORIZED, "Access denied, login required");
     }
 }
 
@@ -2244,7 +2244,7 @@ PUBLIC void httpBasicLogin(HttpStream *stream)
         httpRedirect(stream, HTTP_CODE_MOVED_TEMPORARILY, auth->loginPage);
     } else {
         httpSetHeader(stream, "WWW-Authenticate", "Basic realm=\"%s\"", auth->realm);
-        httpError(stream, HTTP_CODE_UNAUTHORIZED, "Access Denied. Login required");
+        httpError(stream, HTTP_CODE_UNAUTHORIZED, "Access denied, login required");
         httpLog(stream->trace, "auth.basic.error", "error", "msg:Access denied. Login required");
     }
 }
@@ -6103,7 +6103,7 @@ PUBLIC void httpDigestLogin(HttpStream *stream)
                 auth->realm, "/", nonce, opaque);
         }
         httpSetContentType(stream, "text/plain");
-        httpError(stream, HTTP_CODE_UNAUTHORIZED, "Access Denied. Login required");
+        httpError(stream, HTTP_CODE_UNAUTHORIZED, "Access denied, login required");
     }
 }
 
@@ -14616,6 +14616,10 @@ PUBLIC void httpIOEvent(HttpNet *net, MprEvent *event)
         httpEnableNetEvents(net);
     }
     net->active = 0;
+
+    if (mprNeedYield()) {
+        mprYield(0);
+    }
 }
 
 
@@ -22546,24 +22550,27 @@ static void manageSession(HttpSession *sp, int flags)
 PUBLIC HttpSession *httpGetSession(HttpStream *stream, int create)
 {
     Http        *http;
+    HttpNet     *net;
     HttpRx      *rx;
     HttpRoute   *route;
     MprTicks    lifespan;
     cchar       *cookie, *data, *id, *url;
     static int  seqno = 0;
-    int         flags, thisSeqno, activeSessions;
+    int         flags, thisSeqno, activeSessions, addressSeqno;
 
     assert(stream);
+    net = stream->net;
     rx = stream->rx;
     route = rx->route;
     http = stream->http;
     assert(rx);
 
+    addressSeqno = net->address ? net->address->seqno : 0;
     if (!rx->session) {
         if ((id = httpGetSessionID(stream)) != 0) {
             if ((data = mprReadCache(stream->http->sessionCache, id, 0, 0)) != 0) {
                 rx->session = allocSessionObj(stream, id, data);
-                rx->traceId = sfmt("%d-%d-%llu-%d", stream->net->address->seqno, rx->session->seqno, stream->net->seqno, rx->seqno);
+                rx->traceId = sfmt("%d-%d-%llu-%d", seqno, rx->session->seqno, stream->net->seqno, rx->seqno);
             }
         }
         if (!rx->session && create) {
@@ -22583,7 +22590,7 @@ PUBLIC HttpSession *httpGetSession(HttpStream *stream, int create)
             unlock(http);
 
             rx->session = allocSessionObj(stream, id, NULL);
-            rx->traceId = sfmt("%d-%d-%llu-%d", stream->net->address->seqno, rx->session->seqno, stream->net->seqno, rx->seqno);
+            rx->traceId = sfmt("%d-%d-%llu-%d", addressSeqno, rx->session->seqno, stream->net->seqno, rx->seqno);
             flags = (route->flags & HTTP_ROUTE_VISIBLE_SESSION) ? 0 : HTTP_COOKIE_HTTP;
             if (stream->secure) {
                 flags |= HTTP_COOKIE_SECURE;
