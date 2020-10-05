@@ -1110,7 +1110,7 @@ typedef struct Http {
     HttpListenCallback   listenCallback;    /**< Invoked when creating listeners */
     HttpRedirectCallback redirectCallback;  /**< Redirect callback */
     HttpRequestCallback  requestCallback;   /**< Request completion callback */
-    HttpNetCallback      netCallback;       /**< Network event callback */
+    HttpNetCallback      netCallback;       /**< Default network event callback */
 
 } Http;
 
@@ -3220,6 +3220,7 @@ typedef struct HttpNet {
     MprEvent        *workerEvent;           /**< Event for running connection via a worker thread (used by ejs) */
     MprTicks        lastActivity;           /**< Last activity on the connection */
     MprOff          bytesWritten;           /**< Total bytes written */
+    HttpNetCallback callback;               /**< Network event callback */
 
     void            *context;               /**< Embedding context (EjsRequest) */
     void            *data;                  /**< Custom data */
@@ -3491,12 +3492,14 @@ PUBLIC void httpSetAsync(HttpNet *net, bool async);
 /**
     Define a network event callback
     @description This callback is invoked when networks closed or receive a peer disconnect.
+    @param net If defined, set the callback on the net object. Otherwise update the default net callback for
+        future network objects.
     @param callback The callback is invoked with the signature: void callback(HttpNet *net).
     @param event HTTP_NET event indicating error or eof.
     @ingroup HttpNet
     @stability Evolving
  */
-PUBLIC void httpSetNetCallback(HttpNetCallback callback);
+PUBLIC void httpSetNetCallback(HttpNet *net, HttpNetCallback callback);
 
 /**
     Set the network context object

@@ -13936,6 +13936,7 @@ PUBLIC HttpNet *httpCreateNet(MprDispatcher *dispatcher, HttpEndpoint *endpoint,
         return 0;
     }
     net->http = http;
+    net->callback = http->netCallback;
     net->endpoint = endpoint;
     net->lastActivity = http->now = mprGetTicks();
     net->ioCallback = httpIOEvent;
@@ -14014,8 +14015,8 @@ PUBLIC void httpDestroyNet(HttpNet *net)
     HttpStream  *stream;
     int         next;
 
-    if (net->http->netCallback) {
-        net->http->netCallback(net, HTTP_NET_DESTROY);
+    if (net->callback) {
+        net->callback(net, HTTP_NET_DESTROY);
     }
     if (!net->destroyed && !net->borrowed) {
         if (httpIsServer(net)) {
@@ -14114,7 +14115,7 @@ PUBLIC int httpConnectNet(HttpNet *net, cchar *ip, int port, MprSsl *ssl)
         return MPR_ERR_CANT_ALLOCATE;
     }
     net->error = 0;
-    if (mprConnectSocket(sp, ip, port, MPR_SOCKET_NODELAY) < 0) {
+    if (mprConnectSocket(sp, ip, port, MPR_SOCKET_REUSE_PORT) < 0) {
         return MPR_ERR_CANT_CONNECT;
     }
     net->sock = sp;
@@ -14125,8 +14126,8 @@ PUBLIC int httpConnectNet(HttpNet *net, cchar *ip, int port, MprSsl *ssl)
         secureNet(net, ssl, ip);
     }
     httpLog(net->trace, "tx.net.peer", "context", "peer:%s:%d", net->ip, net->port);
-    if (net->http->netCallback) {
-        (net->http->netCallback)(net, HTTP_NET_CONNECT);
+    if (net->callback) {
+        (net->callback)(net, HTTP_NET_CONNECT);
     }
     return 0;
 }
@@ -14269,9 +14270,11 @@ PUBLIC void httpSetIOCallback(HttpNet *net, HttpIOCallback fn)
 }
 
 
-PUBLIC void httpSetNetCallback(HttpNetCallback callback)
+PUBLIC void httpSetNetCallback(HttpNet *net, HttpNetCallback callback)
 {
-    if (HTTP) {
+    if (net) {
+        net->callback = callback;
+    } else if (HTTP) {
         HTTP->netCallback = callback;
     }
 }
@@ -14395,8 +14398,8 @@ PUBLIC cchar *httpGetProtocol(HttpNet *net)
 PUBLIC void httpSetNetEof(HttpNet *net)
 {
     net->eof = 1;
-    if (net->http->netCallback) {
-        (net->http->netCallback)(net, HTTP_NET_EOF);
+    if (net->callback) {
+        (net->callback)(net, HTTP_NET_EOF);
     }
 }
 
@@ -14405,8 +14408,8 @@ PUBLIC void httpSetNetError(HttpNet *net)
 {
     net->eof = 1;
     net->error = 1;
-    if (net->http->netCallback) {
-        (net->http->netCallback)(net, HTTP_NET_ERROR);
+    if (net->callback) {
+        (net->callback)(net, HTTP_NET_ERROR);
     }
 }
 
@@ -14714,8 +14717,8 @@ static void netOutgoingService(HttpQueue *q)
             } else {
                 httpNetError(net, "netConnector: Cannot write. errno %d", errCode);
             }
-            httpSetNetError(net);
             freeNetPackets(q, MAXINT);
+            httpEnableNetEvents(net);
             break;
 
         } else if (written > 0) {
@@ -14985,24 +14988,29 @@ static void resumeEvents(HttpNet *net, MprEvent *event)
 }
 
 
+/*
+    Get the event mask to enable events.
+    Important that this work for networks with net->error set.
+ */
 PUBLIC int httpGetNetEventMask(HttpNet *net)
 {
     MprSocket   *sock;
     HttpStream  *stream;
     int         eventMask;
 
-    if (net->eof || (sock = net->sock) == 0) {
+    if ((sock = net->sock) == 0) {
         return 0;
     }
     eventMask = 0;
 
-    if (!mprSocketHandshaking(sock)) {
-        if (httpQueuesNeedService(net) || mprSocketHasBufferedWrite(sock) || (net->socketq->count + net->socketq->ioCount) > 0) {
+    if (!mprSocketHandshaking(sock) && !(net->error || net->eof)) {
+        if (httpQueuesNeedService(net) || mprSocketHasBufferedWrite(sock) ||
+                (net->socketq->count + net->socketq->ioCount) > 0) {
             /* Must wait to write until handshaking is complete */
             eventMask |= MPR_WRITABLE;
         }
     }
-    if (mprSocketHasBufferedRead(sock) || mprSocketHandshaking(sock) || !net->inputq) {
+    if (mprSocketHasBufferedRead(sock) || mprSocketHandshaking(sock) || !net->inputq || net->error) {
         eventMask |= MPR_READABLE;
 
     } else if (net->inputq->count < net->inputq->max) {
@@ -15021,9 +15029,12 @@ PUBLIC int httpGetNetEventMask(HttpNet *net)
 }
 
 
+/*
+    Important that this work for networks with net->error set.
+ */
 PUBLIC void httpEnableNetEvents(HttpNet *net)
 {
-    if (mprShouldAbortRequests() || net->destroyed || net->borrowed || net->error || netBanned(net)) {
+    if (mprShouldAbortRequests() || net->destroyed || net->borrowed || netBanned(net)) {
         return;
     }
     /*
