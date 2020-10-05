@@ -322,9 +322,10 @@ static Proxy *allocProxy(HttpRoute *route)
     proxy->maxApps = PROXY_MAX_PROXIES;
     proxy->ip = sclone("127.0.0.1");
     proxy->port = 0;
-    proxy->protocol = -1;
+    proxy->protocol = 1;
     proxy->proxyTimeout = PROXY_PROXY_TIMEOUT;
     proxy->ssl = NULL;
+    proxy->limits = route->limits;
     proxy->trace = httpCreateTrace(route->trace);
     proxy->timer = mprCreateTimerEvent(NULL, "proxy-watchdog", PROXY_WATCHDOG_TIMEOUT,
         proxyMaintenance, proxy, MPR_EVENT_QUICK);
@@ -571,6 +572,12 @@ static void proxyReadResponse(HttpQueue *q)
     //  Stream for the client
     stream = req->stream;
     for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
+        /*
+            Handle case of bad proxy sending output that is unexpected
+         */
+        if (stream->tx->finalizedOutput || stream->state < HTTP_STATE_PARSED || stream->state >= HTTP_STATE_FINALIZED) {
+            continue;
+        }
         if (!httpWillQueueAcceptPacket(q, stream->writeq, packet)) {
             httpPutBackPacket(q, packet);
             return;
@@ -1061,11 +1068,8 @@ static int proxyCloseConfigDirective(MaState *state, cchar *key, cchar *value)
         /*
             Extract SSL and limit configuration
          */
-         if (proxy->protocol != 1) {
+         if (state->route->ssl) {
              proxy->ssl = state->route->ssl;
-         }
-         if (proxy->protocol < 0) {
-             proxy->protocol = 1;
          }
          proxy->limits = state->route->limits;
     }

@@ -7915,7 +7915,7 @@ static void outgoingFileService(HttpQueue *q)
             httpServiceNetQueues(stream->net, 0);
         }
     }
-    if (!tx->finalized && tx->finalizedOutput && (tx->finalizedInput || !(rx->flags & HTTP_PUT))) {
+    if (!tx->finalized && tx->finalizedOutput && tx->finalizedInput) {
         httpFinalize(stream);
     }
 }
@@ -23348,7 +23348,6 @@ static void commonPrep(HttpStream *stream)
     stream->lastActivity = stream->http->now;
     stream->error = 0;
     stream->errorMsg = 0;
-    stream->state = 0;
     stream->h2State = 0;
     stream->authRequested = 0;
     stream->completed = 0;
@@ -23373,13 +23372,14 @@ static void commonPrep(HttpStream *stream)
         }
     }
     stream->readq = stream->rxHead;
-    httpTraceQueues(stream);
+    pickStreamNumber(stream);
 
+    httpTraceQueues(stream);
     httpDiscardData(stream, HTTP_QUEUE_TX);
     httpDiscardData(stream, HTTP_QUEUE_RX);
-
+    
+    stream->state = 0;
     httpSetState(stream, HTTP_STATE_BEGIN);
-    pickStreamNumber(stream);
 }
 
 
