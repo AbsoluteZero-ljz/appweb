@@ -8052,6 +8052,7 @@ typedef struct HttpEndpoint {
     int             port;                   /**< Listen port */
     int             async;                  /**< Listening is in async mode (non-blocking) */
     int             flags;                  /**< Endpoint control flags */
+    bool            multiple: 1;            /**< Allow multiple binding on the endpoint */
     void            *context;               /**< Embedding context */
     HttpLimits      *limits;                /**< Alias for first host, default route resource limits */
     MprSocket       *sock;                  /**< Listening socket */

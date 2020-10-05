@@ -7012,7 +7012,7 @@ PUBLIC int httpStartEndpoint(HttpEndpoint *endpoint)
 {
     HttpHost    *host;
     cchar       *proto, *ip;
-    int         next;
+    int         flags, next;
 
     if (!validateEndpoint(endpoint)) {
         return MPR_ERR_BAD_ARGS;
@@ -7023,8 +7023,11 @@ PUBLIC int httpStartEndpoint(HttpEndpoint *endpoint)
     if ((endpoint->sock = mprCreateSocket()) == 0) {
         return MPR_ERR_MEMORY;
     }
-    if (mprListenOnSocket(endpoint->sock, endpoint->ip, endpoint->port,
-                MPR_SOCKET_NODELAY | MPR_SOCKET_THREAD) == SOCKET_ERROR) {
+    flags = MPR_SOCKET_NODELAY | MPR_SOCKET_THREAD;
+    if (endpoint->multiple) {
+        flags |= MPR_SOCKET_REUSE_PORT;
+    }
+    if (mprListenOnSocket(endpoint->sock, endpoint->ip, endpoint->port, flags) == SOCKET_ERROR) {
         if (mprGetError() == EADDRINUSE) {
             mprLog("error http", 0, "Cannot open a socket on %s:%d, socket already bound.",
                 *endpoint->ip ? endpoint->ip : "*", endpoint->port);

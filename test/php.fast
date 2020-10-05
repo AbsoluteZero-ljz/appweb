@@ -6,7 +6,7 @@
 #
 #   Number of child PHP processes to spawn (by PHP) in addition to the PHP main.
 #
-export PHP_FCGI_CHILDREN=0
+export PHP_FCGI_CHILDREN=2
 
 #
 #   Limit of requests before a PHP instance exits (0 is unlimited, default is 500)

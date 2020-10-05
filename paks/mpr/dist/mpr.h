@@ -7613,6 +7613,7 @@ PUBLIC void mprSetSocketPrebindCallback(MprSocketPrebind callback);
 #define MPR_SOCKET_HANDSHAKING      0x8000  /**< Doing an SSL handshake */
 #define MPR_SOCKET_CERT_ERROR       0x10000 /**< Error when validating peer certificate */
 #define MPR_SOCKET_ERROR            0x20000 /**< Hard error (not just eof) */
+#define MPR_SOCKET_REUSE_PORT       0x40000 /**< Set SO_REUSEPORT option */
 
 /**
     Socket Service

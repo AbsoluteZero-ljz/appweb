@@ -1495,9 +1495,10 @@ static int limitWorkersDirective(MaState *state, cchar *key, cchar *value)
 
 
 /*
-    Listen ip:port      Listens only on the specified interface
-    Listen ip           Listens only on the specified interface with the default port
-    Listen port         Listens on both IPv4 and IPv6
+    Listen ip:port          Listens only on the specified interface
+    Listen ip               Listens only on the specified interface with the default port
+    Listen port             Listens on both IPv4 and IPv6
+    Listen port [multiple]  Allow multiple binding on the same port
 
     Where ip may be "::::::" for ipv6 addresses or may be enclosed in "[::]" if appending a port.
     Can provide http:// and https:// prefixes.
@@ -1506,10 +1507,11 @@ static int listenDirective(MaState *state, cchar *key, cchar *value)
 {
     HttpEndpoint    *endpoint, *dual;
     HttpHost        *host;
-    cchar           *ip, *address;
+    cchar           *ip, *address, *multiple;
     int             port;
 
-    if (!maTokenize(state, value, "%S", &address)) {
+    multiple = address = 0;
+    if (!maTokenize(state, value, "%S ?S", &address, &multiple)) {
         return MPR_ERR_BAD_SYNTAX;
     }
     if (mprParseSocketAddress(address, &ip, &port, NULL, 80) < 0) {
@@ -1522,6 +1524,9 @@ static int listenDirective(MaState *state, cchar *key, cchar *value)
     }
     host = state->host;
     endpoint = httpCreateEndpoint(ip, port, NULL);
+    if (smatch(multiple, "multiple")) {
+        endpoint->multiple = 1;
+    }
     if (!host->defaultEndpoint) {
         httpSetHostDefaultEndpoint(host, endpoint);
     }
@@ -1543,6 +1548,7 @@ static int listenDirective(MaState *state, cchar *key, cchar *value)
     ListenSecure ip:port
     ListenSecure ip
     ListenSecure port
+    ListenSecure port [multiple]
 
     Where ip may be "::::::" for ipv6 addresses or may be enclosed in "[]" if appending a port.
  */
@@ -1551,10 +1557,11 @@ static int listenSecureDirective(MaState *state, cchar *key, cchar *value)
 #if ME_COM_SSL
     HttpEndpoint    *endpoint, *dual;
     HttpHost        *host;
-    cchar           *address, *ip;
+    cchar           *address, *ip, *multiple;
     int             port;
 
-    if (!maTokenize(state, value, "%S", &address)) {
+    address = multiple = 0;
+    if (!maTokenize(state, value, "%S ?S", &address, &multiple)) {
         return MPR_ERR_BAD_SYNTAX;
     }
     if (mprParseSocketAddress(address, &ip, &port, NULL, 443) < 0) {
@@ -1566,6 +1573,9 @@ static int listenSecureDirective(MaState *state, cchar *key, cchar *value)
         return -1;
     }
     endpoint = httpCreateEndpoint(ip, port, NULL);
+    if (smatch(multiple, "multiple")) {
+        endpoint->multiple = 1;
+    }
     if (state->route->ssl == 0) {
         if (state->route->parent && state->route->parent->ssl) {
             state->route->ssl = mprCloneSsl(state->route->parent->ssl);
