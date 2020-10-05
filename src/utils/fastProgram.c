@@ -39,7 +39,7 @@
 /*********************************** Locals ***********************************/
 
 #define MAX_ARGV    64
-#define MAX_THREADS 1
+#define MAX_THREADS 16
 
 typedef struct State {
     char         *argvList[MAX_ARGV];

@@ -22315,7 +22315,7 @@ PUBLIC Socket mprListenOnSocket(MprSocket *sp, cchar *ip, int port, int flags)
     sp->fd = INVALID_SOCKET;
     sp->port = port;
     sp->flags = (flags & (MPR_SOCKET_BROADCAST | MPR_SOCKET_DATAGRAM | MPR_SOCKET_BLOCK |
-         MPR_SOCKET_NOREUSE | MPR_SOCKET_NODELAY | MPR_SOCKET_THREAD));
+         MPR_SOCKET_NOREUSE | MPR_SOCKET_REUSE_PORT | MPR_SOCKET_NODELAY | MPR_SOCKET_THREAD));
     datagram = sp->flags & MPR_SOCKET_DATAGRAM;
 
     /*
@@ -22342,20 +22342,35 @@ PUBLIC Socket mprListenOnSocket(MprSocket *sp, cchar *ip, int port, int flags)
 #endif
 
     if (!(sp->flags & MPR_SOCKET_NOREUSE)) {
-        enable = 1;
 #if ME_UNIX_LIKE || VXWORKS
+        enable = 1;
         if (setsockopt(sp->fd, SOL_SOCKET, SO_REUSEADDR, (char*) &enable, sizeof(enable)) != 0) {
             mprLog("error mpr socket", 3, "Cannot set reuseaddr, errno %d", errno);
         }
-#if defined(SO_REUSEPORT) && MULTIPLE_SERVERS
-        /*
-            This permits multiple servers listening on the same endpoint
-         */
-        if (setsockopt(sp->fd, SOL_SOCKET, SO_REUSEPORT, (char*) &enable, sizeof(enable)) != 0) {
+#if defined(SO_REUSEPORT_LB)
+    /*
+        This permits multiple servers listening on the same endpoint with loadbalancing for BSD
+     */
+    if (sp->flags & MPR_SOCKET_REUSE_PORT) {
+        enable = 1;
+        if (setsockopt(sp->fd, SOL_SOCKET, SO_REUSEPORT_LB, (char*) &enable, sizeof(enable)) != 0) {
             mprLog("error mpr socket", 3, "Cannot set reuseport, errno %d", errno);
+        }
+    }
+#elif defined(SO_REUSEPORT)
+        /*
+            This permits multiple servers listening on the same endpoint. Linux will load balance.
+            On Mac (without REUSEPORT_LB), only the last bound port gets the traffic.
+         */
+        if (sp->flags & MPR_SOCKET_REUSE_PORT) {
+            enable = 1;
+            if (setsockopt(sp->fd, SOL_SOCKET, SO_REUSEPORT, (char*) &enable, sizeof(enable)) != 0) {
+                mprLog("error mpr socket", 3, "Cannot set reuseport, errno %d", errno);
+            }
         }
 #endif
 #elif ME_WIN_LIKE && defined(SO_EXCLUSIVEADDRUSE)
+        enable = 1;
         if (setsockopt(sp->fd, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (char*) &enable, sizeof(enable)) != 0) {
             mprLog("error mpr socket", 3, "Cannot set exclusiveaddr, errno %d", errno);
         }
