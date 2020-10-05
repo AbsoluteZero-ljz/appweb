@@ -10125,21 +10125,22 @@ static int dispatchEvents(MprDispatcher *dispatcher)
 
         (event->proc)(event->data, event);
 
-        mprRelease(event);
         event->hasRun = 1;
 
         if (event->cond) {
             mprSignalCond(event->cond);
         }
         if (dispatcher->flags & MPR_DISPATCHER_DESTROYED) {
+            mprRelease(event);
             break;
         }
-
         if (event->flags & MPR_EVENT_CONTINUOUS && event->next == NULL) {
             event->timestamp = dispatcher->service->now;
             event->due = event->timestamp + (event->period ? event->period : 1);
             mprQueueEvent(dispatcher, event);
         }
+        mprRelease(event);
+
         lock(es);
         es->eventCount++;
         unlock(es);
