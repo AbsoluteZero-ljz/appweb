@@ -24,11 +24,11 @@ if (tphase() == 'Setup') {
     if (!Path('.test-prepared').exists) {
         Cmd.run('me prep-test')
     }
-    Cmd.run('killall fastProgram')
-    Cmd.run('killall proxyServer')
+    Cmd.run('killall fastProgram', {exceptions: false})
+    Cmd.run('killall proxyServer', {exceptions: false})
 
 } else if (tphase() == 'Finalize') {
-    Cmd.run('killall fastProgram')
+    Cmd.run('killall fastProgram', {exceptions: false})
 }
 
 startStopService('appweb', {address: tget('TM_HTTP')})
