@@ -22641,8 +22641,8 @@ PUBLIC void mprDisconnectSocket(MprSocket *sp)
 
 static void disconnectSocket(MprSocket *sp)
 {
-    char    buf[ME_BUFSIZE];
-    int     i;
+    char            buf[ME_BUFSIZE];
+    int             i;
 
     /*
         Defensive lock buster. Use try lock incase an operation is blocked somewhere with a lock asserted.
@@ -22662,6 +22662,13 @@ static void disconnectSocket(MprSocket *sp)
                 break;
             }
         }
+#if ME_UNIX_LIKE || ME_BSD_LIKE
+        struct linger   sl;
+        sl.l_onoff = 1;
+        sl.l_linger = 0;
+        setsockopt(sp->fd, SOL_SOCKET, SO_LINGER, &sl, sizeof(sl));
+#endif
+
         shutdown(sp->fd, SHUT_RDWR);
         for (i = 0; i < 16; i++) {
             if (recv(sp->fd, buf, sizeof(buf), 0) <= 0) {
