@@ -475,7 +475,6 @@ static void proxyBackNotifier(HttpStream *proxyStream, int event, int arg)
         httpLog(proxyStream->trace, "tx.proxy", "result", "msg:Request complete");
         httpDestroyStream(proxyStream);
 
-        //  MOB - test HTTP/2 on the backend
         if (net->error || (net->protocol < 2 && (proxyStream->keepAliveCount <= 0 || proxyStream->upgraded))) {
             httpDestroyNet(net);
         } else {
