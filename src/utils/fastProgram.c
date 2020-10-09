@@ -4,7 +4,7 @@
     Copyright (c) All Rights Reserved. See details at the end of the file.
 
     Usage:
-        fastProgram [switches]
+        fastProgram [switches] [endpoint]
             -a                  Output the args (used for ISINDEX queries)
             -b bytes            Output content "bytes" long
             -d secs             Delay for given number of seconds
@@ -99,7 +99,7 @@ int main(int argc, char **argv, char **envp)
     for (i = 1; i < argc; i++) {
         if (argv[i][0] != '-') {
             close(0);
-            FCGX_OpenSocket(":9990", 5);
+            FCGX_OpenSocket(argv[i], 5);
         }
     }
     FCGX_IsCGI();
