@@ -191,6 +191,7 @@ static Fast *getFast(HttpRoute *route);
 static char *getFastToken(MprBuf *buf, cchar *delim);
 static FastApp *getFastApp(Fast *fast, HttpStream *stream);
 static int getListenPort(MprSocket *socket);
+static void idleSocketIO(MprSocket *sp, MprEvent *event);
 static void killFastApp(FastApp *app);
 static void manageFast(Fast *fast, int flags);
 static void manageFastApp(FastApp *app, int flags);
@@ -334,6 +335,9 @@ static void fastCloseRequest(HttpQueue *q)
         } else if (!(req->socket->flags & (MPR_SOCKET_EOF | MPR_SOCKET_DISCONNECTED))) {
             mprRemoveSocketHandler(req->socket);
             mprPushItem(app->sockets, req->socket);
+            if (fast->keep) {
+                mprAddSocketHandler(req->socket, MPR_READABLE, NULL, idleSocketIO, req->socket, 0);
+            }
         }
     }
     mprRemoveItem(app->requests, req);
@@ -458,8 +462,9 @@ static Fast *getFast(HttpRoute *route)
  */
 static void fastIncomingRequestPacket(HttpQueue *q, HttpPacket *packet)
 {
-    HttpStream  *stream;
-    FastRequest *req;
+    HttpStream      *stream;
+    FastRequest     *req;
+    ssize           len;
 
     assert(q);
     assert(packet);
@@ -468,19 +473,15 @@ static void fastIncomingRequestPacket(HttpQueue *q, HttpPacket *packet)
     if ((req = q->queueData) == 0) {
         return;
     }
-    if (httpGetPacketLength(packet) == 0) {
+    if ((len = httpGetPacketLength(packet)) == 0) {
         /* End of input */
         httpFinalizeInput(stream);
         if (stream->rx->remainingContent > 0) {
             httpError(stream, HTTP_CODE_BAD_REQUEST, "Client supplied insufficient body data");
             packet = createFastPacket(q, FAST_ABORT_REQUEST, httpCreateDataPacket(0));
         }
-        if (stream->rx->length < 0) {
-            createFastPacket(q, FAST_STDIN, packet);
-        }
-    } else {
-        createFastPacket(q, FAST_STDIN, packet);
     }
+    createFastPacket(q, FAST_STDIN, packet);
     httpPutForService(req->writeq, packet, HTTP_SCHEDULE_QUEUE);
 }
 
@@ -554,8 +555,6 @@ static void fastHandlerResponse(FastRequest *req, int type, HttpPacket *packet)
             req->parsedHeaders = 1;
         }
         if (httpGetPacketLength(packet) > 0) {
-            httpLogPacket(stream->trace, "fast.rx.data", "packet", 0, packet, "type:%d, id:%d, len:%ld", type, req->id,
-                httpGetPacketLength(packet));
             httpPutPacketToNext(stream->writeq, packet);
         }
     }
@@ -843,13 +842,13 @@ static FastApp *startFastApp(Fast *fast, HttpStream *stream)
     app = allocFastApp(fast, stream);
 
     if (fast->launch) {
-        argc = 1;                                   /* argv[0] == programName */
+        argc = 1;
         if ((command = buildFastArgs(app, stream, &argc, &argv)) == 0) {
             httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot find Fast app command");
             return NULL;
         }
         /*
-            Build environment variables
+            Build environment variables. Currently use only the server env vars.
          */
         count = mprGetHashLength(rx->svars);
         if ((envv = mprAlloc((count + 2) * sizeof(char*))) != 0) {
@@ -926,7 +925,6 @@ static cchar *buildFastArgs(FastApp *app, HttpStream *stream, int *argcp, cchar 
             argc++;
         }
     }
-
     /*
         Count the args for ISINDEX queries. Only valid if there is not a "=" in the query.
         If this is so, then we must not have these args in the query env also?
@@ -1038,6 +1036,7 @@ static MprSocket *getFastSocket(FastApp *app)
     backoff = 1;
 
     while ((socket = mprPopItem(app->sockets)) != 0) {
+        mprRemoveSocketHandler(socket);
         if (socket->flags & (MPR_SOCKET_EOF | MPR_SOCKET_DISCONNECTED)) {
             continue;
         }
@@ -1104,6 +1103,8 @@ static HttpPacket *createFastPacket(HttpQueue *q, int type, HttpPacket *packet)
         Use 8 byte padding alignment
      */
     pad = (len % 8) ? (8 - (len % 8)) : 0;
+    assert(pad < 8);
+
     if (pad > 0) {
         if (mprGetBufSpace(packet->content) < pad) {
             mprGrowBuf(packet->content, pad);
@@ -1113,7 +1114,8 @@ static HttpPacket *createFastPacket(HttpQueue *q, int type, HttpPacket *packet)
     *buf++ = (uchar) pad;
     mprAdjustBufEnd(packet->prefix, 8);
 
-    httpLogProc(req->trace, "tx.fast", "packet", 0, "msg:FastCGI send packet, type:%d, id:%d, lenth:%ld", type, req->id, len);
+    httpLogPacket(req->trace, "tx.fast", "packet", HTTP_TRACE_HEX, packet,
+        "msg:FastCGI tx packet, type:%d, id:%d, lenth:%ld", type, req->id, len);
     return packet;
 }
 
@@ -1151,7 +1153,7 @@ static void prepFastRequestParams(HttpQueue *q)
     packet = httpCreateDataPacket(stream->limits->headerSize);
     packet->data = req;
 
-    /* This is an Apache compatible hack for PHP 5.3 */
+    //  This is an Apache compatible hack for PHP 5.3
     //  mprAddKey(rx->headers, "REDIRECT_STATUS", itos(HTTP_CODE_MOVED_TEMPORARILY));
 
     copyFastParams(packet, rx->params, rx->route->envPrefix);
@@ -1244,7 +1246,7 @@ static void fastConnectorIncomingService(HttpQueue *q)
         buf = packet->content;
 
         if (mprGetBufLength(buf) < FAST_PACKET_SIZE) {
-            /* Insufficient data */
+            // Insufficient data
             httpPutBackPacket(q, packet);
             break;
         }
@@ -1269,15 +1271,15 @@ static void fastConnectorIncomingService(HttpQueue *q)
             break;
         }
         if (mprGetBufLength(buf) < len) {
-            /* Insufficient data */
+            // Insufficient data
             mprAdjustBufStart(buf, -FAST_PACKET_SIZE);
             httpPutBackPacket(q, packet);
             break;
         }
         packet->type = type;
 
-        httpLogProc(app->trace, "fast", "packet", 0, "msg:FastCGI incoming packet, type:%s, id:%d, length:%ld",
-                fastTypes[type], requestID, contentLength);
+        httpLogPacket(req->trace, "rx.fast", "packet", HTTP_TRACE_HEX, packet,
+            "msg:FastCGI rx packet, type:%d, id:%d, length:%ld, padding %ld", type, req->id, len, padLength);
 
         /*
             Split extra data off this packet
@@ -1286,14 +1288,14 @@ static void fastConnectorIncomingService(HttpQueue *q)
             httpPutBackPacket(q, tail);
         }
         if (padLength) {
-            /* Discard padding */
+            // Discard padding
             mprAdjustBufEnd(packet->content, -padLength);
         }
         if (type == FAST_STDOUT || type == FAST_END_REQUEST) {
             fastHandlerResponse(req, type, packet);
 
         } else if (type == FAST_STDERR) {
-            /* Log and discard stderr */
+            // Log and discard stderr
             httpLogProc(app->trace, "fast", "error", 0, "msg:FastCGI stderr, uri:%s, error:%s",
                 req->stream->rx->uri, mprBufToString(packet->content));
 
@@ -1320,7 +1322,7 @@ static void fastConnectorIO(FastRequest *req, MprEvent *event)
     net = req->stream->net;
 
     if (req->eof) {
-        /* Network connection to client has been destroyed */
+        // Network connection to client has been destroyed
         return;
     }
     if (event->mask & MPR_WRITABLE) {
@@ -1348,6 +1350,15 @@ static void fastConnectorIO(FastRequest *req, MprEvent *event)
     if (!req->eof) {
         enableFastRequestEvents(req);
     }
+}
+
+
+/*
+    Detect FastCGI closing the idle socket
+ */
+static void idleSocketIO(MprSocket *sp, MprEvent *event)
+{
+    mprCloseSocket(sp, 0);
 }
 
 
@@ -1666,54 +1677,56 @@ static int fastConnectDirective(MaState *state, cchar *key, cchar *value)
         mprLog("fast", 0, "Cannot parse listening endpoint");
         return MPR_ERR_BAD_SYNTAX;
     }
-    for (option = maGetNextArg(sclone(args), &tok); option; option = maGetNextArg(tok, &tok)) {
-        option = ssplit(option, " =\t,", &ovalue);
-        ovalue = strim(ovalue, "\"'", MPR_TRIM_BOTH);
+    if (args) {
+        for (option = maGetNextArg(sclone(args), &tok); option; option = maGetNextArg(tok, &tok)) {
+            option = ssplit(option, " =\t,", &ovalue);
+            ovalue = strim(ovalue, "\"'", MPR_TRIM_BOTH);
 
-        if (smatch(option, "maxRequests")) {
-            fast->maxRequests = httpGetNumber(ovalue);
-            if (fast->maxRequests < 1) {
-                fast->maxRequests = 1;
-            }
-        } else
-        if (smatch(option, "launch")) {
-            fast->launch = sclone(httpExpandRouteVars(state->route, ovalue));
+            if (smatch(option, "maxRequests")) {
+                fast->maxRequests = httpGetNumber(ovalue);
+                if (fast->maxRequests < 1) {
+                    fast->maxRequests = 1;
+                }
+            } else
+            if (smatch(option, "launch")) {
+                fast->launch = sclone(httpExpandRouteVars(state->route, ovalue));
 
-        } else if (smatch(option, "keep")) {
-            if (ovalue == NULL || smatch(ovalue, "true")) {
-                fast->keep = 1;
-            } else if (smatch(ovalue, "false")) {
-                fast->keep = 0;
+            } else if (smatch(option, "keep")) {
+                if (ovalue == NULL || smatch(ovalue, "true")) {
+                    fast->keep = 1;
+                } else if (smatch(ovalue, "false")) {
+                    fast->keep = 0;
+                } else {
+                    fast->keep = httpGetNumber(ovalue);
+                }
+
+            } else if (smatch(option, "max")) {
+                fast->maxApps = httpGetInt(ovalue);
+                if (fast->maxApps < 1) {
+                    fast->maxApps = 1;
+                }
+
+            } else if (smatch(option, "min")) {
+                fast->minApps = httpGetInt(ovalue);
+                if (fast->minApps < 1) {
+                    fast->minApps = 0;
+                }
+
+            } else if (smatch(option, "multiplex")) {
+                fast->multiplex = httpGetInt(ovalue);
+                if (fast->multiplex < 1) {
+                    fast->multiplex = 1;
+                }
+
+            } else if (smatch(option, "timeout")) {
+                fast->appTimeout = httpGetTicks(ovalue);
+                if (fast->appTimeout < (30 * TPS)) {
+                    fast->appTimeout = 30 * TPS;
+                }
             } else {
-                fast->keep = httpGetNumber(ovalue);
+                mprLog("fast error", 0, "Unknown FastCGI option %s", option);
+                return MPR_ERR_BAD_SYNTAX;
             }
-
-        } else if (smatch(option, "max")) {
-            fast->maxApps = httpGetInt(ovalue);
-            if (fast->maxApps < 1) {
-                fast->maxApps = 1;
-            }
-
-        } else if (smatch(option, "min")) {
-            fast->minApps = httpGetInt(ovalue);
-            if (fast->minApps < 1) {
-                fast->minApps = 0;
-            }
-
-        } else if (smatch(option, "multiplex")) {
-            fast->multiplex = httpGetInt(ovalue);
-            if (fast->multiplex < 1) {
-                fast->multiplex = 1;
-            }
-
-        } else if (smatch(option, "timeout")) {
-            fast->appTimeout = httpGetTicks(ovalue);
-            if (fast->appTimeout < (30 * TPS)) {
-                fast->appTimeout = 30 * TPS;
-            }
-        } else {
-            mprLog("fast error", 0, "Unknown FastCGI option %s", option);
-            return MPR_ERR_BAD_SYNTAX;
         }
     }
     /*
