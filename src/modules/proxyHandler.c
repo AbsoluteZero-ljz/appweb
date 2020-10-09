@@ -581,9 +581,10 @@ static void proxyReadResponse(HttpQueue *q)
             httpPutBackPacket(q, packet);
             return;
         }
-        httpPutPacket(stream->writeq, packet);
         if (packet->flags & HTTP_PACKET_END) {
             httpFinalizeOutput(stream);
+        } else {
+            httpPutPacket(stream->writeq, packet);
         }
     }
     httpServiceNetQueues(stream->net, 0);

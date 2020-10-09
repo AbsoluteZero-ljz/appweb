@@ -37,4 +37,5 @@ for (let i = 0; i < count; i++) {
 }
 
 ws.close()
+// print("COUNT", messageCount)
 ttrue(messageCount == count)

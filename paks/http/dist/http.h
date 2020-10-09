@@ -164,9 +164,6 @@ struct HttpWebSocket;
 #ifndef ME_MAX_HPACK_SIZE
     #define ME_MAX_HPACK_SIZE       65536                /**< Maximum size of the hpack table */
 #endif
-#ifndef ME_MAX_STREAMS
-    #define ME_MAX_STREAMS          100                  /**< Default maximum concurrent streams per network */
-#endif
 #ifndef ME_MAX_HEADERS
     #define ME_MAX_HEADERS          (512 * 1024)         /**< Maximum size of the headers (Chrome HTTP/2 needs this) */
 #endif
@@ -188,8 +185,22 @@ struct HttpWebSocket;
 #ifndef ME_MAX_RX_FORM
     #define ME_MAX_RX_FORM          (512 * 1024)         /**< Maximum incoming form size (512K) */
 #endif
+#ifndef ME_MAX_RX_FORM_FIELD
+    #define ME_MAX_RX_FORM_FIELD    HTTP_UNLIMITED       /**< Maximum form field size for copied to */
+#endif
+
+/*
+    These two are interrelated for HTTP/2
+ */
+#ifndef ME_MAX_STREAMS
+    #ifndef ME_MAX_REQUESTS_PER_CLIENT
+        #define ME_MAX_STREAMS      40                   /**< Default maximum concurrent streams per network */
+    #else
+        #define ME_MAX_STREAMS      ME_MAX_REQUESTS_PER_CLIENT
+    #endif
+#endif
 #ifndef ME_MAX_REQUESTS_PER_CLIENT
-    #define ME_MAX_REQUESTS_PER_CLIENT 20               /**< Maximum concurrent requests per client (ip address) */
+    #define ME_MAX_REQUESTS_PER_CLIENT ME_MAX_STREAMS    /**< Maximum concurrent requests per client (ip address) */
 #endif
 #ifndef ME_MAX_REWRITE
     #define ME_MAX_REWRITE          20                   /**< Maximum URI rewrites */
@@ -212,6 +223,10 @@ struct HttpWebSocket;
 #ifndef ME_MAX_UPLOAD
     #define ME_MAX_UPLOAD           HTTP_UNLIMITED       /**< Maximum file upload size */
 #endif
+#ifndef ME_HTTP_UPLOAD_TIMEOUT
+    #define ME_HTTP_UPLOAD_TIMEOUT  0
+#endif
+
 #ifndef ME_MAX_WSS_FRAME
     #define ME_MAX_WSS_FRAME        (4 * 1024)           /**< Default max WebSockets message frame size */
 #endif
@@ -720,21 +735,6 @@ PUBLIC HttpTrace *httpCreateTrace(HttpTrace *parent);
 PUBLIC void httpDetailFormatter(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *buf, ssize len, cchar *fmt, va_list args);
 
 /**
-    Pretty log trace formatter for debugging
-    @param trace HttpTrace object
-    @param event Event to trace
-    @param type Event type to trace
-    @param flags Formatting flags (HTTP_TRACE_PACKET and set buf to a HttpPacket)
-    @param buf Data buffer to trace.
-    @param len Length of the data buf.
-    @param fmt Printf style formatted string
-    @param args Varargs arguments for fmt
-    @ingroup HttpTrace
-    @stability Evolving
- */
-PUBLIC void httpPrettyFormatter(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *buf, ssize len, cchar *fmt, va_list args);
-
-/**
     Convenience routine to format trace via the configured formatter
     @description The formatter will invoke the trace logger and actually write the trace mesage
     @param trace HttpTrace object
@@ -750,49 +750,6 @@ PUBLIC void httpPrettyFormatter(HttpTrace *trace, cchar *event, cchar *type, int
  */
 PUBLIC void httpFormatTrace(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *buf, ssize len, cchar *fmt, va_list args);
 
-/*
-    Trace LogFile logger
-    @description Open the trace log file defined in the HttpTrace object
-    @param trace Trace object
-    @stability Evolving
-    @internal
- */
-PUBLIC int httpOpenTraceLogFile(HttpTrace *trace);
-
-/**
-    Set the formatter callback to use with a trace object
-    @description The trace formatter should
-    @param trace Trace object to configure
-    @param callback Formatter callback
-    @return Prior trace formatter
-    @ingroup HttpTrace
-    @stability Evolving
- */
-PUBLIC HttpTraceFormatter httpSetTraceFormatter(HttpTrace *trace, HttpTraceFormatter callback);
-
-/**
-    Set the logging format
-    @description This is used by the Common log formatter to define the fields written to the log
-    @param trace Trace object
-    @param format The format string defaults to: "%h %l %u %t \"%r\" %>s %b %n".
-    @ingroup HttpTrace
-    @stability Evolving
- */
-
-PUBLIC void httpSetTraceFormat(HttpTrace *trace, cchar *format);
-
-/**
-    Set the current tracing verbosity level.
-    @description This call defines the maximum trace level of messages that will be
-        traced. Trace events have an associated verbosity level at which they will be enabled.
-        If the event level is greater than the defined tracing verbosity level, the event is ignored.
-    @param level New tracing level. Must be 0-5 inclusive.
-    @param trace Trace object
-    @ingroup HttpTrace
-    @stability Evolving.
- */
-PUBLIC void httpSetTraceLevel(HttpTrace *trace, int level);
-
 /**
     Get the current tracing level
     @return The tracing level 0-5
@@ -801,82 +758,6 @@ PUBLIC void httpSetTraceLevel(HttpTrace *trace, int level);
     @stability Evolving
  */
 PUBLIC int httpGetTraceLevel(HttpTrace *trace);
-
-/**
-    Configure the tracing level for an event type
-    @param trace Tracing object
-    @param type Event type to modify
-    @param level Desired trace level (0-5)
-    @ingroup HttpTrace
-    @stability Evolving.
-    @internal
- */
-PUBLIC void httpSetTraceEventLevel(HttpTrace *trace, cchar *type, int level);
-
-/**
-    Set the maximum content size to trace
-    @description Tracing will be suspended for files that are larger than this size.
-    @param trace Tracing object
-    @param size Maximum content size to trace
-    @ingroup HttpTrace
-    @stability Evolving.
- */
-PUBLIC void httpSetTraceContentSize(HttpTrace *trace, ssize size);
-
-/**
-    Set the trace callback to use with a trace object
-    @description The trace logger is responsible for taking formatted messages and writing to the log.
-    @param trace Trace object to configure
-    @param callback Trace logger callback
-    @ingroup HttpTrace
-    @stability Evolving
- */
-PUBLIC void httpSetTraceLogger(HttpTrace *trace, HttpTraceLogger callback);
-
-/**
-    Configure the request trace log
-    @param trace HttpTrace object
-    @param path Path for request trace log file.
-    @param size Maximum size of the log file before archiving
-    @param backup Set to true to create a backup of the log file if archiving.
-    @param format Log file format
-    @param flags Set to MPR_LOG_ANEW to archive the log when the application reboots.
-    @return Zero if successful, otherwise a negative MPR error code.
-    @ingroup HttpTrace
-    @stability Evolving
- */
-PUBLIC int httpSetTraceLogFile(HttpTrace *trace, cchar *path, ssize size, int backup, cchar *format, int flags);
-
-/**
-    Define the trace formatter by name
-    @param trace Tracing object
-    @param name Formatter name. Set to "common" for the Common Log format or "detail" for the Appweb detailed trace format.
-    @ingroup HttpTrace
-    @stability Evolving.
-    @internal
- */
-PUBLIC void httpSetTraceFormatterName(HttpTrace *trace, cchar *name);
-
-#define httpTracing(net) (net->trace->level > 0)
-
-/**
-    Start tracing for the given trace log file when instructed via a command line switch.
-    @param traceSpec Set the trace log file name and level. The format is "pathName[:level]".
-    The following levels are generally observed:
-    <ul>
-        <li>0 - Essential messages, fatal errors and critical warnings</li>
-        <li>1 - Hard errors</li>
-        <li>2 - Configuration setup and soft warnings</li>
-        <li>3 - Useful informational messages</li>
-        <li>4 - Debug information</li>
-        <li>5 - Most verbose levels of messages useful for debugging</li>
-    </ul>
-    If the traceSpec is null, not tracing is enabled.
-    @return Zero if successful, otherwise a negative Mpr error code. See the Appweb log for diagnostics.
-    @ingroup HttpTrace
-    @stability Evolving
-*/
-PUBLIC int httpStartTracing(cchar *traceSpec);
 
 #if DOXYGEN
 /**
@@ -956,6 +837,149 @@ PUBLIC bool httpLogData(struct HttpNet *net, struct HttpStream *stream, cchar *e
 #endif
 
 /**
+    Pretty log trace formatter for debugging
+    @param trace HttpTrace object
+    @param event Event to trace
+    @param type Event type to trace
+    @param flags Formatting flags (HTTP_TRACE_PACKET and set buf to a HttpPacket)
+    @param buf Data buffer to trace.
+    @param len Length of the data buf.
+    @param fmt Printf style formatted string
+    @param args Varargs arguments for fmt
+    @ingroup HttpTrace
+    @stability Evolving
+ */
+PUBLIC void httpPrettyFormatter(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *buf, ssize len, cchar *fmt, va_list args);
+/*
+    Trace LogFile logger
+    @description Open the trace log file defined in the HttpTrace object
+    @param trace Trace object
+    @stability Evolving
+    @internal
+ */
+PUBLIC int httpOpenTraceLogFile(HttpTrace *trace);
+
+/**
+    Set the formatter callback to use with a trace object
+    @description The trace formatter should
+    @param trace Trace object to configure
+    @param callback Formatter callback
+    @return Prior trace formatter
+    @ingroup HttpTrace
+    @stability Evolving
+ */
+PUBLIC HttpTraceFormatter httpSetTraceFormatter(HttpTrace *trace, HttpTraceFormatter callback);
+
+/**
+    Set the logging format
+    @description This is used by the Common log formatter to define the fields written to the log
+    @param trace Trace object
+    @param format The format string defaults to: "%h %l %u %t \"%r\" %>s %b %n".
+    @ingroup HttpTrace
+    @stability Evolving
+ */
+
+PUBLIC void httpSetTraceFormat(HttpTrace *trace, cchar *format);
+
+/**
+    Set the current tracing verbosity level.
+    @description This call defines the maximum trace level of messages that will be
+        traced. Trace events have an associated verbosity level at which they will be enabled.
+        If the event level is greater than the defined tracing verbosity level, the event is ignored.
+    @param level New tracing level. Must be 0-5 inclusive.
+    @param trace Trace object
+    @ingroup HttpTrace
+    @stability Evolving.
+ */
+PUBLIC void httpSetTraceLevel(HttpTrace *trace, int level);
+
+/**
+    Configure the tracing level for an event type
+    @param trace Tracing object
+    @param type Event type to modify
+    @param level Desired trace level (0-5)
+    @ingroup HttpTrace
+    @stability Evolving.
+    @internal
+ */
+PUBLIC void httpSetTraceEventLevel(HttpTrace *trace, cchar *type, int level);
+
+/**
+    Set the maximum content size to trace
+    @description Tracing will be suspended for files that are larger than this size.
+    @param trace Tracing object
+    @param size Maximum content size to trace
+    @ingroup HttpTrace
+    @stability Evolving.
+ */
+PUBLIC void httpSetTraceContentSize(HttpTrace *trace, ssize size);
+
+/**
+    Set the trace callback to use with a trace object
+    @description The trace logger is responsible for taking formatted messages and writing to the log.
+    @param trace Trace object to configure
+    @param callback Trace logger callback
+    @ingroup HttpTrace
+    @stability Evolving
+ */
+PUBLIC void httpSetTraceLogger(HttpTrace *trace, HttpTraceLogger callback);
+
+/**
+    Configure the request trace log
+    @param trace HttpTrace object
+    @param path Path for request trace log file.
+    @param size Maximum size of the log file before archiving
+    @param backup Set to true to create a backup of the log file if archiving.
+    @param format Log file format
+    @param flags Set to MPR_LOG_ANEW to archive the log when the application reboots.
+    @return Zero if successful, otherwise a negative MPR error code.
+    @ingroup HttpTrace
+    @stability Evolving
+ */
+PUBLIC int httpSetTraceLogFile(HttpTrace *trace, cchar *path, ssize size, int backup, cchar *format, int flags);
+
+/**
+    Define the trace formatter by name
+    @param trace Tracing object
+    @param name Formatter name. Set to "common" for the Common Log format or "detail" for the Appweb detailed trace format.
+    @ingroup HttpTrace
+    @stability Evolving.
+    @internal
+ */
+PUBLIC void httpSetTraceFormatterName(HttpTrace *trace, cchar *name);
+
+/**
+    Should trace be emitted
+    @param trace Tracing object
+    @param type Event type to consider
+    @ingroup HttpTrace
+    @stability Prototype.
+    @returns True if trace should be emitted
+ */
+PUBLIC bool httpShouldTrace(HttpTrace *trace, cchar *name);
+
+#define httpTracing(net) (net->trace->level > 0)
+
+/**
+    Start tracing for the given trace log file when instructed via a command line switch.
+    @param traceSpec Set the trace log file name and level. The format is "pathName[:level]".
+    The following levels are generally observed:
+    <ul>
+        <li>0 - Essential messages, fatal errors and critical warnings</li>
+        <li>1 - Hard errors</li>
+        <li>2 - Configuration setup and soft warnings</li>
+        <li>3 - Useful informational messages</li>
+        <li>4 - Debug information</li>
+        <li>5 - Most verbose levels of messages useful for debugging</li>
+    </ul>
+    If the traceSpec is null, not tracing is enabled.
+    @return Zero if successful, otherwise a negative Mpr error code. See the Appweb log for diagnostics.
+    @ingroup HttpTrace
+    @stability Evolving
+*/
+PUBLIC int httpStartTracing(cchar *traceSpec);
+
+/**
     Convenience routine to write data to the trace logger. Should only be used by formatters.
     @param trace HttpTrace object
     @param buf Trace message to write
@@ -1027,10 +1051,9 @@ typedef struct Http {
     struct HttpStage *httpFilter;           /**< Http filter */
     struct HttpStage *cgiHandler;           /**< CGI handler */
     struct HttpStage *cgiConnector;         /**< CGI connector */
-    struct HttpStage *clientHandler;        /**< Client-side handler (dummy) */
     struct HttpStage *dirHandler;           /**< Directory listing handler */
     struct HttpStage *egiHandler;           /**< Embedded Gateway Interface (EGI) handler */
-#if DEPRECATED || 1
+#if DEPRECATED
     struct HttpStage *ejsHandler;           /**< Ejscript Web Framework handler */
 #endif
     struct HttpStage *espHandler;           /**< ESP Web Framework handler */
@@ -2161,6 +2184,7 @@ PUBLIC HttpPacket *httpSplitPacket(HttpPacket *packet, ssize offset);
 #define HTTP_QUEUE_RESERVICE      0x100     /**< Queue requires reservicing */
 #define HTTP_QUEUE_OUTGOING       0x200     /**< Queue is for outgoing traffic */
 #define HTTP_QUEUE_REQUEST        0x400     /**< Queue is specific for this request */
+#define HTTP_QUEUE_HEAD           0x800     /**< Queue header */
 
 /*
     Queue optimizations
@@ -2411,14 +2435,6 @@ PUBLIC void httpPutPacket(struct HttpQueue *q, HttpPacket *packet);
 PUBLIC void httpPutPacketToNext(struct HttpQueue *qp, HttpPacket *packet);
 
 /**
-    Queue head service routine for queue heads and client handlers
-    @param q Queue reference.
-    @ingroup HttpQueue
-    @stability Evolving
- */
-PUBLIC void httpQueueHeadService(HttpQueue *q);
-
-/**
     Remove a queue
     @description Remove a queue from the request/response pipeline. This will remove a queue so that it does
         not participate in the pipeline, effectively removing the processing stage from the pipeline. This is
@@ -2489,13 +2505,26 @@ PUBLIC void httpSetQueueLimits(HttpQueue *q, HttpLimits *limits, ssize packetSiz
 PUBLIC void httpSuspendQueue(HttpQueue *q);
 
 /**
-    Transfer packets from queues
+    Transfer packets from one queue to another
     @param inq Input q
     @param outq Output q
     @ingroup HttpQueue
     @stability Prototype
  */
 PUBLIC void httpTransferPackets(HttpQueue *inq, HttpQueue *outq);
+
+/**
+    Replay incoming packets through the pipeline.
+    @description This routine is used to process previously received packets once the pipeline
+        is configured. It transfers already received packets back through the new pipeline stages
+        for processing.
+    @param inq Input q
+    @param outq Output q
+    @ingroup HttpQueue
+    @stability Prototype
+ */
+
+PUBLIC void httpReplayPackets(HttpQueue *inq, HttpQueue *outq);
 
 #if ME_DEBUG
 /**
@@ -2596,7 +2625,7 @@ PUBLIC ssize httpWrite(HttpQueue *q, cchar *fmt, ...) PRINTF_ATTRIBUTE(2,3);
         When blocking, the call will either accept and write all the data or it will fail, it will never return "short"
         with a partial write.
         \n\n
-        In blocking mode (HTTP_BLOCK), it block for up to the inactivity timeout specified in the
+        In blocking mode (HTTP_BLOCK), it blocks for up to the inactivity timeout specified in the
         stream->limits->inactivityTimeout value. In blocking mode, this routine may invoke mprYield before blocking to
         consent for the garbage collector to run. Callers must ensure they have retained all required temporary memory
         before invoking this routine.
@@ -2645,7 +2674,7 @@ PUBLIC void httpMarkQueueHead(HttpQueue *q);
 PUBLIC void httpOpenQueues(struct HttpStream *stream);
 PUBLIC void httpPairQueues(HttpQueue *q1, HttpQueue *q2);
 PUBLIC void httpRemovePacket(HttpQueue *q, HttpPacket *prev, HttpPacket *packet);
-PUBLIC cchar *httpTraceHeaders(HttpQueue *q, MprHash *headers);
+PUBLIC cchar *httpTraceHeaders(MprHash *headers);
 PUBLIC void httpTraceQueues(struct HttpStream *stream);
 PUBLIC void httpServiceQueue(HttpQueue *q);
 
@@ -2973,7 +3002,7 @@ PUBLIC void httpSetStageData(struct HttpStream *stream, cchar *key, cvoid *data)
 
 /* Internal APIs */
 PUBLIC void httpAddStage(HttpStage *stage);
-PUBLIC HttpStage *httpCreateClientHandler(cchar *name, MprModule *module);
+PUBLIC int httpOpenQueueHead(void);
 PUBLIC ssize httpFilterChunkData(HttpQueue *q, HttpPacket *packet);
 PUBLIC int httpOpenActionHandler(void);
 PUBLIC int httpOpenChunkFilter(void);
@@ -3234,6 +3263,7 @@ typedef struct HttpNet {
     int             delay;                  /**< Delay servicing requests due to defense strategy */
     int             nextStreamID;           /**< Next stream ID */
     int             lastStreamID;           /**< Last stream ID */
+    int             protocol;               /**< HTTP protocol: 0 for HTTP/1.0, 1 for HTTP/1.1 or 2+ */
     int             ownStreams;             /**< Number of peer created streams */
     int             session;                /**< Currently parsing frame for this session */
     int             timeout;                /**< Network timeout indication */
@@ -3253,7 +3283,6 @@ typedef struct HttpNet {
     uint            eventMask: 3;           /**< Last IO event mask */
     bool            http2: 1;               /**< Enable http 2 */
     bool            init: 1;                /**< Settings frame has been sent and network is ready to use */
-    uint            protocol: 2;            /**< HTTP protocol: 0 for HTTP/1.0, 1 for HTTP/1.1 or 2+ */
     bool            ownDispatcher: 1;       /**< Using own the dispatcher and should destroy when closing connection */
     bool            parsingHeaders: 1;      /**< Parsing HTTP/2 headers */
     bool            push: 1;                /**< Receiver will accept push */
@@ -3696,6 +3725,7 @@ typedef struct HttpStream {
     HttpQueue       *outputq;               /**< End of the write pipeline (tailFilter-tx) */
     HttpQueue       *readq;                 /**< Application queue reading (qhead) */
     HttpQueue       *writeq;                /**< Application queue to write outgoing data (handler) */
+    HttpQueue       *transferq;             /**< After routing, transfer already read packets to this queue for processing */
 
     MprSocket       *sock;                  /**< Underlying socket handle */
     HttpLimits      *limits;                /**< Service limits. Alias to HttpRoute.limits for this request */
@@ -3772,7 +3802,7 @@ typedef struct HttpStream {
     @ingroup HttpStream
     @stability Prototype
  */
-PUBLIC void httpAddEndInputPacket(HttpStream *stream, HttpQueue *q);
+PUBLIC void httpAddInputEndPacket(HttpStream *stream, HttpQueue *q);
 
 /**
     Emit an error message for a badly formatted request
@@ -5114,7 +5144,7 @@ PUBLIC void httpSetRouteCallback(struct HttpRoute *route, HttpRouteCallback proc
         httpSetRouteAuth httpSetRouteAutoDelete httpSetRouteAutoFinalize httpSetRouteConnector httpSetRouteData
         httpSetRouteDefaultLanguage httpSetRouteDocuments httpSetRouteFlags httpSetRouteHandler httpSetRouteHost
         httpSetRouteIndex httpSetRouteMethods httpSetRouteVar httpSetRoutePattern
-        httpSetRoutePrefix httpSetRouteScript httpSetRouteSource httpSetRouteTarget httpSetRouteWorkers httpTemplate
+        httpSetRoutePrefix httpSetRouteScript httpSetRouteSource httpSetRouteTarget httpTemplate
         httpTokenize httpTokenizev httpLink httpLinkEx
     @stability Internal
  */
@@ -5194,7 +5224,7 @@ typedef struct HttpRoute {
     bool            corsCredentials;        /**< Whether to emit an Access-Control-Allow-Credentials */
     int             corsAge;                /**< Age in seconds of the pre-flight authorization */
 
-#if DEPRECATED || 1
+#if DEPRECATED
     /*
         Used by Ejscript
      */
@@ -6302,6 +6332,7 @@ PUBLIC void httpSetRoutePreserveFrames(HttpRoute *route, bool on);
  */
 PUBLIC void httpSetRouteRenameUploads(HttpRoute *route, bool enable);
 
+#if DEPRECATED
 /**
     Set the script to service the route.
     @description This is used by handlers to add a per-route script for processing.
@@ -6314,6 +6345,7 @@ PUBLIC void httpSetRouteRenameUploads(HttpRoute *route, bool enable);
     @internal
  */
 PUBLIC void httpSetRouteScript(HttpRoute *route, cchar *script, cchar *scriptPath);
+#endif
 
 /**
     Make session cookies that are visible to javascript.
@@ -6475,6 +6507,7 @@ PUBLIC void httpSetRouteUpdate(HttpRoute *route, bool on);
  */
 PUBLIC void httpSetRouteUploadDir(HttpRoute *route, cchar *dir);
 
+#if DEPRECATED
 /**
     Define the maximum number of workers for a route
     @param route Route to modify
@@ -6484,6 +6517,7 @@ PUBLIC void httpSetRouteUploadDir(HttpRoute *route, cchar *dir);
     @internal
  */
 PUBLIC void httpSetRouteWorkers(HttpRoute *route, int workers);
+#endif
 
 /**
     Control whether an XSRF token will be emitted during a user login sequence.
@@ -6851,7 +6885,8 @@ typedef struct HttpRx {
     bool            authenticateProbed: 1;  /**< Request has been authenticated */
     bool            authenticated: 1;       /**< Request has been authenticated */
     bool            autoDelete: 1;          /**< Automatically delete uploaded files */
-    bool            eof: 1;                 /**< All read data has been received (eof) */
+    bool            endStream: 1;           /**< HTTP/2 end of input stream */
+    bool            eof: 1;                 /**< All read data has been received by the protocol layer (http*Filter) */
     bool            form: 1;                /**< Using mime-type application/x-www-form-urlencoded */
     bool            ifModified: 1;          /**< If-Modified processing requested */
     bool            ifMatch: 1;             /**< If-Match processing requested */
@@ -7361,19 +7396,13 @@ PUBLIC int httpTestParam(HttpStream *stream, cchar *var);
 PUBLIC void httpTrimExtraPath(HttpStream *stream);
 
 /**
-    Process Http requests and responses
-    @description the httpProcess function drives the HTTP request and response state machine. Once a request is received from the peer and the HTTP headers have been parsed into HttpStream and HttpTx, the httpProcess() function should be called to drive the request pipeline to process the request.
-    \n\n
-    The HTTP state machine drives the HttpStream.state through the states from
-    HTTP_STATE_BEGIN, HTTP_STATE_CONNECTED, HTTP_STATE_FIRST, HTTP_STATE_PARSED, HTTP_STATE_CONTENT, HTTP_STATE_READY, HTTP_STATE_RUNNING, HTTP_STATE_FINALIZED to HTTP_STATE_COMPLETE. For each state, the notifier defined by #httpSetStreamNotifier will be invoked.
-    The state should be in HTTP_STATE_PARSED via #httpProcessHeaders before calling this routine.
-    \n\n
-    httpProcess is invoked by the HTTP/1 and HTTP/2 filters after they have decoded input packets and whenever the network socket becomes newly writable and can absorb more output data.
-    @param q HttpQueue queue object
+    Process http content
+    @description This will change the http state to HTTP_STATE_READY if all the body content has been received.
+    @param stream HttpStream Stream object
     @ingroup HttpRx
     @stability Evolving
  */
-PUBLIC void httpProcess(HttpQueue *q);
+PUBLIC int httpProcessContent(HttpStream *stream);
 
 /**
     Process Http headers

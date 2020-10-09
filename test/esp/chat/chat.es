@@ -7,7 +7,7 @@
 let ws = new WebSocket("ws://127.0.0.1:4100/chat/test/chat")
 
 ws.onmessage = function (event) {
-    // print("GOT", event.data)
+    print("GOT", event.data)
 }
 
 ws.onopen = function (event) {
@@ -23,7 +23,10 @@ ws.onclose = function () {
 let i = 0
 while (true) {
     ws.send("Hello WebSocket World: " + i++)
-    App.sleep(50)
+    // stdout.write('Next: ')
+    // stdin.readLine()
+    // App.run(1, true)
+    App.sleep(1000)
 }
 
 ws.close()
