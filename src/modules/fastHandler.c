@@ -24,7 +24,7 @@
 /************************************ Locals ***********************************/
 
 #define FAST_VERSION            1
-#define FAST_DEBUG              1           //  For debugging (keeps filedes open in FastCGI for debug output)
+#define FAST_DEBUG              0           //  For debugging (keeps filedes open in FastCGI for debug output)
 
 /*
     FastCGI spec packet types
@@ -508,12 +508,6 @@ static void fastHandlerResponse(FastRequest *req, int type, HttpPacket *packet)
     if (stream->state <= HTTP_STATE_BEGIN || stream->rx->route == NULL) {
         /* Request already complete and stream has been recycled (prepared for next request) */
         return;
-    }
-#if UNUSED
-    print("Stream %p, state %d, error %d, type %d", stream, stream->state, stream->error, type);
-#endif
-    if (type == FAST_END_REQUEST && !packet) {
-        print("NO PACKET %p, state %d", stream, stream->state);
     }
     if (type == FAST_COMMS_ERROR) {
         httpError(stream, HTTP_ABORT | HTTP_CODE_COMMS_ERROR, "FastRequest: comms error");

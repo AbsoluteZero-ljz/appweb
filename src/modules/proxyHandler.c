@@ -23,7 +23,7 @@
 #if ME_COM_PROXY && ME_UNIX_LIKE
 /************************************ Locals ***********************************/
 
-#define PROXY_DEBUG              1           //  For debugging (keeps files open in Proxy for debug output)
+#define PROXY_DEBUG              0           //  For debugging (keeps files open in Proxy for debug output)
 
 /*
     Default constants

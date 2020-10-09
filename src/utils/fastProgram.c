@@ -204,11 +204,6 @@ static void *worker(State *state)
                 for (i = 0; i < originalArgc; i++) {
                     FCGX_FPrintF(request.out, "<P>ARG[%d]=%s</P>\r\n", i, originalArgv[i]);
                 }
-#if UNUSED
-                for (i = 0; i < argc; i++) {
-                    FCGX_FPrintF(request.out, "<P>XARG[%d]=%s</P>\r\n", i, argv[i]);
-                }
-#endif
             }
             printEnv(state);
             if (state->outputQuery) {
