@@ -529,8 +529,8 @@ static void fastHandlerResponse(FastRequest *req, int type, HttpPacket *packet)
         buf = packet->content;
         rx = stream->rx;
 
-        status = mprGetCharFromBuf(buf) << 24 || mprGetCharFromBuf(buf) << 16 ||
-                 mprGetCharFromBuf(buf) << 8 || mprGetCharFromBuf(buf);
+        status = mprGetCharFromBuf(buf) << 24 | mprGetCharFromBuf(buf) << 16 |
+                 mprGetCharFromBuf(buf) << 8  | mprGetCharFromBuf(buf);
         protoStatus = mprGetCharFromBuf(buf);
         mprAdjustBufStart(buf, 3);
 
@@ -1741,11 +1741,11 @@ static MprSocket *createListener(FastApp *app, HttpStream *stream)
     Fast        *fast;
     MprSocket   *listen;
     int         flags;
-    
+
     fast = app->fast;
 
     listen = mprCreateSocket();
-    
+
     /*
         Port may be zero in which case a dynamic port number is used. If port specified and max > 1, then must reruse port.
      */

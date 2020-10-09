@@ -16234,6 +16234,7 @@ PUBLIC void mprLogConfig()
     mprLog(name, 2, "OS:                 %s", ME_OS);
     mprLog(name, 2, "Host:               %s", mprGetHostName());
     mprLog(name, 2, "Configure:          %s", ME_CONFIG_CMD);
+    mprLog(name, 2, "PID:                %d", getpid());
     mprLog(name, 2, "----------------------------------");
 }
 

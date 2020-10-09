@@ -7,6 +7,10 @@ let http: Http = new Http
 
 if (thas('ME_FAST')) {
     http.get(HTTP + "/route/missing-ext/index")
+    if (http.status != 200) {
+        print("STATUS", http.status)
+        print(http.response)
+    }
     ttrue(http.status == 200)
     ttrue(http.response.contains("Hello PHP World"))
     http.close()
