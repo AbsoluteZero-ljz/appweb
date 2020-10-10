@@ -3746,7 +3746,9 @@ typedef struct HttpStream {
     char            *boundary;              /**< File upload boundary */
     void            *context;               /**< Embedding context (EjsRequest) */
     void            *data;                  /**< Custom data for request - must be a managed reference */
+#if DEPRECATED
     void            *ejs;                   /**< Embedding VM */
+#endif
     cchar           *errorMsg;              /**< Error message for the last request (if any) */
     void            *grid;                  /**< Current request database grid for MVC apps */
     char            *ip;                    /**< Remote client IP address */
@@ -3766,6 +3768,7 @@ typedef struct HttpStream {
     bool            active;                 /**< httpProcess active on this stack */
     bool            authRequested: 1;       /**< Authorization requested based on user credentials */
     bool            completed: 1;           /**< Request complete and completeRequest schedule */
+    bool            counted: 1;             /**< Request counted by/ monitor event */
     bool            destroyed: 1;           /**< Stream has been destroyed */
     bool            disconnect;             /**< Must disconnect/reset the connection - can not continue */
     bool            encoded: 1;             /**< True if the password is MD5(username:realm:password) */

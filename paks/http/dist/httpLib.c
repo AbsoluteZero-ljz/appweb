@@ -903,13 +903,18 @@ PUBLIC void httpGetStats(HttpStats *sp)
 
 PUBLIC char *httpStatsReport(int flags)
 {
+    Http                *http;
+    HttpNet             *net;
+    HttpStream          *stream;
+    HttpRx              *rx;
+    HttpTx              *tx;
     MprTime             now;
     MprBuf              *buf;
     HttpStats           s;
-    double              elapsed;
+    double              elapsed, mb;
     static MprTime      lastTime;
     static HttpStats    last;
-    double              mb;
+    int                 nextNet, nextStream;
 
     mb = 1024.0 * 1024;
     now = mprGetTime();
@@ -948,8 +953,23 @@ PUBLIC char *httpStatsReport(int flags)
         s.workersBusy, s.workersYielded, s.workersIdle, s.workersMax);
     mprPutToBuf(buf, "Sessions     %8.1f MB\n", s.memSessions / mb);
     mprPutCharToBuf(buf, '\n');
-
     last = s;
+
+
+    http = HTTP;
+    mprPutToBuf(buf, "\nActive Streams:\n");
+    for (ITERATE_ITEMS(http->networks, net, nextNet)) {
+        for (ITERATE_ITEMS(net->streams, stream, nextStream)) {
+            rx = stream->rx;
+            tx = stream->tx;
+            mprPutToBuf(buf,
+                "State %d (%d), error %d, eof %d, finalized input %d, output %d, connector %d, seqno %lld, mask %x, uri %s\n",
+                stream->state, stream->h2State, stream->error, rx->eof, tx->finalizedInput, tx->finalizedOutput,
+                tx->finalizedConnector, stream->seqno, net->eventMask, rx->uri);
+        }
+    }
+    mprPutCharToBuf(buf, '\n');
+
     lastTime = now;
     mprAddNullToBuf(buf);
     return sclone(mprGetBufStart(buf));
@@ -9694,14 +9714,7 @@ static void incomingHttp2(HttpQueue *q, HttpPacket *packet)
         may split packets as required and put back the tail for processing here.
      */
     for (done = 0, packet = httpGetPacket(q); packet && !net->receivedGoaway; packet = httpGetPacket(q)) {
-#if KEEP_FOR_DEBUG
-        static int count = 0;
-        count++;
-        print("COUNT %d", count);
-        if (count >= 7) {
-            print("BREAK");
-        }
-#endif
+
         if ((frame = parseFrame(q, packet, &done)) != 0) {
             net->frame = frame;
             frameHandlers[frame->type](q, packet);
@@ -9781,7 +9794,6 @@ static void outgoingHttp2Service(HttpQueue *q)
             break;
         }
         stream = packet->stream;
-        len = httpGetPacketLength(packet);
 
         if (stream && !stream->destroyed) {
             if (packet->flags & HTTP_PACKET_HEADER) {
@@ -9797,8 +9809,9 @@ static void outgoingHttp2Service(HttpQueue *q)
                 /*
                     Resize data packets to not exceed the remaining HTTP/2 window flow control credits.
                  */
-                len = resizePacket(net->outputq, net->outputq->window, packet);
+                resizePacket(net->outputq, net->outputq->window, packet);
             }
+
             if (net->receivedGoaway && (net->lastStreamID && stream->streamID >= net->lastStreamID)) {
                 /* Network is being closed. Continue to process existing streams but accept no new streams */
                 continue;
@@ -9817,7 +9830,9 @@ static void outgoingHttp2Service(HttpQueue *q)
             assert(net->outputq->window > 0);
 
             if (packet) {
+                assert(net->outputq->window > 0);
                 flags = getFrameFlags(q, packet);
+                assert(net->outputq->window > 0);
                 if (flags & HTTP2_END_STREAM_FLAG) {
                     if (setState(stream, E2_TX_END) == H2_ERR) {
                         invalidState(net, stream, E2_TX_END);
@@ -9831,11 +9846,13 @@ static void outgoingHttp2Service(HttpQueue *q)
                         packet->type = HTTP2_HEADERS_FRAME;
                         stream->tx->startedHeader = 1;
                     }
-                } else if (packet->flags & HTTP_PACKET_DATA) {
+                } else if (packet->flags & (HTTP_PACKET_DATA | HTTP_PACKET_END)) {
                     packet->type = HTTP2_DATA_FRAME;
                 }
+                assert(net->outputq->window > 0);
                 frame = defineFrame(q, packet, packet->type, flags, stream->streamID);
                 sendFrame(q, frame);
+                assert(net->outputq->window > 0);
             }
 
             /*
@@ -9845,7 +9862,7 @@ static void outgoingHttp2Service(HttpQueue *q)
                 httpResumeQueue(stream->outputq, 0);
             }
         }
-        if (net->outputq->window == 0) {
+        if (net->outputq->window <= 0) {
             httpSuspendQueue(q);
             break;
         }
@@ -9866,32 +9883,31 @@ static int getFrameFlags(HttpQueue *q, HttpPacket *packet)
     HttpNet     *net;
     HttpStream  *stream;
     HttpTx      *tx;
-    int         flags;
+    int         flags, type;
 
     net = q->net;
     stream = packet->stream;
     tx = stream->tx;
     flags = 0;
+    type = -1;
 
     if (packet->flags & HTTP_PACKET_HEADER && packet->last) {
+        type = HTTP2_HEADERS_FRAME;
         flags |= HTTP2_END_HEADERS_FLAG;
 
     } else if (packet->flags & HTTP_PACKET_DATA && packet->last) {
+        type = HTTP2_DATA_FRAME;
         flags |= HTTP2_END_STREAM_FLAG;
         tx->allDataSent = 1;
 
     } else if (packet->flags & HTTP_PACKET_END && !tx->allDataSent) {
-        /*
-            Convert the packet end to a data frame to signify end of stream
-         */
-        packet->type = HTTP2_DATA_FRAME;
+        type = HTTP2_DATA_FRAME;
         flags |= HTTP2_END_STREAM_FLAG;
         tx->allDataSent = 1;
     }
-    if (packet->type == HTTP2_DATA_FRAME) {
+    if (type == HTTP2_DATA_FRAME) {
         assert(net->outputq->window > 0);
         net->outputq->window -= httpGetPacketLength(packet);
-        // assert(net->outputq->window >= 0);
     }
     return flags;
 }
@@ -9958,6 +9974,8 @@ static void logIncomingPacket(HttpQueue *q, HttpPacket *packet, int type, int st
         mprAdjustBufStart(buf, HTTP2_FRAME_OVERHEAD);
     }
 }
+
+
 /*
     Parse an incoming HTTP/2 frame. Return true to keep going with this or subsequent request, zero means
     insufficient data to proceed.
@@ -10784,7 +10802,6 @@ static void parseDataFrame(HttpQueue *q, HttpPacket *packet)
     buf = packet->content;
     frame = packet->data;
     stream = frame->stream;
-    len = httpGetPacketLength(packet);
 
     if (!stream) {
         sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Received data frame without stream");
@@ -10800,6 +10817,8 @@ static void parseDataFrame(HttpQueue *q, HttpPacket *packet)
         }
         mprAdjustBufEnd(buf, -padLen);
     }
+    len = httpGetPacketLength(packet);
+
     processDataFrame(q, packet);
 
     /*
@@ -16573,7 +16592,6 @@ PUBLIC void httpSetState(HttpStream *stream, int targetState)
         state = updateState(stream, newState);
     }
     stream->settingState = 0;
-
     if (stream->state == HTTP_STATE_COMPLETE) {
         processComplete(stream, NULL);
 
@@ -16603,26 +16621,23 @@ static int processFirst(HttpStream *stream)
         stream->startMark = mprGetHiResTicks();
         stream->started = stream->http->now;
         stream->http->totalRequests++;
-
-        //TODO
-#if KEEP
-    } else if (rx->status != HTTP_CODE_CONTINUE) {
-        // Ignore Expect status responses. NOTE: Clients have already created their Tx pipeline.
-        httpCreateRxPipeline(stream, NULL);
+#if KEEP && TODO
+        if (rx->status != HTTP_CODE_CONTINUE) {
+            // Ignore Expect status responses. NOTE: Clients have already created their Tx pipeline.
+            httpCreateRxPipeline(stream, NULL);
+        }
 #endif
-    }
-    if (rx->flags & HTTP_EXPECT_CONTINUE) {
-        sendContinue(stream);
-        rx->flags &= ~HTTP_EXPECT_CONTINUE;
-    }
-
-    if (httpServerStream(stream)) {
         if ((value = httpMonitorEvent(stream, HTTP_COUNTER_ACTIVE_REQUESTS, 1)) > net->limits->requestsPerClientMax) {
             httpError(stream, HTTP_ABORT | HTTP_CODE_SERVICE_UNAVAILABLE,
                 "Request denied for IP %s. Too many concurrent requests for client, active: %d max: %d", stream->ip, (int) value, net->limits->requestsPerClientMax);
             return 0;
         }
         httpMonitorEvent(stream, HTTP_COUNTER_REQUESTS, 1);
+        stream->counted = 1;
+    }
+    if (rx->flags & HTTP_EXPECT_CONTINUE) {
+        sendContinue(stream);
+        rx->flags &= ~HTTP_EXPECT_CONTINUE;
     }
     return stream->state;
 }
@@ -17111,6 +17126,7 @@ static int processFinalized(HttpStream *stream)
 
     if (httpServerStream(stream)) {
         httpMonitorEvent(stream, HTTP_COUNTER_ACTIVE_REQUESTS, -1);
+        stream->counted = 0;
     }
     return HTTP_STATE_COMPLETE;
 }
@@ -23254,6 +23270,10 @@ PUBLIC void httpDestroyStream(HttpStream *stream)
         if (stream->streamID == stream->net->lastStreamID) {
             stream->net->lastStreamID++;
         }
+        if (stream->counted) {
+            httpMonitorEvent(stream, HTTP_COUNTER_ACTIVE_REQUESTS, -1);
+            stream->counted = 0;
+        }
         httpRemoveStream(stream->net, stream);
         stream->state = HTTP_STATE_COMPLETE;
         stream->destroyed = 1;
@@ -23272,7 +23292,9 @@ static void manageStream(HttpStream *stream, int flags)
         mprMark(stream->context);
         mprMark(stream->data);
         mprMark(stream->dispatcher);
+#if DEPRECATED
         mprMark(stream->ejs);
+#endif
         mprMark(stream->endpoint);
         mprMark(stream->errorMsg);
         mprMark(stream->grid);

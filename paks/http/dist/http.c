@@ -1048,7 +1048,6 @@ static void startRequest(Request *request)
 static void notifier(HttpStream *stream, int event, int arg)
 {
     Request *request;
-
     request = stream->data;
 
     switch (event) {
