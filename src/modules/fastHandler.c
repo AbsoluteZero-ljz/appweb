@@ -587,7 +587,7 @@ static bool parseFastHeaders(HttpPacket *packet)
     if ((endHeaders = sncontains(headers, "\r\n\r\n", blen)) == NULL) {
         if ((endHeaders = sncontains(headers, "\n\n", blen)) == NULL) {
             if (slen(headers) < ME_MAX_HEADERS) {
-                /* Not EOF and less than max headers and have not yet seen an end of headers delimiter */
+                // Not EOF and less than max headers and have not yet seen an end of headers delimiter
                 httpLog(stream->trace, "rx.fast", "detail", "msg:FastCGI incomplete headers, id:%d", req->id);
                 return 0;
             }
@@ -1115,7 +1115,7 @@ static HttpPacket *createFastPacket(HttpQueue *q, int type, HttpPacket *packet)
     mprAdjustBufEnd(packet->prefix, 8);
 
     httpLogPacket(req->trace, "tx.fast", "packet", HTTP_TRACE_HEX, packet,
-        "msg:FastCGI tx packet, type:%d, id:%d, lenth:%ld", type, req->id, len);
+        "msg:FastCGI tx packet, type:%s, id:%d, lenth:%ld", fastTypes[type], req->id, len);
     return packet;
 }
 
@@ -1279,7 +1279,7 @@ static void fastConnectorIncomingService(HttpQueue *q)
         packet->type = type;
 
         httpLogPacket(req->trace, "rx.fast", "packet", HTTP_TRACE_HEX, packet,
-            "msg:FastCGI rx packet, type:%d, id:%d, length:%ld, padding %ld", type, req->id, len, padLength);
+            "msg:FastCGI rx packet, type:%s, id:%d, length:%ld, padding %ld", fastTypes[type], req->id, len, padLength);
 
         /*
             Split extra data off this packet
