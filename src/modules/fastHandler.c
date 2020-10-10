@@ -147,8 +147,8 @@ typedef struct FastRequest {
     FastApp         *app;                   // Owning app
     MprSocket       *socket;                // I/O socket
     HttpStream      *stream;                // Owning client request stream
-    HttpQueue       *writeq;                // Queue to write to the FastCGI app
-    HttpQueue       *readq;                 // Queue to hold read data from the FastCGI app
+    HttpQueue       *connWriteq;            // Queue to write to the FastCGI app
+    HttpQueue       *connReadq;             // Queue to hold read data from the FastCGI app
     HttpTrace       *trace;                 // Default tracing configuration
     int             id;                     // FastCGI request ID - assigned from FastApp.nextID % FAST_MAX_ID
     bool            eof;                    // Socket is closed
@@ -177,7 +177,8 @@ static void copyFastParams(HttpPacket *packet, MprJson *params, cchar *prefix);
 static void copyFastVars(HttpPacket *packet, MprHash *vars, cchar *prefix);
 static HttpPacket *createFastPacket(HttpQueue *q, int type, HttpPacket *packet);
 static MprSocket *createListener(FastApp *app, HttpStream *stream);
-static void enableFastRequestEvents(FastRequest *req);
+static void enableFastConnector(FastRequest *req);
+static int fastConnectDirective(MaState *state, cchar *key, cchar *value);
 static void fastConnectorIO(FastRequest *req, MprEvent *event);
 static void fastConnectorIncoming(HttpQueue *q, HttpPacket *packet);
 static void fastConnectorIncomingService(HttpQueue *q);
@@ -185,12 +186,12 @@ static void fastConnectorOutgoingService(HttpQueue *q);
 static void fastHandlerReapResponse(FastRequest *req);
 static void fastHandlerResponse(FastRequest *req, int type, HttpPacket *packet);
 static void fastIncomingRequestPacket(HttpQueue *q, HttpPacket *packet);
-static int fastConnectDirective(MaState *state, cchar *key, cchar *value);
 static void freeFastPackets(HttpQueue *q, ssize bytes);
 static Fast *getFast(HttpRoute *route);
 static char *getFastToken(MprBuf *buf, cchar *delim);
 static FastApp *getFastApp(Fast *fast, HttpStream *stream);
 static int getListenPort(MprSocket *socket);
+static void fastOutgoingService(HttpQueue *q);
 static void idleSocketIO(MprSocket *sp, MprEvent *event);
 static void killFastApp(FastApp *app);
 static void manageFast(Fast *fast, int flags);
@@ -232,6 +233,7 @@ PUBLIC int httpFastInit(Http *http, MprModule *module)
     handler->close = fastCloseRequest;
     handler->open = fastOpenRequest;
     handler->incoming = fastIncomingRequestPacket;
+    handler->outgoingService = fastOutgoingService;
 
     /*
         Create FastCGI connector. The connector manages communication to the FastCGI application.
@@ -306,8 +308,8 @@ static int fastOpenRequest(HttpQueue *q)
      */
     prepFastRequestStart(q);
     prepFastRequestParams(q);
-    httpServiceQueue(req->writeq);
-    enableFastRequestEvents(req);
+    httpServiceQueue(req->connWriteq);
+    enableFastConnector(req);
     return 0;
 }
 
@@ -482,7 +484,29 @@ static void fastIncomingRequestPacket(HttpQueue *q, HttpPacket *packet)
         }
     }
     createFastPacket(q, FAST_STDIN, packet);
-    httpPutForService(req->writeq, packet, HTTP_SCHEDULE_QUEUE);
+    httpPutForService(req->connWriteq, packet, HTTP_SCHEDULE_QUEUE);
+}
+
+
+static void fastOutgoingService(HttpQueue *q)
+{
+    HttpPacket      *packet;
+    HttpStream      *stream;
+    FastRequest     *req;
+
+    req = q->queueData;
+    stream = q->stream;
+
+    for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
+        if (!httpWillNextQueueAcceptPacket(q, packet)) {
+            httpPutBackPacket(q, packet);
+            return;
+        }
+        httpPutPacketToNext(q, packet);
+    }
+    if (!(req->eventMask & MPR_READABLE)) {
+        enableFastConnector(req);
+    }
 }
 
 
@@ -555,7 +579,9 @@ static void fastHandlerResponse(FastRequest *req, int type, HttpPacket *packet)
             req->parsedHeaders = 1;
         }
         if (httpGetPacketLength(packet) > 0) {
-            httpPutPacketToNext(stream->writeq, packet);
+            // httpPutPacketToNext(stream->writeq, packet);
+            httpPutForService(stream->writeq, packet, HTTP_SCHEDULE_QUEUE);
+            httpServiceQueue(stream->writeq);
         }
     }
 }
@@ -1135,7 +1161,7 @@ static void prepFastRequestStart(HttpQueue *q)
     /* Reserved bytes */
     buf += 5;
     mprAdjustBufEnd(packet->content, 8);
-    httpPutForService(req->writeq, createFastPacket(q, FAST_BEGIN_REQUEST, packet), HTTP_SCHEDULE_QUEUE);
+    httpPutForService(req->connWriteq, createFastPacket(q, FAST_BEGIN_REQUEST, packet), HTTP_SCHEDULE_QUEUE);
 }
 
 
@@ -1160,8 +1186,8 @@ static void prepFastRequestParams(HttpQueue *q)
     copyFastVars(packet, rx->svars, "");
     copyFastVars(packet, rx->headers, "HTTP_");
 
-    httpPutForService(req->writeq, createFastPacket(q, FAST_PARAMS, packet), HTTP_SCHEDULE_QUEUE);
-    httpPutForService(req->writeq, createFastPacket(q, FAST_PARAMS, 0), HTTP_SCHEDULE_QUEUE);
+    httpPutForService(req->connWriteq, createFastPacket(q, FAST_PARAMS, packet), HTTP_SCHEDULE_QUEUE);
+    httpPutForService(req->connWriteq, createFastPacket(q, FAST_PARAMS, 0), HTTP_SCHEDULE_QUEUE);
 }
 
 
@@ -1189,16 +1215,16 @@ static FastRequest *allocFastRequest(FastApp *app, HttpStream *stream, MprSocket
     }
     assert(req->id);
 
-    req->readq = httpCreateQueue(stream->net, stream, HTTP->fastConnector, HTTP_QUEUE_RX, 0);
-    req->writeq = httpCreateQueue(stream->net, stream, HTTP->fastConnector, HTTP_QUEUE_TX, 0);
+    req->connReadq = httpCreateQueue(stream->net, stream, HTTP->fastConnector, HTTP_QUEUE_RX, 0);
+    req->connWriteq = httpCreateQueue(stream->net, stream, HTTP->fastConnector, HTTP_QUEUE_TX, 0);
 
-    req->readq->max = FAST_Q_SIZE;
-    req->writeq->max = FAST_Q_SIZE;
+    req->connReadq->max = FAST_Q_SIZE;
+    req->connWriteq->max = FAST_Q_SIZE;
 
-    req->readq->queueData = req;
-    req->writeq->queueData = req;
-    req->readq->pair = req->writeq;
-    req->writeq->pair = req->readq;
+    req->connReadq->queueData = req;
+    req->connWriteq->queueData = req;
+    req->connReadq->pair = req->connWriteq;
+    req->connWriteq->pair = req->connReadq;
     return req;
 }
 
@@ -1208,11 +1234,11 @@ static void manageFastRequest(FastRequest *req, int flags)
     if (flags & MPR_MANAGE_MARK) {
         mprMark(req->fast);
         mprMark(req->app);
-        mprMark(req->readq);
+        mprMark(req->connReadq);
         mprMark(req->socket);
         mprMark(req->stream);
         mprMark(req->trace);
-        mprMark(req->writeq);
+        mprMark(req->connWriteq);
     }
 }
 
@@ -1222,7 +1248,7 @@ static void fastConnectorIncoming(HttpQueue *q, HttpPacket *packet)
     FastRequest    *req;
 
     req = q->queueData;
-    httpPutForService(req->writeq, packet, HTTP_SCHEDULE_QUEUE);
+    httpPutForService(req->connWriteq, packet, HTTP_SCHEDULE_QUEUE);
 }
 
 
@@ -1326,7 +1352,7 @@ static void fastConnectorIO(FastRequest *req, MprEvent *event)
         return;
     }
     if (event->mask & MPR_WRITABLE) {
-        httpServiceQueue(req->writeq);
+        httpServiceQueue(req->connWriteq);
     }
     if (event->mask & MPR_READABLE) {
         lock(fast);
@@ -1337,8 +1363,8 @@ static void fastConnectorIO(FastRequest *req, MprEvent *event)
             if (nbytes > 0) {
                 req->bytesRead += nbytes;
                 mprAdjustBufEnd(packet->content, nbytes);
-                httpJoinPacketForService(req->readq, packet, 0);
-                httpServiceQueue(req->readq);
+                httpJoinPacketForService(req->connReadq, packet, 0);
+                httpServiceQueue(req->connReadq);
             }
         }
         unlock(fast);
@@ -1348,7 +1374,7 @@ static void fastConnectorIO(FastRequest *req, MprEvent *event)
     httpServiceNetQueues(net, 0);
 
     if (!req->eof) {
-        enableFastRequestEvents(req);
+        enableFastConnector(req);
     }
 }
 
@@ -1362,25 +1388,30 @@ static void idleSocketIO(MprSocket *sp, MprEvent *event)
 }
 
 
-static void enableFastRequestEvents(FastRequest *req)
+static void enableFastConnector(FastRequest *req)
 {
     MprSocket   *sp;
+    HttpStream  *stream;
     int         eventMask;
 
     lock(req->fast);
     sp = req->socket;
+    stream = req->stream;
 
     if (sp && !req->eof && !(sp->flags & MPR_SOCKET_CLOSED)) {
         eventMask = 0;
-        if (req->writeq->count > 0) {
+        if (req->connWriteq->count > 0) {
             eventMask |= MPR_WRITABLE;
         }
-        if (req->readq->count < req->readq->max) {
+        /*
+            We always ingest from the connector and packets are queued at the fastHandler head writeq.
+         */
+        if (stream->writeq->count < stream->writeq->max) {
             eventMask |= MPR_READABLE;
         }
         if (eventMask) {
             if (sp->handler == 0) {
-                mprAddSocketHandler(sp, eventMask, req->stream->dispatcher, fastConnectorIO, req, 0);
+                mprAddSocketHandler(sp, eventMask, stream->dispatcher, fastConnectorIO, req, 0);
             } else {
                 mprWaitOn(sp->handler, eventMask);
             }
@@ -1448,7 +1479,7 @@ static void fastConnectorOutgoingService(HttpQueue *q)
         }
     }
     req->app->lastActivity = q->net->http->now;
-    enableFastRequestEvents(req);
+    enableFastConnector(req);
     unlock(fast);
 }
 
