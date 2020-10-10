@@ -97,7 +97,10 @@ int main(int argc, char **argv, char **envp)
     memset(&states, 0, sizeof(states));
 
     for (i = 1; i < argc; i++) {
-        if (argv[i][0] != '-') {
+        if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-?") == 0) {
+            fprintf(stderr, "usage: fastProgram -aenp [-b bytes] [-h lines] [-l location] [-s status] [-t timeout] [endpoint]\n");
+            exit(2);
+        } else if (argv[i][0] != '-') {
             close(0);
             FCGX_OpenSocket(argv[i], 5);
         }
@@ -309,15 +312,9 @@ static int parseArgs(State *state)
             }
         }
     }
-    if (err) {
-        error(state, "usage: fastProgram -aenp [-b bytes] [-h lines]\n"
-            "\t[-l location] [-s status] [-t timeout]\n"
-            "\tor set the HTTP_SWITCHES environment variable\n");
-        error(state, "Error at fastProgram:%d\n", __LINE__);
-        exit(3);
-    }
-    return 0;
+    return err ? -1 : 0;
 }
+
 
 
 /*
@@ -653,8 +650,8 @@ static void error(State *state, char *fmt, ...)
         state->responseStatus = 400;
         state->errorMsg = strdup(buf);
         va_end(args);
+        state->hasError++;
     }
-    state->hasError++;
 }
 
 
