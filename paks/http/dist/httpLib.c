@@ -9773,7 +9773,6 @@ static void outgoingHttp2Service(HttpQueue *q)
     HttpStream  *stream;
     HttpPacket  *packet, *frame;
     HttpTx      *tx;
-    ssize       len;
     int         flags;
 
     net = q->net;
@@ -15378,17 +15377,18 @@ PUBLIC HttpPacket *httpGetPacket(HttpQueue *q)
                 assert(q->last == 0);
             }
         }
-        if (q->count < q->low) {
-            prev = httpFindPreviousQueue(q);
-            if (prev && prev->flags & HTTP_QUEUE_SUSPENDED) {
-                /*
-                    This queue was full and now is below the low water mark. Back-enable the previous queue.
-                    Must only resume the queue if a packet was actually dequed.
-                 */
-                httpResumeQueue(prev, 0);
-            }
-        }
         break;
+    }
+    //  Must do this regardless of whether there is a packet or not
+    if (q->count < q->low) {
+        prev = httpFindPreviousQueue(q);
+        if (prev && prev->flags & HTTP_QUEUE_SUSPENDED) {
+            /*
+                This queue was full and now is below the low water mark. Back-enable the previous queue.
+                Must only resume the queue if a packet was actually dequed.
+             */
+            httpResumeQueue(prev, 0);
+        }
     }
     return packet;
 }
@@ -17897,8 +17897,9 @@ PUBLIC void httpServiceQueue(HttpQueue *q)
         Not typically required as the queue is typically linked into a pipeline.
      */
     if (q->net) {
+        //  MOB why?
         q->net->holdq = q;
-        assert(q != q->net->serviceq);
+        //  MOB - what does this do?  every called?
         if (q->net->serviceq == q) {
             return;
         }
@@ -17941,28 +17942,26 @@ PUBLIC bool httpServiceNetQueues(HttpNet *net, int flags)
     HttpQueue   *q;
     bool        workDone;
 
+    //  MOB - get rid of workDone and return values
     workDone = 0;
 
-    /*
-        If switching to net->queues -- may need some limit on number of iterations
-     */
     while ((q = httpGetNextQueueForService(net->serviceq)) != NULL) {
+        //  MOB - remove as done by ServiceQueue itself
         if (q->servicing) {
             /* Called re-entrantly */
             q->flags |= HTTP_QUEUE_RESERVICE;
         } else {
-            assert(q->schedulePrev == q->scheduleNext);
             httpServiceQueue(q);
             workDone = 1;
         }
-        if (mprNeedYield() && (flags & HTTP_BLOCK)) {
+        if ((flags & HTTP_BLOCK) && mprNeedYield()) {
             mprYield(0);
         }
     }
     /*
         Always do a yield if requested even if there are no queues to service
      */
-    if (mprNeedYield() && (flags & HTTP_BLOCK)) {
+    if (!workDone && (flags & HTTP_BLOCK) && mprNeedYield()) {
         mprYield(0);
     }
     return workDone;
@@ -22995,7 +22994,7 @@ static void manageStage(HttpStage *stage, int flags);
  */
 static void outgoing(HttpQueue *q, HttpPacket *packet)
 {
-    if (q->service && q->service != httpDefaultOutgoingServiceStage) {
+    if (q->service) {
         httpPutForService(q, packet, HTTP_SCHEDULE_QUEUE);
     } else {
         httpPutPacketToNext(q, packet);
@@ -25794,7 +25793,7 @@ PUBLIC ssize httpWriteBlock(HttpQueue *q, cchar *buf, ssize len, int flags)
     HttpPacket  *packet;
     HttpStream  *stream;
     HttpTx      *tx;
-    ssize       count, max, totalWritten, packetSize, thisWrite;
+    ssize       totalWritten, packetSize, thisWrite;
 
     assert(q == q->stream->writeq);
 
@@ -25805,11 +25804,11 @@ PUBLIC ssize httpWriteBlock(HttpQueue *q, cchar *buf, ssize len, int flags)
     net = stream->net;
     tx = stream->tx;
 
-    if (tx == 0 || tx->finalizedOutput) {
-        return MPR_ERR_CANT_WRITE;
-    }
     if (flags == 0) {
         flags = HTTP_BUFFER;
+    }
+    if (tx == 0 || tx->finalizedOutput) {
+        return MPR_ERR_CANT_WRITE;
     }
     tx->responded = 1;
 
@@ -25842,13 +25841,7 @@ PUBLIC ssize httpWriteBlock(HttpQueue *q, cchar *buf, ssize len, int flags)
                 httpPutPacket(q, packet);
             }
         }
-        /*
-            The put above may directly transfer the packet onto a downstream queue, so our queue count will probably be zero.
-            So look at the current queue and the downstream queue for flow control.
-         */
-        count = q->count + q->nextQ->count;
-        max = q->max + q->nextQ->max;
-        if (count >= max || q->flags & HTTP_QUEUE_SUSPENDED || q->nextQ->flags & HTTP_QUEUE_SUSPENDED) {
+        if (q->count >= q->max || q->flags & HTTP_QUEUE_SUSPENDED) {
             //  WARNING: may yield if flags are HTTP_BLOCK
             httpFlushQueue(q, flags);
             if (q->count >= q->max && (flags & HTTP_NON_BLOCK)) {

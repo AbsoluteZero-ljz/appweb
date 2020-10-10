@@ -56,3 +56,4 @@ test/error.log*
 test/proxy.err
 test/proxy.log
 test/j*.conf
+php.log
