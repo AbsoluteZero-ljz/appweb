@@ -788,7 +788,10 @@ static int copyParams(HttpStream *stream, cchar **envv, int index, MprJson *para
     int         i;
 
     for (ITERATE_JSON(params, param, i)) {
-        copyInner(stream, envv, index++, param->name, param->value, prefix);
+        //  Workaround for large form fields that are also copied as post data
+        if (slen(param->value) <= ME_MAX_RX_FORM_FIELD) {
+            copyInner(stream, envv, index++, param->name, param->value, prefix);
+        }
     }
     envv[index] = 0;
     return index;
