@@ -471,8 +471,8 @@ static void fastHandlerResponse(FastComm *comm, int type, HttpPacket *packet)
         buf = packet->content;
         rx = stream->rx;
 
-        status = mprGetCharFromBuf(buf) << 24 || mprGetCharFromBuf(buf) << 16 ||
-                 mprGetCharFromBuf(buf) << 8 || mprGetCharFromBuf(buf);
+        status = mprGetCharFromBuf(buf) << 24 | mprGetCharFromBuf(buf) << 16 |
+                 mprGetCharFromBuf(buf) << 8 | mprGetCharFromBuf(buf);
         protoStatus = mprGetCharFromBuf(buf);
         mprAdjustBufStart(buf, 3);
 

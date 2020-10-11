@@ -2899,7 +2899,7 @@ PUBLIC bool mprDestroy()
     /*
         Wait for events thread to exit and the app to become idle
      */
-    while (MPR->eventing) {
+    while (!mprIsIdle(0) || MPR->eventing) {
         mprWakeNotifier();
         mprWaitForCond(MPR->cond, 10);
         if (mprGetRemainingTicks(MPR->shutdownStarted, timeout) <= 0) {
@@ -11359,7 +11359,7 @@ PUBLIC void mprRemoveEvent(MprEvent *event)
         }
         event->dispatcher = 0;
         event->flags &= ~MPR_EVENT_CONTINUOUS;
-        if (event->due == es->willAwake && dispatcher->eventQ->next != dispatcher->eventQ) {
+        if (event->due == es->willAwake && dispatcher->eventQ && dispatcher->eventQ->next != dispatcher->eventQ) {
             mprScheduleDispatcher(dispatcher);
         }
         if (event->cond) {
@@ -22013,7 +22013,7 @@ static void standardSignalHandler(void *ignored, MprSignal *sp)
         mprShutdown(MPR_EXIT_ABORT, -1, 0);
 
     } else if (sp->signo == SIGUSR1) {
-        mprShutdown(MPR_EXIT_RESTART, 0, 0);
+        mprShutdown(MPR_EXIT_RESTART, 0, -1);
 
     } else if (sp->signo == SIGPIPE || sp->signo == SIGXFSZ) {
         /* Ignore */
@@ -28616,7 +28616,8 @@ PUBLIC void mprRemoveWaitHandler(MprWaitHandler *wp)
 
 PUBLIC void mprDestroyWaitHandler(MprWaitHandler *wp)
 {
-    MprWaitService      *ws;
+    MprWaitService  *ws;
+    MprEvent        *event;
 
     if (wp == 0) {
         return;
@@ -28626,10 +28627,11 @@ PUBLIC void mprDestroyWaitHandler(MprWaitHandler *wp)
     if (wp->fd >= 0) {
         mprRemoveWaitHandler(wp);
         wp->fd = INVALID_SOCKET;
-        if (wp->event) {
-            mprRemoveEvent(wp->event);
-            mprRelease(wp->event);
+        event = wp->event;
+        if (event) {
             wp->event = 0;
+            mprRemoveEvent(event);
+            mprRelease(event);
         }
     }
     wp->dispatcher = 0;
