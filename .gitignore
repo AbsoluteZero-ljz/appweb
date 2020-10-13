@@ -58,3 +58,6 @@ test/proxy.log
 test/j*.conf
 php.log
 t.es
+.cdrc
+.profile
+*.dmp
