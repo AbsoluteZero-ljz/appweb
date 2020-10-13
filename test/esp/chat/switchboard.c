@@ -8,19 +8,9 @@
  */
 static MprList  *clients;
 
-/*
-    Example of a structure to pass to each client.
- */
-typedef struct Msg {
-    HttpPacket  *packet;
-} Msg;
-
-
-static void chat(HttpStream *stream, Msg *msg);
+static void chat(HttpStream *stream, HttpPacket *packet);
 static void chat_action();
 static void chat_callback(HttpStream *stream, int event, int arg);
-static void manageMsg(Msg *msg, int flags);
-
 
 /*
     Initialize the "chat" loadable module
@@ -63,7 +53,6 @@ static void chat_callback(HttpStream *stream, int event, int arg)
 {
     HttpPacket  *packet;
     void        *client;
-    Msg         *msg;
     int         next;
 
     if (event == HTTP_EVENT_READABLE) {
@@ -75,14 +64,9 @@ static void chat_callback(HttpStream *stream, int event, int arg)
                     This must be done using each stream event dispatcher to ensure we don't conflict with
                     other activity on the stream that may happen on another worker thread at the same time.
                     The "chat" callback will be invoked on the releveant stream's event dispatcher.
-
-                    We allocate the message object here just to demonstrate how it is done, despite only having one field "packet".
-                    We could have just passed the packet without allocating a Msg. Keep the reference in stream->data to ensure it
-                    is retained by the GC.
                  */
-                stream->data = msg = mprAllocObj(Msg, manageMsg);
-                msg->packet = packet;
-                httpCreateEvent(PTOL(client), (HttpEventProc) chat, msg);
+                mprAddRoot(packet);
+                httpCreateEvent(PTOL(client), (HttpEventProc) chat, packet);
             }
         }
 
@@ -105,24 +89,10 @@ static void chat_callback(HttpStream *stream, int event, int arg)
 /*
     Send message to a client
  */
-static void chat(HttpStream *stream, Msg *msg)
+static void chat(HttpStream *stream, HttpPacket *packet)
 {
-    HttpPacket  *packet;
-
+    mprRemoveRoot(packet);
     if (stream) {
-        packet = msg->packet;
         httpSendBlock(stream, packet->type, httpGetPacketStart(packet), httpGetPacketLength(packet), 0);
-    } else {
-        /* Stream destroyed. Release any custom Msg resources if required here */
-    }
-}
-
-/*
-    Garbage collection rention callback.
- */
-static void manageMsg(Msg *msg, int flags)
-{
-    if (flags & MPR_MANAGE_MARK) {
-        mprMark(msg->packet);
     }
 }

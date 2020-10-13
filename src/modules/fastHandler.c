@@ -466,7 +466,6 @@ static void fastIncomingRequestPacket(HttpQueue *q, HttpPacket *packet)
 {
     HttpStream      *stream;
     FastRequest     *req;
-    ssize           len;
 
     assert(q);
     assert(packet);
@@ -475,7 +474,7 @@ static void fastIncomingRequestPacket(HttpQueue *q, HttpPacket *packet)
     if ((req = q->queueData) == 0) {
         return;
     }
-    if ((len = httpGetPacketLength(packet)) == 0) {
+    if (packet->flags & HTTP_PACKET_END) {
         /* End of input */
         httpFinalizeInput(stream);
         if (stream->rx->remainingContent > 0) {
