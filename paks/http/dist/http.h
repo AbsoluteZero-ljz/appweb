@@ -1958,7 +1958,8 @@ typedef struct HttpPacket {
     uint            flags: 7;               /**< Packet flags */
     uint            last: 1;                /**< Last packet in a message */
     uint            type: 8;                /**< Packet type extension */
-    uint            reserved: 16;           /**< Reserved */
+    uint            fin: 1;                 /**< Web sockets frame fin bit */
+    uint            reserved: 15;           /**< Reserved */
     struct HttpPacket *next;                /**< Next packet in chain */
     MprBuf          *content;               /**< Chunk content */
     MprBuf          *prefix;                /**< Prefix message to be emitted before the content */
@@ -2189,7 +2190,7 @@ PUBLIC HttpPacket *httpSplitPacket(HttpPacket *packet, ssize offset);
 /*
     Queue optimizations
  */
-#define HTTP_QUEUE_ALLOW          16        /**< Let packets less than this size flow through */
+#define HTTP_QUEUE_ALLOW          32        /**< Let packets less than this size flow through */
 #define HTTP_QUEUE_DONT_SPLIT     32        /**< Don't split packets less than 32 bytes */
 
 /*
@@ -2424,9 +2425,6 @@ PUBLIC void httpPutPacket(struct HttpQueue *q, HttpPacket *packet);
     @description Put a packet onto the next downstream queue by calling the downstream queue's put() method.
         Note the receiving queue may immediately process the packet or it may choose to defer processing by putting to
         its service queue.
-    \n\n
-    Note: the garbage collector may run while calling httpSendBlock to reclaim unused packets. It is essential that all
-        required memory be retained by a relevant manager calling mprMark as required.
     @param qp Queue reference. The packet will not be queued on this queue, but rather on the queue downstream.
     @param packet Packet to put
     @ingroup HttpQueue
@@ -2667,6 +2665,7 @@ PUBLIC HttpQueue *httpAppendQueue(HttpQueue *q, HttpQueue *prev);
 PUBLIC void httpAssignQueueCallbacks(HttpQueue *q, struct HttpStage *stage, int dir);
 PUBLIC HttpQueue *httpCreateQueue(struct HttpNet *net, struct HttpStream *stream, struct HttpStage *stage, int dir, HttpQueue *prev);
 PUBLIC HttpQueue *httpCreateQueueHead(struct HttpNet *net, struct HttpStream *stream, cchar *name, int dir);
+PUBLIC HttpQueue *httpFindNextQueue(HttpQueue *q);
 PUBLIC HttpQueue *httpFindPreviousQueue(HttpQueue *q);
 PUBLIC HttpQueue *httpGetNextQueueForService(HttpQueue *q);
 PUBLIC void httpInitSchedulerQueue(HttpQueue *q);
@@ -2708,7 +2707,7 @@ typedef int (*HttpParse)(cchar *key, char *value, void *state);
     If the configuration is modified when the application is multithreaded, all requests must be first be quiesced.
     @defgroup HttpStage HttpStage
     @see HttpStream HttpQueue HttpStage httpCloneStage httpCreateConnector httpCreateFilter httpCreateHandler
-        httpCreateStage httpDefaultOutgoingServiceStage httpGetStageData httpHandleOptionsTrace httpLookupStage
+        httpCreateStage httpDefaultService httpGetStageData httpHandleOptionsTrace httpLookupStage
         httpLookupStageData httpSetStageData
     @stability Internal
  */
@@ -2948,14 +2947,44 @@ PUBLIC struct HttpStage *httpLookupStage(cchar *name);
 PUBLIC void httpDefaultIncoming(HttpQueue *q, HttpPacket *packet);
 
 /**
-    Default outgoing data handling
-    @description This routine provides default handling of outgoing data for stages. It simply sends all packets
-        downstream.
+    Default stage service routine handling
+    @description This routine provides default service handling of data for stages. It simply sends all packets
+        downstream. It handles flow control automatically.
     @param q Queue object
     @ingroup HttpStage
-    @stability Stable
+    @stability Evolving
  */
-PUBLIC void httpDefaultOutgoingServiceStage(HttpQueue *q);
+PUBLIC void httpDefaultService(HttpQueue *q);
+
+/**
+    Stage service routine that discards packets
+    @param q Queue object
+    @ingroup HttpStage
+    @stability Evolving
+ */
+PUBLIC void httpDiscardService(HttpQueue *q);
+
+
+/**
+    Default stage incoming handling
+    @description This routine provides default incoming handling of data for stages.
+        It puts the packet to the next Stage's incoming service queue or incoming routine if there
+        is no service routine defined.
+    @param q Queue object
+    @ingroup HttpStage
+    @stability Prototype
+ */
+PUBLIC void httpDefaultIncoming(HttpQueue *q, HttpPacket *packet);
+
+/**
+    Default stage outgoing handling
+    @description This routine provides default outgoing handling of data for stages. It puts the packet
+        to the next Stage's outgoing service queue or outgoing routine if there is no service routine defined.
+    @param q Queue object
+    @ingroup HttpStage
+    @stability Prototype
+ */
+PUBLIC void httpDefaultOutgoing(HttpQueue *q, HttpPacket *packet);
 
 /**
     Get stage data
@@ -3481,11 +3510,10 @@ PUBLIC void httpReturnNet(HttpNet *net);
         by the http pipeline and support routines.
     @param net HttpNet object created via #httpCreateNet
     @param flags Set to HTTP_BLOCK to yield for GC if due
-    @return True if work was done servicing queues.
     @ingroup HttpNet
     @stability Evolving
  */
-PUBLIC bool httpServiceNetQueues(HttpNet *net, int flags);
+PUBLIC void httpServiceNetQueues(HttpNet *net, int flags);
 
 /**
     Define an I/O callback for network connections
@@ -4357,7 +4385,7 @@ PUBLIC void httpParseMethod(HttpStream *stream);
 PUBLIC void httpResetServerStream(HttpStream *stream);
 PUBLIC HttpLimits *httpSetUniqueStreamLimits(HttpStream *stream);
 PUBLIC void httpInitChunking(HttpStream *stream);
-PUBLIC bool httpServiceQueues(HttpStream *stream, int flags);
+PUBLIC void httpServiceQueues(HttpStream *stream, int flags);
 
 /********************************** HttpAuthStore *********************************/
 /**
@@ -8966,3 +8994,5 @@ PUBLIC bool httpPumpOutput(HttpQueue *q);
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
  */
+
+PUBLIC void httpCheckQueues(HttpQueue *q);

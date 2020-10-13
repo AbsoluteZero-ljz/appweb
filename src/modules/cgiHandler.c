@@ -243,8 +243,7 @@ static void browserToCgiData(HttpQueue *q, HttpPacket *packet)
     stream = q->stream;
     assert(q == stream->readq);
 
-    if (httpGetPacketLength(packet) == 0) {
-        /* End of input */
+    if (packet->flags & HTTP_PACKET_END) {
         if (stream->rx->remainingContent > 0) {
             /* Short incoming body data. Just kill the CGI process */
             if (cgi->cmd) {
@@ -355,7 +354,7 @@ static void cgiToBrowserService(HttpQueue *q)
         socket is writable again, the stream will drain its queue which will re-enable this queue
         and schedule it for service again.
      */
-    httpDefaultOutgoingServiceStage(q);
+    httpDefaultService(q);
     if (q->count < q->low) {
         mprEnableCmdOutputEvents(cmd, 1);
     } else if (q->count > q->max && stream->net->writeBlocked) {
@@ -412,6 +411,8 @@ static void cgiCallback(MprCmd *cmd, int channel, void *data)
         assert(!suspended || stream->net->writeBlocked);
         mprEnableCmdOutputEvents(cmd, !suspended);
     }
+    httpServiceNetQueues(stream->net, 0);
+    
     mprCreateEvent(stream->dispatcher, "cgi", 0, httpIOEvent, stream->net, 0);
 }
 

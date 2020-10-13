@@ -3825,7 +3825,7 @@ PUBLIC ssize espRender(HttpStream *stream, cchar *fmt, ...)
 
 PUBLIC ssize espRenderBlock(HttpStream *stream, cchar *buf, ssize size)
 {
-    return httpWriteBlock(stream->writeq, buf, size, HTTP_BUFFER);
+    return httpWriteBlock(stream->writeq, buf, size, HTTP_BLOCK);
 }
 
 

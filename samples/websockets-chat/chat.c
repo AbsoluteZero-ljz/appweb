@@ -80,8 +80,9 @@ static void chat_callback(HttpStream *stream, int event, int arg)
                     We could have just passed the packet without allocating a Msg. Keep the reference in stream->data to ensure it
                     is retained by the GC.
                  */
-                stream->data = msg = mprAllocObj(Msg, manageMsg);
+                msg = mprAllocObj(Msg, manageMsg);
                 msg->packet = packet;
+                mprAddRoot(msg);
                 httpCreateEvent(PTOL(client), (HttpEventProc) chat, msg);
             }
         }
@@ -109,6 +110,7 @@ static void chat(HttpStream *stream, Msg *msg)
 {
     HttpPacket  *packet;
 
+    mprRemoveRoot(msg);
     if (stream) {
         packet = msg->packet;
         httpSendBlock(stream, packet->type, httpGetPacketStart(packet), httpGetPacketLength(packet), 0);

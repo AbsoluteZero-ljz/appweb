@@ -137,8 +137,8 @@ static HttpStream *proxyCreateStream(ProxyRequest *req);
 static void proxyIncomingRequestPacket(HttpQueue *q, HttpPacket *packet);
 static void proxyBackNotifier(HttpStream *stream, int event, int arg);
 static void proxyDeath(ProxyApp *app, MprSignal *sp);
-static void proxyReadResponse(HttpQueue *q);
 static void proxyStartRequest(HttpQueue *q);
+static void proxyStreamIncoming(HttpQueue *q);
 static ProxyApp *startProxyApp(Proxy *proxy, HttpStream *stream);
 static void proxyMaintenance(Proxy *proxy);
 static void transferClientHeaders(HttpStream *stream, HttpStream *proxyStream);
@@ -465,7 +465,8 @@ static void proxyBackNotifier(HttpStream *proxyStream, int event, int arg)
     complete = 0;
     switch (event) {
     case HTTP_EVENT_READABLE:
-        proxyReadResponse(proxyStream->readq);
+        httpScheduleQueue(proxyStream->readq);
+        //MOB proxyReadResponse(proxyStream->readq);
         break;
     case HTTP_EVENT_WRITABLE:
     case HTTP_EVENT_DESTROY:
@@ -543,8 +544,7 @@ static void proxyIncomingRequestPacket(HttpQueue *q, HttpPacket *packet)
     }
     packet->stream = req->proxyStream;
 
-    if (httpGetPacketLength(packet) == 0) {
-        /* END Packet -- End of input */
+    if (packet->flags & HTTP_PACKET_END) {
         httpFinalizeInput(stream);
         if (stream->rx->remainingContent > 0) {
             httpError(stream, HTTP_CODE_BAD_REQUEST, "Client supplied insufficient body data");
@@ -558,7 +558,35 @@ static void proxyIncomingRequestPacket(HttpQueue *q, HttpPacket *packet)
 }
 
 
-static void proxyReadResponse(HttpQueue *q)
+#if KEEP
+static void proxyOutgoingService(HttpQueue *q)
+{
+    HttpPacket      *packet;
+    HttpStream      *stream;
+    ProxyRequest    *req;
+
+    req = q->queueData;
+    stream = q->stream;
+
+    for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
+        if (!httpWillNextQueueAcceptPacket(q, packet)) {
+            httpPutBackPacket(q, packet);
+            return;
+        }
+        httpPutPacketToNext(q, packet);
+    }
+    if (!(req->proxyNet->eventMask & MPR_READABLE)) {
+        httpEnableNetEvents(req->proxyNet);
+    }
+}
+#endif
+
+
+/*
+    Read a response from the proxy and pass back to the client
+    The queue is the proxyStream readq (QueueHead-rx)
+ */
+static void proxyStreamIncoming(HttpQueue *q)
 {
     HttpPacket      *packet;
     HttpStream      *stream;
@@ -579,6 +607,7 @@ static void proxyReadResponse(HttpQueue *q)
         }
         if (!httpWillQueueAcceptPacket(q, stream->writeq, packet)) {
             httpPutBackPacket(q, packet);
+            httpEnableNetEvents(req->proxyNet);
             return;
         }
         if (packet->flags & HTTP_PACKET_END) {
@@ -1013,6 +1042,7 @@ static HttpStream *proxyCreateStream(ProxyRequest *req)
     }
     httpSetStreamNotifier(proxyStream, proxyBackNotifier);
     httpCreatePipeline(proxyStream);
+    proxyStream->readq->service = proxyStreamIncoming;
 
     proxyStream->trace = proxy->trace;
     proxyStream->proxied = 1;
