@@ -4,5 +4,6 @@ do
     set -e
     echo Count $i
     i=$((i + 1))
-    killall php-cgi fastProgram ; testme
+    killall php-cgi fastProgram 2>&1 >/dev/null || true
+    testme
 done

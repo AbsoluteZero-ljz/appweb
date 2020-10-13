@@ -9689,6 +9689,7 @@ static void outgoingHttp2(HttpQueue *q, HttpPacket *packet)
     }
     if (packet->flags & HTTP_PACKET_DATA) {
         // Must compute window here as this is run synchronously from the upstream sender
+        assert(stream->outputq->window >= 0);
         stream->outputq->window -= httpGetPacketLength(packet);
         assert(stream->outputq->window >= 0);
     }
@@ -14186,6 +14187,8 @@ PUBLIC void httpSetNetProtocol(HttpNet *net, int protocol)
 
     httpAssignQueueCallbacks(net->inputq, stage, HTTP_QUEUE_RX);
     httpAssignQueueCallbacks(net->outputq, stage, HTTP_QUEUE_TX);
+    net->inputq->name = stage->name;
+    net->outputq->name = stage->name;
 }
 
 
@@ -16217,7 +16220,7 @@ static int loadQueue(HttpQueue *q, ssize chunkSize)
 
 
 /*
-    Set the fileHandler as the selected handler for the request
+    Set the fileHandler as the selected handler for the request and invoke the open and start fileHandler callbacks.
     Called by ESP to render a document.
  */
 PUBLIC void httpSetFileHandler(HttpStream *stream, cchar *path)
@@ -16232,10 +16235,11 @@ PUBLIC void httpSetFileHandler(HttpStream *stream, cchar *path)
     }
     tx->entityLength = tx->fileInfo.size;
     fp = tx->handler = HTTP->fileHandler;
-    fp->open(stream->writeq);
-    fp->start(stream->writeq);
     stream->writeq->service = fp->outgoingService;
     stream->readq->put = fp->incoming;
+    fp->open(stream->writeq);
+    fp->start(stream->writeq);
+    httpLog(stream->trace, "pipeline", "context", "Relay to file handler");
 }
 
 
@@ -17449,11 +17453,14 @@ PUBLIC HttpQueue *httpCreateQueue(HttpNet *net, HttpStream *stream, HttpStage *s
 
 static void initQueue(HttpNet *net, HttpStream *stream, HttpQueue *q, cchar *name, int dir, int flags)
 {
+    if (dir == HTTP_QUEUE_TX) {
+        flags |= HTTP_QUEUE_OUTGOING;
+    }
     q->net = net;
     q->stream = stream;
     q->nextQ = q;
     q->prevQ = q;
-    q->name = sfmt("%s-%s", name, dir == HTTP_QUEUE_TX ? "tx" : "rx");
+    q->name = sclone(name);
     if (stream && stream->tx && stream->tx->chunkSize > 0) {
         q->packetSize = stream->tx->chunkSize;
     } else {
@@ -17462,9 +17469,6 @@ static void initQueue(HttpNet *net, HttpStream *stream, HttpQueue *q, cchar *nam
     q->max = q->packetSize * ME_QUEUE_MAX_FACTOR;
     q->low = q->packetSize;
     q->flags = flags;
-    if (dir == HTTP_QUEUE_TX) {
-        flags |= HTTP_QUEUE_OUTGOING;
-    }
 }
 
 
@@ -17631,7 +17635,7 @@ PUBLIC bool httpFlushQueue(HttpQueue *q, int flags)
     HttpNet     *net;
     HttpStream  *stream;
     MprTicks    timeout;
-    int         events;
+    int         events, mask;
 
     net = q->net;
     stream = q->stream;
@@ -17639,7 +17643,9 @@ PUBLIC bool httpFlushQueue(HttpQueue *q, int flags)
     /*
         Initiate flushing.
      */
-    httpScheduleQueue(q);
+    if (!(q->flags & HTTP_QUEUE_SUSPENDED)) {
+        httpScheduleQueue(q);
+    }
     httpServiceNetQueues(net, flags);
 
     /*
@@ -17653,14 +17659,18 @@ PUBLIC bool httpFlushQueue(HttpQueue *q, int flags)
         return 1;
     }
 
-    while (flags & HTTP_BLOCK && q->count > 0 && !stream->error && !net->error) {
+    while (q->count > 0 && !stream->error && !net->error) {
         timeout = (flags & HTTP_BLOCK) ? stream->limits->inactivityTimeout : 0;
-        if ((events = mprWaitForSingleIO((int) net->sock->fd, MPR_READABLE | MPR_WRITABLE, timeout)) != 0) {
+        mask = MPR_READABLE;
+        if (net->socketq->count > 0 || net->socketq->ioCount > 0) {
+            mask = MPR_WRITABLE;
+        }
+        if ((events = mprWaitForSingleIO((int) net->sock->fd, mask, timeout)) != 0) {
             stream->lastActivity = net->lastActivity = net->http->now;
             if (events & MPR_READABLE) {
                 httpReadIO(net);
             }
-            if (net->socketq->count > 0 && events & MPR_WRITABLE) {
+            if ((net->socketq->count > 0 || net->socketq->ioCount > 0) && (events & MPR_WRITABLE)) {
                 net->lastActivity = net->http->now;
                 httpResumeQueue(net->socketq, 1);
                 httpServiceNetQueues(net, flags);
@@ -17671,6 +17681,10 @@ PUBLIC bool httpFlushQueue(HttpQueue *q, int flags)
                  */
                 mprWaitForEvent(stream->dispatcher, 0, mprGetEventMark(stream->dispatcher));
             }
+        }
+        httpServiceNetQueues(net, flags);
+        if (!(flags & HTTP_BLOCK)) {
+            break;
         }
     }
     return (q->count < q->max) ? 1 : 0;
@@ -23873,7 +23887,7 @@ PUBLIC void httpAddInputEndPacket(HttpStream *stream, HttpQueue *q)
 
 /********************************** Forwards **********************************/
 
-static bool willQueueAcceptPacket(HttpQueue *q, HttpPacket *packet, ssize window);
+static bool willQueueAcceptPacket(HttpQueue *q, HttpPacket *packet);
 static HttpPacket *createAltBodyPacket(HttpQueue *q);
 static void incomingTail(HttpQueue *q, HttpPacket *packet);
 static void outgoingTail(HttpQueue *q, HttpPacket *packet);
@@ -23970,57 +23984,33 @@ static void outgoingTail(HttpQueue *q, HttpPacket *packet)
 static void outgoingTailService(HttpQueue *q)
 {
     HttpPacket  *packet;
-    ssize       window = 0;
 
-#if ME_HTTP_HTTP2
-    window = q->stream->outputq->window;
-#endif
     for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
-        if (!willQueueAcceptPacket(q, packet, window)) {
+        if (!willQueueAcceptPacket(q, packet)) {
             httpPutBackPacket(q, packet);
             return;
         }
-#if ME_HTTP_HTTP2
-        if (packet->flags & HTTP_PACKET_DATA && q->net->protocol >= 2) {
-            window -= httpGetPacketLength(packet);
-        }
-#endif
         // Onto the http*Filter
         httpPutPacket(q->net->outputq, packet);
     }
 }
 
-
-/*
-    Create an alternate response body for error responses.
- */
-static HttpPacket *createAltBodyPacket(HttpQueue *q)
-{
-    HttpTx      *tx;
-    HttpPacket  *packet;
-
-    tx = q->stream->tx;
-    packet = httpCreateDataPacket(slen(tx->altBody));
-    mprPutStringToBuf(packet->content, tx->altBody);
-    return packet;
-}
-
-
 /*
     Similar to httpWillQueueAcceptPacket, but also handles HTTP/2 flow control.
+    This MUST be done here because this is the last per-stream control point. The Http2Filter has all streams
+    multiplexed together.
  */
-static bool willQueueAcceptPacket(HttpQueue *q, HttpPacket *packet, ssize window)
+static bool willQueueAcceptPacket(HttpQueue *q, HttpPacket *packet)
 {
+    HttpNet     *net;
     HttpStream  *stream;
     HttpQueue   *nextQ;
     HttpPacket  *next, *tail;
     ssize       room, size;
     int         last;
 
-    next = q->first;
+    net = q->net;
     stream = q->stream;
-    nextQ = stream->net->outputq;
-    size = httpGetPacketLength(packet);
 
     /*
         Determine if this is the last packet in the HTTP/2 stream.
@@ -24029,6 +24019,7 @@ static bool willQueueAcceptPacket(HttpQueue *q, HttpPacket *packet, ssize window
 
         Should be in HTTP/2. But must not flow control headers.
      */
+    next = q->first;
     last = (
         (packet->flags & HTTP_PACKET_HEADER && !(!next || next->flags & HTTP_PACKET_HEADER)) ||
         (packet->flags & HTTP_PACKET_DATA && next && next->flags & HTTP_PACKET_END) ||
@@ -24038,12 +24029,20 @@ static bool willQueueAcceptPacket(HttpQueue *q, HttpPacket *packet, ssize window
         Get the maximum the output stream can absorb that is less than the downstream queue packet size and
         the per-stream window size if HTTP/2.
      */
+    nextQ = stream->net->outputq;
     if (packet->flags & HTTP_PACKET_DATA) {
-        room = q->net->protocol >= 2 ? window : nextQ->max - nextQ->count;
+        room = net->protocol >= 2 ? stream->outputq->window : nextQ->max - nextQ->count;
     } else {
         room = nextQ->max - nextQ->count;
     }
-    if (size <= room || (size - room) < HTTP_QUEUE_ALLOW) {
+    size = httpGetPacketLength(packet);
+    if (size <= room) {
+        //  Packet fits
+        packet->last = last;
+        return 1;
+    }
+    if (net->protocol < 2 && (size - room) < HTTP_QUEUE_ALLOW) {
+        //  Packet almost fits. Allow for HTTP/1. HTTP/2 we must strictly observe the flow control window.
         packet->last = last;
         return 1;
     }
@@ -24069,6 +24068,22 @@ static bool willQueueAcceptPacket(HttpQueue *q, HttpPacket *packet, ssize window
     }
     return 0;
 }
+
+
+/*
+    Create an alternate response body for error responses.
+ */
+static HttpPacket *createAltBodyPacket(HttpQueue *q)
+{
+    HttpTx      *tx;
+    HttpPacket  *packet;
+
+    tx = q->stream->tx;
+    packet = httpCreateDataPacket(slen(tx->altBody));
+    mprPutStringToBuf(packet->content, tx->altBody);
+    return packet;
+}
+
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
@@ -24748,10 +24763,12 @@ PUBLIC bool httpShouldTrace(HttpTrace *trace, cchar *type)
 
 PUBLIC void httpTraceQueues(HttpStream *stream)
 {
+    HttpNet     *net;
     HttpQueue   *q;
     HttpTrace   *trace;
     cchar       *pipeline;
 
+    net = stream->net;
     trace = stream->trace;
     if (!httpShouldTrace(trace, "detail")) {
         return;
@@ -24760,10 +24777,15 @@ PUBLIC void httpTraceQueues(HttpStream *stream)
     for (q = stream->rxHead->prevQ; q != stream->rxHead; q = q->prevQ) {
         pipeline = sjoin(pipeline, " < ", q->name, NULL);
     }
+    pipeline = sjoin(pipeline, " < ", net->inputq->name, " < ", net->socketq->name, NULL);
     httpLog(trace, "stream.queues", "detail", "msg:read-pipeline: %s ", pipeline);
 
     pipeline = stream->txHead->name;
     for (q = stream->txHead->nextQ; q != stream->txHead; q = q->nextQ) {
+        pipeline = sjoin(pipeline, " > ", q->name, NULL);
+    }
+    pipeline = sjoin(pipeline, " > ", net->outputq->name, NULL);
+    for (q = net->outputq->nextQ; q != net->outputq; q = q->prevQ) {
         pipeline = sjoin(pipeline, " > ", q->name, NULL);
     }
     httpLog(trace, "stream.queues", "detail", "msg:write-pipeline: %s ", pipeline);
@@ -28773,8 +28795,6 @@ static void incomingWebSockData(HttpQueue *q, HttpPacket *packet)
             }
             if (packet->type == WS_MSG_CONT && ws->currentFrame) {
                 httpJoinPacket(ws->currentFrame, packet);
-                //  ZZZ
-                // ws->currentFrame->fin = packet->fin;
                 packet = ws->currentFrame;
                 content = packet->content;
             }

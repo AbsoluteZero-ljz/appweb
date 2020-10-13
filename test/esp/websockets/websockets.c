@@ -53,7 +53,7 @@ static void len_callback(HttpStream *stream, int event, int arg)
             /*
                 Ignore precedding packets and just respond and echo the last
              */
-            print("PACKET len %d, fin %d", (int) httpGetPacketLength(packet), packet->fin);
+            // print("PACKET len %d, fin %d", (int) httpGetPacketLength(packet), packet->fin);
             if (packet->fin) {
                 ws = stream->rx->webSocket;
                 httpSend(stream, "{type: %d, last: %d, length: %d, data: \"%s\"}\n", packet->type, packet->fin,
