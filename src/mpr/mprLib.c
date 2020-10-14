@@ -1610,7 +1610,7 @@ PUBLIC void mprRelease(cvoid *ptr)
                 For memory allocated in foreign threads, there could be a race where the release missed the GC mark phase
                 and the sweeper is or is about to run. We simulate a GC mark here to prevent the sweeper from collecting
                 the block on this sweep. Will be collected on the next sweep if there is no other reference.
-                Note: this races with the sweeper (invokeDestructors) so must set the mark first and clear eternal after that.
+                Note: this races with the sweeper (invokeDestructors) so must set the mark first and clear eternal after that with an ATOMIC_RELEASE barrier to ensure the mark change is committed.
              */
             mp->mark = heap->mark;
             // mprAtomicBarrier(MPR_ATOMIC_SEQUENTIAL);
@@ -16704,7 +16704,7 @@ PUBLIC int _cmp(char *s1, char *s2)
 
 /********* Start of file src/mime.c ************/
 
-/*
+/* 
     mime.c - Mime type handling
 
     Copyright (c) All Rights Reserved. See copyright notice at the bottom of the file.
@@ -30963,3 +30963,4 @@ PUBLIC int mprXmlGetLineNumber(MprXml *xp)
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
  */
+

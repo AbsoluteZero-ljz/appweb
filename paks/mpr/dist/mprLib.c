@@ -1600,21 +1600,21 @@ PUBLIC void mprHold(cvoid *ptr)
 
 PUBLIC void mprRelease(cvoid *ptr)
 {
-    MprMem  *mp;
+    MprMem       *mp;
+    static uchar zero = 0;
 
     if (ptr) {
         mp = GET_MEM(ptr);
         if (!mp->free && VALID_BLK(mp)) {
             /*
-                For memory allocated in foreign threads, there could be a race where it missed the GC mark phase
+                For memory allocated in foreign threads, there could be a race where the release missed the GC mark phase
                 and the sweeper is or is about to run. We simulate a GC mark here to prevent the sweeper from collecting
-                the block on this sweep. Will be collected on the next if there is no other reference.
-                Note: this races with the sweeper (invokeDestructors) so must set the mark first and clear eternal after that.
+                the block on this sweep. Will be collected on the next sweep if there is no other reference.
+                Note: this races with the sweeper (invokeDestructors) so must set the mark first and clear eternal after that with an ATOMIC_RELEASE barrier to ensure the mark change is committed.
              */
             mp->mark = heap->mark;
             // mprAtomicBarrier(MPR_ATOMIC_SEQUENTIAL);
             // mp->eternal = 0;
-            uchar zero = 0;
             mprAtomicStore(&mp->eternal, &zero, MPR_ATOMIC_RELEASE);
         }
     }
