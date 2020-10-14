@@ -468,6 +468,9 @@ static int parseArgs(int argc, char **argv)
                 return showUsage();
             } else {
                 app->iterations = atoi(argv[++nextArg]);
+                if (app->iterations == 0) {
+                    app->iterations = MAXINT;
+                }
             }
 
         } else if (smatch(argp, "--key")) {
