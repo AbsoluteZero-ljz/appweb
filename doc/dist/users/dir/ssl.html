@@ -205,7 +205,7 @@
                     </tr>
                     <tr>
                         <td class="pivot">Synopsis</td>
-                        <td>ListenSecure [IP address:]portNumber</td>
+                        <td>ListenSecure [IP address:]portNumber [multiple]</td>
                     </tr>
                     <tr>
                         <td class="pivot">Context</td>
@@ -215,6 +215,7 @@
                         <td class="pivot">Examples</td>
                         <td>Listen 80<br>
                             ListenSecure 205.162.77.64:7777<br>
+                            ListenSecure :7777 multiple<br>
                             ListenSecure [::]
                         </td>
                     </tr>
@@ -228,6 +229,7 @@
                             <p>In Appweb 4 and later, you do not need to use a Virtual Host to use SSL/TLS.</p>
                             <p>For IPv6 endpoints, enclose the IP address in square brackets. For example:
                                 Listen [2001:05c0:9168:0000:0000:0000:0000:0001]
+                            <p>To permit multiple instances of Appweb to bind to the same listen endpoint, specify the multiple attribute. Multiple binding is supported on Linux only.</p>
                         </td>
                     </tr>
                 </tbody>
