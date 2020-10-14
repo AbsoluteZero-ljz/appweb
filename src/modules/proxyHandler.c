@@ -144,7 +144,7 @@ static void proxyMaintenance(Proxy *proxy);
 static void transferClientHeaders(HttpStream *stream, HttpStream *proxyStream);
 static void transferProxyHeaders(HttpStream *proxyStream, HttpStream *stream);
 
-#if ME_UNIX_LIKE && ME_DEBUG
+#if ME_DEBUG
     static void proxyInfo(void *ignored, MprSignal *sp);
 #endif
 
@@ -176,9 +176,9 @@ PUBLIC int httpProxyInit(Http *http, MprModule *module)
     handler->start = proxyStartRequest;
     handler->incoming = proxyIncomingRequestPacket;
 
-    #if ME_DEBUG
+#if ME_DEBUG
         mprAddRoot(mprAddSignalHandler(SIGINFO, proxyInfo, 0, 0, MPR_SIGNAL_AFTER));
-    #endif
+#endif
     return 0;
 }
 
