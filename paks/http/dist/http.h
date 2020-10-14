@@ -185,6 +185,9 @@ struct HttpWebSocket;
 #ifndef ME_MAX_RX_FORM
     #define ME_MAX_RX_FORM          (512 * 1024)         /**< Maximum incoming form size (512K) */
 #endif
+#ifndef ME_MAX_RX_FORM_FIELD
+    #define ME_MAX_RX_FORM_FIELD    HTTP_UNLIMITED       /**< Maximum upload form field size */
+#endif
 #ifndef ME_MAX_REQUESTS_PER_CLIENT
     #define ME_MAX_REQUESTS_PER_CLIENT 20               /**< Maximum concurrent requests per client (ip address) */
 #endif

@@ -28,11 +28,11 @@
     },
     "dependencies": {
         "assist": "~1",
-        "http": "~8",
+        "http": "~8.1",
         "makerom": "~1",
         "mbedtls": "~2.8",
         "me-win": "~1",
-        "mpr": "~8",
+        "mpr": "~8.1",
         "mpr-version": "~1",
         "osdep": "~1",
         "pcre": "~1",

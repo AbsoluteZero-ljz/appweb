@@ -9015,6 +9015,7 @@ static cchar *eatBlankLines(HttpPacket *packet)
         if (*start != '\r' && *start != '\n') {
             break;
         }
+        mprGetCharFromBuf(packet->content);
     }
     return mprGetBufStart(content);
 }
@@ -9427,6 +9428,7 @@ static HttpStream *findStream1(HttpQueue *q)
     } else {
         stream = q->stream;
     }
+    stream->lastActivity = stream->net->lastActivity;
     return stream;
 }
 
@@ -11379,6 +11381,7 @@ static HttpStream *findStream(HttpNet *net, int streamID)
 
     for (ITERATE_ITEMS(net->streams, stream, next)) {
         if (stream->streamID == streamID) {
+            stream->lastActivity = net->lastActivity;
             return stream;
         }
     }
@@ -16526,6 +16529,10 @@ static void processHeaders(HttpQueue *q)
                         rx->form = scontains(rx->mimeType, "application/x-www-form-urlencoded") != 0;
                         rx->json = sstarts(rx->mimeType, "application/json");
                         rx->upload = scontains(rx->mimeType, "multipart/form-data") != 0;
+#if ME_HTTP_UPLOAD_TIMEOUT
+                        stream->limits = mprMemdup(stream->limits, sizeof(HttpLimits));
+                        stream->limits->requestTimeout = ME_HTTP_UPLOAD_TIMEOUT * TPS;
+#endif
                     }
                 }
             } else if (strcasecmp(key, "cookie") == 0) {
@@ -25296,12 +25303,14 @@ PUBLIC void httpPrepareHeaders(HttpStream *stream)
      */
     httpAddHeaderString(stream, "Date", stream->http->currentDate);
 
-    if (tx->ext && route) {
+    if (tx->mimeType == 0 && route) {
         if (stream->error) {
             tx->mimeType = sclone("text/html");
-        } else if ((tx->mimeType = (char*) mprLookupMime(route->mimeTypes, tx->ext)) == 0) {
+        } else if (!route || (tx->mimeType = (char*) mprLookupMime(route->mimeTypes, tx->ext)) == 0) {
             tx->mimeType = sclone("text/html");
         }
+    }
+    if (tx->mimeType) {
         httpAddHeaderString(stream, "Content-Type", tx->mimeType);
     }
     if (tx->etag) {
@@ -26094,7 +26103,7 @@ static int processUploadData(HttpQueue *q)
     Upload          *up;
     ssize           size, dataLen;
     bool            pureData;
-    char            *data, *bp, *key;
+    char            *data, *bp;
 
     stream = q->stream;
     up = q->queueData;
@@ -26120,8 +26129,8 @@ static int processUploadData(HttpQueue *q)
                 }
             }
             mprAdjustBufStart(content, dataLen);
-            return 0;       /* Get more data */
         }
+        return -1;       /* Get more data */
     }
     data = mprGetBufStart(content);
     dataLen = (bp) ? (bp - data) : mprGetBufLength(content);
@@ -26148,9 +26157,7 @@ static int processUploadData(HttpQueue *q)
                 Normal string form data variables
              */
             data[dataLen] = '\0';
-            key = mprUriDecode(up->name);
-            data = mprUriDecode(data);
-            httpSetParam(stream, key, data);
+            httpSetParam(stream, up->name, data);
 
             if (packet == 0) {
                 packet = httpCreatePacket(ME_BUFSIZE);
