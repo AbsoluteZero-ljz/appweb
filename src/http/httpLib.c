@@ -1,5 +1,5 @@
 /*
- * Embedthis Http Library Source
+ * Embedthis Http Library Source 8.2.0
  */
 
 #include "http.h"
@@ -9922,9 +9922,11 @@ static HttpFrame *parseFrame(HttpQueue *q, HttpPacket *packet, int *done)
     *done = 0;
 
     size = mprGetBufLength(buf);
-    if (mprGetBufLength(buf) < HTTP2_FRAME_OVERHEAD) {
-        /* Insufficient data */
-        httpPutBackPacket(q, packet);
+    if (size < HTTP2_FRAME_OVERHEAD) {
+        if (size > 0) {
+            /* Insufficient data */
+            httpPutBackPacket(q, packet);
+        }
         *done = 1;
         return 0;
     }
@@ -9936,13 +9938,14 @@ static HttpFrame *parseFrame(HttpQueue *q, HttpPacket *packet, int *done)
     len = lenType >> 8;
     flags = mprGetCharFromBuf(buf);
     streamID = mprGetUint32FromBuf(buf) & HTTP_STREAM_MASK;
-    logIncomingPacket(q, packet, type, streamID, flags);
 
     if (len > q->packetSize || len > HTTP2_MAX_FRAME_SIZE) {
+        logIncomingPacket(q, packet, type, streamID, flags);
         sendGoAway(q, HTTP2_FRAME_SIZE_ERROR, "Bad frame size %d vs %d", len, q->packetSize);
         return 0;
     }
     if (net->sentGoaway && net->lastStreamID && streamID >= net->lastStreamID) {
+        logIncomingPacket(q, packet, type, streamID, flags);
         /* Network is being closed. Continue to process existing streams but accept no new streams */
         return 0;
     }
@@ -9953,6 +9956,7 @@ static HttpFrame *parseFrame(HttpQueue *q, HttpPacket *packet, int *done)
     if (len < size) {
         if ((tail = httpSplitPacket(packet, len)) == 0) {
             /* Memory error - centrally reported */
+            logIncomingPacket(q, packet, type, streamID, flags);
             *done = 1;
             return 0;
         }
@@ -9962,6 +9966,7 @@ static HttpFrame *parseFrame(HttpQueue *q, HttpPacket *packet, int *done)
     } else if (len > size) {
         mprAdjustBufStart(buf, -HTTP2_FRAME_OVERHEAD);
         httpPutBackPacket(q, packet);
+        //  Don't log packet yet
         *done = 1;
         return 0;
     }
@@ -9989,6 +9994,7 @@ static HttpFrame *createFrame(HttpQueue *q, HttpPacket *packet, int type, int fl
     frame->flags = flags;
     frame->streamID = streamID;
 
+    logIncomingPacket(q, packet, type, streamID, flags);
     stream = frame->stream = findStream(net, streamID);
 
     if (frame->type < 0 || frame->type >= HTTP2_MAX_FRAME) {
@@ -11285,6 +11291,7 @@ static HttpPacket *defineFrame(HttpQueue *q, HttpPacket *packet, int type, uchar
         buf = packet->prefix = mprCreateBuf(HTTP2_FRAME_OVERHEAD, HTTP2_FRAME_OVERHEAD);
     }
     length = httpGetPacketLength(packet);
+    assert(length <= HTTP2_MAX_FRAME_SIZE);
 
     /*
         Not yet supporting priority or weight
@@ -11492,6 +11499,7 @@ static void sendGoAway(HttpQueue *q, int status, cchar *fmt, ...)
 static int setState(HttpStream *stream, int event)
 {
     HttpNet     *net;
+    cchar       *type;
     int         state;
 
     net = stream->net;
@@ -11500,20 +11508,13 @@ static int setState(HttpStream *stream, int event)
     }
     state = StateMatrix[event][stream->h2State];
 
-    if (state == H2_ERR) {
-        httpLog(net->trace, "rx.http2", "error", "State change ERROR for stream %d from \"%s\" (%d) via event \"%s\" (%d)",
-            stream->streamID, States[stream->h2State], stream->h2State, Events[event], event);
-        return H2_ERR;
-    }
-    if (state == H2_SAME) {
-        /* httpLog(net->trace, "rx.http2", "packet", "State \"%s\" (%d) UNCHANGED via event \"%s\" (%d)",
-            States[stream->h2State], stream->h2State, Events[event], event); */
-        return H2_SAME;
-    }
-    httpLog(net->trace, "rx.http2", "packet", "State change for stream %d from \"%s\" (%d) to \"%s\" (%d) via event \"%s\" (%d) ",
-        stream->streamID, States[stream->h2State], stream->h2State, States[state], state, Events[event], event);
+    type = (state == H2_ERR) ? "error" : "packet";
 
-    stream->h2State = state;
+    if (state != H2_SAME) {
+        httpLog(net->trace, "rx.http2", type, "msg:State change for stream %d from \"%s\" (%d) to \"%s\" (%d) via event \"%s\" (%d)",
+            stream->streamID, States[stream->h2State], stream->h2State, States[state], state, Events[event], event);
+        stream->h2State = state;
+    }
     return state;
 }
 
@@ -14770,7 +14771,6 @@ static void netOutgoingService(HttpQueue *q)
 static MprOff buildNetVec(HttpQueue *q)
 {
     HttpPacket  *packet;
-
     /*
         Examine each packet and accumulate as many packets into the I/O vector as possible. Leave the packets on
         the queue for now, they are removed after the IO is complete for the entire packet.
@@ -14781,6 +14781,21 @@ static MprOff buildNetVec(HttpQueue *q)
         }
         if (httpGetPacketLength(packet) > 0 || packet->prefix) {
             addPacketForNet(q, packet);
+        }
+        bool hex = 1;
+        ssize len;
+        cchar *prefix, *content;
+        if (packet->prefix) {
+            ssize len = mprGetBufLength(packet->prefix);
+            prefix = httpMakePrintable(q->net->trace, packet->prefix->start, &hex, &len);
+        } else {
+            prefix = "";
+        }
+        if (packet->content) {
+            len = httpGetPacketLength(packet);
+            content = httpMakePrintable(q->net->trace, packet->content->start, &hex, &len);
+        } else {
+            content = "";
         }
     }
     return q->ioCount;
@@ -14833,6 +14848,17 @@ static void freeNetPackets(HttpQueue *q, ssize bytes)
 
     while ((packet = q->first) != 0) {
         if (packet->flags & HTTP_PACKET_END) {
+            if (packet->prefix) {
+                len = mprGetBufLength(packet->prefix);
+                len = min(len, bytes);
+                mprAdjustBufStart(packet->prefix, len);
+                bytes -= len;
+                /* Prefixes don't count in the q->count. No need to adjust */
+                if (mprGetBufLength(packet->prefix) == 0) {
+                    /* Ensure the prefix is not resent if all the content is not sent */
+                    packet->prefix = 0;
+                }
+            }
             if ((stream = packet->stream) != 0) {
                 httpFinalizeConnector(stream);
             }
@@ -23990,7 +24016,7 @@ static void outgoingTailService(HttpQueue *q)
             httpPutBackPacket(q, packet);
             return;
         }
-        // Onto the http*Filter
+        //  Onto the HttpFilter
         httpPutPacket(q->net->outputq, packet);
     }
 }
