@@ -1,6 +1,6 @@
 /*
- * Embedthis MPR Library Source 
-*/
+ * Embedthis MPR Library Source 8.2.0
+ */
 
 #include "mpr.h"
 
@@ -1296,23 +1296,29 @@ static void invokeDestructors()
     MprRegion   *region;
     MprMem      *mp;
     MprManager  mgr;
+    uchar       mark;
 
     for (region = heap->regions; region; region = region->next) {
         for (mp = region->start; mp < region->end; mp = GET_NEXT(mp)) {
             /*
-                Order matters: racing with allocator. The allocator sets free last.
-                Free first, then mark, then eternal
+                Order matters: racing with allocator. The allocator sets free last. mprRelease sets
+                eternal last and uses mprAtomicStore to ensure mp->mark is committed.
              */
-            if (!mp->free && !mp->eternal && mp->mark != heap->mark && mp->hasManager) {
-                mgr = GET_MANAGER(mp);
-                if (mgr) {
-                    assert(!mp->eternal);
-                    assert(!mp->free);
-                    assert(mp->mark != heap->mark);
-                    (mgr)(GET_PTR(mp), MPR_MANAGE_FREE);
-                    /* Retest incase the manager routine revied the object */
-                    if (mp->mark != heap->mark) {
-                        mp->hasManager = 0;
+            if (mp->hasManager && !mp->free && !mp->eternal) {
+                //  mark = mp->mark
+                mprAtomicLoad(&mp->mark, &mark, MPR_ATOMIC_ACQUIRE);
+                // mprAtomicBarrier(MPR_ATOMIC_SEQUENTIAL);
+                if (mark != heap->mark) {
+                    mgr = GET_MANAGER(mp);
+                    if (mgr) {
+                        assert(!mp->eternal);
+                        assert(!mp->free);
+                        assert(mp->mark != heap->mark);
+                        (mgr)(GET_PTR(mp), MPR_MANAGE_FREE);
+                        // Retest incase the manager routine revived the object
+                        if (mp->mark != heap->mark) {
+                            mp->hasManager = 0;
+                        }
                     }
                 }
             }
@@ -1594,20 +1600,22 @@ PUBLIC void mprHold(cvoid *ptr)
 
 PUBLIC void mprRelease(cvoid *ptr)
 {
-    MprMem  *mp;
+    MprMem       *mp;
+    static uchar zero = 0;
 
     if (ptr) {
         mp = GET_MEM(ptr);
         if (!mp->free && VALID_BLK(mp)) {
             /*
-                For memory allocated in foreign threads, there could be a race where it missed the GC mark phase
+                For memory allocated in foreign threads, there could be a race where the release missed the GC mark phase
                 and the sweeper is or is about to run. We simulate a GC mark here to prevent the sweeper from collecting
-                the block on this sweep. Will be collected on the next if there is no other reference.
+                the block on this sweep. Will be collected on the next sweep if there is no other reference.
                 Note: this races with the sweeper (invokeDestructors) so must set the mark first and clear eternal after that.
              */
             mp->mark = heap->mark;
-            mprAtomicBarrier();
-            mp->eternal = 0;
+            // mprAtomicBarrier(MPR_ATOMIC_SEQUENTIAL);
+            // mp->eternal = 0;
+            mprAtomicStore(&mp->eternal, &zero, MPR_ATOMIC_RELEASE);
         }
     }
 }
@@ -3955,6 +3963,10 @@ void asyncDummy() {}
 
 
 
+#if ME_BSD_LIKE || ME_UNIX_LIKE || ME_WIN_LIKE
+#include <stdatomic.h>
+#endif
+
 /*********************************** Local ************************************/
 
 static MprSpin  atomicSpinLock;
@@ -3967,11 +3979,10 @@ PUBLIC void mprAtomicOpen()
     mprInitSpinLock(atomicSpin);
 }
 
-
 /*
     Full memory barrier
  */
-PUBLIC void mprAtomicBarrier()
+PUBLIC void mprAtomicBarrier(int model)
 {
     #if defined(VX_MEM_BARRIER_RW)
         VX_MEM_BARRIER_RW();
@@ -3980,7 +3991,7 @@ PUBLIC void mprAtomicBarrier()
         MemoryBarrier();
 
     #elif ME_COMPILER_HAS_ATOMIC
-        __atomic_thread_fence(__ATOMIC_SEQ_CST);
+        __atomic_thread_fence(model);
 
     #elif ME_COMPILER_HAS_SYNC
         __sync_synchronize();
@@ -4003,7 +4014,7 @@ PUBLIC void mprAtomicBarrier()
 
 
 /*
-    Atomic compare and swap a pointer with a full memory barrier
+    Atomic compare and swap a pointer.
  */
 PUBLIC int mprAtomicCas(void * volatile *addr, void *expected, cvoid *value)
 {
@@ -4016,7 +4027,8 @@ PUBLIC int mprAtomicCas(void * volatile *addr, void *expected, cvoid *value)
 
     #elif ME_COMPILER_HAS_ATOMIC
         void *localExpected = expected;
-        return __atomic_compare_exchange(addr, &localExpected, (void**) &value, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
+        // return __atomic_compare_exchange(addr, &localExpected, (void**) &value, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
+        return __atomic_compare_exchange(addr, &localExpected, (void**) &value, 0, __ATOMIC_RELAXED, __ATOMIC_RELAXED);
 
     #elif ME_COMPILER_HAS_SYNC_CAS
         return __sync_bool_compare_and_swap(addr, expected, (void*) value);
@@ -4060,8 +4072,8 @@ PUBLIC void mprAtomicAdd(volatile int *ptr, int value)
         InterlockedExchangeAdd(ptr, value);
 
     #elif ME_COMPILER_HAS_ATOMIC
-        //  OPT - could use __ATOMIC_RELAXED
-        __atomic_add_fetch(ptr, value, __ATOMIC_SEQ_CST);
+        //  WAS ATOMIC_SEQ_CST
+        __atomic_add_fetch(ptr, value, __ATOMIC_RELAXED);
 
     #elif ME_COMPILER_HAS_SYNC_CAS
         __sync_add_and_fetch(ptr, value);
@@ -4088,11 +4100,12 @@ PUBLIC void mprAtomicAdd(volatile int *ptr, int value)
 PUBLIC void mprAtomicAdd64(volatile int64 *ptr, int64 value)
 {
     #if ME_WIN_LIKE && ME_64
+        //  Full memory barrier
         InterlockedExchangeAdd64(ptr, value);
 
     #elif ME_COMPILER_HAS_ATOMIC64 && (ME_64 || ME_CPU_ARCH == ME_CPU_X86 || ME_CPU_ARCH == ME_CPU_X64)
-        //  OPT - could use __ATOMIC_RELAXED
-        __atomic_add_fetch(ptr, value, __ATOMIC_SEQ_CST);
+        //  WAS ATOMIC_SEQ_CST
+        __atomic_add_fetch(ptr, value, __ATOMIC_RELAXED);
 
     #elif ME_COMPILER_HAS_SYNC64 && (ME_64 || ME_CPU_ARCH == ME_CPU_X86 || ME_CPU_ARCH == ME_CPU_X64)
         __sync_add_and_fetch(ptr, value);
@@ -9785,7 +9798,8 @@ PUBLIC int mprServiceEvents(MprTicks timeout, int flags)
         mprLog("warn mpr event", 0, "mprServiceEvents called reentrantly");
         return 0;
     }
-    mprAtomicBarrier();
+    //  MOB - remove
+    mprAtomicBarrier(MPR_ATOMIC_SEQUENTIAL);
     if (mprIsDestroying()) {
         return 0;
     }
@@ -9865,7 +9879,7 @@ PUBLIC int64 mprGetEventMark(MprDispatcher *dispatcher)
         Ensure all writes are flushed so user state will be valid across all threads
      */
     result = dispatcher->mark;
-    mprAtomicBarrier();
+    mprAtomicBarrier(MPR_ATOMIC_SEQUENTIAL);
     return result;
 }
 
@@ -16690,7 +16704,7 @@ PUBLIC int _cmp(char *s1, char *s2)
 
 /********* Start of file src/mime.c ************/
 
-/* 
+/*
     mime.c - Mime type handling
 
     Copyright (c) All Rights Reserved. See copyright notice at the bottom of the file.
@@ -30949,4 +30963,3 @@ PUBLIC int mprXmlGetLineNumber(MprXml *xp)
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
  */
-
