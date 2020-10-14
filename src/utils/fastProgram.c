@@ -646,7 +646,11 @@ static void error(State *state, char *fmt, ...)
     if (state->errorMsg == 0) {
         va_start(args, fmt);
         vsprintf(buf, fmt, args);
-        FCGX_FPrintF(state->request->err, "%s\n", buf);
+        if (state->request && state->request->err) {
+            FCGX_FPrintF(state->request->err, "%s\n", buf);
+        } else {
+            fprintf(stderr, "%s\n", buf);
+        }
         state->responseStatus = 400;
         state->errorMsg = strdup(buf);
         va_end(args);
