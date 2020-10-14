@@ -206,7 +206,7 @@ static void prepFastRequestParams(HttpQueue *q);
 static void reapSignalHandler(FastApp *app, MprSignal *sp);
 static FastApp *startFastApp(Fast *fast, HttpStream *stream);
 
-#if ME_UNIX_LIKE && ME_DEBUG
+#if ME_DEBUG
     static void fastInfo(void *ignored, MprSignal *sp);
 #endif
 
@@ -835,7 +835,9 @@ static FastApp *getFastApp(Fast *fast, HttpStream *stream)
                 mprResetYield();
                 lock(fast);
                 mprLog("fast", 0, "Waiting for fastCGI app to become available, running %d", mprGetListLength(fast->apps));
+#if ME_DEBUG
                 fastInfo(NULL, NULL);
+#endif
             }
         }
     }
