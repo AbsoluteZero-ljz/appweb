@@ -16712,7 +16712,7 @@ PUBLIC int _cmp(char *s1, char *s2)
 
 /********* Start of file src/mime.c ************/
 
-/* 
+/*
     mime.c - Mime type handling
 
     Copyright (c) All Rights Reserved. See copyright notice at the bottom of the file.
