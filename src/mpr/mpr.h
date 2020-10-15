@@ -5914,7 +5914,6 @@ typedef struct MprEvent {
 #define MPR_DISPATCHER_DESTROYED  0x4   /**< Dispatcher has been destroyed */
 #define MPR_DISPATCHER_AUTO       0x8   /**< Dispatcher was auto created in response to accept event */
 #define MPR_DISPATCHER_COMPLETE   0x10  /**< Test operation is complete */
-#define MPR_DISPATCHER_ACTIVE     0x20  /**< Dispatching events */
 
 /**
     Event Dispatcher
@@ -5924,7 +5923,7 @@ typedef struct MprEvent {
 typedef struct MprDispatcher {
     cchar           *name;              /**< Static debug dispatcher name / purpose */
     MprEvent        *eventQ;            /**< Event queue */
-    MprEvent        *current;           /**< Currently executing event */
+    MprEvent        *currentQ;          /**< Currently executing event */
     MprCond         *cond;              /**< Multi-thread sync */
     int             flags;              /**< Dispatcher control flags */
     int64           mark;               /**< Last event sequence mark (may reuse over time) */
@@ -6262,7 +6261,8 @@ PUBLIC int mprStopDispatcher(MprDispatcher *dispatcher);
 PUBLIC MprEvent *mprCreateEventQueue(void);
 PUBLIC MprEventService *mprCreateEventService(void);
 PUBLIC void mprDedicateWorkerToDispatcher(MprDispatcher *dispatcher, struct MprWorker *worker);
-PUBLIC void mprDequeueEvent(MprEvent *event);
+PUBLIC void mprLinkEvent(MprEvent *prior, MprEvent *event);
+PUBLIC void mprUnlinkEvent(MprEvent *event);
 PUBLIC bool mprDispatcherHasEvents(MprDispatcher *dispatcher);
 PUBLIC int mprDispatchersAreIdle(void);
 PUBLIC int mprGetEventCount(MprDispatcher *dispatcher);
@@ -8168,11 +8168,12 @@ PUBLIC ssize mprWriteSocket(MprSocket *sp, cvoid *buf, ssize len);
 PUBLIC ssize mprWriteSocketString(MprSocket *sp, cchar *str);
 
 /**
-    Write a vector to a socket
-    @description Do scatter/gather I/O by writing a vector of buffers to a socket.
+    Write a vector of buffers to a socket
+    @description Do scatter/gather I/O by writing a vector of buffers to a socket. May return with a short write having written
+        less than the total.
     @param sp Socket object returned from #mprCreateSocket
     @param iovec Vector of data to write before the file contents
-    @param count Count of entries in beforeVect
+    @param count Count of entries in iovec
     @return A count of bytes actually written. Return a negative MPR error code on errors and if the socket cannot absorb any
         more data. If the transport is saturated, will return a negative error and mprGetError() returns EAGAIN or EWOULDBLOCK
     @ingroup MprSocket
