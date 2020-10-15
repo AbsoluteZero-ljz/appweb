@@ -200,7 +200,7 @@ static void startCgi(HttpQueue *q)
         return;
     }
 #if ME_WIN_LIKE
-    mprCreateEvent(stream->dispatcher, "cgi-win", 10, waitForCgi, cgi, MPR_EVENT_CONTINUOUS);
+    mprCreateLocalEvent(stream->dispatcher, "cgi-win", 10, waitForCgi, cgi, MPR_EVENT_CONTINUOUS);
 #endif
 }
 
@@ -412,8 +412,8 @@ static void cgiCallback(MprCmd *cmd, int channel, void *data)
         mprEnableCmdOutputEvents(cmd, !suspended);
     }
     httpServiceNetQueues(stream->net, 0);
-    
-    mprCreateEvent(stream->dispatcher, "cgi", 0, httpIOEvent, stream->net, 0);
+
+    mprCreateLocalEvent(stream->dispatcher, "cgi", 0, httpIOEvent, stream->net, 0);
 }
 
 

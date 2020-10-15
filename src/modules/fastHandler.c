@@ -1023,7 +1023,7 @@ static void reapSignalHandler(FastApp *app, MprSignal *sp)
             get notified before the I/O response is received.
          */
         for (ITERATE_ITEMS(app->requests, req, next)) {
-            mprCreateEvent(req->stream->dispatcher, "fast-reap", 0, fastHandlerReapResponse, req, 10);
+            mprCreateLocalEvent(req->stream->dispatcher, "fast-reap", 0, fastHandlerReapResponse, req, 10);
         }
     }
     unlock(fast);

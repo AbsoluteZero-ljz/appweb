@@ -14240,7 +14240,7 @@ PUBLIC void httpNetTimeout(HttpNet *net)
         /*
             Will run on the HttpNet dispatcher unless shutting down and it is destroyed already
          */
-        net->timeoutEvent = mprCreateEvent(net->dispatcher, "netTimeout", 0, netTimeout, net, 0);
+        net->timeoutEvent = mprCreateLocalEvent(net->dispatcher, "netTimeout", 0, netTimeout, net, 0);
     }
 }
 
@@ -15026,7 +15026,7 @@ static bool netBanned(HttpNet *net)
             /*
                 Defensive counter measure - go slow
              */
-            mprCreateEvent(net->dispatcher, "delayConn", net->delay, resumeEvents, net, 0);
+            mprCreateLocalEvent(net->dispatcher, "delayConn", net->delay, resumeEvents, net, 0);
             httpLog(net->trace, "monitor.delay.stop", "context", "msg:Suspend I/O, client:%s", net->ip);
             return 1;
         } else {
@@ -15044,7 +15044,7 @@ static bool netBanned(HttpNet *net)
 static void resumeEvents(HttpNet *net, MprEvent *event)
 {
     net->delay = 0;
-    mprCreateEvent(net->dispatcher, "resumeConn", 0, httpEnableNetEvents, net, 0);
+    mprCreateLocalEvent(net->dispatcher, "resumeConn", 0, httpEnableNetEvents, net, 0);
 }
 
 
@@ -23526,7 +23526,7 @@ PUBLIC void httpStreamTimeout(HttpStream *stream)
         /*
             Will run on the HttpStream dispatcher unless shutting down and it is destroyed already
          */
-        stream->timeoutEvent = mprCreateEvent(stream->dispatcher, "streamTimeout", 0, streamTimeout, stream, 0);
+        stream->timeoutEvent = mprCreateLocalEvent(stream->dispatcher, "streamTimeout", 0, streamTimeout, stream, 0);
     }
 }
 
@@ -23740,7 +23740,7 @@ PUBLIC void httpSetStreamReqData(HttpStream *stream, void *data)
 
 
 /*
-    Invoke the callback. This routine is run on the streams dispatcher.
+    Invoke the callback. This routine is run on the streams dispatcher on an MPR thread.
     If the stream is destroyed, the event will be NULL.
  */
 static void invokeWrapper(HttpInvoke *invoke, MprEvent *event)
@@ -23775,6 +23775,9 @@ PUBLIC int httpCreateEvent(uint64 seqno, HttpEventProc callback, void *data)
         invoke->callback = callback;
         invoke->data = data;
     }
+    /*
+        Find the stream by "seqno" and then call createInvokeEvent() to create an MPR event.
+     */
     if (httpFindStream(seqno, createInvokeEvent, invoke)) {
         return 0;
     }
@@ -23798,7 +23801,7 @@ static void manageInvoke(HttpInvoke *invoke, int flags)
 
 static void createInvokeEvent(HttpStream *stream, void *data)
 {
-    mprCreateEvent(stream->dispatcher, "httpEvent", 0, (MprEventProc) invokeWrapper, data, MPR_EVENT_ALWAYS);
+    mprCreateLocalEvent(stream->dispatcher, "httpEvent", 0, (MprEventProc) invokeWrapper, data, MPR_EVENT_ALWAYS);
 }
 
 
@@ -28551,7 +28554,7 @@ static int matchWebSock(HttpStream *stream, HttpRoute *route, int dir)
         httpSetHeader(stream, "X-Inactivity-Timeout", "%lld", stream->limits->inactivityTimeout / TPS);
 #endif
         if (route->webSocketsPingPeriod) {
-            ws->pingEvent = mprCreateEvent(stream->dispatcher, "webSocket", route->webSocketsPingPeriod,
+            ws->pingEvent = mprCreateLocalEvent(stream->dispatcher, "webSocket", route->webSocketsPingPeriod,
                 webSockPing, stream, MPR_EVENT_CONTINUOUS);
         }
         stream->keepAliveCount = 0;

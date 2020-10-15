@@ -201,6 +201,7 @@ static void chat(Msg *msg)
 
 /*
     Event callback. Invoked for incoming web socket messages and other events of interest.
+    Invoked on an MPR thread.
  */
 static void chat_callback(HttpStream *stream, int event, int arg)
 {
@@ -216,7 +217,7 @@ static void chat_callback(HttpStream *stream, int event, int arg)
                     msg = mprAllocObj(Msg, manageMsg);
                     msg->stream = client;
                     msg->packet = packet;
-                    mprCreateEvent(client->dispatcher, "chat", 0, chat, msg, 0);
+                    mprCreateLocalEvent(client->dispatcher, "chat", 0, chat, msg, 0);
                 }
             }
         }

@@ -2551,7 +2551,7 @@ PUBLIC cchar *session(cchar *key)
 
 PUBLIC void setTimeout(void *proc, MprTicks timeout, void *data)
 {
-    mprCreateEvent(getStream()->dispatcher, "setTimeout", (int) timeout, proc, data, 0);
+    mprCreateLocalEvent(getStream()->dispatcher, "setTimeout", (int) timeout, proc, data, 0);
 }
 
 
