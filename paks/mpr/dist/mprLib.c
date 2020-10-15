@@ -1296,7 +1296,7 @@ static void invokeDestructors()
     MprRegion   *region;
     MprMem      *mp;
     MprManager  mgr;
-    uchar       mark;
+    uchar       eternal, mark;
 
     for (region = heap->regions; region; region = region->next) {
         for (mp = region->start; mp < region->end; mp = GET_NEXT(mp)) {
@@ -1304,6 +1304,7 @@ static void invokeDestructors()
                 Order matters: racing with allocator. The allocator sets free last. mprRelease sets
                 eternal last and uses mprAtomicStore to ensure mp->mark is committed.
              */
+            mprAtomicLoad(&mp->eternal, &eternal, MPR_ATOMIC_ACQUIRE);
             if (mp->hasManager && !mp->free && !mp->eternal) {
                 //  mark = mp->mark
                 mprAtomicLoad(&mp->mark, &mark, MPR_ATOMIC_ACQUIRE);
@@ -1610,7 +1611,8 @@ PUBLIC void mprRelease(cvoid *ptr)
                 For memory allocated in foreign threads, there could be a race where the release missed the GC mark phase
                 and the sweeper is or is about to run. We simulate a GC mark here to prevent the sweeper from collecting
                 the block on this sweep. Will be collected on the next sweep if there is no other reference.
-                Note: this races with the sweeper (invokeDestructors) so must set the mark first and clear eternal after that with an ATOMIC_RELEASE barrier to ensure the mark change is committed.
+                Note: this races with the sweeper (invokeDestructors) so must set the mark first and clear eternal
+                after that with an ATOMIC_RELEASE barrier to ensure the mark change is committed.
              */
             mp->mark = heap->mark;
             // mprAtomicBarrier(MPR_ATOMIC_SEQUENTIAL);

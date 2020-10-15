@@ -1,5 +1,5 @@
 /*
- * Embedthis Http Library Source 8.2.0
+ * Embedthis Http Library Source 9.0.0
  */
 
 #include "http.h"
@@ -14707,9 +14707,6 @@ static void netOutgoing(HttpQueue *q, HttpPacket *packet)
     if (q->net->socketq) {
         httpPutForService(q->net->socketq, packet, HTTP_SCHEDULE_QUEUE);
     }
-#if KEEP
-    checkLen(q);
-#endif
 }
 
 
@@ -14853,9 +14850,9 @@ static void freeNetPackets(HttpQueue *q, ssize bytes)
                 len = min(len, bytes);
                 mprAdjustBufStart(packet->prefix, len);
                 bytes -= len;
-                /* Prefixes don't count in the q->count. No need to adjust */
+                // Prefixes don't count in the q->count. No need to adjust
                 if (mprGetBufLength(packet->prefix) == 0) {
-                    /* Ensure the prefix is not resent if all the content is not sent */
+                    // Ensure the prefix is not resent if all the content is not sent
                     packet->prefix = 0;
                 }
             }
@@ -14868,9 +14865,9 @@ static void freeNetPackets(HttpQueue *q, ssize bytes)
                 len = min(len, bytes);
                 mprAdjustBufStart(packet->prefix, len);
                 bytes -= len;
-                /* Prefixes don't count in the q->count. No need to adjust */
+                // Prefixes don't count in the q->count. No need to adjust
                 if (mprGetBufLength(packet->prefix) == 0) {
-                    /* Ensure the prefix is not resent if all the content is not sent */
+                    // Ensure the prefix is not resent if all the content is not sent
                     packet->prefix = 0;
                 }
             }
@@ -14884,10 +14881,10 @@ static void freeNetPackets(HttpQueue *q, ssize bytes)
             }
         }
         if ((packet->flags & HTTP_PACKET_END) || (httpGetPacketLength(packet) == 0 && !packet->prefix)) {
-            /* Done with this packet - consume it */
+            // Done with this packet - consume it
             httpGetPacket(q);
         } else {
-            /* Packet still has data to be written */
+            // Packet still has data to be written
             break;
         }
     }
@@ -14972,7 +14969,7 @@ static int sleuthProtocol(HttpNet *net, HttpPacket *packet)
     }
     if (protocol == 2) {
         if ((len = mprGetBufLength(buf)) < (sizeof(HTTP2_PREFACE) - 1)) {
-            /* Insufficient data */
+            // Insufficient data
             return 0;
         }
         if (memcmp(buf->start, HTTP2_PREFACE, sizeof(HTTP2_PREFACE) - 1) != 0) {
@@ -15069,7 +15066,7 @@ PUBLIC int httpGetNetEventMask(HttpNet *net)
 
     if (!mprSocketHandshaking(sock) && !(net->error || net->eof)) {
         if (httpQueuesNeedService(net) || mprSocketHasBufferedWrite(sock) || (net->socketq->count + net->socketq->ioCount) > 0) {
-            /* Must wait to write until handshaking is complete */
+            // Must wait to write until handshaking is complete
             eventMask |= MPR_WRITABLE;
         }
     }
@@ -15136,28 +15133,6 @@ static void closeStreams(HttpNet *net)
         httpSetState(stream, HTTP_STATE_COMPLETE);
     }
 }
-
-
-#if KEEP
-static void checkLen(HttpQueue *q)
-{
-    HttpNet     *net;
-    HttpPacket  *packet;
-    static int  maxCount = 0;
-    int         count = 0;
-
-    net = q->net;
-    for (packet = q->first; packet && count < 99999; packet = packet->next) {
-        count++;
-    }
-    if (count > maxCount) {
-        maxCount = count;
-        if (maxCount > 50) {
-            print("Qcount %ld, count %d, blocked %d, goaway %d, received goaway %d, eof %d", q->count, count, net->writeBlocked, net->goaway, net->receivedGoaway, net->eof);
-        }
-    }
-}
-#endif
 
 
 /*
