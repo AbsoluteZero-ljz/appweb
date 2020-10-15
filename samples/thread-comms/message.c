@@ -48,6 +48,7 @@ static void foreignThread(uint64 streamSeqno)
 
     /*
         Invoke the finalizeResponse callback on the Stream identified by the sequence number and pass in a message to write.
+        Data to httpCreateEvent is unmanaged.
      */
     message = strdup("Hello World");
     if (httpCreateEvent(streamSeqno, finalizeResponse, message) < 0) {
