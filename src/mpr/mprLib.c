@@ -9724,6 +9724,8 @@ PUBLIC MprDispatcher *mprCreateDispatcher(cchar *name, int flags)
     dispatcher->name = name;
     dispatcher->cond = mprCreateCond();
     dispatcher->eventQ = mprCreateEventQueue();
+    dispatcher->currentQ = mprCreateEventQueue();
+
     queueDispatcher(es->idleQ, dispatcher);
     return dispatcher;
 }
@@ -9755,6 +9757,7 @@ PUBLIC void mprDestroyDispatcher(MprDispatcher *dispatcher)
         es = dispatcher->service;
         assert(es == MPR->eventService);
         lock(es);
+        freeEvents(dispatcher->currentQ);
         freeEvents(dispatcher->eventQ);
         dequeueDispatcher(dispatcher);
         dispatcher->flags |= MPR_DISPATCHER_DESTROYED;
@@ -9768,12 +9771,18 @@ static void manageDispatcher(MprDispatcher *dispatcher, int flags)
     MprEvent    *q, *event, *next;
 
     if (flags & MPR_MANAGE_MARK) {
+        mprMark(dispatcher->currentQ);
         mprMark(dispatcher->eventQ);
         mprMark(dispatcher->cond);
         mprMark(dispatcher->parent);
         mprMark(dispatcher->service);
-        mprMark(dispatcher->current);
 
+        if ((q = dispatcher->currentQ) != 0) {
+            for (event = q->next; event != q; event = next) {
+                next = event->next;
+                mprMark(event);
+            }
+        }
         if ((q = dispatcher->eventQ) != 0) {
             for (event = q->next; event != q; event = next) {
                 next = event->next;
@@ -9782,6 +9791,7 @@ static void manageDispatcher(MprDispatcher *dispatcher, int flags)
         }
     } else if (flags & MPR_MANAGE_FREE) {
         if (!(dispatcher->flags & MPR_DISPATCHER_DESTROYED)) {
+            freeEvents(dispatcher->currentQ);
             freeEvents(dispatcher->eventQ);
         }
     }
@@ -10132,12 +10142,10 @@ static int dispatchEvents(MprDispatcher *dispatcher)
     if (mprIsStopped()) {
         return 0;
     }
-    assert(!(dispatcher->flags & MPR_DISPATCHER_ACTIVE));
     assert(isRunning(dispatcher));
     assert(ownedDispatcher(dispatcher));
 
     es = dispatcher->service;
-    dispatcher->flags = dispatcher->flags | MPR_DISPATCHER_ACTIVE;
 
     /*
         Events are serviced from the dispatcher queue. When serviced, they are removed.
@@ -10145,11 +10153,11 @@ static int dispatchEvents(MprDispatcher *dispatcher)
      */
     for (count = 0; (event = mprGetNextEvent(dispatcher)) != 0; count++) {
         mprAtomicAdd64(&dispatcher->mark, 1);
+        mprLinkEvent(dispatcher->currentQ, event);
 
-        dispatcher->current = event;
         (event->proc)(event->data, event);
 
-        dispatcher->current = 0;
+        mprUnlinkEvent(event);
         event->hasRun = 1;
 
         if (event->cond) {
@@ -10167,7 +10175,6 @@ static int dispatchEvents(MprDispatcher *dispatcher)
         es->eventCount++;
         unlock(es);
     }
-    dispatcher->flags &= ~MPR_DISPATCHER_ACTIVE;
     return count;
 }
 
@@ -11170,7 +11177,6 @@ void epollDummy() {}
 static MprEvent *createEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags);
 static void initEventQ(MprEvent *q, cchar *name);
 static void manageEvent(MprEvent *event, int flags);
-static void queueEvent(MprEvent *prior, MprEvent *event);
 
 /************************************* Code ***********************************/
 /*
@@ -11325,7 +11331,7 @@ PUBLIC void mprQueueEvent(MprDispatcher *dispatcher, MprEvent *event)
         assert(prior->next);
         assert(prior->prev);
 
-        queueEvent(prior, event);
+        mprLinkEvent(prior, event);
         event->dispatcher = dispatcher;
         es->eventCount++;
         mprScheduleDispatcher(dispatcher);
@@ -11347,7 +11353,7 @@ PUBLIC void mprRemoveEvent(MprEvent *event)
         es = dispatcher->service;
         lock(es);
         if (event->next) {
-            mprDequeueEvent(event);
+            mprUnlinkEvent(event);
         }
         event->dispatcher = 0;
         event->flags &= ~MPR_EVENT_CONTINUOUS;
@@ -11433,7 +11439,7 @@ PUBLIC MprEvent *mprGetNextEvent(MprDispatcher *dispatcher)
     if (next != dispatcher->eventQ) {
         if (next->due <= es->now) {
             event = next;
-            mprDequeueEvent(event);
+            mprUnlinkEvent(event);
         }
     }
     unlock(es);
@@ -11472,7 +11478,7 @@ static void initEventQ(MprEvent *q, cchar *name)
 /*
     Append a new event. Must be locked when called.
  */
-static void queueEvent(MprEvent *prior, MprEvent *event)
+PUBLIC void mprLinkEvent(MprEvent *prior, MprEvent *event)
 {
     assert(prior);
     if (!event) {
@@ -11485,7 +11491,7 @@ static void queueEvent(MprEvent *prior, MprEvent *event)
     assert(prior->next);
 
     if (event->next) {
-        mprDequeueEvent(event);
+        mprUnlinkEvent(event);
     }
     event->prev = prior;
     event->next = prior->next;
@@ -11497,7 +11503,7 @@ static void queueEvent(MprEvent *prior, MprEvent *event)
 /*
     Remove an event. Must be locked when called.
  */
-PUBLIC void mprDequeueEvent(MprEvent *event)
+PUBLIC void mprUnlinkEvent(MprEvent *event)
 {
     assert(event);
 
@@ -23040,7 +23046,7 @@ PUBLIC ssize mprWriteSocketString(MprSocket *sp, cchar *str)
 PUBLIC ssize mprWriteSocketVector(MprSocket *sp, MprIOVec *iovec, int count)
 {
     char        *start;
-    ssize       total, len, written;
+    ssize       len, written;
     int         i;
 
 #if ME_UNIX_LIKE
@@ -23048,7 +23054,28 @@ PUBLIC ssize mprWriteSocketVector(MprSocket *sp, MprIOVec *iovec, int count)
         return writev(sp->fd, (const struct iovec*) iovec, (int) count);
     } else
 #endif
+#if ME_MPR_SOCKET_VECTOR_JOIN
     {
+        ssize   size;
+        int     offset;
+        char    *buf;
+
+        size = 0;
+        for (i = 0; i < count; i++) {
+            size += len = (int) iovec[i].len;
+        }
+        buf = mprAlloc(count);
+        offset = 0;
+        for (i = 0; i < count; i++) {
+            memcpy(&buf[offset], iovec[i].start, iovec[i].len);
+            offset += iovec[i].len;
+        }
+        written = mprWriteSocket(sp, start, len);
+        return written;
+    }
+#else
+    {
+        ssize   total;
         //  OPT - better to buffer and have fewer raw writes
         if (count <= 0) {
             return 0;
@@ -23079,6 +23106,7 @@ PUBLIC ssize mprWriteSocketVector(MprSocket *sp, MprIOVec *iovec, int count)
         }
         return total;
     }
+#endif
 }
 
 
