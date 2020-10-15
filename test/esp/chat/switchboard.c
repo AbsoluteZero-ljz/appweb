@@ -8,7 +8,7 @@
  */
 static MprList  *clients;
 
-static void chat(HttpStream *stream, HttpPacket *packet);
+static void chat(HttpStream *stream, char *msg);
 static void chat_action();
 static void chat_callback(HttpStream *stream, int event, int arg);
 
@@ -64,9 +64,10 @@ static void chat_callback(HttpStream *stream, int event, int arg)
                     This must be done using each stream event dispatcher to ensure we don't conflict with
                     other activity on the stream that may happen on another worker thread at the same time.
                     The "chat" callback will be invoked on the releveant stream's event dispatcher.
+                    The data ("packet") is unmanaged.
                  */
-                mprAddRoot(packet);
-                httpCreateEvent(PTOL(client), (HttpEventProc) chat, packet);
+                char *msg = strdup(packet->content->start);
+                httpCreateEvent(PTOL(client), (HttpEventProc) chat, msg);
             }
         }
 
@@ -89,10 +90,10 @@ static void chat_callback(HttpStream *stream, int event, int arg)
 /*
     Send message to a client
  */
-static void chat(HttpStream *stream, HttpPacket *packet)
+static void chat(HttpStream *stream, char *msg)
 {
-    mprRemoveRoot(packet);
     if (stream) {
-        httpSendBlock(stream, packet->type, httpGetPacketStart(packet), httpGetPacketLength(packet), 0);
+        httpSendBlock(stream, WS_MSG_TEXT, msg, slen(msg), HTTP_BLOCK);
     }
+    free(msg);
 }
