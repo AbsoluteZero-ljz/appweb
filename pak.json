@@ -7,7 +7,7 @@
         "http",
         "webserver"
     ],
-    "version": "8.1.3",
+    "version": "8.1.4",
     "homepage": "https://www.embedthis.com/appweb/",
     "author": {
         "name": "Embedthis Software",
@@ -41,7 +41,7 @@
     },
     "optionalDependencies": {
         "certs": "~1",
-        "esp": "~8",
+        "esp": "~8.1",
         "mpr-mbedtls": "~2",
         "mpr-openssl": "~1",
         "sqlite": "~3"
