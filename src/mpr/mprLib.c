@@ -1303,16 +1303,19 @@ static void invokeDestructors()
                 Order matters: racing with allocator. The allocator sets free last.
                 Free first, then mark, then eternal
              */
-            if (!mp->free && !mp->eternal && mp->mark != heap->mark && mp->hasManager) {
-                mgr = GET_MANAGER(mp);
-                if (mgr) {
-                    assert(!mp->eternal);
-                    assert(!mp->free);
-                    assert(mp->mark != heap->mark);
-                    (mgr)(GET_PTR(mp), MPR_MANAGE_FREE);
-                    /* Retest incase the manager routine revied the object */
-                    if (mp->mark != heap->mark) {
-                        mp->hasManager = 0;
+            if (mp->hasManager && !mp->free && !mp->eternal) {
+                mprAtomicBarrier();
+                if (mp->mark != heap->mark) {
+                    mgr = GET_MANAGER(mp);
+                    if (mgr) {
+                        assert(!mp->eternal);
+                        assert(!mp->free);
+                        assert(mp->mark != heap->mark);
+                        (mgr)(GET_PTR(mp), MPR_MANAGE_FREE);
+                        /* Retest incase the manager routine revied the object */
+                        if (mp->mark != heap->mark) {
+                            mp->hasManager = 0;
+                        }
                     }
                 }
             }
