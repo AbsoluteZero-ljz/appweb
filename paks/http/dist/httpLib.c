@@ -14722,6 +14722,17 @@ static void freeNetPackets(HttpQueue *q, ssize bytes)
 
     while ((packet = q->first) != 0) {
         if (packet->flags & HTTP_PACKET_END) {
+            if (packet->prefix) {
+                len = mprGetBufLength(packet->prefix);
+                len = min(len, bytes);
+                mprAdjustBufStart(packet->prefix, len);
+                bytes -= len;
+                // Prefixes don't count in the q->count. No need to adjust
+                if (mprGetBufLength(packet->prefix) == 0) {
+                    // Ensure the prefix is not resent if all the content is not sent
+                    packet->prefix = 0;
+                }
+            }
             if ((stream = packet->stream) != 0) {
                 httpFinalizeConnector(stream);
                 httpProcess(stream->inputq);
