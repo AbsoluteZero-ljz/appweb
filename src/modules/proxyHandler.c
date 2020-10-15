@@ -485,7 +485,7 @@ static void proxyBackNotifier(HttpStream *proxyStream, int event, int arg)
         break;
     case HTTP_EVENT_ERROR:
         for (ITERATE_ITEMS(req->app->requests, rq, next)) {
-            mprCreateEvent(req->stream->dispatcher, "proxy-reap", 0, proxyCleanRequest, req, 0);
+            mprCreateLocalEvent(req->stream->dispatcher, "proxy-reap", 0, proxyCleanRequest, req, 0);
         }
         break;
 
@@ -964,7 +964,7 @@ static void proxyDeath(ProxyApp *app, MprSignal *sp)
             Notify all requests on their relevant dispatcher
          */
         for (ITERATE_ITEMS(app->requests, req, next)) {
-            mprCreateEvent(req->stream->dispatcher, "proxy-reap", 0, proxyCleanRequest, req, 0);
+            mprCreateLocalEvent(req->stream->dispatcher, "proxy-reap", 0, proxyCleanRequest, req, 0);
         }
         for (ITERATE_ITEMS(app->networks, net, next)) {
             httpDestroyNet(net);
