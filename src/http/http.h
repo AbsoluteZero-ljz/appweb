@@ -70,6 +70,9 @@ struct HttpWebSocket;
 #ifndef ME_HTTP_WEB_SOCKETS
     #define ME_HTTP_WEB_SOCKETS     0
 #endif
+#ifndef ME_HTTP_SENDFILE
+    #define ME_HTTP_SENDFILE        1
+#endif
 
 /*
     Unlimited limit value
