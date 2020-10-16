@@ -8943,7 +8943,12 @@ static void logPacket(HttpQueue *q, HttpPacket *packet)
                 httpLog(q->stream->trace, "tx.http1", "packet", "msg:Abbreviating packet trace");
                 net->skipTrace = 1;
             } else {
-                httpLogPacket(q->stream->trace, "tx.http1", "packet", HTTP_TRACE_HEX, packet, "type:%s, length:%zd", type, len);
+                if (packet->esize) {
+                    httpLogPacket(q->stream->trace, "tx.http1", "packet", HTTP_TRACE_HEX, packet, "type:%s, entity:%lld, path: %s",
+                        type, packet->esize, q->stream->tx->file->path);
+                } else {
+                    httpLogPacket(q->stream->trace, "tx.http1", "packet", HTTP_TRACE_HEX, packet, "type:%s, length:%zd", type, len);
+                }
             }
         } else {
             httpLog(q->stream->trace, "tx.http1", "packet", "type:%s, length:%zd,", type, len);
@@ -16642,18 +16647,16 @@ static void processHeaders(HttpStream *stream)
     if (stream->error) {
         return;
     }
-
     if (httpTracing(net)) {
         if (httpIsServer(net)) {
-            httpLog(stream->trace, "rx.http", "request", "@%s %s %s\n", rx->originalMethod, rx->uri, rx->protocol);
-            httpLog(stream->trace, "rx.http", "headers", "@%s", httpTraceHeaders(stream->rx->headers));
+            httpLog(stream->trace, "rx.http.request", "request", "@%s %s %s\n", rx->originalMethod, rx->uri, rx->protocol);
+            httpLog(stream->trace, "rx.http.headers", "headers", "@%s", httpTraceHeaders(stream->rx->headers));
         } else {
             msg = rx->statusMessage ? rx->statusMessage : "";
-            httpLog(stream->trace, "rx.http", "result", "@%s %d %s\n", rx->protocol, rx->status, msg);
-            httpLog(stream->trace, "rx.http", "headers", "@%s", httpTraceHeaders(stream->rx->headers));
+            httpLog(stream->trace, "rx.http.status", "result", "@%s %d %s\n", rx->protocol, rx->status, msg);
+            httpLog(stream->trace, "rx.http.headers", "headers", "@%s", httpTraceHeaders(stream->rx->headers));
         }
     }
-
     for (ITERATE_KEYS(rx->headers, kp)) {
         key = kp->key;
         value = (char*) kp->data;
@@ -24181,7 +24184,7 @@ static HttpPacket *createAltBodyPacket(HttpQueue *q)
 /********************************* Forwards ***********************************/
 
 static void emitTraceValues(MprBuf *buf, char *str);
-static cchar *getTraceTag(cchar *event, cchar *type);
+static cchar *getTraceTag(cchar *event, cchar *type, int flags);
 
 /*********************************** Code *************************************/
 
@@ -24383,7 +24386,7 @@ PUBLIC void httpDetailFormatter(HttpTrace *trace, cchar *event, cchar *type, int
     HttpPacket  *packet;
     MprBuf      *buf;
     MprTime     now;
-    char        *msg;
+    char        *msg, *ptag;
     bool        hex;
 
     assert(trace);
@@ -24404,10 +24407,11 @@ PUBLIC void httpDetailFormatter(HttpTrace *trace, cchar *event, cchar *type, int
     }
 
     if (event && type) {
+        ptag = (flags & HTTP_TRACE_PACKET) ? " PACKET" : "";
         if (scontains(event, ".tx")) {
-            mprPutToBuf(buf, "%s SEND event=%s type=%s", trace->lastTime, event, type);
+            mprPutToBuf(buf, "%s SEND%s event=%s type=%s", trace->lastTime, ptag, event, type);
         } else {
-            mprPutToBuf(buf, "%s RECV event=%s type=%s", trace->lastTime, event, type);
+            mprPutToBuf(buf, "%s RECV%s event=%s type=%s", trace->lastTime, ptag, event, type);
         }
         if (fmt) {
             mprPutCharToBuf(buf, ' ');
@@ -24475,7 +24479,7 @@ PUBLIC void httpPrettyFormatter(HttpTrace *trace, cchar *event, cchar *type, int
         trace->lastTime = mprGetDate("%D %T");
         trace->lastMark = now;
     }
-    mprPutToBuf(buf, "%s %s (%s)\n\n", trace->lastTime, getTraceTag(event, type), event);
+    mprPutToBuf(buf, "%s %s (%s)\n\n", trace->lastTime, getTraceTag(event, type, flags), event);
     if (fmt) {
         msg = sfmtv(fmt, args);
         if (flags & HTTP_TRACE_RAW) {
@@ -24538,16 +24542,23 @@ static void emitTraceValues(MprBuf *buf, char *str)
 }
 
 
-static cchar *getTraceTag(cchar *event, cchar *type)
+static cchar *getTraceTag(cchar *event, cchar *type, int flags)
 {
-    if (sstarts(event, "tx")) {
-        return "SEND";
+    if (flags & HTTP_TRACE_PACKET) {
+        if (sstarts(event, "tx")) {
+            return "SEND";
+        } else if (sstarts(event, "rx")) {
+            return "RECV";
+        }
+        return supper(type);
+    } else if (sstarts(event, "tx")) {
+        return "OUTGOING";
     } else if (sstarts(event, "rx")) {
-        return "RECV";
-    } else if (smatch(type, "request")) {
-        return "RECV";
+        return "INCOMING";
     } else if (smatch(type, "result")) {
-        return "SEND";
+        return "OUTGOING";
+    } else if (smatch(type, "request")) {
+        return "INCOMING";
     } else {
         return supper(type);
     }
