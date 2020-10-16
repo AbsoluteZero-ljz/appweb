@@ -7595,10 +7595,6 @@ static int rewriteFileHandler(HttpStream *stream)
         return httpHandleDirectory(stream);
     }
     if (rx->flags & (HTTP_GET | HTTP_HEAD | HTTP_POST) && info->valid) {
-        /*
-            The sendFile connector is optimized on some platforms to use the sendfile() system call.
-            Set the entity length for the sendFile connector to utilize.
-         */
         tx->entityLength = tx->fileInfo.size;
     }
     return HTTP_ROUTE_OK;
@@ -7712,10 +7708,11 @@ static void closeFileHandler(HttpQueue *q)
  */
 static void startFileHandler(HttpQueue *q)
 {
-    HttpStream  *stream;
-    HttpTx      *tx;
-    HttpRx      *rx;
-    HttpPacket  *packet;
+    HttpStream      *stream;
+    HttpTx          *tx;
+    HttpRx          *rx;
+    HttpPacket      *packet;
+    HttpFillProc    fill;
 
     stream = q->stream;
     tx = stream->tx;
@@ -7742,7 +7739,17 @@ static void startFileHandler(HttpQueue *q)
                 Create a single dummy data packet based to hold the remaining data length and file seek possition.
                 This is used to trigger the outgoing file service. It is not transmitted to the client.
              */
-            packet = httpCreateEntityPacket(0, tx->entityLength, readFileData);
+            if (tx->simplePipeline) {
+                httpLog(stream->trace, "fileHandler", "detail", "msg:Using sendfile for %s", tx->filename);
+                httpRemoveChunkFilter(stream->txHead);
+                fill = NULL;
+            } else {
+                if (q->net->protocol < 2 && !q->net->secure) {
+                    httpLog(stream->trace, "fileHandler", "detail", "msg:Using slower full pipeline for %s", tx->filename);
+                }
+                fill = readFileData;
+            }
+            packet = httpCreateEntityPacket(0, tx->entityLength, fill);
 
             /*
                 Set the content length if not chunking and not using ranges
@@ -7872,7 +7879,7 @@ static void outgoingFileService(HttpQueue *q)
                 httpGetPacket(q);
             }
         } else {
-            /* Don't flow control as the packet is already consuming memory */
+            // Don't flow control as the packet is already consuming memory
             packet = httpGetPacket(q);
             httpPutPacketToNext(q, packet);
         }
@@ -9887,18 +9894,29 @@ static void closeNetworkWhenDone(HttpQueue *q)
     }
 }
 
-static void logIncomingPacket(HttpQueue *q, HttpPacket *packet, int type, int streamID, int flags)
+static void logIncomingPacket(HttpQueue *q, HttpPacket *packet, ssize payloadLen, int type, int streamID, int flags)
 {
     MprBuf      *buf;
     cchar       *typeStr;
+    ssize       excess, len;
 
     buf = packet->content;
     if (httpTracing(q->net)) {
+        len = httpGetPacketLength(packet);
+        excess = len - payloadLen;
+        if (excess > 0) {
+            mprAdjustBufEnd(buf, -excess);
+        }
         mprAdjustBufStart(buf, -HTTP2_FRAME_OVERHEAD);
+
         typeStr = (type < HTTP2_MAX_FRAME) ? packetTypes[type] : "unknown";
         httpLogPacket(q->net->trace, "rx.http2", "packet", HTTP_TRACE_HEX, packet,
             "frame=%s flags=%x stream=%d length=%zd", typeStr, flags, streamID, httpGetPacketLength(packet));
+
         mprAdjustBufStart(buf, HTTP2_FRAME_OVERHEAD);
+        if (excess > 0) {
+            mprAdjustBufEnd(buf, excess);
+        }
     }
 }
 
@@ -13561,7 +13579,7 @@ PUBLIC int64 httpMonitorNetEvent(HttpNet *net, int counterIndex, int64 adj)
     }
     counter = &address->counters[counterIndex];
     mprAtomicAdd64((int64*) &counter->value, adj);
-    
+
     if (adj < 0 && counter->value < 0) {
         counter->value = 0;
     }
@@ -14621,7 +14639,7 @@ PUBLIC void httpIOEvent(HttpNet *net, MprEvent *event)
     net->active = 1;
     net->lastActivity = net->http->now;
 
-    if (event->mask & MPR_WRITABLE && net->socketq->count > 0) {
+    if (event->mask & MPR_WRITABLE && (net->socketq->count + net->socketq->ioCount) > 0) {
         httpResumeQueue(net->socketq, 1);
     }
     if (event->mask & MPR_READABLE) {
@@ -14725,7 +14743,11 @@ static void netOutgoingService(HttpQueue *q)
             freeNetPackets(q, 0);
             break;
         }
-        written = mprWriteSocketVector(net->sock, q->iovec, q->ioIndex);
+        if (q->file) {
+            written = mprSendFileToSocket(net->sock, q->file, q->ioPos, q->ioCount, q->iovec, q->ioIndex, NULL, 0);
+        } else {
+            written = mprWriteSocketVector(net->sock, q->iovec, q->ioIndex);
+        }
         if (written < 0) {
             errCode = mprGetError();
             if (errCode == EAGAIN || errCode == EWOULDBLOCK) {
@@ -14768,35 +14790,23 @@ static void netOutgoingService(HttpQueue *q)
 static MprOff buildNetVec(HttpQueue *q)
 {
     HttpPacket  *packet;
+
     /*
         Examine each packet and accumulate as many packets into the I/O vector as possible. Leave the packets on
-        the queue for now, they are removed after the IO is complete for the entire packet.
+        the queue for now, they are removed after the IO is complete for the entire packet. mprWriteSocketVector will
+        use O/S vectored writes or aggregate packets into a single write where appropriate.
      */
      for (packet = q->first; packet; packet = packet->next) {
         if (q->ioIndex >= (ME_MAX_IOVEC - 2)) {
             break;
         }
-        if (httpGetPacketLength(packet) > 0 || packet->prefix) {
+        if (httpGetPacketLength(packet) > 0 || packet->prefix || packet->esize > 0) {
             addPacketForNet(q, packet);
-        }
-        bool hex = 1;
-        ssize len;
-        cchar *prefix, *content;
-        if (packet->prefix) {
-            ssize len = mprGetBufLength(packet->prefix);
-            prefix = httpMakePrintable(q->net->trace, packet->prefix->start, &hex, &len);
-        } else {
-            prefix = "";
-        }
-        if (packet->content) {
-            len = httpGetPacketLength(packet);
-            content = httpMakePrintable(q->net->trace, packet->content->start, &hex, &len);
-        } else {
-            content = "";
         }
     }
     return q->ioCount;
 }
+
 
 
 /*
@@ -14805,17 +14815,25 @@ static MprOff buildNetVec(HttpQueue *q)
 static void addPacketForNet(HttpQueue *q, HttpPacket *packet)
 {
     HttpNet     *net;
+    HttpStream  *stream;
 
     net = q->net;
     assert(q->count >= 0);
     assert(q->ioIndex < (ME_MAX_IOVEC - 2));
 
-    net->bytesWritten += httpGetPacketLength(packet);
     if (packet->prefix && mprGetBufLength(packet->prefix) > 0) {
         addToNetVector(q, mprGetBufStart(packet->prefix), mprGetBufLength(packet->prefix));
+        //  Don't count prefix in bytesWritten
     }
     if (packet->content && mprGetBufLength(packet->content) > 0) {
         addToNetVector(q, mprGetBufStart(packet->content), mprGetBufLength(packet->content));
+        net->bytesWritten += mprGetBufLength(packet->content);
+
+    } else if (packet->esize > 0) {
+        stream = packet->stream;
+        q->file = stream->tx->file;
+        q->ioCount += packet->esize;
+        net->bytesWritten += packet->esize;
     }
 }
 
@@ -14878,9 +14896,17 @@ static void freeNetPackets(HttpQueue *q, ssize bytes)
                 bytes -= len;
                 q->count -= len;
                 assert(q->count >= 0);
+
+            } else if (packet->esize > 0) {
+                len = min(packet->esize, bytes);
+                bytes -= len;
+                packet->esize -= len;
+                packet->epos += len;
+                q->ioPos += len;
+                assert(packet->esize >= 0);
             }
         }
-        if ((packet->flags & HTTP_PACKET_END) || (httpGetPacketLength(packet) == 0 && !packet->prefix)) {
+        if ((packet->flags & HTTP_PACKET_END) || (httpGetPacketLength(packet) == 0 && !packet->prefix && packet->esize == 0)) {
             // Done with this packet - consume it
             httpGetPacket(q);
         } else {
@@ -14909,6 +14935,7 @@ static void adjustNetVec(HttpQueue *q, ssize written)
          */
         q->ioIndex = 0;
         q->ioCount = 0;
+        q->ioPos = 0;
 
     } else {
         /*
@@ -15429,7 +15456,7 @@ PUBLIC int httpJoinPacket(HttpPacket *packet, HttpPacket *p)
 PUBLIC void httpJoinPackets(HttpQueue *q, ssize size)
 {
     HttpPacket  *packet, *p;
-    ssize       count, len;
+    ssize       count, len, npackets;
 
     if (size < 0) {
         size = MAXINT;
@@ -15438,11 +15465,15 @@ PUBLIC void httpJoinPackets(HttpQueue *q, ssize size)
         /*
             Get total length of data and create one packet for all the data, up to the size max
          */
-        count = 0;
+        npackets = count = 0;
         for (p = q->first; p; p = p->next) {
-            if (!(p->flags & HTTP_PACKET_HEADER)) {
+            if (!(p->flags & (HTTP_PACKET_HEADER | HTTP_PACKET_END))) {
                 count += httpGetPacketLength(p);
+                npackets++;
             }
+        }
+        if (npackets <= 1) {
+            return;
         }
         size = min(count, size);
         if ((packet = httpCreateDataPacket(size)) == 0) {
@@ -16054,7 +16085,7 @@ PUBLIC void httpCreateTxPipeline(HttpStream *stream, HttpRoute *route)
     HttpQueue   *q;
     HttpStage   *stage, *filter;
     cchar       *pattern;
-    int         next;
+    int         next, simple;
 
     assert(stream);
     if (!route) {
@@ -16082,6 +16113,7 @@ PUBLIC void httpCreateTxPipeline(HttpStream *stream, HttpRoute *route)
         //  No handler callbacks needed for the client side
         tx->started = 1;
     }
+    simple = 1;
     if (route->outputStages) {
         for (next = 0; (filter = mprGetNextItem(route->outputStages, &next)) != 0; ) {
             if (filter->flags & HTTP_STAGE_INTERNAL) {
@@ -16105,6 +16137,7 @@ PUBLIC void httpCreateTxPipeline(HttpStream *stream, HttpRoute *route)
     pairQueues(stream->txHead, stream->rxHead);
     pairQueues(stream->rxHead, stream->txHead);
     tx->connector = http->netConnector;
+    // tx->simplePipeline = (net->protocol < 2 && !net->secure && !(tx->flags & HTTP_TX_HAS_FILTERS));
     httpTraceQueues(stream);
 
     /*
@@ -16380,6 +16413,23 @@ static int matchFilter(HttpStream *stream, HttpStage *filter, HttpRoute *route, 
         return mprLookupKey(filter->extensions, tx->ext) != 0 ? HTTP_ROUTE_OK : HTTP_ROUTE_OMIT_FILTER;
     }
     return HTTP_ROUTE_OK;
+}
+
+
+PUBLIC void httpRemoveChunkFilter(HttpQueue *head)
+{
+    HttpQueue   *q;
+    HttpStream  *stream;
+
+    stream = head->stream;
+
+    for (q = head->nextQ; q != head; q = q->nextQ) {
+        if (q->stage == stream->http->chunkFilter) {
+            httpRemoveQueue(q);
+            httpTraceQueues(stream);
+            return;
+        }
+    }
 }
 
 /*
@@ -29575,4 +29625,3 @@ bool httpIsLastPacket(HttpPacket *packet)
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
  */
-
