@@ -11536,14 +11536,11 @@ static int setState(HttpStream *stream, int event)
     state = StateMatrix[event][stream->h2State];
 
     type = (state == H2_ERR) ? "error" : "packet";
-    stateStr = (state < 0) ? "Error" : States[state];
 
     if (state != H2_SAME) {
+        stateStr = (state < 0) ? "Error" : States[state];
         httpLog(net->trace, "rx.http2", type, "msg:State change for stream %d from \"%s\" (%d) to \"%s\" (%d) via event \"%s\" (%d)",
             stream->streamID, States[stream->h2State], stream->h2State, stateStr, state, Events[event], event);
-        if (state == H2_ERR) {
-            print("ERR");
-        }
         stream->h2State = state;
     }
     return state;
@@ -13592,7 +13589,7 @@ PUBLIC int64 httpMonitorNetEvent(HttpNet *net, int counterIndex, int64 adj)
     }
     counter = &address->counters[counterIndex];
     mprAtomicAdd64((int64*) &counter->value, adj);
-
+    
     if (adj < 0 && counter->value < 0) {
         counter->value = 0;
     }
@@ -29638,3 +29635,4 @@ bool httpIsLastPacket(HttpPacket *packet)
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
  */
+
