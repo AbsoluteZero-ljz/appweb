@@ -466,7 +466,6 @@ static void proxyBackNotifier(HttpStream *proxyStream, int event, int arg)
     switch (event) {
     case HTTP_EVENT_READABLE:
         httpScheduleQueue(proxyStream->readq);
-        //MOB proxyReadResponse(proxyStream->readq);
         break;
     case HTTP_EVENT_WRITABLE:
     case HTTP_EVENT_DESTROY:
@@ -546,7 +545,7 @@ static void proxyIncomingRequestPacket(HttpQueue *q, HttpPacket *packet)
 
     if (packet->flags & HTTP_PACKET_END) {
         httpFinalizeInput(stream);
-        if (stream->rx->remainingContent > 0) {
+        if (stream->net->protocol < 0 && stream->rx->remainingContent > 0) {
             httpError(stream, HTTP_CODE_BAD_REQUEST, "Client supplied insufficient body data");
         } else {
             httpFinalizeOutput(req->proxyStream);
@@ -599,6 +598,7 @@ static void proxyStreamIncoming(HttpQueue *q)
     //  Stream for the client
     stream = req->stream;
     for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
+        packet->stream = stream;
         /*
             Handle case of bad proxy sending output that is unexpected
          */
