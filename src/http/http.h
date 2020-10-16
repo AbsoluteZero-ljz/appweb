@@ -2268,6 +2268,7 @@ typedef struct HttpQueue {
     int                 ioFile;                 /**< Sending a file */
     MprOff              ioCount;                /**< Count of bytes in iovec including file I/O */
     MprOff              ioPos;                  /**< Position in file */
+    MprFile             *file;                  /**< File to send */
 } HttpQueue;
 
 /**
@@ -2672,6 +2673,7 @@ PUBLIC void httpInitSchedulerQueue(HttpQueue *q);
 PUBLIC void httpMarkQueueHead(HttpQueue *q);
 PUBLIC void httpOpenQueues(struct HttpStream *stream);
 PUBLIC void httpPairQueues(HttpQueue *q1, HttpQueue *q2);
+PUBLIC void httpRemoveChunkFilter(HttpQueue *head);
 PUBLIC void httpRemovePacket(HttpQueue *q, HttpPacket *prev, HttpPacket *packet);
 PUBLIC cchar *httpTraceHeaders(MprHash *headers);
 PUBLIC void httpTraceQueues(struct HttpStream *stream);
@@ -7527,6 +7529,7 @@ typedef struct HttpTx {
     cchar           *method;                /**< Client request method GET, HEAD, POST, DELETE, OPTIONS, PUT, TRACE */
     cchar           *mimeType;              /**< Mime type of the request payload */
     cchar           *charSet;               /**< Character set to use with the Content-Type */
+    uint            simplePipeline;         /**< Output pipeline doesn't use custom filters or HTTP/2, SSL or ranges */
 
     /*
         Range fields
@@ -8844,7 +8847,7 @@ PUBLIC HttpDir *httpGetDirObj(HttpRoute *route);
         If is important to check the HttpStream.error and HttpStream.state in the callback to ensure the Stream is in
         an acceptable state for your logic. Typically you want HttpStream.state to be greater than HTTP_STATE_BEGIN and
         less than HTTP_STATE_COMPLETE. You may also wish to check HttpStream.error incase the stream request has errored.
-    @param data Data to pass to the callback.
+    @param data Data to pass to the callback. This is unmanaged data. The caller is responsible for retaining and freeing.
     @return "Zero" if the stream can be found and the event is scheduled, Otherwise returns MPR_ERR_CANT_FIND.
     @ingroup HttpStream
     @stability Prototype

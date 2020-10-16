@@ -128,6 +128,13 @@ struct  MprXml;
 #define MPR_SOCKET_MESSAGE      (WM_USER + 32)
 
 /*
+    Coalesce vectored write packets when using SSL
+ */
+#ifndef ME_MPR_SOCKET_VECTOR_JOIN
+    #define ME_MPR_SOCKET_VECTOR_JOIN 1
+#endif
+
+/*
     Priorities
  */
 #define MPR_BACKGROUND_PRIORITY 15          /**< May only get CPU if idle */

@@ -9953,40 +9953,43 @@ static HttpFrame *parseFrame(HttpQueue *q, HttpPacket *packet, int *done)
      */
     lenType = mprGetUint32FromBuf(buf);
     type = lenType & 0xFF;
-    len = lenType >> 8;
+    payloadLen = lenType >> 8;
     flags = mprGetCharFromBuf(buf);
     streamID = mprGetUint32FromBuf(buf) & HTTP_STREAM_MASK;
 
-    if (len > q->packetSize || len > HTTP2_MAX_FRAME_SIZE) {
-        logIncomingPacket(q, packet, type, streamID, flags);
-        sendGoAway(q, HTTP2_FRAME_SIZE_ERROR, "Bad frame size %d vs %d", len, q->packetSize);
+    if (payloadLen > q->packetSize || payloadLen > HTTP2_MAX_FRAME_SIZE) {
+        logIncomingPacket(q, packet, payloadLen, type, streamID, flags);
+        sendGoAway(q, HTTP2_FRAME_SIZE_ERROR, "Bad frame size %d vs %d", payloadLen, q->packetSize);
         return 0;
     }
     if (net->sentGoaway && net->lastStreamID && streamID >= net->lastStreamID) {
-        logIncomingPacket(q, packet, type, streamID, flags);
+        logIncomingPacket(q, packet, payloadLen, type, streamID, flags);
         /* Network is being closed. Continue to process existing streams but accept no new streams */
         return 0;
     }
+
     /*
         Split data for a following frame and put back on the queue for later servicing.
      */
     size = mprGetBufLength(buf);
-    if (len < size) {
-        if ((tail = httpSplitPacket(packet, len)) == 0) {
-            /* Memory error - centrally reported */
-            logIncomingPacket(q, packet, type, streamID, flags);
-            *done = 1;
-            return 0;
-        }
-        httpPutBackPacket(q, tail);
-        buf = packet->content;
 
-    } else if (len > size) {
+    if (payloadLen > size) {
         mprAdjustBufStart(buf, -HTTP2_FRAME_OVERHEAD);
         httpPutBackPacket(q, packet);
         //  Don't log packet yet
         *done = 1;
         return 0;
+    }
+    logIncomingPacket(q, packet, payloadLen, type, streamID, flags);
+
+    if (payloadLen < size) {
+        if ((tail = httpSplitPacket(packet, payloadLen)) == 0) {
+            /* Memory error - centrally reported */
+            *done = 1;
+            return 0;
+        }
+        httpPutBackPacket(q, tail);
+        buf = packet->content;
     }
     return createFrame(q, packet, type, flags, streamID);
 }
@@ -10012,7 +10015,6 @@ static HttpFrame *createFrame(HttpQueue *q, HttpPacket *packet, int type, int fl
     frame->flags = flags;
     frame->streamID = streamID;
 
-    logIncomingPacket(q, packet, type, streamID, flags);
     stream = frame->stream = findStream(net, streamID);
 
     if (frame->type < 0 || frame->type >= HTTP2_MAX_FRAME) {
@@ -10169,7 +10171,7 @@ static void parseHeaderFrame(HttpQueue *q, HttpPacket *packet)
     HttpFrame   *frame;
     MprBuf      *buf;
     bool        padded, priority;
-    ssize       size, frameLen;
+    ssize       size, payloadLen;
     int         value, padLen;
 
     net = q->net;
@@ -10187,14 +10189,14 @@ static void parseHeaderFrame(HttpQueue *q, HttpPacket *packet)
         /* dependency + weight */
         size += sizeof(uint32) + 1;
     }
-    frameLen = mprGetBufLength(buf);
-    if (frameLen <= size) {
+    payloadLen = mprGetBufLength(buf);
+    if (payloadLen <= size) {
         sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Incorrect header length");
         return;
     }
     if (padded) {
         padLen = (int) mprGetCharFromBuf(buf);
-        if (padLen >= frameLen) {
+        if (padLen >= payloadLen) {
             sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Incorrect padding length");
             return;
         }
@@ -10745,7 +10747,7 @@ static void parseDataFrame(HttpQueue *q, HttpPacket *packet)
     HttpStream  *stream;
     HttpLimits  *limits;
     MprBuf      *buf;
-    ssize       len, padLen, frameLen;
+    ssize       len, padLen, payloadLen;
     int         padded;
 
     net = q->net;
@@ -10760,9 +10762,9 @@ static void parseDataFrame(HttpQueue *q, HttpPacket *packet)
     }
     padded = frame->flags & HTTP2_PADDED_FLAG;
     if (padded) {
-        frameLen = mprGetBufLength(buf);
+        payloadLen = mprGetBufLength(buf);
         padLen = (int) mprGetCharFromBuf(buf);
-        if (padLen >= frameLen) {
+        if (padLen >= payloadLen) {
             sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Incorrect padding length");
             return;
         }
@@ -11464,8 +11466,11 @@ static void restartSuspendedStreams(HttpNet *net) {
 
 static void invalidState(HttpNet *net, HttpStream *stream, int event)
 {
+    cchar       *stateStr;
+
+    stateStr = (stream->h2State < 0) ? "Error" : States[stream->h2State];
     sendGoAway(net->socketq, HTTP2_PROTOCOL_ERROR, "Invalid event on stream %d, \"%s\" (%d) in stream state \"%s\" (%d)",
-        stream->streamID, Events[event], event, States[stream->h2State], stream->h2State);
+        stream->streamID, Events[event], event, stateStr, stream->h2State);
 }
 
 
@@ -11517,7 +11522,7 @@ static void sendGoAway(HttpQueue *q, int status, cchar *fmt, ...)
 static int setState(HttpStream *stream, int event)
 {
     HttpNet     *net;
-    cchar       *type;
+    cchar       *stateStr, *type;
     int         state;
 
     net = stream->net;

@@ -23045,8 +23045,7 @@ PUBLIC ssize mprWriteSocketString(MprSocket *sp, cchar *str)
 
 PUBLIC ssize mprWriteSocketVector(MprSocket *sp, MprIOVec *iovec, int count)
 {
-    char        *start;
-    ssize       len, written;
+    ssize       written;
     int         i;
 
 #if ME_UNIX_LIKE
@@ -23062,21 +23061,24 @@ PUBLIC ssize mprWriteSocketVector(MprSocket *sp, MprIOVec *iovec, int count)
 
         size = 0;
         for (i = 0; i < count; i++) {
-            size += len = (int) iovec[i].len;
+            size += iovec[i].len;
         }
-        buf = mprAlloc(count);
+        buf = mprAlloc(size);
         offset = 0;
         for (i = 0; i < count; i++) {
             memcpy(&buf[offset], iovec[i].start, iovec[i].len);
             offset += iovec[i].len;
+            assert(offset <= size);
         }
-        written = mprWriteSocket(sp, start, len);
+        written = mprWriteSocket(sp, buf, size);
         return written;
     }
 #else
     {
         ssize   total;
-        //  OPT - better to buffer and have fewer raw writes
+        char    *start;
+        ssize   len;
+
         if (count <= 0) {
             return 0;
         }
