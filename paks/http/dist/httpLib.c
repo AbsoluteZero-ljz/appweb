@@ -7739,6 +7739,7 @@ static void startFileHandler(HttpQueue *q)
                 Create a single dummy data packet based to hold the remaining data length and file seek possition.
                 This is used to trigger the outgoing file service. It is not transmitted to the client.
              */
+#if ME_HTTP_SENDFILE
             if (tx->simplePipeline) {
                 httpLog(stream->trace, "fileHandler", "detail", "msg:Using sendfile for %s", tx->filename);
                 httpRemoveChunkFilter(stream->txHead);
@@ -7749,6 +7750,9 @@ static void startFileHandler(HttpQueue *q)
                 }
                 fill = readFileData;
             }
+#else
+            fill = readFileData;
+#endif
             packet = httpCreateEntityPacket(0, tx->entityLength, fill);
 
             /*
@@ -11532,9 +11536,9 @@ static int setState(HttpStream *stream, int event)
     state = StateMatrix[event][stream->h2State];
 
     type = (state == H2_ERR) ? "error" : "packet";
-    stateStr = (state < 0) ? "Error" : States[state];
 
     if (state != H2_SAME) {
+        stateStr = (state < 0) ? "Error" : States[state];
         httpLog(net->trace, "rx.http2", type, "msg:State change for stream %d from \"%s\" (%d) to \"%s\" (%d) via event \"%s\" (%d)",
             stream->streamID, States[stream->h2State], stream->h2State, stateStr, state, Events[event], event);
         stream->h2State = state;
@@ -16143,7 +16147,7 @@ PUBLIC void httpCreateTxPipeline(HttpStream *stream, HttpRoute *route)
     pairQueues(stream->txHead, stream->rxHead);
     pairQueues(stream->rxHead, stream->txHead);
     tx->connector = http->netConnector;
-    tx->simplePipeline = (net->protocol < 2 && !net->secure && !(tx->flags & HTTP_TX_HAS_FILTERS));
+    tx->simplePipeline = (net->protocol < 2 && !net->secure && !(tx->flags & HTTP_TX_HAS_FILTERS) && tx->chunkSize < 0);
     httpTraceQueues(stream);
 
     /*
