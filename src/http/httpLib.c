@@ -940,7 +940,7 @@ PUBLIC int httpApplyUserGroup()
 
     http = HTTP;
     if (http->userChanged || http->groupChanged) {
-        if (!smatch(MPR->logPath, "stdout") && !smatch(MPR->logPath, "stderr")) {
+        if (MPR->logPath && !smatch(MPR->logPath, "stdout") && !smatch(MPR->logPath, "stderr")) {
             if (chown(MPR->logPath, http->uid, http->gid) < 0) {
                 mprLog("critical http", 0, "Cannot change ownership on %s", MPR->logPath);
             }
@@ -949,7 +949,7 @@ PUBLIC int httpApplyUserGroup()
             for (ITERATE_ITEMS(host->routes, route, nextRoute)) {
                 if (route->trace) {
                     path = route->trace->path;
-                    if (!smatch(path, "stdout") && !smatch(path, "stderr")) {
+                    if (path && !smatch(path, "stdout") && !smatch(path, "stderr")) {
                         if (chown(path, http->uid, http->gid) < 0) {
                             mprLog("critical http", 0, "Cannot change ownership on %s", path);
                         }

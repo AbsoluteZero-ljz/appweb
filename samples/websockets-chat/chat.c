@@ -8,7 +8,7 @@
  */
 static MprList  *clients;
 
-static void chat(HttpStream *stream, cchar *msg);
+static void chat(HttpStream *stream, char *msg);
 static void chat_action();
 static void chat_callback(HttpStream *stream, int event, int arg);
 
@@ -53,7 +53,7 @@ static void chat_callback(HttpStream *stream, int event, int arg)
 {
     HttpPacket  *packet;
     void        *client;
-    cchar       *msg;
+    char        *msg;
     int         next;
 
     if (event == HTTP_EVENT_READABLE) {
@@ -92,13 +92,10 @@ static void chat_callback(HttpStream *stream, int event, int arg)
 /*
     Send message to a client
  */
-static void chat(HttpStream *stream, cchar *msg)
+static void chat(HttpStream *stream, char *msg)
 {
-    HttpPacket  *packet;
-
     if (stream) {
-        packet = msg->packet;
-        httpSendBlock(stream, packet->type, msg, slen(msg), 0);
+        httpSendBlock(stream, WS_MSG_TEXT, msg, slen(msg), 0);
     } else {
         /* Stream destroyed. Release any custom Msg resources if required here */
     }

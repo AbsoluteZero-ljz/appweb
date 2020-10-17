@@ -510,12 +510,6 @@ static int getPostData(State *state)
             bufsize = len + size + 1;
         }
         bytes = FCGX_GetStr(&buf[len], (int) size, in);
-#if KEEP
-        printf("@@@ After read %d, errno %d, sofar %ld / %ld\n", (int) bytes, errno, len, limit);
-        printf("@@@ isClosed %d, isReader %d, size %ld, errno %d, closedCalled %d\n",
-            in->isClosed, in->isReader, size, in->FCGI_errno, in->wasFCloseCalled);
-        fflush(stdout);
-#endif
         if (bytes < 0) {
             error(state, "Could not read FAST input %d", in->FCGI_errno);
             return -1;
