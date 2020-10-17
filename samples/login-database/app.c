@@ -36,7 +36,7 @@ static bool verifyUser(HttpStream *stream, cchar *username, cchar *password)
     rx = stream->rx;
     auth = rx->route->auth;
 
-    if ((urec = readRecWhere("user", "username", "==", username)) == 0) {
+    if ((urec = findGrid("user", sfmt("username == %s", username))) == 0) {
         httpTrace(stream->trace, "auth.login.error", "error", "msg: 'Cannot verify user', username: '%s'", username);
         return 0;
     }

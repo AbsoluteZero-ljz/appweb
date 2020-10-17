@@ -9,7 +9,7 @@ let http: Http = new Http
 /* Depths:    0  1  2  3   4   5   6    7    8    9    */
 var sizes = [ 1, 2, 4, 8, 16, 32, 64, 128, 256, 512 ]
 
-//  Create test buffer 
+//  Create test buffer
 buf = new ByteArray
 for (i in 64) {
     for (j in 15) {
@@ -22,7 +22,6 @@ for (i in 64) {
 count = sizes[tdepth()] * 1024
 
 function postTest(url: String) {
-    // print("@@@@ Writing " + count * buf.length + " to " + url)
     http.post(HTTP + url)
     // print("Count " + count + " buf " + buf.length + " total " + count * buf.length)
     for (i in count) {
