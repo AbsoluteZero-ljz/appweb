@@ -634,9 +634,9 @@ PUBLIC HttpAddress *httpMonitorAddress(struct HttpNet *net, int counterIndex);
 /*
     Formatter flags
  */
-#define HTTP_TRACE_PACKET           0x1         /**< Trace a packet */
-#define HTTP_TRACE_HEX              0x2         /**< Format content in hex with side ascii */
-#define HTTP_TRACE_RAW              0x4         /**< Emit raw trace */
+#define HTTP_TRACE_HEX              0x1         /**< Format content in hex with side ascii */
+#define HTTP_TRACE_RAW              0x2         /**< Emit raw trace - don't interpret key/value pairs */
+#define HTTP_TRACE_CONT             0x4         /**< Continuation trace. Don't flush and try to format with subsequent trace */
 
 /**
     Trace formatter callback
@@ -702,7 +702,7 @@ PUBLIC int httpBackupTraceLogFile(HttpTrace *trace);
     @param trace HttpTrace object
     @param event Event to trace
     @param type Event type
-    @param flags Formatting flags (HTTP_TRACE_PACKET and set buf to a HttpPacket)
+    @param flags Formatting flags
     @param buf Data buffer to trace.
     @param len Length of the data buf.
     @param fmt Printf style formatted string
@@ -727,7 +727,7 @@ PUBLIC HttpTrace *httpCreateTrace(HttpTrace *parent);
     @param trace HttpTrace object
     @param event Event to trace
     @param type Event type to trace
-    @param flags Formatting flags (HTTP_TRACE_PACKET and set buf to a HttpPacket)
+    @param flags Formatting flags
     @param buf Data buffer to trace.
     @param len Length of the data buf.
     @param fmt Printf style formatted string
@@ -742,7 +742,7 @@ PUBLIC void httpDetailFormatter(HttpTrace *trace, cchar *event, cchar *type, int
     @description The formatter will invoke the trace logger and actually write the trace mesage
     @param trace HttpTrace object
     @param type Event type to trace
-    @param flags Formatting flags (HTTP_TRACE_PACKET and set buf to a HttpPacket)
+    @param flags Formatting flags
     @param event Event name to trace
     @param buf Trace data buffer to write
     @param len Length of data buffer
@@ -797,54 +797,44 @@ PUBLIC bool httpLog(HttpTrace *trace, cchar *event, cchar *type, cchar *fmt, ...
         } else
 #endif
 
-PUBLIC bool httpLogProc(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *fmt, ...) PRINTF_ATTRIBUTE(5,6);
+//  Internal
+PUBLIC void httpLogProc(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *fmt, ...) PRINTF_ATTRIBUTE(5,6);
 
 /**
-    Trace request packet
-    @description This is similar to #httpLogData but accepts a packet as a parameter.
-    If the buffer contains binary data, it will be displayed in hex format. The content will be logged up
-    to the maximum size defined via #httpSetTraceLogFile.
-    @param trace HttpTrace object. Typically used via HttpStream.trace or HttpNet.trace.
-    @param event Event to log
-    @param type Event type to log
-    @param flags Output formatting flags
-    @param packet Packet to log.
-    @param values Formatted comma separated key=value pairs
-    @param ... Arguments for fmt
-    @return True if the event was logged
-    @ingroup HttpTrace
-    @stability Evolving
- */
-PUBLIC bool httpLogPacket(HttpTrace *trace, cchar *event, cchar *type, int flags, struct HttpPacket *packet, cchar *values, ...) PRINTF_ATTRIBUTE(6,7);
-
-#if DEPRECATED
-/**
-    Log with data buffer
-    @description This is similar to #httpLog but will also log the contents of a data buffer.
-    If the buffer contains binary data, it will be displayed in hex format. The content will be logged up
-    to the maximum size defined via #httpSetTraceLogFile.
-    @param trace HttpTrace object. Typically used via HttpStream.trace or HttpNet.trace.
-    @param event Event to trace
-    @param type Event type to trace
-    @param flags Output formatting flags
+    Trace a packet received from the network
+    @param net HttpNet object
     @param buf Data buffer to trace
-    @param len Size of the data buffer.
-    @param fmt Printf style format string. String should be comma separated key=value pairs
-    @param ... Arguments for fmt
-    @return True if the event was traced
+    @param len Size of buffer
     @ingroup HttpTrace
-    @stability Evolving
+    @stability Prototype
  */
-PUBLIC bool httpLogData(struct HttpNet *net, struct HttpStream *stream, cchar *event, cchar *type, int flags, cchar *buf,
-    ssize len, cchar *fmt, ...) PRINTF_ATTRIBUTE(8,9);
-#endif
+PUBLIC void httpLogRxPacket(struct HttpNet *net, cchar *buf, ssize len);
+
+/**
+    Trace packets sent to the network
+    @description This traces the packets referenced by net->socketq->iovec
+    @param net HttpNet object
+    @param len Length in bytes actually written
+    @ingroup HttpTrace
+    @stability Prototype
+ */
+PUBLIC void httpLogTxPacket(struct HttpNet *net, ssize len);
+
+/**
+    Trace the completion of a request
+    @description This traces the request metrics
+    @param stream HttpStream object
+    @ingroup HttpTrace
+    @stability Prototype
+ */
+PUBLIC void httpLogCompleteRequest(struct HttpStream *stream);
 
 /**
     Pretty log trace formatter for debugging
     @param trace HttpTrace object
     @param event Event to trace
     @param type Event type to trace
-    @param flags Formatting flags (HTTP_TRACE_PACKET and set buf to a HttpPacket)
+    @param flags Formatting flags
     @param buf Data buffer to trace.
     @param len Length of the data buf.
     @param fmt Printf style formatted string
@@ -2262,16 +2252,6 @@ typedef struct HttpQueue {
 #if ME_HTTP_HTTP2 || DOXYGEN
     ssize               window;                 /**< HTTP/2 flow control window size */
 #endif
-
-    /*
-        Connector instance data
-     */
-    MprIOVec            iovec[ME_MAX_IOVEC];
-    int                 ioIndex;                /**< Next index into iovec */
-    int                 ioFile;                 /**< Sending a file */
-    MprOff              ioCount;                /**< Count of bytes in iovec including file I/O */
-    MprOff              ioPos;                  /**< Position in file */
-    MprFile             *file;                  /**< File to send */
 } HttpQueue;
 
 /**
@@ -3317,7 +3297,7 @@ typedef struct HttpNet {
     uint            eventMask: 3;           /**< Last IO event mask */
     bool            http2: 1;               /**< Enable http 2 */
     bool            init: 1;                /**< Settings frame has been sent and network is ready to use */
-    bool            ownDispatcher: 1;       /**< Using own the dispatcher and should destroy when closing connection */
+    bool            ownDispatcher: 1;       /**< Using own dispatcher and should destroy when closing */
     bool            parsingHeaders: 1;      /**< Parsing HTTP/2 headers */
     bool            push: 1;                /**< Receiver will accept push */
     bool            receivedGoaway: 1;      /**< Received goaway frame */
@@ -3325,8 +3305,20 @@ typedef struct HttpNet {
     bool            sentGoaway: 1;          /**< Sent goaway frame */
     bool            sharedDispatcher: 1;    /**< Dispatcher is shared and should not be destroyed */
     bool            skipTrace: 1;           /**< Omit trace from now on */
+    bool            tracing: 1;             /**< Network is tracing packets */
     bool            worker: 1;              /**< Use worker */
     bool            writeBlocked: 1;        /**< Transmission writing is blocked */
+
+    /*
+        Network connector instance data
+     */
+    MprIOVec            iovec[ME_MAX_IOVEC];
+    int                 ioIndex;                /**< Next index into iovec */
+    MprOff              ioCount;                /**< Count of bytes in iovec including file I/O */
+    MprOff              ioPos;                  /**< Position in file */
+    //MprOff              ioFileSize;             /**< Size of file */
+    MprFile             *ioFile;                /**< File to send */
+
 } HttpNet;
 
 #if DEPRECATED || 1
@@ -7541,6 +7533,7 @@ typedef struct HttpTx {
     HttpRange       *currentRange;          /**< Current range being fullfilled */
     char            *rangeBoundary;         /**< Inter-range boundary */
     MprOff          rangePos;               /**< Current range I/O position in response data */
+    MprOff          filePos;                /**< Position in file */
 
     cchar           *altBody;               /**< Alternate transmission for errors */
     int             traceMethods;           /**< Handler methods supported */

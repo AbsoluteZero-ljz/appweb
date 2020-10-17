@@ -160,9 +160,9 @@ typedef struct FastRequest {
 
 /*********************************** Forwards *********************************/
 
-static void addFastPacket(HttpQueue *q, HttpPacket *packet);
-static void addToFastVector(HttpQueue *q, char *ptr, ssize bytes);
-static void adjustFastVec(HttpQueue *q, ssize written);
+static void addFastPacket(HttpNet *net, HttpPacket *packet);
+static void addToFastVector(HttpNet *net, char *ptr, ssize bytes);
+static void adjustFastVec(HttpNet *net, ssize written);
 static Fast *allocFast(void);
 static FastRequest *allocFastRequest(FastApp *app, HttpStream *stream, MprSocket *socket);
 static FastApp *allocFastApp(Fast *fast, HttpStream *stream);
@@ -1141,8 +1141,7 @@ static HttpPacket *createFastPacket(HttpQueue *q, int type, HttpPacket *packet)
     *buf++ = (uchar) pad;
     mprAdjustBufEnd(packet->prefix, 8);
 
-    httpLogPacket(req->trace, "tx.fast", "packet", HTTP_TRACE_HEX, packet,
-        "msg:FastCGI tx packet, type:%s, id:%d, lenth:%ld", fastTypes[type], req->id, len);
+    httpLog(req->trace, "tx.fast", "packet", "msg:FastCGI tx packet, type:%s, id:%d, lenth:%ld", fastTypes[type], req->id, len);
     return packet;
 }
 
@@ -1305,8 +1304,8 @@ static void fastConnectorIncomingService(HttpQueue *q)
         }
         packet->type = type;
 
-        httpLogPacket(req->trace, "rx.fast", "packet", HTTP_TRACE_HEX, packet,
-            "msg:FastCGI rx packet, type:%s, id:%d, length:%ld, padding %ld", fastTypes[type], req->id, len, padLength);
+        httpLog(req->trace, "rx.fast", "packet", "msg:FastCGI rx packet, type:%s, id:%d, length:%ld, padding %ld",
+            fastTypes[type], req->id, len, padLength);
 
         /*
             Split extra data off this packet
@@ -1433,6 +1432,7 @@ static void fastConnectorOutgoingService(HttpQueue *q)
     Fast            *fast;
     FastApp         *app;
     FastRequest     *req, *cp;
+    HttpNet         *net;
     ssize           written;
     int             errCode, next;
 
@@ -1440,6 +1440,7 @@ static void fastConnectorOutgoingService(HttpQueue *q)
     app = req->app;
     fast = app->fast;
     app->lastActive = mprGetTicks();
+    net = q->net;
 
     if (req->eof || req->socket == 0) {
         return;
@@ -1447,12 +1448,12 @@ static void fastConnectorOutgoingService(HttpQueue *q)
     lock(fast);
     req->writeBlocked = 0;
 
-    while (q->first || q->ioIndex) {
-        if (q->ioIndex == 0 && buildFastVec(q) <= 0) {
+    while (q->first || net->ioIndex) {
+        if (net->ioIndex == 0 && buildFastVec(q) <= 0) {
             freeFastPackets(q, 0);
             break;
         }
-        written = mprWriteSocketVector(req->socket, q->iovec, q->ioIndex);
+        written = mprWriteSocketVector(req->socket, net->iovec, net->ioIndex);
         if (written < 0) {
             errCode = mprGetError();
             if (errCode == EAGAIN || errCode == EWOULDBLOCK) {
@@ -1472,7 +1473,7 @@ static void fastConnectorOutgoingService(HttpQueue *q)
 
         } else if (written > 0) {
             freeFastPackets(q, written);
-            adjustFastVec(q, written);
+            adjustFastVec(net, written);
 
         } else {
             /* Socket full */
@@ -1490,37 +1491,38 @@ static void fastConnectorOutgoingService(HttpQueue *q)
  */
 static MprOff buildFastVec(HttpQueue *q)
 {
+    HttpNet     *net;
     HttpPacket  *packet;
 
+    net = q->net;
     /*
         Examine each packet and accumulate as many packets into the I/O vector as possible. Leave the packets on
         the queue for now, they are removed after the IO is complete for the entire packet.
      */
      for (packet = q->first; packet; packet = packet->next) {
-        if (q->ioIndex >= (ME_MAX_IOVEC - 2)) {
+        if (net->ioIndex >= (ME_MAX_IOVEC - 2)) {
             break;
         }
         if (httpGetPacketLength(packet) > 0 || packet->prefix) {
-            addFastPacket(q, packet);
+            addFastPacket(net, packet);
         }
     }
-    return q->ioCount;
+    return net->ioCount;
 }
 
 
 /*
     Add a packet to the io vector. Return the number of bytes added to the vector.
  */
-static void addFastPacket(HttpQueue *q, HttpPacket *packet)
+static void addFastPacket(HttpNet *net, HttpPacket *packet)
 {
-    assert(q->count >= 0);
-    assert(q->ioIndex < (ME_MAX_IOVEC - 2));
+    assert(net->ioIndex < (ME_MAX_IOVEC - 2));
 
     if (packet->prefix && mprGetBufLength(packet->prefix) > 0) {
-        addToFastVector(q, mprGetBufStart(packet->prefix), mprGetBufLength(packet->prefix));
+        addToFastVector(net, mprGetBufStart(packet->prefix), mprGetBufLength(packet->prefix));
     }
     if (packet->content && mprGetBufLength(packet->content) > 0) {
-        addToFastVector(q, mprGetBufStart(packet->content), mprGetBufLength(packet->content));
+        addToFastVector(net, mprGetBufStart(packet->content), mprGetBufLength(packet->content));
     }
 }
 
@@ -1528,14 +1530,14 @@ static void addFastPacket(HttpQueue *q, HttpPacket *packet)
 /*
     Add one entry to the io vector
  */
-static void addToFastVector(HttpQueue *q, char *ptr, ssize bytes)
+static void addToFastVector(HttpNet *net, char *ptr, ssize bytes)
 {
     assert(bytes > 0);
 
-    q->iovec[q->ioIndex].start = ptr;
-    q->iovec[q->ioIndex].len = bytes;
-    q->ioCount += bytes;
-    q->ioIndex++;
+    net->iovec[net->ioIndex].start = ptr;
+    net->iovec[net->ioIndex].len = bytes;
+    net->ioCount += bytes;
+    net->ioIndex++;
 }
 
 
@@ -1585,23 +1587,23 @@ static void freeFastPackets(HttpQueue *q, ssize bytes)
 /*
     Clear entries from the IO vector that have actually been transmitted. Support partial writes.
  */
-static void adjustFastVec(HttpQueue *q, ssize written)
+static void adjustFastVec(HttpNet *net, ssize written)
 {
     MprIOVec    *iovec;
     ssize       len;
     int         i, j;
 
-    if (written == q->ioCount) {
-        q->ioIndex = 0;
-        q->ioCount = 0;
+    if (written == net->ioCount) {
+        net->ioIndex = 0;
+        net->ioCount = 0;
     } else {
         /*
             Partial write of an vector entry. Need to copy down the unwritten vector entries.
          */
-        q->ioCount -= written;
-        assert(q->ioCount >= 0);
-        iovec = q->iovec;
-        for (i = 0; i < q->ioIndex; i++) {
+        net->ioCount -= written;
+        assert(net->ioCount >= 0);
+        iovec = net->iovec;
+        for (i = 0; i < net->ioIndex; i++) {
             len = iovec[i].len;
             if (written < len) {
                 iovec[i].start += written;
@@ -1614,10 +1616,10 @@ static void adjustFastVec(HttpQueue *q, ssize written)
         /*
             Compact the vector
          */
-        for (j = 0; i < q->ioIndex; ) {
+        for (j = 0; i < net->ioIndex; ) {
             iovec[j++] = iovec[i++];
         }
-        q->ioIndex = j;
+        net->ioIndex = j;
     }
 }
 
