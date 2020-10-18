@@ -24418,7 +24418,7 @@ PUBLIC void httpDetailFormatter(HttpTrace *trace, cchar *event, cchar *type, int
         }
         mprPutStringToBuf(buf, "\n");
     }
-    if (data) {
+    if (data && len > 0) {
         traceData(trace, data, len, flags);
         mprPutStringToBuf(buf, "\n");
     }
@@ -24462,11 +24462,11 @@ PUBLIC void httpPrettyFormatter(HttpTrace *trace, cchar *event, cchar *type, int
                 emitTraceValues(buf, msg);
             }
         }
-        if (data) {
+        if (data && len > 0) {
             mprPutCharToBuf(buf, '\n');
         }
     }
-    if (data) {
+    if (data && len > 0) {
         traceData(trace, data, len, flags);
     }
     if (!(flags & HTTP_TRACE_CONT)) {
