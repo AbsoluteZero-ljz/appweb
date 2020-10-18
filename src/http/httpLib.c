@@ -16402,7 +16402,13 @@ static int matchFilter(HttpStream *stream, HttpStage *filter, HttpRoute *route, 
         return filter->match(stream, route, dir);
     }
     if (filter->extensions && tx->ext) {
-        return mprLookupKey(filter->extensions, tx->ext) != 0 ? HTTP_ROUTE_OK : HTTP_ROUTE_OMIT_FILTER;
+        if (mprLookupKey(filter->extensions, tx->ext)) {
+            return HTTP_ROUTE_OK;
+        }
+        if (mprLookupKey(filter->extensions, "")) {
+            return HTTP_ROUTE_OK;
+        }
+        return HTTP_ROUTE_OMIT_FILTER;
     }
     return HTTP_ROUTE_OK;
 }
