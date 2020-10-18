@@ -129,6 +129,9 @@
 #ifndef ME_HTTP_PAM
     #define ME_HTTP_PAM 1
 #endif
+#ifndef ME_HTTP_SENDFILE
+    #define ME_HTTP_SENDFILE 1
+#endif
 #ifndef ME_HTTP_UPLOAD
     #define ME_HTTP_UPLOAD 1
 #endif

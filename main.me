@@ -188,9 +188,9 @@ Me.load({
         projects: {
             action: `
                 if (me.settings.description == 'Embedthis Appweb Enterprise Edition') {
-                    genProjects('--set openssl.version=1.0 --with openssl --with esp --with cgi --with fast --with proxy', 'openssl_10', 'windows-x64')
-                    genProjects('--set openssl.version=1.1 --with openssl --with esp --with cgi --with fast --with proxy', 'openssl_11', 'windows-x64')
-                    genProjects('--with openssl --with esp --with cgi --with fast --with proxy', 'openssl', 'macosx-x64')
+                    genProjects('--set openssl.version=1.0 --with openssl --with esp --with mdb --with cgi --with fast --with proxy', 'openssl_10', 'windows-x64')
+                    genProjects('--set openssl.version=1.1 --with openssl --with esp --with mdb --with cgi --with fast --with proxy', 'openssl_11', 'windows-x64')
+                    genProjects('--with openssl --with esp --with mdb --with cgi --with fast --with proxy', 'openssl', 'macosx-x64')
                     genProjects('--with esp --with fast -with proxy')
                 } else {
                     genProjects('', ['default'])
