@@ -259,7 +259,7 @@ static void proxyCloseRequest(HttpQueue *q)
     if (--app->inUse <= 0) {
         msg = "Release Proxy app";
         if (mprRemoveItem(proxy->apps, app) < 0) {
-            httpLogProc(proxy->trace, "proxy", "error", 0, "msg:Cannot find proxy app in list");
+            httpLog(proxy->trace, "proxy", "error", 0, "msg:Cannot find proxy app in list");
         }
         if (app->pid) {
             if (proxy->maxRequests < MAXINT64 && app->nextID >= proxy->maxRequests) {
@@ -276,7 +276,7 @@ static void proxyCloseRequest(HttpQueue *q)
             app->lastActive = mprGetTicks();
             mprAddItem(proxy->idleApps, app);
         }
-        httpLogProc(proxy->trace, "proxy", "context", 0,
+        httpLog(proxy->trace, "proxy", "context", 0,
             "msg:%s, pid:%d, idle:%d, active:%d, id:%lld, maxRequests:%lld, destroy:%d, nextId:%lld",
             msg, app->pid, mprGetListLength(proxy->idleApps), mprGetListLength(proxy->apps),
             app->nextID, proxy->maxRequests, app->destroy, app->nextID);
@@ -903,7 +903,7 @@ static ProxyApp *startProxyApp(Proxy *proxy, HttpStream *stream)
         mprMakeArgv(proxy->launch, &argv, 0);
         command = argv[0];
 
-        httpLogProc(app->trace, "proxy", "context", 0, "msg:Start Proxy app, command:%s", command);
+        httpLog(app->trace, "proxy", "context", 0, "msg:Start Proxy app, command:%s", command);
 
         if (!app->signal) {
             app->signal = mprAddSignalHandler(SIGCHLD, proxyDeath, app, NULL, MPR_SIGNAL_BEFORE);
@@ -925,7 +925,7 @@ static ProxyApp *startProxyApp(Proxy *proxy, HttpStream *stream)
             }
             return NULL;
         } else {
-            httpLogProc(app->trace, "proxy", "context", 0, "msg:Proxy started, command:%s, pid:%d", command, app->pid);
+            httpLog(app->trace, "proxy", "context", 0, "msg:Proxy started, command:%s, pid:%d", command, app->pid);
         }
     }
     return app;
@@ -948,7 +948,7 @@ static void proxyDeath(ProxyApp *app, MprSignal *sp)
 
     lock(proxy);
     if (app->pid && waitpid(app->pid, &status, WNOHANG) == app->pid) {
-        httpLogProc(app->trace, "proxy", WEXITSTATUS(status) == 0 ? "context" : "error", 0,
+        httpLog(app->trace, "proxy", WEXITSTATUS(status) == 0 ? "context" : "error", 0,
             "msg:Proxy exited, pid:%d, status:%d", app->pid, WEXITSTATUS(status));
         if (app->signal) {
             mprRemoveSignalHandler(app->signal);
@@ -998,7 +998,7 @@ static void killProxyApp(ProxyApp *app)
 {
     lock(app->proxy);
     if (app->pid) {
-        httpLogProc(app->trace, "proxy", "context", 0, "msg:Kill Proxy process, pid:%d", app->pid);
+        httpLog(app->trace, "proxy", "context", 0, "msg:Kill Proxy process, pid:%d", app->pid);
         if (app->pid) {
             kill(app->pid, SIGTERM);
         }

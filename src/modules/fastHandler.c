@@ -346,7 +346,7 @@ static void fastCloseRequest(HttpQueue *q)
 
     if (--app->inUse <= 0) {
         if (mprRemoveItem(fast->apps, app) < 0) {
-            httpLogProc(app->trace, "fast", "error", 0, "msg:Cannot find app in list");
+            httpLog(app->trace, "fast", "error", 0, "msg:Cannot find app in list");
         }
         msg = "Release FastCGI app";
         if (app->pid) {
@@ -364,7 +364,7 @@ static void fastCloseRequest(HttpQueue *q)
             mprAddItem(fast->idleApps, app);
             app->lastActive = mprGetTicks();
         }
-        httpLogProc(app->trace, "fast", "context", 0,
+        httpLog(app->trace, "fast", "context", 0,
             "msg:%s, pid:%d, idle:%d, active:%d, id:%d, destroy:%d, nextId:%lld",
             msg, app->pid, mprGetListLength(fast->idleApps), mprGetListLength(fast->apps),
             req->id, app->destroy, app->nextID);
@@ -881,7 +881,7 @@ static FastApp *startFastApp(Fast *fast, HttpStream *stream)
         if ((envv = mprAlloc((count + 2) * sizeof(char*))) != 0) {
             count = prepFastEnv(stream, envv, rx->svars);
         }
-        httpLogProc(app->trace, "fast", "context", 0, "msg:Start FastCGI app, command:%s", command);
+        httpLog(app->trace, "fast", "context", 0, "msg:Start FastCGI app, command:%s", command);
 
         if ((listen = createListener(app, stream)) == NULL) {
             return NULL;
@@ -908,7 +908,7 @@ static FastApp *startFastApp(Fast *fast, HttpStream *stream)
             }
             return NULL;
         } else {
-            httpLogProc(app->trace, "fast", "context", 0, "msg:FastCGI started app, command:%s, pid:%d", command, app->pid);
+            httpLog(app->trace, "fast", "context", 0, "msg:FastCGI started app, command:%s, pid:%d", command, app->pid);
             mprCloseSocket(listen, 0);
         }
     }
@@ -1004,7 +1004,7 @@ static void reapSignalHandler(FastApp *app, MprSignal *sp)
 
     lock(fast);
     if (app->pid && waitpid(app->pid, &status, WNOHANG) == app->pid) {
-        httpLogProc(app->trace, "fast", WEXITSTATUS(status) == 0 ? "context" : "error", 0,
+        httpLog(app->trace, "fast", WEXITSTATUS(status) == 0 ? "context" : "error", 0,
             "msg:FastCGI exited, pid:%d, status:%d", app->pid, WEXITSTATUS(status));
         if (app->signal) {
             mprRemoveSignalHandler(app->signal);
@@ -1037,7 +1037,7 @@ static void killFastApp(FastApp *app)
 {
     lock(app->fast);
     if (app->pid) {
-        httpLogProc(app->trace, "fast", "context", 0, "msg:Kill FastCGI process, pid:%d", app->pid);
+        httpLog(app->trace, "fast", "context", 0, "msg:Kill FastCGI process, pid:%d", app->pid);
         if (app->pid) {
             kill(app->pid, SIGTERM);
             app->destroyed = 1;
@@ -1071,7 +1071,7 @@ static MprSocket *getFastSocket(FastApp *app)
     }
     timeout = mprGetTicks() + FAST_CONNECT_TIMEOUT;
     while (1) {
-        httpLogProc(app->trace, "fast.rx", "request", 0, "FastCGI connect %s port %d", app->ip, app->port);
+        httpLog(app->trace, "fast.rx", "request", 0, "FastCGI connect, ip:%s, port:%d", app->ip, app->port);
         socket = mprCreateSocket();
         if (mprConnectSocket(socket, app->ip, app->port, MPR_SOCKET_NODELAY) == 0) {
             connected = 1;
@@ -1285,15 +1285,15 @@ static void fastConnectorIncomingService(HttpQueue *q)
         len = contentLength + padLength;
 
         if (version != FAST_VERSION) {
-            httpLogProc(app->trace, "fast", "error", 0, "msg:Bad FastCGI response version");
+            httpLog(app->trace, "fast", "error", 0, "msg:Bad FastCGI response version");
             break;
         }
         if (contentLength < 0 || contentLength > 65535) {
-            httpLogProc(app->trace, "fast", "error", 0, "msg:Bad FastCGI content length, length:%ld", contentLength);
+            httpLog(app->trace, "fast", "error", 0, "msg:Bad FastCGI content length, length:%ld", contentLength);
             break;
         }
         if (padLength < 0 || padLength > 255) {
-            httpLogProc(app->trace, "fast", "error", 0, "msg:Bad FastCGI pad length, padding:%ld", padLength);
+            httpLog(app->trace, "fast", "error", 0, "msg:Bad FastCGI pad length, padding:%ld", padLength);
             break;
         }
         if (mprGetBufLength(buf) < len) {
@@ -1322,12 +1322,11 @@ static void fastConnectorIncomingService(HttpQueue *q)
 
         } else if (type == FAST_STDERR) {
             // Log and discard stderr
-            httpLogProc(app->trace, "fast", "error", 0, "msg:FastCGI stderr, uri:%s, error:%s",
+            httpLog(app->trace, "fast", "error", 0, "msg:FastCGI stderr, uri:%s, error:%s",
                 req->stream->rx->uri, mprBufToString(packet->content));
 
         } else {
-            httpLogProc(app->trace, "fast", "error", 0, "msg:FastCGI invalid packet, command:%s, type:%d",
-                req->stream->rx->uri, type);
+            httpLog(app->trace, "fast", "error", 0, "msg:FastCGI invalid packet, command:%s, type:%d", req->stream->rx->uri, type);
             app->destroy = 1;
         }
     }
@@ -1464,7 +1463,7 @@ static void fastConnectorOutgoingService(HttpQueue *q)
             mprSetSocketEof(req->socket, 1);
             req->eof = 1;
             app->destroy = 1;
-            httpLogProc(req->app->trace, "fast", "error", 0, "msg:Write error, errno:%d", errCode);
+            httpLog(req->app->trace, "fast", "error", 0, "msg:Write error, errno:%d", errCode);
 
             for (ITERATE_ITEMS(app->requests, cp, next)) {
                 fastHandlerResponse(cp, FAST_COMMS_ERROR, NULL);
@@ -1666,7 +1665,7 @@ static void copyFastInner(HttpPacket *packet, cchar *key, cchar *value, cchar *p
     if (prefix) {
         key = sjoin(prefix, key, NULL);
     }
-    httpLogProc(req->trace, "tx.fast", "detail", 0, "msg:FastCGI env, key:%s, value:%s", key, value);
+    httpLog(req->trace, "tx.fast", "detail", 0, "msg:FastCGI env, key:%s, value:%s", key, value);
     encodeFastName(packet, key, value);
 }
 
@@ -1796,11 +1795,11 @@ static MprSocket *createListener(FastApp *app, HttpStream *stream)
     }
     if (mprListenOnSocket(listen, fast->ip, fast->port, flags) == SOCKET_ERROR) {
         if (mprGetError() == EADDRINUSE) {
-            httpLogProc(app->trace, "fast", "error", 0,
-                "msg:Cannot open listening socket for FastCGI. Already bound, address: %s port %d",
+            httpLog(app->trace, "fast", "error", 0,
+                "msg:Cannot open listening socket for FastCGI. Already bound, address:%s, port:%d",
                 fast->ip ? fast->ip : "*", fast->port);
         } else {
-            httpLogProc(app->trace, "fast", "error", 0, "msg:Cannot open listening socket for FastCGI, address: %s port%d",
+            httpLog(app->trace, "fast", "error", 0, "msg:Cannot open listening socket for FastCGI, address:%s port:%d",
                 fast->ip ? fast->ip : "*", fast->port);
         }
         httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot create listening endpoint");
@@ -1812,8 +1811,7 @@ static MprSocket *createListener(FastApp *app, HttpStream *stream)
     } else {
         app->port = fast->port;
     }
-    httpLogProc(app->trace, "fast", "context", 0, "msg:Listening for FastCGI, endpoint: %s port%d",
-        app->ip ? app->ip : "*", app->port);
+    httpLog(app->trace, "fast", "context", 0, "msg:Listening for FastCGI, endpoint: %s, port:%d", app->ip ? app->ip : "*", app->port);
     return listen;
 }
 
