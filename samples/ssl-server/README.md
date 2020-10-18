@@ -6,15 +6,14 @@ This sample shows how to configure Appweb to use SSL.
 Requirements
 ---
 * [Appweb](https://www.embedthis.com/appweb/download.html)
-* [MakeMe Build Tool](https://www.embedthis.com/makeme/download.html)
 
 To build:
 ---
-    me 
+    make 
 
 To run:
 ---
-    me run
+    make run
 
 The server listens on port 4443 for SSL requests. Browse to: 
  
@@ -22,6 +21,7 @@ The server listens on port 4443 for SSL requests. Browse to:
 
 Code:
 ---
+* [Makefile](Makefile) - Makefile build instructions
 * [appweb.conf](appweb.conf) - Appweb server configuration file
 * [web](web) - Web content to serve
 * [start.me](start.me) - MakeMe build instructions

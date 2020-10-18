@@ -67,7 +67,6 @@ static void finalizeResponse(HttpStream *stream, void *message)
     if (stream) {
         httpWrite(stream->writeq, "message: %s\n", message);
         httpFinalize(stream);
-        httpProcess(stream->inputq);
     }
     /*
         Free the "hello World" memory allocated via strdup in foreignThread
