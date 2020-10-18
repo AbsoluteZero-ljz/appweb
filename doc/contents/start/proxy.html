@@ -22,10 +22,10 @@ make ME_COM_PROXY=1</pre>
 
             <p>For example:</p>
 <pre class="ui code segment">
-<Route ^/proxy/(.*)$>
+&lt;Route ^/proxy/(.*)$>
     Reset pipeline
     SetHandler proxyHandler
     Prefix /proxy
     ProxyConnect 127.0.0.1:9999
-</Route>
+&lt;/Route>
 </pre>

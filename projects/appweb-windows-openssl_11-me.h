@@ -114,6 +114,9 @@
 #ifndef ME_HTTP_PAM
     #define ME_HTTP_PAM 1
 #endif
+#ifndef ME_HTTP_SENDFILE
+    #define ME_HTTP_SENDFILE 1
+#endif
 #ifndef ME_HTTP_UPLOAD
     #define ME_HTTP_UPLOAD 1
 #endif
@@ -277,7 +280,7 @@
 
 /* Profile */
 #ifndef ME_CONFIG_CMD
-    #define ME_CONFIG_CMD "me -d -q -platform windows-x64-openssl_11 -configure . --set openssl.version=1.1 --with openssl --with esp --with cgi --with fast --with proxy -gen vs"
+    #define ME_CONFIG_CMD "me -d -q -platform windows-x64-openssl_11 -configure . --set openssl.version=1.1 --with openssl --with esp --with mdb --with cgi --with fast --with proxy -gen vs"
 #endif
 #ifndef ME_APPWEB_PRODUCT
     #define ME_APPWEB_PRODUCT 1

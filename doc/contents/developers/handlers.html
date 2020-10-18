@@ -79,20 +79,14 @@
             <a id="packets"></a>
             <h3>Packets</h3>
             <p>Packets are an instance of the
-            <a href="../ref/api/http.html#group___http_packet">HttpPacket</a> structure. HttpPacket instances efficiently
-            store data and can be passed through the pipeline without copying. Appweb network connectors are optimized
-            to write packets to network connections using scatter/gather techniques so that multiple packets can be written
-            in one O/S system call.</p>
+            <a href="../ref/api/http.html#group___http_packet">HttpPacket</a> structure. HttpPacket instances efficiently store data and can be passed through the pipeline without copying. Appweb network connectors are optimized to write packets to network connections using scatter/gather techniques so that multiple packets can be written in one O/S system call.</p>
+            <p>Packets may contain prefix and suffix data to emit before and after the data packet.</p>
 
             <a id="callbacks"></a>
             <a id="flow"></a>
             <h3>Handler Data Flow</h3>
-            <p>A handler will receive request body data via its <em>incoming</em> callback on its read queue. The
-            callback will be invoked for each packet of data. The end of the input stream is signified by a zero length
-            packet. The handler may choose to aggregate body data on its read service queue until the entire body is
-            received.</p>
-            <p>A handler will generate output response data and send it downstream, so it will not have an outgoing callback.
-            The handler may generate data by
+            <p>A handler will receive request body data via its <em>incoming</em> callback on its read queue. The callback will be invoked for each packet of data. The end of the input stream is signified by a packet with flags set to HTTP_PACKET_END. The handler may choose to aggregate body data on its read service queue until the entire body is received.</p>
+            <p>A handler will generate output response data and send it downstream, so it may not need to have an outgoing service callback. The handler may generate data by
             <a href="../ref/api/http.html#group___http_queue_1ga5599a178a2bab73929795952231d6e6a">httpWrite</a>
             which buffers output and creates packets as required that may be queued handlers output service queue.
             These packets will be flushed downstream if the queue becomes full or if
@@ -186,7 +180,7 @@ httpSetHeader(stream, "NowIs", "The time is %s", mprGetDate(NULL));
 <pre class="ui code segment">
 httpError(stream, 200, HTTP_CODE_GONE, "Can't find %s", path);
 </pre>
-                <h4>Aborting Requests</h4>
+                <h3>Aborting Requests</h3>
                 <p>The status argument to httpError can also accept flags to control how the socket connection is
                 managed. If HTTP_ABORT is supplied, the request will be aborted and the connection will be
                 immediately closed. The supplied message will be logged but not transmitted.
@@ -219,7 +213,7 @@ httpWrite(stream, "Hello World\n");
 httpFinalizeOutput(stream);
 </pre>
             <p>You can call httpFinalize if you have generated all the response output and completed all processing.
-            This implies httpFinalizeOutput and may then discard any remaining input.</p>
+            This implies httpFinalizeOutput and may then discard any remaining input. Alternatively, call httpFinalizeInput when you have processed all input and httpFinalizeOutput when you have generated all output.</p>
 
             <a id="nonblocking"></a>
             <h3>Generating Responses without Blocking</h3>
@@ -292,18 +286,17 @@ static void writable(HttpQueue *q)
         <p>Please read <a href="../ref/multithread.html#safety">Thread Safety</a> for details about how to communicate from foreign threads.
 
         <h4>Owning a Connection</h4>
-        <p>Appweb monitors requests and imposes timeout limits. The <em>RequestTimeout</em> directive in the appweb.conf file
-        specifies the maximum time a request can take to complete. The <em>InactivityTimeout</em> directive specifies the maximum
-        time a request can perform no input or output before being terminated. If either of these timeouts are violated,
-        the request will be terminated and the connection will be closed by Appweb.
+        <p>Appweb monitors requests and imposes timeout limits. The <em>RequestTimeout</em> directive in the appweb.conf file specifies the maximum time a request can take to complete. The <em>InactivityTimeout</em> directive specifies the maximum time a request can perform no input or output before being terminated. If either of these timeouts are violated, the request will be terminated and the connection will be closed by Appweb.
 
-        <p>A handler can modify these timeouts via the <a
-            href="../ref/api/http.html#group___http_stream_1ga99922c1f07023f4ed5bcf39d37a86791">httpSetTimeout</a>
-        API. Alternatively, the handler can <em>steal</em> the socket handle from Appweb and assume responsibility for
+        <p>A handler can modify these timeouts via the <a href="../ref/api/http.html#group___http_stream_1ga99922c1f07023f4ed5bcf39d37a86791">httpSetTimeout</a> API. </p>
+
+        <!-
+        Alternatively, the handler can <em>steal</em> the socket handle from Appweb and assume responsibility for
         the connection via: <a
             href="../ref/api/http.html#group___http_conn_1ga2dabae1fcd13e8f482399d43133f4a69">httpStealSocketHandle</a>.
             This terminates the request and connection, but preserves the open socket handle. This is useful for
             upgrading from HTTP to a custom protocols after an initial HTTP connection is established.</p>
+        -->
 
         <a id="coding"></a>
         <h2>Coding Issues</h2>
@@ -340,7 +333,7 @@ static void writable(HttpQueue *q)
 int maMyModuleInit(Http *http, MprModule *mp)
 {
     HttpStage   *handler;
-    if ((handler = httpCreateHandler(http, "myHandler", 0)) == 0) {
+    if ((handler = httpCreateHandler(http, "myHandler")) == 0) {
         return MPR_ERR_CANT_CREATE;
     }
     handler-&gt;open = openSimple;
@@ -366,10 +359,10 @@ int maMyModuleInit(Http *http, MprModule *mp)
                         HTTP_STATE_COMPLETE.</td></tr>
                     <tr><td>HttpTx.finalized</td><td>is set by the handler when httpFinalize is called. This means the
                         request is complete. httpFinalize calls httpFinalizeOutput.</td></tr>
-                    <tr><td>HttpTx.finalizedOutput</td><td>is set by the handler when all response data has been written,
-                        there may still be processing to complete.</td></tr>
-                    <tr><td>HttpTx.finalizedConnector</td><td>is set by the connector when it has fully transmitted the
-                        response data to the network socket.</td></tr>
+                    <tr><td>HttpTx.finalizedOutput</td><td>is set by the handler when all response data has been written, there may still be processing to complete.</td></tr>
+
+                    <tr><td>HttpTx.finalizedInput</td><td>is set by the handler when all request body data has been received, there may still be processing to complete.</td></tr>
+                    <tr><td>HttpTx.finalizedConnector</td><td>is set by the connector when it has fully transmitted the response data to the network socket.</td></tr>
                     <tr><td> HttpTx.responded</td><td>is set by various routines when any part of a
                         response has been initiated httpWrite, httpSetStatus etc.</td></tr>
                 </tbody>

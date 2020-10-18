@@ -129,6 +129,9 @@
 #ifndef ME_HTTP_PAM
     #define ME_HTTP_PAM 1
 #endif
+#ifndef ME_HTTP_SENDFILE
+    #define ME_HTTP_SENDFILE 1
+#endif
 #ifndef ME_HTTP_UPLOAD
     #define ME_HTTP_UPLOAD 1
 #endif
@@ -289,7 +292,7 @@
 
 /* Profile */
 #ifndef ME_CONFIG_CMD
-    #define ME_CONFIG_CMD "me -d -q -platform macosx-x64-openssl -configure . --with openssl --with esp --with cgi --with fast --with proxy -gen xcode"
+    #define ME_CONFIG_CMD "me -d -q -platform macosx-x64-openssl -configure . --with openssl --with esp --with mdb --with cgi --with fast --with proxy -gen xcode"
 #endif
 #ifndef ME_APPWEB_PRODUCT
     #define ME_APPWEB_PRODUCT 1
