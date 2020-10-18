@@ -24347,11 +24347,11 @@ PUBLIC void httpLogCompleteRequest(HttpStream *stream)
     if (httpTracing(stream->net)) {
         received = httpGetPacketLength(rx->headerPacket) + rx->bytesRead;
 #if MPR_HIGH_RES_TIMER
-        formatTrace(stream->trace, "rx.complete", "context", 0, (void*) stream, 0,
+        formatTrace(stream->trace, "tx.complete", "context", 0, (void*) stream, 0,
             "elapsed:%llu, ticks:%llu, received:%lld, sent:%lld",
             elapsed, mprGetHiResTicks() - stream->startMark, received, tx->bytesWritten);
 #else
-        formatTrace(stream->trace, "rx.complete", "context", 0, (void*) stream, 0,
+        formatTrace(stream->trace, "tx.complete", "context", 0, (void*) stream, 0,
             "elapsed:%llu, received:%lld, sent:%lld", elapsed, received, tx->bytesWritten);
 #endif
     }
