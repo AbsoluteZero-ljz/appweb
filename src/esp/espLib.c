@@ -4561,7 +4561,7 @@ PUBLIC bool espIsCurrentSession(HttpStream *stream)
  */
 
 /*
-    espHtml.c -- ESP HTML controls
+    espHtml.c -- ESP HTML controls 
 
     Copyright (c) All Rights Reserved. See copyright notice at the bottom of the file.
  */
@@ -4595,7 +4595,7 @@ PUBLIC void input(cchar *field, cchar *optionString)
     options = httpGetOptions(optionString);
     style = httpGetOption(options, "class", "");
     errorMsg = rec->errors ? mprLookupKey(rec->errors, field) : 0;
-    error = errorMsg ? sfmt("<span class=\"field-error\">%s</span>", errorMsg) : "";
+    error = errorMsg ? sfmt("<span class=\"field-error\">%s</span>", errorMsg) : ""; 
 
     switch (type) {
     case EDI_TYPE_BOOL:
@@ -4617,7 +4617,7 @@ PUBLIC void input(cchar *field, cchar *optionString)
 
     case EDI_TYPE_INT:
     case EDI_TYPE_DATE:
-    case EDI_TYPE_STRING:
+    case EDI_TYPE_STRING:        
         if (type == EDI_TYPE_TEXT && !httpGetOption(options, "rows", 0)) {
             httpSetOption(options, "rows", "10");
         }
@@ -4633,10 +4633,10 @@ PUBLIC void input(cchar *field, cchar *optionString)
         }
         if ((rows = httpGetOption(options, "rows", 0)) != 0) {
             cols = httpGetOption(options, "cols", "60");
-            espRender(stream, "<textarea name='%s' type='%s' cols='%s' rows='%s'%s class='%s'>%s</textarea>",
+            espRender(stream, "<textarea name='%s' type='%s' cols='%s' rows='%s'%s class='%s'>%s</textarea>", 
                 field, etype, cols, rows, map(stream, options), style, value);
         } else {
-            espRender(stream, "<input name='%s' type='%s' value='%s'%s class='%s'/>", field, etype, value,
+            espRender(stream, "<input name='%s' type='%s' value='%s'%s class='%s'/>", field, etype, value, 
                 map(stream, options), style);
         }
         if (error) {
@@ -4660,7 +4660,7 @@ PUBLIC void inputSecurityToken()
 }
 
 
-/**************************************** Support *************************************/
+/**************************************** Support *************************************/ 
 
 static cchar *getValue(HttpStream *stream, cchar *fieldName, MprHash *options)
 {
@@ -5063,10 +5063,13 @@ static bool loadController(HttpStream *stream)
         if (espLoadModule(route, stream->dispatcher, "controller", controller, &errMsg, &loaded) < 0) {
             if (mprPathExists(controller, R_OK)) {
                 httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "%s", errMsg);
+                return 0;
+#if UNUSED
             } else {
+                //  Cant do this because esp pages try to load a controller first and then fall back to RenderDocument
                 httpError(stream, HTTP_CODE_NOT_FOUND, "%s", errMsg);
+#endif
             }
-            return 0;
         } else if (loaded) {
             httpLog(stream->trace, "esp.handler", "context", "msg:Load module %s", controller);
         }
@@ -6041,6 +6044,7 @@ PUBLIC int espOpenDatabase(HttpRoute *route, cchar *spec)
         spec = sfmt("mdb://%s.mdb", eroute->appName);
 #else
         mprLog("error esp", 0, "No database handler configured (MDB or SQLITE). Reconfigure.");
+        return MPR_ERR_BAD_ARGS;
 #endif
     }
     provider = ssplit(sclone(spec), "://", &path);
