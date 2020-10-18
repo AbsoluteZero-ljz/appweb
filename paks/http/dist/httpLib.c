@@ -16402,7 +16402,13 @@ static int matchFilter(HttpStream *stream, HttpStage *filter, HttpRoute *route, 
         return filter->match(stream, route, dir);
     }
     if (filter->extensions && tx->ext) {
-        return mprLookupKey(filter->extensions, tx->ext) != 0 ? HTTP_ROUTE_OK : HTTP_ROUTE_OMIT_FILTER;
+        if (mprLookupKey(filter->extensions, tx->ext)) {
+            return HTTP_ROUTE_OK;
+        }
+        if (mprLookupKey(filter->extensions, "")) {
+            return HTTP_ROUTE_OK;
+        }
+        return HTTP_ROUTE_OMIT_FILTER;
     }
     return HTTP_ROUTE_OK;
 }
@@ -24341,11 +24347,11 @@ PUBLIC void httpLogCompleteRequest(HttpStream *stream)
     if (httpTracing(stream->net)) {
         received = httpGetPacketLength(rx->headerPacket) + rx->bytesRead;
 #if MPR_HIGH_RES_TIMER
-        formatTrace(stream->trace, "rx.complete", "context", 0, (void*) stream, 0,
+        formatTrace(stream->trace, "tx.complete", "context", 0, (void*) stream, 0,
             "elapsed:%llu, ticks:%llu, received:%lld, sent:%lld",
             elapsed, mprGetHiResTicks() - stream->startMark, received, tx->bytesWritten);
 #else
-        formatTrace(stream->trace, "rx.complete", "context", 0, (void*) stream, 0,
+        formatTrace(stream->trace, "tx.complete", "context", 0, (void*) stream, 0,
             "elapsed:%llu, received:%lld, sent:%lld", elapsed, received, tx->bytesWritten);
 #endif
     }
