@@ -1,9 +1,9 @@
 {
     "name": "demo",
     "title": "Demo Application",
-    "version": undefined,
+    "version": "1.0.0",
     "import": true,
-    "profile": "debug",
+    "profile": "dev",
     "devDependencies": {
         "esp": ">=7.0"
     },

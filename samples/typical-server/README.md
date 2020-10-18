@@ -6,15 +6,14 @@ This sample shows how to embed Appweb using the full embedding API.
 Requirements
 ---
 * [Appweb](https://www.embedthis.com/appweb/download.html)
-* [MakeMe Build Tool](https://www.embedthis.com/makeme/download.html)
 
 To build:
 ---
-    me 
+    make 
 
 To run:
 ---
-    me run
+    make run
 
 The server listens on port 8080. Browse to: 
  
@@ -22,6 +21,7 @@ The server listens on port 8080. Browse to:
 
 Code:
 ---
+* [Makefile](Makefile) - Makefile build instructions
 * [server.c](server.c) - Main program
 * [appweb.conf](appweb.conf) - Appweb server configuration file
 * [auth.conf](auth.conf) - User/Password/Role authorization file

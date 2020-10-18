@@ -20,20 +20,19 @@ The password database is kept in a flat file called auth.conf. The password was 
 Requirements
 ---
 * [Appweb](https://www.embedthis.com/appweb/download.html)
-* [MakeMe Build Tool](https://www.embedthis.com/makeme/download.html)
 
 To build:
 ---
 
 Run:
 
-    me 
+    make 
 
 This will precompile the ESP pages and a create device node inside the chroot jail for /dev/urandom.
 
 To run:
 ---
-    me run
+    make run
 
 The server listens on port 8080 for HTTP traffice and 4443 for SSL. Browse to: 
  
@@ -44,6 +43,7 @@ Continue and you will be prompted to login. The test username/password is ralph/
 
 Code:
 ---
+* [Makefile](Makefile) - Makefile build instructions
 * [server.c](server.c) - Main program
 * [appweb.conf](appweb.conf) - Appweb server configuration file
 * [web](web) - Web content to serve

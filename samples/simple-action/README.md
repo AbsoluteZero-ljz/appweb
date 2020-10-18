@@ -8,15 +8,14 @@ actions.
 Requirements
 ---
 * [Appweb](https://www.embedthis.com/appweb/download.html)
-* [MakeMe Build Tool](https://www.embedthis.com/makeme/download.html)
 
 To build:
 ---
-    me 
+    make 
 
 To run:
 ---
-    me run
+    make run
 
 The server listens on port 8080. Browse to: 
  
@@ -29,6 +28,7 @@ The MyAction will parse the form/query parameters and echo their values back.
 
 Code:
 ---
+* [Makefile](Makefile) - Makefile build instructions
 * [server.c](server.c) - Main program with action
 * [appweb.conf](appweb.conf) - Appweb server configuration file
 * [index.html](index.html) - Web page to serve
