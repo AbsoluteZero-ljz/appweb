@@ -14992,10 +14992,10 @@ static int sleuthProtocol(HttpNet *net, HttpPacket *packet)
     } else {
         protocol = 0;
     }
-    if (!net->http2 || ME_HTTP_HTTP2 == 0) {
-        return MPR_ERR_BAD_STATE;
-    }
     if (protocol == 2) {
+        if (!net->http2 || ME_HTTP_HTTP2 == 0) {
+            return MPR_ERR_BAD_STATE;
+        }
         if ((len = mprGetBufLength(buf)) < (sizeof(HTTP2_PREFACE) - 1)) {
             // Insufficient data
             return 0;
