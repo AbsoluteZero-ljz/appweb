@@ -4365,9 +4365,6 @@ PUBLIC void httpStartPipeline(HttpStream *stream);
 
 PUBLIC void httpStartHandler(HttpStream *stream);
 
-//  LEGACY
-PUBLIC bool httpTrace(HttpStream *stream, cchar *event, cchar *type, cchar *fmt, ...);
-
 /**
     Verify the server handshake
     @param stream HttpStream stream object created via #httpCreateStream
