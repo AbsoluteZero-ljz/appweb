@@ -23246,7 +23246,7 @@ static ssize flushSocket(MprSocket *sp)
 
 PUBLIC ssize mprFlushSocket(MprSocket *sp)
 {
-    if (sp->provider == 0) {
+    if (sp->provider == 0 || sp->provider->flushSocket == NULL) {
         return MPR_ERR_NOT_INITIALIZED;
     }
     return sp->provider->flushSocket(sp);
