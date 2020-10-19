@@ -244,13 +244,13 @@ static void browserToCgiData(HttpQueue *q, HttpPacket *packet)
     assert(q == stream->readq);
 
     if (packet->flags & HTTP_PACKET_END) {
-        if (stream->rx->remainingContent > 0) {
+        if (stream->rx->remainingContent > 0 && stream->net->protocol < 2) {
             /* Short incoming body data. Just kill the CGI process */
+            httpError(stream, HTTP_CODE_BAD_REQUEST, "Client supplied insufficient body data");
             if (cgi->cmd) {
                 mprDestroyCmd(cgi->cmd);
                 cgi->cmd = 0;
             }
-            httpError(stream, HTTP_CODE_BAD_REQUEST, "Client supplied insufficient body data");
         } else {
             httpFinalizeInput(stream);
         }
@@ -482,6 +482,9 @@ static void readFromCgi(Cgi *cgi, int channel)
         if (!tx->finalizedOutput && httpGetPacketLength(packet) > 0) {
             /* Put the data to the CGI readq, then cgiToBrowserService will take care of it */
             httpPutPacket(q, packet);
+        }
+        if (nbytes == 0 && channel == MPR_CMD_STDOUT) {
+            httpFinalizeOutput(stream);
         }
     }
 }
