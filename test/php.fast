@@ -14,6 +14,11 @@ export PHP_FCGI_CHILDREN=0
 export PHP_FCGI_MAX_REQUESTS=0
 
 #
+#   Directory containing php.init
+#
+# export PHPRC="/usr/local/etc/php/7.4"
+
+#
 #   For dynamic launching by appweb
 #
 exec /usr/local/bin/php-cgi

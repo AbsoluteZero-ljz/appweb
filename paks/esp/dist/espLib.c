@@ -2551,7 +2551,7 @@ PUBLIC cchar *session(cchar *key)
 
 PUBLIC void setTimeout(void *proc, MprTicks timeout, void *data)
 {
-    mprCreateEvent(getStream()->dispatcher, "setTimeout", (int) timeout, proc, data, 0);
+    mprCreateLocalEvent(getStream()->dispatcher, "setTimeout", (int) timeout, proc, data, 0);
 }
 
 
@@ -3825,7 +3825,12 @@ PUBLIC ssize espRender(HttpStream *stream, cchar *fmt, ...)
 
 PUBLIC ssize espRenderBlock(HttpStream *stream, cchar *buf, ssize size)
 {
-    return httpWriteBlock(stream->writeq, buf, size, HTTP_BUFFER);
+    /*
+        Need to block because ESP views may call espRenderBlock a lot. To prevent memory growth, must block.
+        Callers can call httpWriteBlock(stream->writeq, buf, size, HTTP_BUFFER); for faster writing if they
+        are confident they will not exceed memory limits.
+     */
+    return httpWriteBlock(stream->writeq, buf, size, HTTP_BLOCK);
 }
 
 
@@ -3929,7 +3934,7 @@ PUBLIC ssize espRenderError(HttpStream *stream, int status, cchar *fmt, ...)
             httpSetContentType(stream, "text/html");
             written += espRenderString(stream, text);
             espFinalize(stream);
-            httpLog(stream->trace, "esp.error", "error", "msg=\"%s\", status=%d, uri=\"%s\"", msg, status, rx->pathInfo);
+            httpLog(stream->trace, "esp.error", "error", "msg=%s, status=%d, uri=%s", msg, status, rx->pathInfo);
         }
     }
     va_end(args);
@@ -4780,6 +4785,7 @@ PUBLIC int espOpen(MprModule *module)
     handler->stageData = esp;
     esp->mutex = mprCreateLock();
     esp->local = mprCreateThreadLocal();
+
     if (espInitParser() < 0) {
         return 0;
     }
@@ -5057,12 +5063,15 @@ static bool loadController(HttpStream *stream)
         if (espLoadModule(route, stream->dispatcher, "controller", controller, &errMsg, &loaded) < 0) {
             if (mprPathExists(controller, R_OK)) {
                 httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "%s", errMsg);
+                return 0;
+#if UNUSED
             } else {
+                //  Cant do this because esp pages try to load a controller first and then fall back to RenderDocument
                 httpError(stream, HTTP_CODE_NOT_FOUND, "%s", errMsg);
+#endif
             }
-            return 0;
         } else if (loaded) {
-            httpLog(stream->trace, "esp.handler", "context", "msg: 'Load module %s'", controller);
+            httpLog(stream->trace, "esp.handler", "context", "msg:Load module %s", controller);
         }
     }
 #endif /* !ME_STATIC */
@@ -5134,7 +5143,7 @@ static int runAction(HttpStream *stream)
     httpAuthenticate(stream);
 
     action = mprLookupKey(eroute->top->actions, rx->target);
-    httpLog(stream->trace, "esp.handler", "context", "msg: 'Invoke controller action %s'", rx->target);
+    httpLog(stream->trace, "esp.handler", "context", "msg:Invoke controller action %s", rx->target);
 
     if (eroute->commonController) {
         (eroute->commonController)(stream, action);
@@ -5170,7 +5179,7 @@ static bool loadView(HttpStream *stream, cchar *target)
 
     if (!eroute->combine && (eroute->update || !mprLookupKey(eroute->top->views, target))) {
         path = mprJoinPath(route->documents, target);
-        httpLog(stream->trace, "esp.handler", "context", "msg: 'Loading module %s'", path);
+        httpLog(stream->trace, "esp.handler", "context", "msg:Loading module %s", path);
         /* May yield */
         route->source = path;
         if (espLoadModule(route, stream->dispatcher, "view", path, &errMsg, &loaded) < 0) {
@@ -5223,9 +5232,10 @@ PUBLIC bool espRenderView(HttpStream *stream, cchar *target, int flags)
  */
 static cchar *checkView(HttpStream *stream, cchar *target, cchar *filename, cchar *ext)
 {
-    HttpRx      *rx;
-    HttpRoute   *route;
-    EspRoute    *eroute;
+    HttpRx          *rx;
+    HttpRoute       *route;
+    EspRoute        *eroute;
+    MprFileSystem   *fs;
 
     assert(target);
 
@@ -5239,8 +5249,15 @@ static cchar *checkView(HttpStream *stream, cchar *target, cchar *filename, ccha
     assert(target && *target);
 
     if (ext && *ext) {
-        if (!smatch(mprGetPathExt(target), ext)) {
-            target = sjoin(target, ".", ext, NULL);
+        fs = mprLookupFileSystem("/");
+        if (fs->caseSensitive) {
+            if (!smatch(mprGetPathExt(target), ext)) {
+                target = sjoin(target, ".", ext, NULL);
+            }
+        } else {
+            if (!scaselessmatch(mprGetPathExt(target), ext)) {
+                target = sjoin(target, ".", ext, NULL);
+            }
         }
     }
     /*
@@ -5302,7 +5319,7 @@ PUBLIC void espRenderDocument(HttpStream *stream, cchar *target)
         for (ITERATE_KEYS(stream->rx->route->extensions, kp)) {
             if (kp->data == HTTP->espHandler && kp->key && kp->key[0]) {
                 if ((dest = checkView(stream, target, 0, kp->key)) != 0) {
-                    httpLog(stream->trace, "esp.handler", "context", "msg: 'Render view %s'", dest);
+                    httpLog(stream->trace, "esp.handler", "context", "msg:Render view %s", dest);
                     /* May yield */
                     espRenderView(stream, dest, 0);
                     return;
@@ -5323,13 +5340,13 @@ PUBLIC void espRenderDocument(HttpStream *stream, cchar *target)
                 up->port, sjoin(up->path, "/", NULL), up->reference, up->query, 0));
             return;
         }
-        httpLog(stream->trace, "esp.handler", "context", "msg: 'Render index %s'", dest);
+        httpLog(stream->trace, "esp.handler", "context", "msg:Render index %s", dest);
         /* May yield */
         espRenderView(stream, dest, 0);
         return;
     }
 
-    httpLog(stream->trace, "esp.handler", "context", "msg: 'Relay to the fileHandler'");
+    httpLog(stream->trace, "esp.handler", "context", "msg:Relay to the fileHandler");
     stream->rx->target = sclone(&stream->rx->pathInfo[1]);
     httpMapFile(stream);
     if (stream->tx->fileInfo.isDir) {
@@ -6025,6 +6042,9 @@ PUBLIC int espOpenDatabase(HttpRoute *route, cchar *spec)
         spec = sfmt("sdb://%s.sdb", eroute->appName);
 #elif ME_COM_MDB
         spec = sfmt("mdb://%s.mdb", eroute->appName);
+#else
+        mprLog("error esp", 0, "No database handler configured (MDB or SQLITE). Reconfigure.");
+        return MPR_ERR_BAD_ARGS;
 #endif
     }
     provider = ssplit(sclone(spec), "://", &path);

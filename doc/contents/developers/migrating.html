@@ -10,6 +10,9 @@
             <p>If you are migrating from Appweb 1-3, you should regard Appweb latest as a next generation web server. You can migrate code from Appweb 1-3 to Appweb latest, however, you should anticipate significant refactoring work in the transition, especially with regard to memory allocations.</p>
 
             <a id="changes"></a>
+            <h2>Migrating to Appweb 9</h2>
+            <p>Appweb 8 adds support for the FastCGI protocol and HTTP Proxies. Appweb 9 is API compatible with Appweb 8. Appweb 9 has improved and optimized pipeline processing and so the timing of certain operations may be modified. Applications, handlers and filters should need very little refactoring to work with Appweb 9. </p>
+
             <h2>Migrating to Appweb 8</h2>
             <p>Appweb 8 adds support for the HTTP/2 protocol. HTTP/2 is a higher performance binary protocol that supports multiplexing multiple request streams over a single network connection. This necessitates some API changes and so applications, handlers and filters may need some minor refactoring to work with Appweb 8. See the separate document <a href="migrating-8.html">Migrating to Appweb 8</a> for details.</p>
 

@@ -7,7 +7,7 @@
         "http",
         "webserver"
     ],
-    "version": "8.1.1",
+    "version": "8.2.0",
     "homepage": "https://www.embedthis.com/appweb/",
     "author": {
         "name": "Embedthis Software",
@@ -28,11 +28,11 @@
     },
     "dependencies": {
         "assist": "~1",
-        "http": "~8",
+        "http": "~9",
         "makerom": "~1",
         "mbedtls": "~2.8",
         "me-win": "~1",
-        "mpr": "~8",
+        "mpr": "~9",
         "mpr-version": "~1",
         "osdep": "~1",
         "pcre": "~1",
@@ -41,7 +41,7 @@
     },
     "optionalDependencies": {
         "certs": "~1",
-        "esp": "~8",
+        "esp": "~9",
         "mpr-mbedtls": "~2",
         "mpr-openssl": "~1",
         "sqlite": "~3"

@@ -1,6 +1,6 @@
 /*
- * Embedthis MPR Library Source 
-*/
+ * Embedthis MPR Library Source 9.0.0
+ */
 
 #include "mpr.h"
 
@@ -1296,23 +1296,29 @@ static void invokeDestructors()
     MprRegion   *region;
     MprMem      *mp;
     MprManager  mgr;
+    uchar       eternal, mark;
 
     for (region = heap->regions; region; region = region->next) {
         for (mp = region->start; mp < region->end; mp = GET_NEXT(mp)) {
             /*
-                Order matters: racing with allocator. The allocator sets free last.
-                Free first, then mark, then eternal
+                Examine all freeable (allocated and not marked with by a reference) memory with destructors.
+                Order matters: racing with allocator. The allocator sets free last. mprRelease sets
+                eternal last and uses mprAtomicStore to ensure mp->mark is committed.
              */
-            if (!mp->free && !mp->eternal && mp->mark != heap->mark && mp->hasManager) {
-                mgr = GET_MANAGER(mp);
-                if (mgr) {
-                    assert(!mp->eternal);
-                    assert(!mp->free);
-                    assert(mp->mark != heap->mark);
-                    (mgr)(GET_PTR(mp), MPR_MANAGE_FREE);
-                    /* Retest incase the manager routine revied the object */
-                    if (mp->mark != heap->mark) {
-                        mp->hasManager = 0;
+            mprAtomicLoad(&mp->eternal, &eternal, MPR_ATOMIC_ACQUIRE);
+            if (mp->hasManager && !mp->free && !mp->eternal) {
+                mprAtomicLoad(&mp->mark, &mark, MPR_ATOMIC_ACQUIRE);
+                if (mark != heap->mark) {
+                    mgr = GET_MANAGER(mp);
+                    if (mgr) {
+                        assert(!mp->eternal);
+                        assert(!mp->free);
+                        assert(mp->mark != heap->mark);
+                        (mgr)(GET_PTR(mp), MPR_MANAGE_FREE);
+                        // Retest incase the manager routine revived the object
+                        if (mp->mark != heap->mark) {
+                            mp->hasManager = 0;
+                        }
                     }
                 }
             }
@@ -1426,8 +1432,8 @@ static void sweep()
             INC(sweepVisited);
 
             /*
-                Racing with the allocator. Be conservative. The sweeper is the only place that mp->free is cleared.
-                The allocator is the only place that sets mp->free. If mp->free is zero, we can be sure the block is
+                Racing with the allocator. Be conservative. The sweeper is the only place that mp->free is set.
+                The allocator is the only place that clears mp->free. If mp->free is zero, we can be sure the block is
                 not free and not on a freeq. If mp->free is set, we could be racing with the allocator for the block.
              */
             if (mp->eternal) {
@@ -1444,6 +1450,9 @@ static void sweep()
                     INC(compacted);
                 }
             }
+            /*
+                Test that the block was not marked on the current mark phase
+             */
             if (!mp->free && mp->mark != heap->mark) {
                 freeLocation(mp);
                 if (joinBlocks) {
@@ -1579,11 +1588,19 @@ PUBLIC size_t psize(void *ptr)
 PUBLIC void mprHold(cvoid *ptr)
 {
     MprMem  *mp;
+    uchar   one;
 
     if (ptr) {
         mp = GET_MEM(ptr);
+        assert(!mp->free);
+        assert(!mp->eternal);
+        assert(mp->mark == MPR->heap->mark);
+
         if (!mp->free && VALID_BLK(mp)) {
-            mp->eternal = 1;
+            // mp->eternal = 1;
+            one = 1;
+            mprAtomicStore(&mp->eternal, &one, MPR_ATOMIC_RELEASE);
+            assert(mp->eternal);
         }
     }
 }
@@ -1591,20 +1608,24 @@ PUBLIC void mprHold(cvoid *ptr)
 
 PUBLIC void mprRelease(cvoid *ptr)
 {
-    MprMem  *mp;
+    MprMem       *mp;
+    static uchar zero = 0;
 
     if (ptr) {
         mp = GET_MEM(ptr);
+        assert(mp->eternal);
+        assert(!mp->free);
+
         if (!mp->free && VALID_BLK(mp)) {
             /*
-                For memory allocated in foreign threads, there could be a race where it missed the GC mark phase
+                For memory allocated in foreign threads, there could be a race where the release missed the GC mark phase
                 and the sweeper is or is about to run. We simulate a GC mark here to prevent the sweeper from collecting
-                the block on this sweep. Will be collected on the next if there is no other reference.
-                Note: this races with the sweeper (invokeDestructors) so must set the mark first and clear eternal after that.
+                the block on this sweep. The block will be collected on the next sweep if there is no other reference.
+                Note: this races with the sweeper (invokeDestructors) so must set the mark first and clear eternal
+                after that with an ATOMIC_RELEASE barrier to ensure the mark change is committed.
              */
-            mp->mark = heap->mark;
-            mprAtomicBarrier();
-            mp->eternal = 0;
+            mprAtomicStore(&mp->mark, &heap->mark, MPR_ATOMIC_RELEASE);
+            mprAtomicStore(&mp->eternal, &zero, MPR_ATOMIC_RELEASE);
         }
     }
 }
@@ -1812,9 +1833,13 @@ static void printMemReport()
 {
     MprMemStats     *ap;
     double          mb;
+    int             fd;
 
     ap = mprGetMemStats();
     mb = 1024.0 * 1024;
+
+    fd = open("/dev/null", O_RDONLY);
+    close(fd);
 
     printf("Memory Stats:\n");
     printf("  Memory          %12.1f MB\n", mprGetMem() / mb);
@@ -1833,6 +1858,7 @@ static void printMemReport()
     }
     printf("  Errors          %12d\n", (int) ap->errors);
     printf("  CPU cores       %12d\n", (int) ap->cpuCores);
+    printf("  Next free fd    %12d\n", (int) fd);
     printf("\n");
 
 #if ME_MPR_ALLOC_STATS
@@ -2846,9 +2872,9 @@ PUBLIC void mprShutdown(int how, int exitStatus, MprTicks timeout)
         }
         /* No continue */
     }
-    mprLog("info mpr", 6, "Application exit, waiting for existing requests to complete.");
 
     if (!mprIsIdle(0)) {
+        mprLog("info mpr", 6, "Application exit, waiting for existing requests to complete.");
         mprCreateTimerEvent(NULL, "shutdownMonitor", 0, shutdownMonitor, 0, MPR_EVENT_QUICK);
     }
     mprWakeDispatchers();
@@ -2899,7 +2925,7 @@ PUBLIC bool mprDestroy()
     /*
         Wait for events thread to exit and the app to become idle
      */
-    while (MPR->eventing) {
+    while (!mprIsIdle(0) || MPR->eventing) {
         mprWakeNotifier();
         mprWaitForCond(MPR->cond, 10);
         if (mprGetRemainingTicks(MPR->shutdownStarted, timeout) <= 0) {
@@ -3947,6 +3973,10 @@ void asyncDummy() {}
 
 
 
+#if ME_BSD_LIKE || ME_UNIX_LIKE || ME_WIN_LIKE
+#include <stdatomic.h>
+#endif
+
 /*********************************** Local ************************************/
 
 static MprSpin  atomicSpinLock;
@@ -3959,11 +3989,10 @@ PUBLIC void mprAtomicOpen()
     mprInitSpinLock(atomicSpin);
 }
 
-
 /*
     Full memory barrier
  */
-PUBLIC void mprAtomicBarrier()
+PUBLIC void mprAtomicBarrier(int model)
 {
     #if defined(VX_MEM_BARRIER_RW)
         VX_MEM_BARRIER_RW();
@@ -3972,7 +4001,7 @@ PUBLIC void mprAtomicBarrier()
         MemoryBarrier();
 
     #elif ME_COMPILER_HAS_ATOMIC
-        __atomic_thread_fence(__ATOMIC_SEQ_CST);
+        __atomic_thread_fence(model);
 
     #elif ME_COMPILER_HAS_SYNC
         __sync_synchronize();
@@ -3995,7 +4024,7 @@ PUBLIC void mprAtomicBarrier()
 
 
 /*
-    Atomic compare and swap a pointer with a full memory barrier
+    Atomic compare and swap a pointer.
  */
 PUBLIC int mprAtomicCas(void * volatile *addr, void *expected, cvoid *value)
 {
@@ -4008,7 +4037,8 @@ PUBLIC int mprAtomicCas(void * volatile *addr, void *expected, cvoid *value)
 
     #elif ME_COMPILER_HAS_ATOMIC
         void *localExpected = expected;
-        return __atomic_compare_exchange(addr, &localExpected, (void**) &value, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
+        // return __atomic_compare_exchange(addr, &localExpected, (void**) &value, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
+        return __atomic_compare_exchange(addr, &localExpected, (void**) &value, 0, __ATOMIC_RELAXED, __ATOMIC_RELAXED);
 
     #elif ME_COMPILER_HAS_SYNC_CAS
         return __sync_bool_compare_and_swap(addr, expected, (void*) value);
@@ -4052,8 +4082,8 @@ PUBLIC void mprAtomicAdd(volatile int *ptr, int value)
         InterlockedExchangeAdd(ptr, value);
 
     #elif ME_COMPILER_HAS_ATOMIC
-        //  OPT - could use __ATOMIC_RELAXED
-        __atomic_add_fetch(ptr, value, __ATOMIC_SEQ_CST);
+        //  WAS ATOMIC_SEQ_CST
+        __atomic_add_fetch(ptr, value, __ATOMIC_RELAXED);
 
     #elif ME_COMPILER_HAS_SYNC_CAS
         __sync_add_and_fetch(ptr, value);
@@ -4080,11 +4110,12 @@ PUBLIC void mprAtomicAdd(volatile int *ptr, int value)
 PUBLIC void mprAtomicAdd64(volatile int64 *ptr, int64 value)
 {
     #if ME_WIN_LIKE && ME_64
+        //  Full memory barrier
         InterlockedExchangeAdd64(ptr, value);
 
     #elif ME_COMPILER_HAS_ATOMIC64 && (ME_64 || ME_CPU_ARCH == ME_CPU_X86 || ME_CPU_ARCH == ME_CPU_X64)
-        //  OPT - could use __ATOMIC_RELAXED
-        __atomic_add_fetch(ptr, value, __ATOMIC_SEQ_CST);
+        //  WAS ATOMIC_SEQ_CST
+        __atomic_add_fetch(ptr, value, __ATOMIC_RELAXED);
 
     #elif ME_COMPILER_HAS_SYNC64 && (ME_64 || ME_CPU_ARCH == ME_CPU_X86 || ME_CPU_ARCH == ME_CPU_X64)
         __sync_add_and_fetch(ptr, value);
@@ -5476,7 +5507,7 @@ static void manageCmdService(MprCmdService *cmd, int flags);
 static void manageCmd(MprCmd *cmd, int flags);
 static void prepWinCommand(MprCmd *cmd);
 static void prepWinProgram(MprCmd *cmd);
-static void reapCmd(MprCmd *cmd, bool finalizing);
+static bool reapCmd(MprCmd *cmd);
 static void resetCmd(MprCmd *cmd, bool finalizing);
 static int startProcess(MprCmd *cmd);
 static void stdinCallback(MprCmd *cmd, MprEvent *event);
@@ -5618,8 +5649,9 @@ static void manageCmd(MprCmd *cmd, int flags)
 
 static void resetCmd(MprCmd *cmd, bool finalizing)
 {
-    MprCmdFile      *files;
-    int             i;
+    MprCmdFile  *files;
+    MprTicks    mark, timeout;
+    int         i;
 
     assert(cmd);
     files = cmd->files;
@@ -5652,8 +5684,18 @@ static void resetCmd(MprCmd *cmd, bool finalizing)
 
     if (cmd->pid && (!(cmd->flags & MPR_CMD_DETACH) || finalizing)) {
         mprStopCmd(cmd, -1);
-        reapCmd(cmd, finalizing);
-        cmd->pid = 0;
+        mark = mprGetTicks();
+        timeout = 20 * TPS;
+        do {
+            if (reapCmd(cmd)) {
+                break;
+            }
+            mprYield(0);
+            mprNap(1);
+        } while (mprGetRemainingTicks(mark, timeout) > 0);
+    }
+    if (cmd->pid) {
+        mprLog("error cmd", 0, "Could not reap command pid %d", cmd->pid);
     }
     if (cmd->signal) {
         mprRemoveSignalHandler(cmd->signal);
@@ -5719,7 +5761,7 @@ PUBLIC void mprCloseCmdFd(MprCmd *cmd, int channel)
             cmd->eofCount++;
             if (cmd->eofCount >= cmd->requiredEof) {
 #if VXWORKS || XCODE_DEBUG
-                reapCmd(cmd, 0);
+                reapCmd(cmd);
 #endif
                 if (cmd->pid == 0) {
                     completeCommand(cmd);
@@ -6230,7 +6272,7 @@ static void pollWinCmd(MprCmd *cmd, MprTicks timeout)
             mprYield(MPR_YIELD_STICKY);
             if (WaitForSingleObject(cmd->process, (DWORD) delay) == WAIT_OBJECT_0) {
                 mprResetYield();
-                reapCmd(cmd, 0);
+                reapCmd(cmd);
                 break;
             } else {
                 mprResetYield();
@@ -6305,10 +6347,10 @@ PUBLIC int mprWaitForCmd(MprCmd *cmd, MprTicks timeout)
     WARNING: this may be called with a false-positive, ie. SIGCHLD will get invoked for all process deaths and not just
     when this cmd has completed.
  */
-static void reapCmd(MprCmd *cmd, bool finalizing)
+static bool reapCmd(MprCmd *cmd)
 {
     if (cmd->pid == 0) {
-        return;
+        return 0;
     }
 #if ME_UNIX_LIKE
 {
@@ -6344,7 +6386,7 @@ static void reapCmd(MprCmd *cmd, bool finalizing)
     if (!cmd->stopped) {
         if (semTake(cmd->exitCond, MPR_TIMEOUT_STOP_TASK) != OK) {
             mprLog("error mpr cmd", 0, "Child %s did not exit, errno %d", cmd->program, errno);
-            return;
+            return 0;
         }
     }
     semDelete(cmd->exitCond);
@@ -6359,7 +6401,7 @@ static void reapCmd(MprCmd *cmd, bool finalizing)
 
     if (GetExitCodeProcess(cmd->process, (ulong*) &status) == 0) {
         mprLog("error mpr cmd", 0, "GetExitProcess error");
-        return;
+        return 0;
     }
     if (status != STILL_ACTIVE) {
         cmd->status = status;
@@ -6383,6 +6425,7 @@ static void reapCmd(MprCmd *cmd, bool finalizing)
             (cmd->callback)(cmd, -1, cmd->callbackData);
         }
     }
+    return cmd->pid == 0 ? 1 : 0;
 }
 
 
@@ -6973,7 +7016,7 @@ static int makeChannel(MprCmd *cmd, int index)
  */
 static void cmdChildDeath(MprCmd *cmd, MprSignal *sp)
 {
-    reapCmd(cmd, 0);
+    reapCmd(cmd);
 }
 
 
@@ -9682,6 +9725,7 @@ PUBLIC MprDispatcher *mprCreateDispatcher(cchar *name, int flags)
     dispatcher->cond = mprCreateCond();
     dispatcher->eventQ = mprCreateEventQueue();
     dispatcher->currentQ = mprCreateEventQueue();
+
     queueDispatcher(es->idleQ, dispatcher);
     return dispatcher;
 }
@@ -9700,7 +9744,6 @@ static void freeEvents(MprEvent *q)
             if (event->dispatcher) {
                 mprRemoveEvent(event);
             }
-            mprRelease(event);
         }
     }
 }
@@ -9710,12 +9753,12 @@ PUBLIC void mprDestroyDispatcher(MprDispatcher *dispatcher)
 {
     MprEventService     *es;
 
-    if (dispatcher) {
+    if (dispatcher && !(dispatcher->flags & MPR_DISPATCHER_DESTROYED)) {
         es = dispatcher->service;
         assert(es == MPR->eventService);
         lock(es);
-        freeEvents(dispatcher->eventQ);
         freeEvents(dispatcher->currentQ);
+        freeEvents(dispatcher->eventQ);
         dequeueDispatcher(dispatcher);
         dispatcher->flags |= MPR_DISPATCHER_DESTROYED;
         unlock(es);
@@ -9728,29 +9771,28 @@ static void manageDispatcher(MprDispatcher *dispatcher, int flags)
     MprEvent    *q, *event, *next;
 
     if (flags & MPR_MANAGE_MARK) {
-        mprMark(dispatcher->eventQ);
         mprMark(dispatcher->currentQ);
+        mprMark(dispatcher->eventQ);
         mprMark(dispatcher->cond);
         mprMark(dispatcher->parent);
         mprMark(dispatcher->service);
 
-        if ((q = dispatcher->eventQ) != 0) {
-            for (event = q->next; event != q; event = next) {
-                next = event->next;
-                mprMark(event);
-            }
-        }
         if ((q = dispatcher->currentQ) != 0) {
             for (event = q->next; event != q; event = next) {
                 next = event->next;
                 mprMark(event);
             }
         }
-
+        if ((q = dispatcher->eventQ) != 0) {
+            for (event = q->next; event != q; event = next) {
+                next = event->next;
+                mprMark(event);
+            }
+        }
     } else if (flags & MPR_MANAGE_FREE) {
         if (!(dispatcher->flags & MPR_DISPATCHER_DESTROYED)) {
-            freeEvents(dispatcher->eventQ);
             freeEvents(dispatcher->currentQ);
+            freeEvents(dispatcher->eventQ);
         }
     }
 }
@@ -9777,7 +9819,6 @@ PUBLIC int mprServiceEvents(MprTicks timeout, int flags)
         mprLog("warn mpr event", 0, "mprServiceEvents called reentrantly");
         return 0;
     }
-    mprAtomicBarrier();
     if (mprIsDestroying()) {
         return 0;
     }
@@ -9857,7 +9898,7 @@ PUBLIC int64 mprGetEventMark(MprDispatcher *dispatcher)
         Ensure all writes are flushed so user state will be valid across all threads
      */
     result = dispatcher->mark;
-    mprAtomicBarrier();
+    mprAtomicBarrier(MPR_ATOMIC_SEQUENTIAL);
     return result;
 }
 
@@ -10102,56 +10143,36 @@ static int dispatchEvents(MprDispatcher *dispatcher)
         return 0;
     }
     assert(isRunning(dispatcher));
-    es = dispatcher->service;
-
     assert(ownedDispatcher(dispatcher));
 
+    es = dispatcher->service;
+
     /*
-        Events are removed from the dispatcher queue and put onto the currentQ. This is so they will be marked for GC.
-        If the callback calls mprRemoveEvent, it will not remove from the currentQ. If it was a continuous event,
-        mprRemoveEvent will clear the continuous flag.
-        OPT - this could all be simpler if dispatchEvents was never called recursively. Then a currentQ would not be needed,
-        and neither would a running flag. See mprRemoveEvent().
+        Events are serviced from the dispatcher queue. When serviced, they are removed.
+        If the callback calls mprRemoveEvent, it will not remove it from the queue, but will clear the continuous flag.
      */
     for (count = 0; (event = mprGetNextEvent(dispatcher)) != 0; count++) {
-        assert(!(event->flags & MPR_EVENT_RUNNING));
-        event->flags |= MPR_EVENT_RUNNING;
-
-        assert(event->proc);
         mprAtomicAdd64(&dispatcher->mark, 1);
+        mprLinkEvent(dispatcher->currentQ, event);
 
         (event->proc)(event->data, event);
+
+        mprUnlinkEvent(event);
         event->hasRun = 1;
 
         if (event->cond) {
             mprSignalCond(event->cond);
         }
-
         if (dispatcher->flags & MPR_DISPATCHER_DESTROYED) {
             break;
         }
-        event->flags &= ~MPR_EVENT_RUNNING;
-
-        lock(es);
-        if (event->flags & MPR_EVENT_CONTINUOUS) {
-            /*
-                Reschedule if continuous
-             */
-            if (event->next) {
-                mprDequeueEvent(event);
-            }
+        if (event->flags & MPR_EVENT_CONTINUOUS && !event->next) {
             event->timestamp = dispatcher->service->now;
             event->due = event->timestamp + (event->period ? event->period : 1);
             mprQueueEvent(dispatcher, event);
-        } else {
-            mprDequeueEvent(event);
         }
-        /*
-            Can release here even if continuous. Hold not needed once securely referenced by the dispatcher
-         */
-        mprRelease(event);
+        lock(es);
         es->eventCount++;
-        assert(ownedDispatcher(dispatcher));
         unlock(es);
     }
     return count;
@@ -10170,8 +10191,6 @@ static void dispatchEventsHelper(MprDispatcher *dispatcher)
     if (!reclaimDispatcher(dispatcher)) {
         return;
     }
-    assert(ownedDispatcher(dispatcher));
-
     dispatchEvents(dispatcher);
 
     if (!(dispatcher->flags & MPR_DISPATCHER_DESTROYED)) {
@@ -10179,7 +10198,6 @@ static void dispatchEventsHelper(MprDispatcher *dispatcher)
         dequeueDispatcher(dispatcher);
         mprScheduleDispatcher(dispatcher);
     }
-    assert(!ownedDispatcher(dispatcher));
 }
 
 
@@ -11159,7 +11177,6 @@ void epollDummy() {}
 static MprEvent *createEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags);
 static void initEventQ(MprEvent *q, cchar *name);
 static void manageEvent(MprEvent *event, int flags);
-static void queueEvent(MprEvent *prior, MprEvent *event);
 
 /************************************* Code ***********************************/
 /*
@@ -11178,6 +11195,12 @@ PUBLIC MprEvent *mprCreateEventQueue()
 }
 
 
+PUBLIC MprEvent *mprCreateLocalEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags)
+{
+    return createEvent(dispatcher, name, period, proc, data, flags | MPR_EVENT_LOCAL);
+}
+
+
 /*
     Must only be called from an Appweb thread owning this dispatcher
  */
@@ -11187,19 +11210,12 @@ PUBLIC void mprCreateIOEvent(MprDispatcher *dispatcher, void *proc, void *data, 
 
     assert(proc);
     assert(wp);
-
-    if (dispatcher == 0) {
-        dispatcher = MPR->dispatcher;
+    if ((event = createEvent(dispatcher, "IOEvent", 0, proc, wp->handlerData, MPR_EVENT_LOCAL | MPR_EVENT_DONT_QUEUE)) != 0) {
+        event->mask = wp->presentMask;
+        event->handler = wp;
+        event->sock = sock;
+        mprQueueEvent(dispatcher, event);
     }
-    if (dispatcher && dispatcher->flags & MPR_DISPATCHER_DESTROYED) {
-        return;
-    }
-    event = createEvent(dispatcher, "IOEvent", 0, proc, wp->handlerData, 0);
-    event->mask = wp->presentMask;
-    event->handler = wp;
-    event->sock = sock;
-    wp->event = event;
-    mprQueueEvent(dispatcher, event);
 }
 
 
@@ -11208,7 +11224,7 @@ PUBLIC void mprCreateIOEvent(MprDispatcher *dispatcher, void *proc, void *data, 
  */
 PUBLIC MprEvent *mprCreateTimerEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags)
 {
-    return mprCreateEvent(dispatcher, name, period, proc, data, MPR_EVENT_CONTINUOUS | flags);
+    return createEvent(dispatcher, name, period, proc, data, MPR_EVENT_CONTINUOUS | MPR_EVENT_LOCAL | flags);
 }
 
 
@@ -11220,7 +11236,19 @@ PUBLIC MprEvent *mprCreateTimerEvent(MprDispatcher *dispatcher, cchar *name, Mpr
  */
 PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags)
 {
+    return createEvent(dispatcher, name, period, proc, data, flags);
+}
+
+
+/*
+    Create a new event. The period is used as the delay before running the event and
+    as the period between events for continuous events.
+    This routine is foreign thread-safe provided the dispatcher and data are held or null.
+ */
+static MprEvent *createEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags)
+{
     MprEvent    *event;
+    int         aflags;
 
     if (dispatcher == 0) {
         dispatcher = (flags & MPR_EVENT_QUICK) ? MPR->nonBlock : MPR->dispatcher;
@@ -11228,35 +11256,14 @@ PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks
     if (dispatcher && dispatcher->flags & MPR_DISPATCHER_DESTROYED) {
         return 0;
     }
-    if ((event = createEvent(dispatcher, name, period, proc, data, flags)) != NULL) {
-#if DEPRECATE || 1
-        // only for ejscript
-        if (!(flags & MPR_EVENT_DONT_QUEUE)) {
-            mprQueueEvent(dispatcher, event);
-        }
-#endif
-    }
-    return event;
-}
-
-
-/*
-    Create a new event but do not queue. The returned event is held via mprHold() and is itself immune from GC.
-    The hold will be released when the event is run in dispatchEvents or if the dispatcher is freed before the event is run.
-    Period is used as the delay before running the event and as the period between events for continuous events.
-    This routine is foreign thread-safe provided the dispatcher and data are held or null.
- */
-static MprEvent *createEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags)
-{
-    MprEvent    *event;
-
-    assert(dispatcher);
-    assert(!(dispatcher->flags & MPR_DISPATCHER_DESTROYED));
-
     /*
-        The old is for allocations via foreign threads which retains the event until it is queued.
+        The hold is for allocations via foreign threads which retains the event until it is queued.
      */
-    if ((event = mprAllocMem(sizeof(MprEvent), MPR_ALLOC_MANAGER | MPR_ALLOC_ZERO | MPR_ALLOC_HOLD)) == 0) {
+    aflags = MPR_ALLOC_MANAGER | MPR_ALLOC_ZERO;
+    if (!(flags & MPR_EVENT_LOCAL)) {
+        aflags |= MPR_ALLOC_HOLD;
+    }
+    if ((event = mprAllocMem(sizeof(MprEvent), aflags)) == 0) {
         return 0;
     }
     mprSetManager(event, (MprManager) manageEvent);
@@ -11274,6 +11281,9 @@ static MprEvent *createEvent(MprDispatcher *dispatcher, cchar *name, MprTicks pe
     }
     event->period = period;
     event->due = event->timestamp + period;
+    if (!(flags & MPR_EVENT_DONT_QUEUE)) {
+        mprQueueEvent(dispatcher, event);
+    }
     return event;
 }
 
@@ -11305,6 +11315,7 @@ PUBLIC void mprQueueEvent(MprDispatcher *dispatcher, MprEvent *event)
     assert(dispatcher);
     assert(event);
     assert(event->timestamp);
+    assert(event->next == NULL);
 
     es = dispatcher->service;
     lock(es);
@@ -11320,7 +11331,7 @@ PUBLIC void mprQueueEvent(MprDispatcher *dispatcher, MprEvent *event)
         assert(prior->next);
         assert(prior->prev);
 
-        queueEvent(prior, event);
+        mprLinkEvent(prior, event);
         event->dispatcher = dispatcher;
         es->eventCount++;
         mprScheduleDispatcher(dispatcher);
@@ -11341,12 +11352,12 @@ PUBLIC void mprRemoveEvent(MprEvent *event)
     if (dispatcher) {
         es = dispatcher->service;
         lock(es);
-        if (event->next && !(event->flags & MPR_EVENT_RUNNING)) {
-            mprDequeueEvent(event);
+        if (event->next) {
+            mprUnlinkEvent(event);
         }
         event->dispatcher = 0;
         event->flags &= ~MPR_EVENT_CONTINUOUS;
-        if (event->due == es->willAwake && dispatcher->eventQ->next != dispatcher->eventQ) {
+        if (event->due == es->willAwake && dispatcher->eventQ && dispatcher->eventQ->next != dispatcher->eventQ) {
             mprScheduleDispatcher(dispatcher);
         }
         if (event->cond) {
@@ -11377,8 +11388,8 @@ PUBLIC void mprRescheduleEvent(MprEvent *event, MprTicks period)
         mprRemoveEvent(event);
         event->flags |= continuous;
     }
-    unlock(es);
     mprQueueEvent(dispatcher, event);
+    unlock(es);
 }
 
 
@@ -11411,7 +11422,8 @@ PUBLIC void mprEnableContinuousEvent(MprEvent *event, int enable)
 
 
 /*
-    Get the next due event from the front of the event queue.
+    Get the next due event from the front of the event queue and dequeue it.
+    Internal: only called by the dispatcher
  */
 PUBLIC MprEvent *mprGetNextEvent(MprDispatcher *dispatcher)
 {
@@ -11426,11 +11438,8 @@ PUBLIC MprEvent *mprGetNextEvent(MprDispatcher *dispatcher)
     next = dispatcher->eventQ->next;
     if (next != dispatcher->eventQ) {
         if (next->due <= es->now) {
-            /*
-                Hold event while executing in the current queue
-             */
             event = next;
-            queueEvent(dispatcher->currentQ, event);
+            mprUnlinkEvent(event);
         }
     }
     unlock(es);
@@ -11469,17 +11478,20 @@ static void initEventQ(MprEvent *q, cchar *name)
 /*
     Append a new event. Must be locked when called.
  */
-static void queueEvent(MprEvent *prior, MprEvent *event)
+PUBLIC void mprLinkEvent(MprEvent *prior, MprEvent *event)
 {
     assert(prior);
-    if (!prior || !event) {
+    if (!event) {
+        return;
+    }
+    if (!prior) {
         return;
     }
     assert(event);
     assert(prior->next);
 
     if (event->next) {
-        mprDequeueEvent(event);
+        mprUnlinkEvent(event);
     }
     event->prev = prior;
     event->next = prior->next;
@@ -11491,7 +11503,7 @@ static void queueEvent(MprEvent *prior, MprEvent *event)
 /*
     Remove an event. Must be locked when called.
  */
-PUBLIC void mprDequeueEvent(MprEvent *event)
+PUBLIC void mprUnlinkEvent(MprEvent *event)
 {
     assert(event);
 
@@ -15562,8 +15574,10 @@ PUBLIC void *mprPopItem(MprList *lp)
     if (lp->length > 0) {
         lock(lp);
         index = lp->length - 1;
-        item = mprGetItem(lp, index);
-        mprRemoveItemAtPos(lp, index);
+        if (index >= 0) {
+            item = mprGetItem(lp, index);
+            mprRemoveItemAtPos(lp, index);
+        }
         unlock(lp);
     }
     return item;
@@ -16244,6 +16258,7 @@ PUBLIC void mprLogConfig()
     mprLog(name, 2, "OS:                 %s", ME_OS);
     mprLog(name, 2, "Host:               %s", mprGetHostName());
     mprLog(name, 2, "Configure:          %s", ME_CONFIG_CMD);
+    mprLog(name, 2, "PID:                %d", getpid());
     mprLog(name, 2, "----------------------------------");
 }
 
@@ -21799,6 +21814,7 @@ static void signalHandler(int signo, siginfo_t *info, void *arg)
 
 /*
     Called by mprServiceEvents after a signal has been received. Create an event and queue on the appropriate dispatcher.
+    Run on an MPR thread.
  */
 PUBLIC void mprServiceSignals()
 {
@@ -21819,7 +21835,7 @@ PUBLIC void mprServiceSignals()
                  */
                 signo = (int) (ip - ssp->info);
                 for (sp = ssp->signals[signo]; sp; sp = sp->next) {
-                    mprCreateEvent(sp->dispatcher, "signalEvent", 0, signalEvent, sp, 0);
+                    mprCreateLocalEvent(sp->dispatcher, "signalEvent", 0, signalEvent, sp, 0);
                 }
             }
         }
@@ -22000,7 +22016,8 @@ static void standardSignalHandler(void *ignored, MprSignal *sp)
         mprShutdown(MPR_EXIT_ABORT, -1, 0);
 
     } else if (sp->signo == SIGUSR1) {
-        mprShutdown(MPR_EXIT_RESTART, 0, 0);
+        /* Graceful shutdown */
+        mprShutdown(MPR_EXIT_RESTART, 0, -1);
 
     } else if (sp->signo == SIGPIPE || sp->signo == SIGXFSZ) {
         /* Ignore */
@@ -22325,7 +22342,7 @@ PUBLIC Socket mprListenOnSocket(MprSocket *sp, cchar *ip, int port, int flags)
     sp->fd = INVALID_SOCKET;
     sp->port = port;
     sp->flags = (flags & (MPR_SOCKET_BROADCAST | MPR_SOCKET_DATAGRAM | MPR_SOCKET_BLOCK |
-         MPR_SOCKET_NOREUSE | MPR_SOCKET_NODELAY | MPR_SOCKET_THREAD));
+         MPR_SOCKET_NOREUSE | MPR_SOCKET_REUSE_PORT | MPR_SOCKET_NODELAY | MPR_SOCKET_THREAD));
     datagram = sp->flags & MPR_SOCKET_DATAGRAM;
 
     /*
@@ -22352,20 +22369,35 @@ PUBLIC Socket mprListenOnSocket(MprSocket *sp, cchar *ip, int port, int flags)
 #endif
 
     if (!(sp->flags & MPR_SOCKET_NOREUSE)) {
-        enable = 1;
 #if ME_UNIX_LIKE || VXWORKS
+        enable = 1;
         if (setsockopt(sp->fd, SOL_SOCKET, SO_REUSEADDR, (char*) &enable, sizeof(enable)) != 0) {
             mprLog("error mpr socket", 3, "Cannot set reuseaddr, errno %d", errno);
         }
-#if defined(SO_REUSEPORT) && MULTIPLE_SERVERS
-        /*
-            This permits multiple servers listening on the same endpoint
-         */
-        if (setsockopt(sp->fd, SOL_SOCKET, SO_REUSEPORT, (char*) &enable, sizeof(enable)) != 0) {
+#if defined(SO_REUSEPORT_LB)
+    /*
+        This permits multiple servers listening on the same endpoint with loadbalancing for BSD
+     */
+    if (sp->flags & MPR_SOCKET_REUSE_PORT) {
+        enable = 1;
+        if (setsockopt(sp->fd, SOL_SOCKET, SO_REUSEPORT_LB, (char*) &enable, sizeof(enable)) != 0) {
             mprLog("error mpr socket", 3, "Cannot set reuseport, errno %d", errno);
+        }
+    }
+#elif defined(SO_REUSEPORT)
+        /*
+            This permits multiple servers listening on the same endpoint. Linux will load balance.
+            On Mac (without REUSEPORT_LB), only the last bound port gets the traffic.
+         */
+        if (sp->flags & MPR_SOCKET_REUSE_PORT) {
+            enable = 1;
+            if (setsockopt(sp->fd, SOL_SOCKET, SO_REUSEPORT, (char*) &enable, sizeof(enable)) != 0) {
+                mprLog("error mpr socket", 3, "Cannot set reuseport, errno %d", errno);
+            }
         }
 #endif
 #elif ME_WIN_LIKE && defined(SO_EXCLUSIVEADDRUSE)
+        enable = 1;
         if (setsockopt(sp->fd, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (char*) &enable, sizeof(enable)) != 0) {
             mprLog("error mpr socket", 3, "Cannot set exclusiveaddr, errno %d", errno);
         }
@@ -22558,8 +22590,6 @@ static int connectSocket(MprSocket *sp, cchar *ip, int port, int initialFlags)
     datagram = sp->flags & MPR_SOCKET_DATAGRAM;
 
     if (mprGetSocketInfo(ip, port, &family, &protocol, &addr, &addrlen) < 0) {
-        closesocket(sp->fd);
-        sp->fd = INVALID_SOCKET;
         unlock(sp);
         return MPR_ERR_CANT_ACCESS;
     }
@@ -22637,8 +22667,8 @@ PUBLIC void mprDisconnectSocket(MprSocket *sp)
 
 static void disconnectSocket(MprSocket *sp)
 {
-    char    buf[ME_BUFSIZE];
-    int     i;
+    char            buf[ME_BUFSIZE];
+    int             i;
 
     /*
         Defensive lock buster. Use try lock incase an operation is blocked somewhere with a lock asserted.
@@ -22658,6 +22688,13 @@ static void disconnectSocket(MprSocket *sp)
                 break;
             }
         }
+#if ME_UNIX_LIKE || ME_BSD_LIKE
+        struct linger   sl;
+        sl.l_onoff = 1;
+        sl.l_linger = 0;
+        setsockopt(sp->fd, SOL_SOCKET, SO_LINGER, &sl, sizeof(sl));
+#endif
+
         shutdown(sp->fd, SHUT_RDWR);
         for (i = 0; i < 16; i++) {
             if (recv(sp->fd, buf, sizeof(buf), 0) <= 0) {
@@ -22885,7 +22922,7 @@ again:
             bytes = -1;
 
         } else {
-            sp->flags |= MPR_SOCKET_EOF;        /* Some other error */
+            sp->flags |= MPR_SOCKET_EOF | MPR_SOCKET_ERROR;
             bytes = -errCode;
         }
 
@@ -23008,8 +23045,7 @@ PUBLIC ssize mprWriteSocketString(MprSocket *sp, cchar *str)
 
 PUBLIC ssize mprWriteSocketVector(MprSocket *sp, MprIOVec *iovec, int count)
 {
-    char        *start;
-    ssize       total, len, written;
+    ssize       written;
     int         i;
 
 #if ME_UNIX_LIKE
@@ -23017,8 +23053,32 @@ PUBLIC ssize mprWriteSocketVector(MprSocket *sp, MprIOVec *iovec, int count)
         return writev(sp->fd, (const struct iovec*) iovec, (int) count);
     } else
 #endif
+#if ME_MPR_SOCKET_VECTOR_JOIN
     {
-        //  OPT - better to buffer and have fewer raw writes
+        ssize   size;
+        int     offset;
+        char    *buf;
+
+        size = 0;
+        for (i = 0; i < count; i++) {
+            size += iovec[i].len;
+        }
+        buf = mprAlloc(size);
+        offset = 0;
+        for (i = 0; i < count; i++) {
+            memcpy(&buf[offset], iovec[i].start, iovec[i].len);
+            offset += iovec[i].len;
+            assert(offset <= size);
+        }
+        written = mprWriteSocket(sp, buf, size);
+        return written;
+    }
+#else
+    {
+        ssize   total;
+        char    *start;
+        ssize   len;
+
         if (count <= 0) {
             return 0;
         }
@@ -23048,6 +23108,7 @@ PUBLIC ssize mprWriteSocketVector(MprSocket *sp, MprIOVec *iovec, int count)
         }
         return total;
     }
+#endif
 }
 
 
@@ -26192,7 +26253,9 @@ static void workerMain(MprWorker *worker, MprThread *tp)
     worker->thread = 0;
     ws->numThreads--;
     unlock(ws);
-    mprLog("info mpr thread", 6, "Worker exiting. There are %d workers remaining in the pool.", ws->numThreads);
+    if (ws->numThreads) {
+        mprLog("info mpr thread", 6, "Worker exiting with %d workers in the pool.", ws->numThreads);
+    }
 }
 
 
@@ -28536,13 +28599,15 @@ static MprWaitHandler *initWaitHandler(MprWaitHandler *wp, int fd, int mask, Mpr
     wp->flags           = flags;
 
     if (mprGetListLength(ws->handlers) >= FD_SETSIZE) {
-        mprLog("error mpr event", 0, "Too many io handlers: %d", FD_SETSIZE);
+        mprLog("error mpr event", 1,
+            "Too many io handlers: FD_SETSIZE %d, increase FD_SETSIZE or reduce limits", FD_SETSIZE);
         return 0;
     }
 #if ME_UNIX_LIKE || VXWORKS
 #if ME_EVENT_NOTIFIER == MPR_EVENT_SELECT
     if (fd >= FD_SETSIZE) {
-        mprLog("error mpr event", 0, "File descriptor %d exceeds max io of %d", fd, FD_SETSIZE);
+        mprLog("error mpr event", 1, "File descriptor %d exceeds max FD_SETSIZE of %d, increase FD_SETSIZE or reduce limits",
+            fd, FD_SETSIZE);
     }
 #endif
 #endif
@@ -28573,7 +28638,6 @@ static void manageWaitHandler(MprWaitHandler *wp, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
         mprMark(wp->handlerData);
-        mprMark(wp->event);
         mprMark(wp->dispatcher);
         mprMark(wp->requiredWorker);
         mprMark(wp->thread);
@@ -28611,10 +28675,6 @@ PUBLIC void mprDestroyWaitHandler(MprWaitHandler *wp)
     if (wp->fd >= 0) {
         mprRemoveWaitHandler(wp);
         wp->fd = INVALID_SOCKET;
-        if (wp->event) {
-            mprRemoveEvent(wp->event);
-            wp->event = 0;
-        }
     }
     wp->dispatcher = 0;
     unlock(ws);
@@ -28644,7 +28704,6 @@ static void ioEvent(void *data, MprEvent *event)
     }
     assert(event->handler);
 
-    event->handler->event = 0;
     event->handler->proc(data, event);
 }
 

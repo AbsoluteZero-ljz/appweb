@@ -11,7 +11,7 @@ let http: Http = new Http
 
 let count = iterations[tdepth()] * 20
 
-tinfo("Request", "/chat/test/switchboard", count, "times")
+// tinfo("Request", "/chat/test/switchboard", count, "times")
 
 let ws = new WebSocket(uri)
 let messageCount = 0
@@ -37,4 +37,5 @@ for (let i = 0; i < count; i++) {
 }
 
 ws.close()
+// print("COUNT", messageCount)
 ttrue(messageCount == count)

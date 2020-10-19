@@ -7,15 +7,14 @@ generate responses.
 Requirements
 ---
 * [Appweb](https://www.embedthis.com/appweb/download.html)
-* [MakeMe Build Tool](https://www.embedthis.com/makeme/download.html)
 
 To build:
 ---
-    me
+    make
 
 To run:
 ---
-    me run
+    make run
 
 Appweb listens on port 8080. Browse to:
 
@@ -26,6 +25,7 @@ To send data to the handler, use:
 
 Code:
 ---
+* [Makefile](Makefile) - Makefile build instructions
 * [cppHandler.c](cppHandler.c) - Simple handler
 * [appweb.conf](appweb.conf) - Appweb server configuration file
 * [start.me](start.me) - MakeMe build instructions

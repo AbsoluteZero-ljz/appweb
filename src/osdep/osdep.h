@@ -386,6 +386,7 @@
 #if ME_BSD_LIKE
     #include    <readpassphrase.h>
     #include    <sys/sysctl.h>
+    #include    <sys/event.h>
 #endif
     #include    <setjmp.h>
     #include    <signal.h>
@@ -488,6 +489,10 @@
     #include    <nettools/inc/dnsif.h>
     #include    <socket.h>
     #include    <file.h>
+#endif
+
+#if ME_COMPILER_HAS_ATOMIC
+    #include   <stdatomic.h>
 #endif
 
 /************************************** Types *********************************/

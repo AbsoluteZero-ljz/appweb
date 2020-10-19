@@ -18,15 +18,14 @@ Requirements
 ---
 
 * [Appweb](https://www.embedthis.com/appweb/download.html)
-* [MakeMe Build Tool](https://www.embedthis.com/makeme/download.html)
 
 To build:
 ---
-    me 
+    make 
 
 To run:
 ---
-    me run
+    make run
 
 The server listens on port 8080. Browse to: 
  
@@ -37,6 +36,7 @@ by echoing back the message. After one minute of inactivity, the server will clo
 
 Code:
 ---
+* [Makefile](Makefile) - Makefile build instructions
 * [cache](cache) - Directory for compiled ESP modules
 * [appweb.conf](appweb.conf) - Appweb server configuration file
 * [echo.c](echo.c) - WebSockets echo server code

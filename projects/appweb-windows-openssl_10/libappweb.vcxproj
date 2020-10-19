@@ -110,6 +110,7 @@
     <ClCompile Include="..\..\src\modules\cgiHandler.c" />
     <ClCompile Include="..\..\src\modules\espHandler.c" />
     <ClCompile Include="..\..\src\modules\fastHandler.c" />
+    <ClCompile Include="..\..\src\modules\proxyHandler.c" />
     <ClCompile Include="..\..\src\rom.c" />
   </ItemGroup>
 
@@ -155,6 +156,13 @@ cd ..\projects\appweb-windows-openssl_10</Command>
     <ItemGroup>
       <ProjectReference Include="libmpr.vcxproj">
       <Project>c9743826-0a58-4f00-b2cf-5086b63ff233</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      </ProjectReference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="libmpr-version.vcxproj">
+      <Project>88f94e88-42a9-4a84-b1a2-a1b546e1a3b8</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       </ProjectReference>
     </ItemGroup>

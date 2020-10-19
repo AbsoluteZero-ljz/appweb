@@ -65,12 +65,12 @@ static int openCgi(HttpQueue *q)
     int         nproc;
 
     stream = q->stream;
-    if ((nproc = (int) httpMonitorEvent(stream, HTTP_COUNTER_ACTIVE_PROCESSES, 1)) >= stream->limits->processMax) {
+    if ((nproc = (int) httpMonitorEvent(stream, HTTP_COUNTER_ACTIVE_PROCESSES, 1)) > stream->limits->processMax) {
+        httpMonitorEvent(q->stream, HTTP_COUNTER_ACTIVE_PROCESSES, -1);
         httpLog(stream->trace, "cgi.limit.error", "error",
             "msg=\"Too many concurrent processes\", activeProcesses=%d, maxProcesses=%d",
-            nproc, stream->limits->processMax);
+            nproc - 1, stream->limits->processMax);
         httpError(stream, HTTP_CODE_SERVICE_UNAVAILABLE, "Server overloaded");
-        httpMonitorEvent(q->stream, HTTP_COUNTER_ACTIVE_PROCESSES, -1);
         return MPR_ERR_CANT_OPEN;
     }
     if ((cgi = mprAllocObj(Cgi, manageCgi)) == 0) {
@@ -177,6 +177,7 @@ static void startCgi(HttpQueue *q)
      */
     varCount = mprGetHashLength(rx->headers) + mprGetHashLength(rx->svars) + mprGetJsonLength(rx->params);
     if ((envv = mprAlloc((varCount + 1) * sizeof(char*))) != 0) {
+        //  OPTIONAL
         count = copyParams(stream, envv, 0, rx->params, route->envPrefix);
         count = copyVars(stream, envv, count, rx->svars, "");
         count = copyVars(stream, envv, count, rx->headers, "HTTP_");
@@ -199,7 +200,7 @@ static void startCgi(HttpQueue *q)
         return;
     }
 #if ME_WIN_LIKE
-    mprCreateEvent(stream->dispatcher, "cgi-win", 10, waitForCgi, cgi, MPR_EVENT_CONTINUOUS);
+    mprCreateLocalEvent(stream->dispatcher, "cgi-win", 10, waitForCgi, cgi, MPR_EVENT_CONTINUOUS);
 #endif
 }
 
@@ -242,8 +243,7 @@ static void browserToCgiData(HttpQueue *q, HttpPacket *packet)
     stream = q->stream;
     assert(q == stream->readq);
 
-    if (httpGetPacketLength(packet) == 0) {
-        /* End of input */
+    if (packet->flags & HTTP_PACKET_END) {
         if (stream->rx->remainingContent > 0) {
             /* Short incoming body data. Just kill the CGI process */
             if (cgi->cmd) {
@@ -354,7 +354,7 @@ static void cgiToBrowserService(HttpQueue *q)
         socket is writable again, the stream will drain its queue which will re-enable this queue
         and schedule it for service again.
      */
-    httpDefaultOutgoingServiceStage(q);
+    httpDefaultService(q);
     if (q->count < q->low) {
         mprEnableCmdOutputEvents(cmd, 1);
     } else if (q->count > q->max && stream->net->writeBlocked) {
@@ -406,13 +406,14 @@ static void cgiCallback(MprCmd *cmd, int channel, void *data)
     if (cmd->complete || cgi->location) {
         cgi->location = 0;
         httpFinalize(stream);
-        mprCreateEvent(stream->dispatcher, "cgiComplete", 0, httpIOEvent, stream->net, 0);
-        return;
+    } else {
+        suspended = httpIsQueueSuspended(stream->writeq);
+        assert(!suspended || stream->net->writeBlocked);
+        mprEnableCmdOutputEvents(cmd, !suspended);
     }
-    suspended = httpIsQueueSuspended(stream->writeq);
-    assert(!suspended || stream->net->writeBlocked);
-    mprEnableCmdOutputEvents(cmd, !suspended);
-    mprCreateEvent(stream->dispatcher, "cgi", 0, httpIOEvent, stream->net, 0);
+    httpServiceNetQueues(stream->net, 0);
+
+    mprCreateLocalEvent(stream->dispatcher, "cgi", 0, httpIOEvent, stream->net, 0);
 }
 
 
@@ -465,7 +466,7 @@ static void readFromCgi(Cgi *cgi, int channel)
             mprAdjustBufEnd(packet->content, nbytes);
         }
         if (channel == MPR_CMD_STDERR) {
-            httpLog(stream->trace, "cgi.error", "error", "msg=\"CGI failed uri=\'%s\',details: %s",
+            httpLog(stream->trace, "cgi.error", "error", "msg:CGI failed, uri:%s, details: %s",
                 stream->rx->uri, mprBufToString(packet->content));
             httpSetStatus(stream, HTTP_CODE_SERVICE_UNAVAILABLE);
             cgi->seenHeader = 1;
@@ -561,7 +562,11 @@ static bool parseCgiHeaders(Cgi *cgi, HttpPacket *packet)
                 httpSetStatus(stream, atoi(value));
 
             } else if (scaselesscmp(key, "content-type") == 0) {
-                httpSetHeaderString(stream, "Content-Type", value);
+                if (stream->tx->charSet && !scaselesscontains(value, "charset")) {
+                    httpSetHeader(stream, "Content-Type", "%s; charset=%s", value, stream->tx->charSet);
+                } else {
+                    httpSetHeaderString(stream, "Content-Type", value);
+                }
 
             } else if (scaselesscmp(key, "content-length") == 0) {
                 httpSetContentLength(stream, (MprOff) stoi(value));
@@ -788,7 +793,10 @@ static int copyParams(HttpStream *stream, cchar **envv, int index, MprJson *para
     int         i;
 
     for (ITERATE_JSON(params, param, i)) {
-        copyInner(stream, envv, index++, param->name, param->value, prefix);
+        //  Workaround for large form fields that are also copied as post data
+        if (slen(param->value) <= ME_MAX_RX_FORM_FIELD) {
+            copyInner(stream, envv, index++, param->name, param->value, prefix);
+        }
     }
     envv[index] = 0;
     return index;

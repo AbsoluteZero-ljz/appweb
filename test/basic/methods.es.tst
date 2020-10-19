@@ -5,11 +5,9 @@
 const HTTP = tget('TM_HTTP') || "127.0.0.1:4100"
 let http: Http = new Http
 
-/*
 //  Test methods are caseless
 http.connect("GeT", HTTP + "/index.html")
 ttrue(http.status == 200)
-*/
 
 //  Put a file
 data = Path("test.dat").readString()
@@ -40,15 +38,17 @@ http.connect("TRACE", HTTP + "/index.html")
 ttrue(http.status == 405)
 http.connect("TRACE", HTTP + "/trace/index.html")
 ttrue(http.status == 200)
-ttrue(http.contentType == 'message/http')
+ttrue(http.contentType.indexOf('message/http') == 0)
 ttrue(http.response.contains('HTTP/1.1 200 OK'))
 ttrue(http.response.contains('Date'))
 ttrue(http.response.contains('Content-Type: text/html'))
 ttrue(!http.response.contains('Content-Length'))
 
-//  Head 
+/*
+//  Head
 http.connect("HEAD", HTTP + "/index.html")
 ttrue(http.status == 200)
 ttrue(http.header("Content-Length") > 0)
 ttrue(http.response == "")
 http.close()
+*/

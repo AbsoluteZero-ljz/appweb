@@ -43,6 +43,7 @@
                     <a class="item" href="../../start/source.html">Building from Source</a>
                     <a class="item" href="../../start/cgi.html">Building with CGI</a>
                     <a class="item" href="../../start/fast.html">Building with FastCGI</a>
+                    <a class="item" href="../../start/proxy.html">Building with Proxy</a>
                     <a class="item" href="../../start/openssl.html">Building with OpenSSL</a>
                     <a class="item" href="../../start/php.html">Building with PHP</a>
                 </div>
@@ -161,7 +162,7 @@
                     <a class="item" href="https://embedthis.com/appweb/">Appweb Site</a>
                     <span class="desktop-only">
                         <a class="item" href="https://embedthis.com/blog/categories/Appweb">Appweb News</a>
-                        <a class="item" href="https://github.com/embedthis/appweb">Repository</a>
+                        <a class="item" href="https://github.com/embedthis/appweb-gpl">Repository</a>
                         <a class="item" href="https://embedthis.com/blog/">Blog</a>
                         <a class="item" href="https://twitter.com/embedthat">Twitter</a>
                     </span>
@@ -559,6 +560,35 @@
                 </tbody>
             </table>
 
+            <a id="charSet"></a>
+            <h2>CharSet</h2>
+            <table class="directive" title="details">
+                <tbody>
+                    <tr>
+                        <td class="pivot">Description</td>
+                        <td>Set the default character set encoding for a route.</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Synopsis</td>
+                        <td>CharSet set</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Context</td>
+                        <td>Default server, VirtualHost, Route</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Example</td>
+                        <td>CharSet utf-8</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Notes</td>
+                        <td>
+                            <p>The CharSet directive defines the default character to use with the Content-Type response header. If defined, the "; charset=value" will be appended to the Content-Type header.</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
             
             <a id="condition"></a>
             <h2>Condition</h2>
@@ -835,7 +865,7 @@ Defense reboot REMEDY=restart
                     <tr>
                         <td class="pivot">Synopsis</td>
                         <td>FastConnect endpoint<br>
-                            FastConnect endpoint [count=number] [launch] [max=number] [min=number] [multiplex=number]
+                            FastConnect endpoint [launch[=command]] [keep] [maxRequests] [max=number] [min=number] [multiplex=number]
                                 [timeout="timespec"]<br>
                     </tr>
                     <tr>
@@ -846,19 +876,21 @@ Defense reboot REMEDY=restart
                         <td class="pivot">Example</td>
                         <td>FastConnect 127.0.0.1:9000<br>
                             FastConnect localhost:9000 launch<br>
-                            FastConnect localhost:9000 launch min=1 max=2 count=500 timeout=5mins multiplex=1<br>
+                            FastConnect localhost:9000 launch min=1 max=2 maxRequests=500 timeout=5mins multiplex=1<br>
+                            FastConnect localhost:9000 launch="/program/to/run"<br>
                         </td>
                     </tr>
                     <tr>
                         <td class="pivot">Notes</td>
                         <td>
                             <p>The FastConnect directive configures the FastCGI handler to serve requests using the
-                                <a href="https://en.wikipedia.org/wiki/FastCGI">FastCGI</a> protocol.</p>
+                                <a href="https://en.wikipedia.org/wiki/FastCGI">FastCGI</a> protocol on Unix like systems.</p>
                             <p>FastCGI programs may be pre-launched or may be launched on-demand by Appweb. If using pre-launched configuration, the FastCGI program should be started before Appweb and should be configured to listen for requests on the IP:PORT address specified via this directive. The port may be zero in which case an available port number is dynamically selected.</p>
-                            <p>The "launch" attribute specifies that the FastCGI application should be launched by Appweb. The path to the applications is given via the <a href="#action">Action</a> directive which specifies a mapping from a mime-type (and hence request extension) to the FastCGI program to serve the request of that type.</p>
+                            <p>The "keep" attributes specifies the communication socket to the FastCGI application should be reused for subsequent requests.</p>
+                            <p>The "launch" attribute specifies that the FastCGI application should be launched by Appweb. The path to the applications is given via the <a href="#action">Action</a> directive which specifies a mapping from a mime-type (and hence request extension) to the FastCGI program to serve the request of that type. Alternatively, the command may be specified directly via a "launch=" attribute.</p>
                             <p>The "min" attribute specifies the minimum number of FastCGI programs to maintain. Appweb will launch FastCGI programs up to the maximum specified via the "max" attribute. After the "timeout" expires, Appweb will kill unwanted FastCGI programs to reduce resource load down to the minimum specified by "min". The default min and max values are 1. The default timeout is 5 minutes.</p>
-                            <p>The "multiplex" attribute defines how many simultaneous requests the FastCGI application can handle. The default is 1.</p>
-                            <p>The "count" attribute defines how many requests to serve before a launched FastCGI application is restarted. The default is 500.</p>
+                            <p>The "multiplex" attribute defines how many simultaneous requests the FastCGI application can handle. The default is 1. When using a multiplex value greater than one, it is essential that your FastCGI application can handle multiplexing and that the value stipulated in the FastConnect directive be equal or less than the capacity of your FastCGI program. PHP defines the multiplex capacity via its PHP_FCGI_CHILDREN environment variable.</p>
+                            <p>The "maxRequests" attribute defines how many requests to serve before a launched FastCGI application is restarted. The default is unlimited.</p>
                         </td>
                     </tr>
                 </tbody>
@@ -1233,6 +1265,87 @@ Monitor "RequestsPerClient &gt; 200" 5sec deny</td>
             </table>
 
             
+            <a id="proxyConfig"></a>
+            <h2>ProxyConfig</h2>
+            <table class="directive" title="details">
+                <tbody>
+                    <tr>
+                        <td class="pivot">Description</td>
+                        <td>Configure Proxy Network</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Synopsis</td>
+                        <td>&lt;ProxyConfig&gt;<br>
+                                ... SSL directives
+                                ... Limit directives
+                            &lt;/ProxyConfig&gt;
+                    </tr>
+                    <tr>
+                        <td class="pivot">Context</td>
+                        <td>Proxy Route</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Example</td>
+                        <td>ProxyConnect 127.0.0.1:9000<br>
+                            &lt;ProxyConfig&gt;
+                                SSLCertificateFile      "${BIN_DIR}/test.crt"
+                                SSLCertificateKeyFile   "${BIN_DIR}/test.key"
+                            &lt;/ProxyConfig&gt;
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Notes</td>
+                        <td>
+                            <p>The ProxyConfig directive opens a block that may contain other SSL or limit directives. These directives then apply to the network connection from Appweb to the proxied application. </p>
+                            <p>The ProxyConfig directive can be used to enable SSL to be used for communication to the proxied application. It can also be used to define a non-default inactivity timeout for the network connection to the proxied application which by default is 5 minutes.</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <a id="proxyConnect"></a>
+            <h2>ProxyConnect</h2>
+            <table class="directive" title="details">
+                <tbody>
+                    <tr>
+                        <td class="pivot">Description</td>
+                        <td>Configure Proxy applications</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Synopsis</td>
+                        <td>ProxyConnect endpoint<br>
+                            ProxyConnect endpoint [launch="program args.."] <br>
+                            [http2] [maxRequests=number] [max=number] [min=number] [multiplex=number] [ssl] [timeout="timespec"]<br>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Context</td>
+                        <td>Default server, VirtualHost, Route</td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Example</td>
+                        <td>ProxyConnect 127.0.0.1:9000<br>
+                            ProxyConnect localhost:9000 launch="myApp --debug"<br>
+                            ProxyConnect localhost:9000 min=1 max=2 maxRequests=500 timeout=5mins multiplex=1<br>
+                            ProxyConnect localhost:9999 http2<br>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="pivot">Notes</td>
+                        <td>
+                            <p>The ProxyConnect directive configures the Proxy handler to relay requests to configured proxied applications on Unix like systems.</p>
+                            <p>Proxied programs may be pre-launched or may be launched on-demand by Appweb. If using pre-launched configuration, the Proxy program should be started before Appweb and should be configured to listen for requests on the IP:PORT address specified via this directive. The port may be zero in which case an available port number is dynamically selected.</p>
+                            <p>The "launch" attribute specifies that the proxied application that should be launched by Appweb including the program name and arguments.</p>
+                            <p>The "min" attribute specifies the minimum number of Proxy application instances to maintain. Appweb will launch proxied programs up to the maximum specified via the "max" attribute. After the "timeout" expires, Appweb will kill unwanted proxied programs to reduce resource load down to the minimum specified by "min". The default min is zero and and the default max is 1. The default timeout is 5 minutes.</p>
+                            <p>The "multiplex" attribute defines how many simultaneous requests the proxied application can handle. The default is 1. When using a multiplex value greater than one, it is essential that your Proxy application can handle multiplexing and that the value stipulated in the FastConnect directive be equal or less than the capacity of your program.</p>
+                            <p>The "maxRequests" attribute defines how many requests to serve before a launched Proxied application is restarted. The default is unlimited.</p>
+                            <p>The "ssl" attributes specifies the protocol to communicate with the proxy should use TLS. The "http2" attributes specifies the protocol should be HTTP/2 over TLS. The "http2" attribute implies "ssl". Use the <a href="proxyConfig">ProxyConfig</a> directive to define the SSL cipher parameters for the protocol.</p>
+                            <p>Appweb will rewrite any Location HTTP headers returned from the application if a Canonical (public)
+                                URL is defined for the server on that route. Appweb will pass the canonical URL via the X-Canonical
+                                HTTP header to the application. The client IP address will also be passed via the X-Client header.</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
 
             <a id="redirect"></a>
             <h2>Redirect</h2>

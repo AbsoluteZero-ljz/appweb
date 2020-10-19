@@ -1037,19 +1037,20 @@ static ssize readOss(MprSocket *sp, void *buf, ssize len)
     retries = 5;
     for (i = 0; i < retries; i++) {
         rc = SSL_read(osp->handle, buf, (int) len);
-        if (rc < 0) {
+        if (rc <= 0) {
             error = SSL_get_error(osp->handle, rc);
             if (error == SSL_ERROR_WANT_READ || error == SSL_ERROR_WANT_CONNECT || error == SSL_ERROR_WANT_ACCEPT) {
                 continue;
             }
             mprLog("info mpr ssl openssl", 5, "SSL_read %s", getOssError(sp));
+            sp->flags |= MPR_SOCKET_EOF | MPR_SOCKET_ERROR;
         }
         break;
     }
     if (osp->cfg->maxHandshakes && osp->handshakes > osp->cfg->maxHandshakes) {
         mprLog("error mpr ssl openssl", 4, "TLS renegotiation attack");
         rc = -1;
-        sp->flags |= MPR_SOCKET_EOF;
+        sp->flags |= MPR_SOCKET_EOF | MPR_SOCKET_ERROR;
         return MPR_ERR_BAD_STATE;
     }
     if (rc <= 0) {
@@ -1062,17 +1063,18 @@ static ssize readOss(MprSocket *sp, void *buf, ssize len)
             sp->flags |= MPR_SOCKET_EOF;
             rc = -1;
         } else if (error == SSL_ERROR_SYSCALL) {
-            sp->flags |= MPR_SOCKET_EOF;
+            sp->flags |= MPR_SOCKET_EOF | MPR_SOCKET_ERROR;
             rc = -1;
         } else if (error != SSL_ERROR_ZERO_RETURN) {
             /* SSL_ERROR_SSL */
             mprLog("info mpr ssl openssl", 4, "%s", getOssError(sp));
             rc = -1;
-            sp->flags |= MPR_SOCKET_EOF;
+            sp->flags |= MPR_SOCKET_EOF | MPR_SOCKET_ERROR;
         }
     } else {
         if (!(sp->flags & MPR_SOCKET_SERVER) && !sp->secured) {
             if (checkPeerCertName(sp) < 0) {
+                sp->flags |= MPR_SOCKET_EOF | MPR_SOCKET_CERT_ERROR;
                 return MPR_ERR_BAD_STATE;
             }
         }
