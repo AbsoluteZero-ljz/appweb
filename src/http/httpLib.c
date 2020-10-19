@@ -9098,11 +9098,6 @@ static void parseResponseLine(HttpQueue *q, HttpPacket *packet)
             "Bad response. Status message too long. Length %zd vs limit %d", len, stream->limits->uriSize);
         return;
     }
-    if (rx->status == HTTP_CODE_CONTINUE) {
-        /* Eat the blank line and wait for the real response */
-        mprAdjustBufStart(packet->content, 2);
-        return;
-    }
 }
 
 
@@ -9144,6 +9139,9 @@ static void parseFields(HttpQueue *q, HttpPacket *packet)
             mprAddKey(rx->headers, key, sclone(value));
         }
     }
+    /*
+        If there were no headers, there will be no trailing ...
+     */
     if (mprGetBufLength(packet->content) < 2) {
         httpBadRequestError(stream, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad header format");
         return;
@@ -9157,7 +9155,9 @@ static void parseFields(HttpQueue *q, HttpPacket *packet)
     } else {
         mprAdjustBufStart(packet->content, 2);
     }
-    httpSetState(stream, HTTP_STATE_PARSED);
+    if (rx->status != HTTP_CODE_CONTINUE) {
+        httpSetState(stream, HTTP_STATE_PARSED);
+    }
 }
 
 
@@ -14594,7 +14594,9 @@ PUBLIC bool httpReadIO(HttpNet *net)
                     net->error = 1;
                     return 0;
                 }
-                httpResetServerStream(stream);
+                if (httpServerStream(stream)) {
+                    httpResetServerStream(stream);
+                }
             }
         }
         if (net->protocol < 0) {
@@ -16599,12 +16601,6 @@ static int processFirst(HttpStream *stream)
         stream->startMark = mprGetHiResTicks();
         stream->started = stream->http->now;
         stream->http->totalRequests++;
-#if KEEP && TODO
-        if (rx->status != HTTP_CODE_CONTINUE) {
-            // Ignore Expect status responses. NOTE: Clients have already created their Tx pipeline.
-            httpCreateRxPipeline(stream, NULL);
-        }
-#endif
         if ((value = httpMonitorEvent(stream, HTTP_COUNTER_ACTIVE_REQUESTS, 1)) > net->limits->requestsPerClientMax) {
             httpError(stream, HTTP_ABORT | HTTP_CODE_SERVICE_UNAVAILABLE,
                 "Request denied for IP %s. Too many concurrent requests for client, active: %d max: %d", stream->ip, (int) value, net->limits->requestsPerClientMax);
@@ -16612,10 +16608,6 @@ static int processFirst(HttpStream *stream)
         }
         httpMonitorEvent(stream, HTTP_COUNTER_REQUESTS, 1);
         stream->counted = 1;
-    }
-    if (rx->flags & HTTP_EXPECT_CONTINUE) {
-        sendContinue(stream);
-        rx->flags &= ~HTTP_EXPECT_CONTINUE;
     }
     return stream->state;
 }
@@ -16967,6 +16959,10 @@ static void processHeaders(HttpStream *stream)
         }
         if (!rx->originalUri) {
             rx->originalUri = rx->uri;
+        }
+        if (rx->flags & HTTP_EXPECT_CONTINUE && !stream->error) {
+            sendContinue(stream);
+            rx->flags &= ~HTTP_EXPECT_CONTINUE;
         }
     }
     if (net->protocol == 0 && !keepAliveHeader) {
