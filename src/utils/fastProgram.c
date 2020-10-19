@@ -4,7 +4,7 @@
     Copyright (c) All Rights Reserved. See details at the end of the file.
 
     Usage:
-        fastProgram [switches]
+        fastProgram [switches] [endpoint]
             -a                  Output the args (used for ISINDEX queries)
             -b bytes            Output content "bytes" long
             -d secs             Delay for given number of seconds
@@ -39,7 +39,7 @@
 /*********************************** Locals ***********************************/
 
 #define MAX_ARGV    64
-#define MAX_THREADS 2
+#define MAX_THREADS 16
 
 typedef struct State {
     char         *argvList[MAX_ARGV];
@@ -96,7 +96,17 @@ int main(int argc, char **argv, char **envp)
     originalArgv = argv;
     memset(&states, 0, sizeof(states));
 
-    FCGX_Init();
+    for (i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-?") == 0) {
+            fprintf(stderr, "usage: fastProgram -aenp [-b bytes] [-h lines] [-l location] [-s status] [-t timeout] [endpoint]\n");
+            exit(2);
+        } else if (argv[i][0] != '-') {
+            close(0);
+            FCGX_OpenSocket(argv[i], 5);
+        }
+    }
+    FCGX_IsCGI();
+
     for (i = 1; i < MAX_THREADS; i++) {
         pthread_create(&ids[i], NULL, (void*) worker, (void*) &states[i]);
     }
@@ -197,11 +207,6 @@ static void *worker(State *state)
                 for (i = 0; i < originalArgc; i++) {
                     FCGX_FPrintF(request.out, "<P>ARG[%d]=%s</P>\r\n", i, originalArgv[i]);
                 }
-#if UNUSED
-                for (i = 0; i < argc; i++) {
-                    FCGX_FPrintF(request.out, "<P>XARG[%d]=%s</P>\r\n", i, argv[i]);
-                }
-#endif
             }
             printEnv(state);
             if (state->outputQuery) {
@@ -307,15 +312,9 @@ static int parseArgs(State *state)
             }
         }
     }
-    if (err) {
-        error(state, "usage: fastProgram -aenp [-b bytes] [-h lines]\n"
-            "\t[-l location] [-s status] [-t timeout]\n"
-            "\tor set the HTTP_SWITCHES environment variable\n");
-        error(state, "Error at fastProgram:%d\n", __LINE__);
-        exit(3);
-    }
-    return 0;
+    return err ? -1 : 0;
 }
+
 
 
 /*
@@ -511,12 +510,6 @@ static int getPostData(State *state)
             bufsize = len + size + 1;
         }
         bytes = FCGX_GetStr(&buf[len], (int) size, in);
-#if KEEP
-        printf("@@@ After read %d, errno %d, sofar %ld / %ld\n", (int) bytes, errno, len, limit);
-        printf("@@@ isClosed %d, isReader %d, size %ld, errno %d, closedCalled %d\n",
-            in->isClosed, in->isReader, size, in->FCGI_errno, in->wasFCloseCalled);
-        fflush(stdout);
-#endif
         if (bytes < 0) {
             error(state, "Could not read FAST input %d", in->FCGI_errno);
             return -1;
@@ -647,12 +640,16 @@ static void error(State *state, char *fmt, ...)
     if (state->errorMsg == 0) {
         va_start(args, fmt);
         vsprintf(buf, fmt, args);
-        FCGX_FPrintF(state->request->err, "%s\n", buf);
+        if (state->request && state->request->err) {
+            FCGX_FPrintF(state->request->err, "%s\n", buf);
+        } else {
+            fprintf(stderr, "%s\n", buf);
+        }
         state->responseStatus = 400;
         state->errorMsg = strdup(buf);
         va_end(args);
+        state->hasError++;
     }
-    state->hasError++;
 }
 
 

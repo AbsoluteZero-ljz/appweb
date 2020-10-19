@@ -43,6 +43,7 @@
                     <a class="item" href="../../start/source.html">Building from Source</a>
                     <a class="item" href="../../start/cgi.html">Building with CGI</a>
                     <a class="item" href="../../start/fast.html">Building with FastCGI</a>
+                    <a class="item" href="../../start/proxy.html">Building with Proxy</a>
                     <a class="item" href="../../start/openssl.html">Building with OpenSSL</a>
                     <a class="item" href="../../start/php.html">Building with PHP</a>
                 </div>
@@ -161,7 +162,7 @@
                     <a class="item" href="https://embedthis.com/appweb/">Appweb Site</a>
                     <span class="desktop-only">
                         <a class="item" href="https://embedthis.com/blog/categories/Appweb">Appweb News</a>
-                        <a class="item" href="https://github.com/embedthis/appweb">Repository</a>
+                        <a class="item" href="https://github.com/embedthis/appweb-gpl">Repository</a>
                         <a class="item" href="https://embedthis.com/blog/">Blog</a>
                         <a class="item" href="https://twitter.com/embedthat">Twitter</a>
                     </span>
@@ -540,7 +541,7 @@
                     </tr>
                     <tr>
                         <td class="pivot">Synopsis</td>
-                        <td>Listen [IP address:]portNumber</td>
+                        <td>Listen [IP address:]portNumber [multiple]</td>
                     </tr>
                     <tr>
                         <td class="pivot">Context</td>
@@ -550,6 +551,7 @@
                         <td class="pivot">Examples</td>
                         <td>Listen 80<br>
                             Listen 205.162.77.64:7777<br>
+                            Listen :4000 multiple<br>
                             Listen [::]
                         </td>
                     </tr>
@@ -566,6 +568,7 @@
                             on all IPv4 interfaces.</p>
                             <p>To listen for SSL requests, use the <a href="ssl.html#listenSecure">ListenSecure</a>
                                 directive.</p>
+                            <p>To permit multiple instances of Appweb to bind to the same listen endpoint, specify the multiple attribute. Multiple binding is supported on Linux only.</p>
                         </td>
                     </tr>
                 </tbody>

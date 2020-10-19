@@ -43,6 +43,7 @@
                     <a class="item" href="../start/source.html">Building from Source</a>
                     <a class="item" href="../start/cgi.html">Building with CGI</a>
                     <a class="item" href="../start/fast.html">Building with FastCGI</a>
+                    <a class="item" href="../start/proxy.html">Building with Proxy</a>
                     <a class="item" href="../start/openssl.html">Building with OpenSSL</a>
                     <a class="item" href="../start/php.html">Building with PHP</a>
                 </div>
@@ -161,7 +162,7 @@
                     <a class="item" href="https://embedthis.com/appweb/">Appweb Site</a>
                     <span class="desktop-only">
                         <a class="item" href="https://embedthis.com/blog/categories/Appweb">Appweb News</a>
-                        <a class="item" href="https://github.com/embedthis/appweb">Repository</a>
+                        <a class="item" href="https://github.com/embedthis/appweb-gpl">Repository</a>
                         <a class="item" href="https://embedthis.com/blog/">Blog</a>
                         <a class="item" href="https://twitter.com/embedthat">Twitter</a>
                     </span>
@@ -205,7 +206,7 @@ make ME_COM_CGI=1</pre>
             <h3>CGI Configuration</h3>
             <p>The following default configuration is enabled in appweb.conf once Appweb is built with CGI support.
 <pre class="ui code segment">
-AddHandler cgiHandler exe cgi cgi-nph out bat cmd pl py
+AddHandler cgiHandler exe cgi cgi-nph out bat cmd pl py php
 ScriptAlias /cgi-bin/ "${DOCUMENTS}/../cgi-bin"
 Action application/x-perl /usr/bin/perl
 Action application/x-python /usr/bin/python
@@ -220,7 +221,7 @@ CgiEscape on
             <p>Consult the <a href="https://www.embedthis.com/appweb/doc/users/dir/server.html#cgiEscape">CGI Directives</a> for more information.</p>
 
             <h3>FastCGI</h3>
-            <p>Appweb does not support FastCGI.</p>
+            <p>Appweb supports FastCGI as an alternative way to run CGI programs on Unix style systems.</p>
 
     </div>
     <div class="terms ui basic center aligned segment">

@@ -43,6 +43,7 @@
                     <a class="item" href="../start/source.html">Building from Source</a>
                     <a class="item" href="../start/cgi.html">Building with CGI</a>
                     <a class="item" href="../start/fast.html">Building with FastCGI</a>
+                    <a class="item" href="../start/proxy.html">Building with Proxy</a>
                     <a class="item" href="../start/openssl.html">Building with OpenSSL</a>
                     <a class="item" href="../start/php.html">Building with PHP</a>
                 </div>
@@ -161,7 +162,7 @@
                     <a class="item" href="https://embedthis.com/appweb/">Appweb Site</a>
                     <span class="desktop-only">
                         <a class="item" href="https://embedthis.com/blog/categories/Appweb">Appweb News</a>
-                        <a class="item" href="https://github.com/embedthis/appweb">Repository</a>
+                        <a class="item" href="https://github.com/embedthis/appweb-gpl">Repository</a>
                         <a class="item" href="https://embedthis.com/blog/">Blog</a>
                         <a class="item" href="https://twitter.com/embedthat">Twitter</a>
                     </span>
@@ -190,7 +191,8 @@
 
             <h1>Building Appweb with FastCGI Support</h1>
 
-            <p>Appweb includes support for <a href="https://en.wikipedia.org/wiki/FastCGI">FastCGI</a> but it is not enabled by default to minimize the security surface. If you wish to use FastCGI, you need to enable FastCGI and rebuild Appweb.</p>
+            <p>Appweb includes support for <a href="https://en.wikipedia.org/wiki/FastCGI">FastCGI</a> on Unix like systems.
+                However it is not enabled by default to minimize the security surface. If you wish to use FastCGI, you need to enable FastCGI and rebuild Appweb.</p>
 
             <p>To build Appweb with FastCGI support via <a href="https://www.embedthis.com/makeme">MakeMe</a>, use the following:</p>
 <pre class="ui code segment">
@@ -206,7 +208,6 @@ make ME_COM_FAST=1</pre>
 
             <p>For example, to run PHP scripts using FastCGI:</p>
 <pre class="ui code segment">
-LoadModule fastHandler libmod_fast
 Action application/x-php /usr/local/bin/php-cgi
 FastConnect 127.0.0.1 launch
 AddHandler fastHandler php

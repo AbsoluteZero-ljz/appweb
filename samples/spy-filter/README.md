@@ -6,15 +6,14 @@ This sample shows how to create an Appweb input filter.
 Requirements
 ---
 * [Appweb](https://www.embedthis.com/appweb/download.html)
-* [MakeMe Build Tool](https://www.embedthis.com/makeme/download.html)
 
 To build:
 ---
-    me 
+    make 
 
 To run:
 ---
-    me run
+    make run
 
 The server listens on port 8080. Use the "http" client utility to issue a form request:
  
@@ -26,6 +25,7 @@ the header will be set to "missing".
 
 Code:
 ---
+* [Makefile](Makefile) - Makefile build instructions
 * [spyFilter.c](spyFilter.c) - Spy Filter source code
 * [appweb.conf](appweb.conf) - Appweb server configuration file
 * [index.html](index.html) - Web page to serve

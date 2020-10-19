@@ -23,6 +23,8 @@ Me.load({
             generate: false,
             action: `
                 print('   [Create] test files')
+                run('utils/make-files 205 web/10K.txt')
+                run('utils/make-files 512 web/25K.txt')
                 run('utils/make-files 2050 web/100K.txt')
                 run('utils/make-files 21000 web/1M.txt')
                 run('utils/make-files 1040000 web/50M.txt')
@@ -67,6 +69,7 @@ Me.load({
                 cp(cgiProgram, Path('cgi-bin/nph-cgiProgram${EXE}'), perms)
                 cp(cgiProgram, Path('cgi-bin/cgi Program${EXE}'), perms)
                 cp(cgiProgram, Path('web/cgiProgram.cgi'), perms)
+                cp(cgiProgram, Path('web/upload/cgiProgram.cgi'), perms)
             `,
             depends: [ 'cgiProgram' ],
             generate: false,

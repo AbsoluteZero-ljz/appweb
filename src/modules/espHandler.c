@@ -69,23 +69,6 @@ static int espAppDirective(MaState *state, cchar *key, cchar *value)
 }
 
 
-#if UNUSED
-/*
-    EspUpdate on|off
- */
-static int espUpdateDirective(MaState *state, cchar *key, cchar *value)
-{
-    bool    on;
-
-    if (!maTokenize(state, value, "%B", &on)) {
-        return MPR_ERR_BAD_SYNTAX;
-    }
-    httpSetRouteUpdate(state->route, on);
-    return 0;
-}
-#endif
-
-
 /*
     Loadable module configuration
  */
@@ -95,9 +78,6 @@ PUBLIC int httpEspInit(Http *http, MprModule *module)
         return MPR_ERR_CANT_CREATE;
     }
     maAddDirective("EspApp", espAppDirective);
-#if UNUSED
-    maAddDirective("EspUpdate", espUpdateDirective);
-#endif
     return 0;
 }
 #endif /* ME_COM_ESP */

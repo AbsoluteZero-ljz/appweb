@@ -12,7 +12,7 @@ ttrue(connection == "Keep-Alive")
 
 http.get(HTTP + "/index.html")
 ttrue(http.statusMessage == "OK")
-ttrue(http.contentType == "text/html")
+ttrue(http.contentType.indexOf("text/html") == 0)
 ttrue(http.date != "")
 ttrue(http.lastModified != "")
 

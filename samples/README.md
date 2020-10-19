@@ -2,11 +2,10 @@ Embedthis Appweb Samples
 ===
 
 These samples are configured to use a locally built Appweb or Appweb installed to the default location
-(usually /usr/local/lib/apppweb). To build the samples, you will need to install Appweb and the MakeMe build tool from:
+(usually /usr/local/lib/apppweb). The Makefiles assume GCC on Linux or Mac. You will need to adjust to
+build on Windows.
 
 * Appweb - [https://www.embedthis.com/appweb/download.html](https://www.embedthis.com/appweb/download.html)
-* MakeMe - [https://www.embedthis.com/makeme/download.html](https://www.embedthis.com/makeme/download.html)
-* Pak - [https://www.embedthis.com/pak/download.html](https://www.embedthis.com/pak/download.html)
 
 The following samples are available:
 
@@ -40,15 +39,7 @@ The following samples are available:
 
 ### SSL Certificates
 
-Some samples require SSL certificates and keys. These can be generated in the Appweb source tree via:
-
-    me generate-certs
-
-Then in the samples directory, run
-
-    me samples-certs
-
-This will copy the generated certificates into the 'certs' directory.
+Some samples require SSL certificates and keys.
 
 ### Building
 
@@ -56,7 +47,7 @@ To build the samples, see the per-sample README instructions. Many can run witho
 
 To build all, use:
 
-    me --file samples.me samples
+    make build
 
 ### Documentation
 
