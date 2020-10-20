@@ -13677,6 +13677,13 @@ PUBLIC void httpDumpCounters()
             if (name == NULL) {
                 break;
             }
+            if (i == HTTP_COUNTER_ACTIVE_CLIENTS) {
+                counter->value = mprGetHashLength(http->addresses);
+            } else if (i == HTTP_COUNTER_ACTIVE_PROCESSES) {
+                counter->value = mprGetListLength(MPR->cmdService->cmds);
+            } else if (i == HTTP_COUNTER_MEMORY) {
+                counter->value = mprGetMem();
+            }
             mprLog(0, 0, "  Counter          %s = %'lld\n", name, counter->value);
         }
     }
@@ -24913,12 +24920,15 @@ PUBLIC char *httpStatsReport(int flags)
     MprBuf              *buf;
     HttpStats           s;
     double              elapsed, mb;
-    static MprTime      lastTime;
+    static MprTime      lastTime = 0;
     static HttpStats    last;
     int                 nextNet, nextStream;
 
     mb = 1024.0 * 1024;
     now = mprGetTime();
+    if (lastTime == 0) {
+        lastTime = MPR->start;
+    }
     elapsed = (now - lastTime) / 1000.0;
     httpGetStats(&s);
     buf = mprCreateBuf(ME_PACKET_SIZE, 0);
