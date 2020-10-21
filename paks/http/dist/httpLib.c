@@ -4277,6 +4277,12 @@ static void parseCgiPrefix(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
+static void parseCharset(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    httpSetRouteCharSet(route, prop->value);
+}
+
+
 static void parseCompress(HttpRoute *route, cchar *key, MprJson *prop)
 {
     if (smatch(prop->value, "true")) {
@@ -5652,6 +5658,7 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.cgi", httpParseAll);
     httpAddConfig("http.cgi.escape", parseCgiEscape);
     httpAddConfig("http.cgi.prefix", parseCgiPrefix);
+    httpAddConfig("http.charset", parseCharset);
     httpAddConfig("http.compress", parseCompress);
     httpAddConfig("http.conditions", parseConditions);
     httpAddConfig("http.database", parseDatabase);
@@ -5688,6 +5695,7 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.limits.packet", parseLimitsPacket);
     httpAddConfig("http.limits.processes", parseLimitsProcesses);
     httpAddConfig("http.limits.requests", parseLimitsRequestsPerClient);
+    httpAddConfig("http.limits.requestsPerClient", parseLimitsRequestsPerClient);
     httpAddConfig("http.limits.sessions", parseLimitsSessions);
     httpAddConfig("http.limits.txBody", parseLimitsTxBody);
     httpAddConfig("http.limits.upload", parseLimitsUpload);
