@@ -9759,7 +9759,9 @@ PUBLIC void mprDestroyDispatcher(MprDispatcher *dispatcher)
         lock(es);
         freeEvents(dispatcher->currentQ);
         freeEvents(dispatcher->eventQ);
-        dequeueDispatcher(dispatcher);
+        if (!isRunning(dispatcher)) {
+            dequeueDispatcher(dispatcher);
+        }
         dispatcher->flags |= MPR_DISPATCHER_DESTROYED;
         unlock(es);
     }
@@ -10193,9 +10195,10 @@ static void dispatchEventsHelper(MprDispatcher *dispatcher)
     }
     dispatchEvents(dispatcher);
 
+    releaseDispatcher(dispatcher);
+    dequeueDispatcher(dispatcher);
+
     if (!(dispatcher->flags & MPR_DISPATCHER_DESTROYED)) {
-        releaseDispatcher(dispatcher);
-        dequeueDispatcher(dispatcher);
         mprScheduleDispatcher(dispatcher);
     }
 }
@@ -10417,18 +10420,12 @@ static bool reclaimDispatcher(MprDispatcher *dispatcher)
     dispatcher->owner = mprGetCurrentOsThread();
     unlock(es);
     return 1;
-
 }
 
 
 static void releaseDispatcher(MprDispatcher *dispatcher)
 {
-    lock(MPR->eventService);
-    if (dispatcher->owner && dispatcher->owner != RESERVED_DISPATCHER && dispatcher->owner != mprGetCurrentOsThread()) {
-        assert(0);
-    }
     dispatcher->owner = 0;
-    unlock(MPR->eventService);
 }
 
 
