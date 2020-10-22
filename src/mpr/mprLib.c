@@ -9757,9 +9757,10 @@ PUBLIC void mprDestroyDispatcher(MprDispatcher *dispatcher)
         es = dispatcher->service;
         assert(es == MPR->eventService);
         lock(es);
-        freeEvents(dispatcher->currentQ);
+        //  Must not free events in currentQ incase running in dispatchEvents -- current event must not be freed
         freeEvents(dispatcher->eventQ);
         if (!isRunning(dispatcher)) {
+            //  Must not dequeue otherwise GC may claim dispatcher while running dispatchEvents
             dequeueDispatcher(dispatcher);
         }
         dispatcher->flags |= MPR_DISPATCHER_DESTROYED;
@@ -10134,6 +10135,7 @@ PUBLIC void mprRescheduleDispatcher(MprDispatcher *dispatcher)
 
 /*
     Run events for a dispatcher
+    WARNING: may yield
  */
 static int dispatchEvents(MprDispatcher *dispatcher)
 {
@@ -10157,6 +10159,8 @@ static int dispatchEvents(MprDispatcher *dispatcher)
         mprAtomicAdd64(&dispatcher->mark, 1);
         mprLinkEvent(dispatcher->currentQ, event);
 
+        //  WARNING: may yield
+        //  WARNING: may destroy dispatcher (memory still present)
         (event->proc)(event->data, event);
 
         mprUnlinkEvent(event);
