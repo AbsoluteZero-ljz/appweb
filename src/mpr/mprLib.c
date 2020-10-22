@@ -920,9 +920,7 @@ static void vmfree(void *ptr, size_t size)
 {
 #if ME_MPR_ALLOC_VIRTUAL
     #if ME_UNIX_LIKE
-        if (munmap(ptr, size) != 0) {
-            assert(0);
-        }
+        munmap(ptr, size);
     #elif ME_WIN_LIKE
         VirtualFree(ptr, 0, MEM_RELEASE);
     #else
@@ -10394,7 +10392,6 @@ static bool claimDispatcher(MprDispatcher *dispatcher, MprOsThread thread)
     es = MPR->eventService;
     lock(es);
     if (dispatcher->owner && dispatcher->owner != mprGetCurrentOsThread()) {
-        assert(0);
         unlock(es);
         return 0;
     }
@@ -10748,8 +10745,6 @@ PUBLIC char *mprEscapeHtml(cchar *html)
             } else if (*html == '\'') {
                 strcpy(op, "&#39;");
                 op += 5;
-            } else {
-                assert(0);
             }
             html++;
         } else {
@@ -14137,7 +14132,6 @@ static MprJson *queryContents(MprJson *obj, char *property, cchar *rest, MprJson
     result = mprCreateJson(MPR_JSON_ARRAY);
     if (!(obj->type & MPR_JSON_ARRAY)) {
         /* Cannot get here */
-        assert(0);
         return result;
     }
     if (splitExpression(property, &operator, &v) == 0) {
@@ -14152,7 +14146,6 @@ static MprJson *queryContents(MprJson *obj, char *property, cchar *rest, MprJson
                     appendItem(result, queryLeaf(obj, itosbuf(ibuf, sizeof(ibuf), index, 10), value, flags));
                 }
             } else {
-                assert(0);
                 /*  Should never get here as this means the array has objects instead of simple values */
                 appendItems(result, queryCore(child, rest, value, flags));
             }
@@ -14253,9 +14246,6 @@ static MprJson *queryCompound(MprJson *obj, char *property, cchar *rest, MprJson
 
     } else if (termType & JSON_PROP_EXPR) {
         return queryExpr(obj, property, rest, value, flags);
-
-    } else {
-        assert(0);
     }
     return 0;
 }
@@ -19854,7 +19844,6 @@ PUBLIC int mprGetRandomBytes(char *buf, ssize length, bool block)
     do {
         rc = read(fd, &buf[sofar], length);
         if (rc < 0) {
-            assert(0);
             close(fd);
             return MPR_ERR_CANT_READ;
         }
@@ -22836,7 +22825,6 @@ PUBLIC MprSocket *mprAcceptSocket(MprSocket *listen)
         Get the remote client address
      */
     if (getSocketIpAddr(addr, addrlen, ip, sizeof(ip), &port) != 0) {
-        assert(0);
         mprCloseSocket(nsp, 0);
         return 0;
     }
@@ -23121,7 +23109,6 @@ static ssize localSendfile(MprSocket *sp, MprFile *file, MprOff offset, ssize le
     mprSeekFile(file, SEEK_SET, (int) offset);
     len = min(len, sizeof(buf));
     if ((len = mprReadFile(file, buf, len)) < 0) {
-        assert(0);
         return MPR_ERR_CANT_READ;
     }
     return mprWriteSocket(sp, buf, len);
@@ -23582,7 +23569,6 @@ PUBLIC int mprGetSocketInfo(cchar *ip, int port, int *family, int *protocol, str
         sa->sin_addr.s_addr = (ulong) hostGetByName((char*) ip);
         if (sa->sin_addr.s_addr < 0) {
             unlock(ss);
-            assert(0);
             return 0;
         }
 #else
@@ -25811,7 +25797,6 @@ PUBLIC int mprMapMprPriorityToOs(int mprPriority)
     } else {
         return -19;
     }
-    assert(0);
     return 0;
 }
 
@@ -30661,7 +30646,6 @@ static int parseNext(MprXml *xp, int state)
             return MPR_ERR;
         }
     }
-    assert(0);
 }
 
 
@@ -30850,7 +30834,6 @@ static MprXmlToken getXmlToken(MprXml *xp, int state)
     }
 
     /* Should never get here */
-    assert(0);
     return MPR_XMLTOK_ERR;
 }
 
@@ -30937,7 +30920,6 @@ static int getNextChar(MprXml *xp)
 static int putLastChar(MprXml *xp, int c)
 {
     if (mprInsertCharToBuf(xp->inBuf, (char) c) < 0) {
-        assert(0);
         return MPR_ERR_BAD_STATE;
     }
     if (c == '\n') {
