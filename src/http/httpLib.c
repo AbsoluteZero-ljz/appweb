@@ -14652,10 +14652,14 @@ PUBLIC void httpIOEvent(HttpNet *net, MprEvent *event)
             httpSetNetEof(net);
         }
     }
+assert(event->next);
+assert(event->prev);
     /*
         Process packet read above. This will propagate the packet through configured queues for the net.
      */
     httpServiceNetQueues(net, 0);
+assert(event->next);
+assert(event->prev);
 
     if (net->error || net->eof || (net->sentGoaway && !net->socketq->first)) {
         if (net->autoDestroy) {
@@ -14668,9 +14672,13 @@ PUBLIC void httpIOEvent(HttpNet *net, MprEvent *event)
     }
     net->active = 0;
 
+    assert(event->next);
+    assert(event->prev);
     if (mprNeedYield()) {
         mprYield(0);
     }
+    assert(event->next);
+    assert(event->prev);
 }
 
 
@@ -29332,7 +29340,7 @@ static void outgoingWebSockService(HttpQueue *q)
             }
             *prefix = '\0';
             mprAdjustBufEnd(packet->prefix, prefix - packet->prefix->start);
-            httpLog(stream->trace, "websockets.tx.packet", "packet", 
+            httpLog(stream->trace, "websockets.tx.packet", "packet",
                 "wsSeqno:%d, wsTypeName:\"%s\", wsType:%d, wsLast:%d, wsLength:%zd",
                 ws->txSeq++, codetxt[packet->type], packet->type, packet->fin, httpGetPacketLength(packet));
         }
@@ -29635,4 +29643,3 @@ bool httpIsLastPacket(HttpPacket *packet)
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
  */
-
