@@ -5695,7 +5695,6 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.limits.packet", parseLimitsPacket);
     httpAddConfig("http.limits.processes", parseLimitsProcesses);
     httpAddConfig("http.limits.requests", parseLimitsRequestsPerClient);
-    httpAddConfig("http.limits.requestsPerClient", parseLimitsRequestsPerClient);
     httpAddConfig("http.limits.sessions", parseLimitsSessions);
     httpAddConfig("http.limits.txBody", parseLimitsTxBody);
     httpAddConfig("http.limits.upload", parseLimitsUpload);
@@ -8738,7 +8737,6 @@ PUBLIC int httpAddPackedHeader(HttpHeaderTable *headers, cchar *key, cchar *valu
         headers->size -= (slen(kp->key) + slen(kp->value) + HTTP2_HEADER_OVERHEAD);
         if (headers->size < 0) {
             /* Should never happen */
-            assert(0);
             return MPR_ERR_BAD_STATE;
         }
     }
@@ -8784,7 +8782,6 @@ PUBLIC int httpSetPackedHeadersMax(HttpHeaderTable *headers, int max)
         headers->size -= (slen(kp->key) + slen(kp->value) + HTTP2_HEADER_OVERHEAD);
         if (headers->size < 0) {
             /* Should never happen */
-            assert(0);
             return MPR_ERR_BAD_STATE;
         }
     }
@@ -14652,14 +14649,10 @@ PUBLIC void httpIOEvent(HttpNet *net, MprEvent *event)
             httpSetNetEof(net);
         }
     }
-assert(event->next);
-assert(event->prev);
     /*
         Process packet read above. This will propagate the packet through configured queues for the net.
      */
     httpServiceNetQueues(net, 0);
-assert(event->next);
-assert(event->prev);
 
     if (net->error || net->eof || (net->sentGoaway && !net->socketq->first)) {
         if (net->autoDestroy) {
@@ -14672,13 +14665,9 @@ assert(event->prev);
     }
     net->active = 0;
 
-    assert(event->next);
-    assert(event->prev);
     if (mprNeedYield()) {
         mprYield(0);
     }
-    assert(event->next);
-    assert(event->prev);
 }
 
 
@@ -15468,7 +15457,6 @@ PUBLIC int httpJoinPacket(HttpPacket *packet, HttpPacket *p)
 
     len = httpGetPacketLength(p);
     if (mprPutBlockToBuf(packet->content, mprGetBufStart(p->content), len) != len) {
-        assert(0);
         return MPR_ERR_MEMORY;
     }
     return 0;
@@ -16804,7 +16792,6 @@ static void processHeaders(HttpStream *stream)
                     *cp = '\0';
                 }
                 if (mprParseTime(&newDate, value, MPR_UTC_TIMEZONE, NULL) < 0) {
-                    assert(0);
                     break;
                 }
                 if (newDate) {
@@ -29643,3 +29630,4 @@ bool httpIsLastPacket(HttpPacket *packet)
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
  */
+

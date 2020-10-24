@@ -5695,7 +5695,6 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.limits.packet", parseLimitsPacket);
     httpAddConfig("http.limits.processes", parseLimitsProcesses);
     httpAddConfig("http.limits.requests", parseLimitsRequestsPerClient);
-    httpAddConfig("http.limits.requestsPerClient", parseLimitsRequestsPerClient);
     httpAddConfig("http.limits.sessions", parseLimitsSessions);
     httpAddConfig("http.limits.txBody", parseLimitsTxBody);
     httpAddConfig("http.limits.upload", parseLimitsUpload);
@@ -8738,7 +8737,6 @@ PUBLIC int httpAddPackedHeader(HttpHeaderTable *headers, cchar *key, cchar *valu
         headers->size -= (slen(kp->key) + slen(kp->value) + HTTP2_HEADER_OVERHEAD);
         if (headers->size < 0) {
             /* Should never happen */
-            assert(0);
             return MPR_ERR_BAD_STATE;
         }
     }
@@ -8784,7 +8782,6 @@ PUBLIC int httpSetPackedHeadersMax(HttpHeaderTable *headers, int max)
         headers->size -= (slen(kp->key) + slen(kp->value) + HTTP2_HEADER_OVERHEAD);
         if (headers->size < 0) {
             /* Should never happen */
-            assert(0);
             return MPR_ERR_BAD_STATE;
         }
     }
@@ -15460,7 +15457,6 @@ PUBLIC int httpJoinPacket(HttpPacket *packet, HttpPacket *p)
 
     len = httpGetPacketLength(p);
     if (mprPutBlockToBuf(packet->content, mprGetBufStart(p->content), len) != len) {
-        assert(0);
         return MPR_ERR_MEMORY;
     }
     return 0;
@@ -16796,7 +16792,6 @@ static void processHeaders(HttpStream *stream)
                     *cp = '\0';
                 }
                 if (mprParseTime(&newDate, value, MPR_UTC_TIMEZONE, NULL) < 0) {
-                    assert(0);
                     break;
                 }
                 if (newDate) {
@@ -29332,7 +29327,7 @@ static void outgoingWebSockService(HttpQueue *q)
             }
             *prefix = '\0';
             mprAdjustBufEnd(packet->prefix, prefix - packet->prefix->start);
-            httpLog(stream->trace, "websockets.tx.packet", "packet", 
+            httpLog(stream->trace, "websockets.tx.packet", "packet",
                 "wsSeqno:%d, wsTypeName:\"%s\", wsType:%d, wsLast:%d, wsLength:%zd",
                 ws->txSeq++, codetxt[packet->type], packet->type, packet->fin, httpGetPacketLength(packet));
         }

@@ -132,7 +132,7 @@ static char     *getPassword(void);
 static cchar    *getRedirectUrl(HttpStream *stream, cchar *url);
 static HttpStream *getStream(Request *req);
 static int      initSettings(void);
-static int      initSsl();
+static int      initSsl(void);
 static bool     isPort(cchar *name);
 static void     manageApp(App *app, int flags);
 static void     manageRequest(Request *req, int flags);
@@ -1541,7 +1541,7 @@ static char *extendUrl(cchar *url)
 }
 
 
-static int initSsl()
+static int initSsl(void)
 {
 #if ME_COM_SSL
     HttpUri     *uri;
