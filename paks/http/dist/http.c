@@ -1012,7 +1012,7 @@ static void startRequest(Request *req)
 static void notifier(HttpStream *stream, int event, int arg)
 {
     Request     *req;
-    int         limit;
+    int         delay, limit;
 
     req = stream->data;
 
@@ -1030,7 +1030,11 @@ static void notifier(HttpStream *stream, int event, int arg)
         if (++req->count >= limit || (!app->success && !app->continueOnErrors)) {
             finishRequest(req);
         } else {
-            mprCreateLocalEvent(stream->dispatcher, "startRequest", 0, startRequest, req, 0);
+            /*
+                Slight delay to better load balance threads
+             */
+            delay = app->loadThreads > 2 ? 2: 0;
+            mprCreateLocalEvent(stream->dispatcher, "startRequest", delay, startRequest, req, 0);
         }
     }
 }
