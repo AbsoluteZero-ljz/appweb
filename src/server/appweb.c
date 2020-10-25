@@ -544,9 +544,9 @@ static void statusCheck(void *ignored, MprSignal *sp)
     httpDumpCounters();
 #endif
     if (MPR->heap->track) {
-        mprPrintMem("MPR Memory Report", MPR_MEM_DETAIL);
+        mprPrintMem("\nMPR Memory Report", MPR_MEM_DETAIL);
     } else {
-        mprPrintMem("MPR Memory Report", 0);
+        mprPrintMem("\nMPR Memory Report", 0);
     }
 }
 
