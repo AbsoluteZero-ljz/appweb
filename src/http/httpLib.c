@@ -25939,10 +25939,9 @@ PUBLIC ssize httpWriteBlock(HttpQueue *q, cchar *buf, ssize len, int flags)
     }
     tx->responded = 1;
 
-    if (mprNeedYield()) {
+    if (mprNeedYield() && (flags & HTTP_BLOCK)) {
         mprYield(0);
     }
-
     for (totalWritten = 0; len > 0; ) {
         if (stream->state >= HTTP_STATE_FINALIZED || stream->net->error) {
             return MPR_ERR_CANT_WRITE;

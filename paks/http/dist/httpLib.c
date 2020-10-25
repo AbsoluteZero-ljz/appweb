@@ -25912,6 +25912,7 @@ PUBLIC bool httpFileExists(HttpStream *stream)
     Write a block of data. This is the lowest level write routine for data. This will buffer the data and flush if
     the queue buffer is full. Flushing is done by calling httpFlushQueue which will service queues as required.
     Flags can be HTTP_BUFFER, HTTP_BLOCK, HTTP_NON_BLOCK.
+    WARNING: may yield if using HTTP_BLOCK.
  */
 PUBLIC ssize httpWriteBlock(HttpQueue *q, cchar *buf, ssize len, int flags)
 {
@@ -25938,10 +25939,9 @@ PUBLIC ssize httpWriteBlock(HttpQueue *q, cchar *buf, ssize len, int flags)
     }
     tx->responded = 1;
 
-    if (mprNeedYield()) {
+    if (mprNeedYield() && (flags & HTTP_BLOCK)) {
         mprYield(0);
     }
-
     for (totalWritten = 0; len > 0; ) {
         if (stream->state >= HTTP_STATE_FINALIZED || stream->net->error) {
             return MPR_ERR_CANT_WRITE;
