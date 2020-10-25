@@ -827,9 +827,9 @@ PUBLIC void mprAtomicAdd64(volatile int64 *target, int64 value);
 #endif
 #ifndef ME_MPR_ALLOC_QUOTA
     #if ME_TUNE_SIZE
-        #define ME_MPR_ALLOC_QUOTA  (200 * 1024)        /* Total allocations before a GC is worthwhile */
+        #define ME_MPR_ALLOC_QUOTA  (100 * 1024)        /* Allocations before a GC. Scaled by workers/2 */
     #else
-        #define ME_MPR_ALLOC_QUOTA  (512 * 1024)
+        #define ME_MPR_ALLOC_QUOTA  (200 * 1024)
     #endif
 #endif
 #ifndef ME_MPR_ALLOC_REGION_SIZE

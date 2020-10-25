@@ -160,6 +160,7 @@ static int initQueues(void);
 static void invokeDestructors(void);
 static void markAndSweep(void);
 static void markRoots(void);
+static ME_INLINE bool needGc(MprHeap *heap);
 static int pauseThreads(void);
 static void printMemReport(void);
 static ME_INLINE void release(MprFreeQueue *freeq);
@@ -556,7 +557,7 @@ static MprMem *allocMem(size_t required)
                             mp->size = (MprMemSize) required;
                             ATOMIC_INC(splits);
                         }
-                        if (!heap->gcRequested && heap->workDone > heap->workQuota) {
+                        if (needGc(heap)) {
                             triggerGC(0);
                         }
                         ATOMIC_INC(reuse);
@@ -621,7 +622,7 @@ static MprMem *growHeap(size_t required)
     MprMem      *mp;
     size_t      size, rsize, spareLen;
 
-    if (required < MPR_ALLOC_MAX_BLOCK && (heap->workDone > heap->workQuota)) {
+    if (required < MPR_ALLOC_MAX_BLOCK && needGc(heap)) {
         triggerGC(1);
     }
     if (required >= MPR_ALLOC_MAX) {
@@ -995,7 +996,7 @@ PUBLIC int mprGC(int flags)
          */
         mprYield(MPR_YIELD_STICKY);
     }
-    if ((flags & (MPR_GC_FORCE | MPR_GC_COMPLETE)) || (heap->workDone > heap->workQuota)) {
+    if ((flags & (MPR_GC_FORCE | MPR_GC_COMPLETE)) || needGc(heap)) {
         triggerGC(flags & (MPR_GC_FORCE | MPR_GC_COMPLETE));
     }
     if (!(flags & MPR_GC_NO_BLOCK)) {
@@ -2577,6 +2578,16 @@ static void monitorStack()
     }
 }
 #endif
+
+
+static ME_INLINE bool needGc(MprHeap *heap)
+{
+    if (!heap->gcRequested && heap->workDone > (heap->workQuota * (mprGetBusyWorkerCount() / 2 + 1))) {
+        return 1;
+    }
+    return 0;
+}
+
 
 #if !ME_MPR_ALLOC_DEBUG
 #undef mprSetName

@@ -540,14 +540,14 @@ static void traceHandler(void *ignored, MprSignal *sp)
 static void statusCheck(void *ignored, MprSignal *sp)
 {
     mprLog(0, 0, "%s", httpStatsReport(0));
+#if ME_HTTP_DEFENSE
+    httpDumpCounters();
+#endif
     if (MPR->heap->track) {
         mprPrintMem("MPR Memory Report", MPR_MEM_DETAIL);
     } else {
         mprPrintMem("MPR Memory Report", 0);
     }
-#if ME_HTTP_DEFENSE
-    httpDumpCounters();
-#endif
 }
 
 
