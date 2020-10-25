@@ -2624,6 +2624,7 @@ PUBLIC ssize httpWrite(HttpQueue *q, cchar *fmt, ...) PRINTF_ATTRIBUTE(2,3);
     @param size of the data in buf
     @param flags Set to HTTP_BLOCK for blocking operation or HTTP_NON_BLOCK for non-blocking. Set to HTTP_BUFFER to
         buffer the data if required and never block. Set to zero will default to HTTP_BUFFER.
+        This call may yield via mprYield if flags are set to HTTP_BLOCK.
     @return The size value if successful or a negative MPR error code.
     @ingroup HttpQueue
     @stability Evolving
