@@ -160,7 +160,7 @@ static int initQueues(void);
 static void invokeDestructors(void);
 static void markAndSweep(void);
 static void markRoots(void);
-static ME_INLINE bool needGc(MprHeap *heap);
+static ME_INLINE bool needGC(MprHeap *heap);
 static int pauseThreads(void);
 static void printMemReport(void);
 static ME_INLINE void release(MprFreeQueue *freeq);
@@ -557,7 +557,7 @@ static MprMem *allocMem(size_t required)
                             mp->size = (MprMemSize) required;
                             ATOMIC_INC(splits);
                         }
-                        if (needGc(heap)) {
+                        if (needGC(heap)) {
                             triggerGC(0);
                         }
                         ATOMIC_INC(reuse);
@@ -622,7 +622,7 @@ static MprMem *growHeap(size_t required)
     MprMem      *mp;
     size_t      size, rsize, spareLen;
 
-    if (required < MPR_ALLOC_MAX_BLOCK && needGc(heap)) {
+    if (required < MPR_ALLOC_MAX_BLOCK && needGC(heap)) {
         triggerGC(1);
     }
     if (required >= MPR_ALLOC_MAX) {
@@ -996,7 +996,7 @@ PUBLIC int mprGC(int flags)
          */
         mprYield(MPR_YIELD_STICKY);
     }
-    if ((flags & (MPR_GC_FORCE | MPR_GC_COMPLETE)) || needGc(heap)) {
+    if ((flags & (MPR_GC_FORCE | MPR_GC_COMPLETE)) || needGC(heap)) {
         triggerGC(flags & (MPR_GC_FORCE | MPR_GC_COMPLETE));
     }
     if (!(flags & MPR_GC_NO_BLOCK)) {
@@ -1236,6 +1236,12 @@ static void sweeperThread(void *unused, MprThread *tp)
  */
 static void markAndSweep()
 {
+    MprThreadService    *ts;
+    int                 threadCount;
+
+    ts = MPR->threadService;
+    threadCount = ts->threads->length;
+
     if (!pauseThreads()) {
 #if ME_MPR_ALLOC_STATS && ME_MPR_ALLOC_DEBUG && MPR_ALLOC_TRACE
         static int warnOnce = 0;
@@ -1263,18 +1269,23 @@ static void markAndSweep()
     mprGlobalUnlock();
 
     /*
-        Sweep unused memory. Sweeping goes on in parallel with running threads.
+        Sweep unused memory. If less than 4 threds, sweeping goes on in parallel with running threads.
+        Otherwise, with high thread loads, the sweeper can be starved which leads to memory growth.
      */
     heap->sweeping = 1;
 
-    resumeThreads(YIELDED_THREADS);
-
+    if (threadCount < 4) {
+        resumeThreads(YIELDED_THREADS);
+    }
     sweep();
     heap->sweeping = 0;
 
     /*
         Resume threads waiting for the sweeper to complete
      */
+    if (threadCount >= 4) {
+        resumeThreads(YIELDED_THREADS);
+    }
     resumeThreads(WAITING_THREADS);
 }
 
@@ -2580,7 +2591,7 @@ static void monitorStack()
 #endif
 
 
-static ME_INLINE bool needGc(MprHeap *heap)
+static ME_INLINE bool needGC(MprHeap *heap)
 {
     if (!heap->gcRequested && heap->workDone > (heap->workQuota * (mprGetBusyWorkerCount() / 2 + 1))) {
         return 1;
@@ -9860,12 +9871,11 @@ PUBLIC int mprServiceEvents(MprTicks timeout, int flags)
              */
             if (dp->flags & MPR_DISPATCHER_IMMEDIATE) {
                 dispatchEventsHelper(dp);
-            } else {
-                if (mprStartWorker((MprWorkerProc) dispatchEventsHelper, dp) < 0) {
-                    releaseDispatcher(dp);
-                    queueDispatcher(es->pendingQ, dp);
-                    break;
-                }
+
+            } else if (mprStartWorker((MprWorkerProc) dispatchEventsHelper, dp) < 0) {
+                releaseDispatcher(dp);
+                queueDispatcher(es->pendingQ, dp);
+                break;
             }
         }
         if (flags & MPR_SERVICE_NO_BLOCK) {
@@ -9882,7 +9892,7 @@ PUBLIC int mprServiceEvents(MprTicks timeout, int flags)
             }
             unlock(es);
             /*
-                Service IO events
+                Service IO events. Will Yield.
              */
             mprWaitForIO(MPR->waitService, delay);
         }
