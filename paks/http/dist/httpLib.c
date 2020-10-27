@@ -9808,29 +9808,25 @@ static int getFrameFlags(HttpQueue *q, HttpPacket *packet)
     HttpNet     *net;
     HttpStream  *stream;
     HttpTx      *tx;
-    int         flags, type;
+    int         flags;
 
     net = q->net;
     stream = packet->stream;
     tx = stream->tx;
     flags = 0;
-    type = -1;
 
     if (packet->flags & HTTP_PACKET_HEADER && packet->last) {
-        type = HTTP2_HEADERS_FRAME;
         flags |= HTTP2_END_HEADERS_FLAG;
 
     } else if (packet->flags & HTTP_PACKET_DATA && packet->last) {
-        type = HTTP2_DATA_FRAME;
         flags |= HTTP2_END_STREAM_FLAG;
         tx->allDataSent = 1;
 
     } else if (packet->flags & HTTP_PACKET_END && !tx->allDataSent) {
-        type = HTTP2_DATA_FRAME;
         flags |= HTTP2_END_STREAM_FLAG;
         tx->allDataSent = 1;
     }
-    if (type == HTTP2_DATA_FRAME) {
+    if (packet->flags & HTTP_PACKET_DATA) {
         assert(net->outputq->window > 0);
         net->outputq->window -= httpGetPacketLength(packet);
     }
@@ -9858,6 +9854,15 @@ static ssize resizePacket(HttpQueue *q, ssize max, HttpPacket *packet)
     }
     return len;
 }
+
+
+PUBLIC void httpFinalizeHttp2Stream(HttpStream *stream)
+{
+    if (stream->h2State >= H2_CLOSED) {
+        httpDestroyStream(stream);
+    }
+}
+
 
 
 /*
@@ -14085,7 +14090,6 @@ static void manageNet(HttpNet *net, int flags)
         mprMark(net->context);
         mprMark(net->data);
         mprMark(net->dispatcher);
-        mprMark(net->ejs);
         mprMark(net->endpoint);
         mprMark(net->errorMsg);
         mprMark(net->holdq);
@@ -14096,7 +14100,6 @@ static void manageNet(HttpNet *net, int flags)
         mprMark(net->newDispatcher);
         mprMark(net->oldDispatcher);
         mprMark(net->outputq);
-        mprMark(net->pool);
         mprMark(net->serviceq);
         mprMark(net->sock);
         mprMark(net->socketq);
@@ -14108,6 +14111,10 @@ static void manageNet(HttpNet *net, int flags)
         mprMark(net->frame);
         mprMark(net->rxHeaders);
         mprMark(net->txHeaders);
+#endif
+#if DEPRECATE
+        mprMark(net->pool);
+        mprMark(net->ejs);
 #endif
     }
 }
@@ -14309,6 +14316,7 @@ PUBLIC void httpSetNetContext(HttpNet *net, void *context)
 }
 
 
+#if DEPRECATE
 /*
     Used by ejs
  */
@@ -14334,6 +14342,7 @@ PUBLIC void httpUsePrimary(HttpNet *net)
     net->worker = 0;
     unlock(net->http);
 }
+#endif
 
 
 #if DEPRECATED || 1
@@ -14778,7 +14787,7 @@ static void netOutgoingService(HttpQueue *q)
             adjustNetVec(net, written);
 
         } else {
-            /* Socket full or SSL negotiate */
+            // Socket full or SSL negotiate
             net->writeBlocked = 1;
             break;
         }
@@ -14807,6 +14816,7 @@ static MprOff buildNetVec(HttpQueue *q)
         the queue for now, they are removed after the IO is complete for the entire packet. mprWriteSocketVector will
         use O/S vectored writes or aggregate packets into a single write where appropriate.
      */
+     net->ioCount = 0;
      for (packet = q->first; packet; packet = packet->next) {
         if (net->ioIndex >= (ME_MAX_IOVEC - 2)) {
             break;
@@ -14843,7 +14853,6 @@ static void addPacketForNet(HttpQueue *q, HttpPacket *packet)
         assert(!stream->error);
         assert(!net->stream->error);
         net->ioFile = stream->tx->file;
-        // net->ioFileSize = packet->esize;
         net->ioCount += packet->esize;
     }
 }
@@ -14953,7 +14962,6 @@ static void adjustNetVec(HttpNet *net, ssize written)
         net->ioCount = 0;
         net->ioPos = 0;
         net->ioFile = 0;
-        // net->ioFileSize = 0;
 
     } else {
         /*
@@ -25282,6 +25290,10 @@ PUBLIC void httpFinalizeConnector(HttpStream *stream)
     tx = stream->tx;
     tx->finalizedConnector = 1;
     checkFinalized(stream);
+
+    if (stream->net->protocol >= 2) {
+        httpFinalizeHttp2Stream(stream);
+    }
 }
 
 
