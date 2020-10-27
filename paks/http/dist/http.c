@@ -461,6 +461,15 @@ static int parseArgs(int argc, char **argv)
             }
             app->needSsl = 1;
 
+        } else if (smatch(argp, "--load") || smatch(argp, "-L")) {
+            //  Undocumented and unsupported.  -i 0 -q -v -D
+            app->iterations = MAXINT;
+            mprSetDebugMode(1);
+            app->timeout = HTTP_UNLIMITED;
+            app->maxRetries = 0;
+            app->noout++;
+            app->verbose++;
+
         } else if (smatch(argp, "--log") || smatch(argp, "-l")) {
             if (nextArg >= argc) {
                 return showUsage();

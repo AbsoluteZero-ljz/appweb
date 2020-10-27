@@ -3270,7 +3270,7 @@ typedef struct HttpNet {
     void            *data;                  /**< Custom data */
     uint64          seqno;                  /**< Unique network sequence number */
 
-#if KEEP || 1
+#if DEPRECATE
     void            *ejs;                   /**< Embedding VM */
     void            *pool;                  /**< Pool of VMs */
 #endif
@@ -7654,6 +7654,16 @@ PUBLIC void httpFinalize(HttpStream *stream);
     @internal
  */
 PUBLIC void httpFinalizeConnector(HttpStream *stream);
+
+/**
+    Finalize a HTTP/2 stream when the connector output has sent the response.
+    @description This should only be called by httpFinalizeConnector
+    @param stream HttpStream object created via #httpCreateStream
+    @ingroup HttpTx
+    @stability Internal
+    @internal
+ */
+PUBLIC void httpFinalizeHttp2Stream(HttpStream *stream);
 
 /**
     Finalize transmission of the http response
