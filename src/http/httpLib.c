@@ -9808,29 +9808,25 @@ static int getFrameFlags(HttpQueue *q, HttpPacket *packet)
     HttpNet     *net;
     HttpStream  *stream;
     HttpTx      *tx;
-    int         flags, type;
+    int         flags;
 
     net = q->net;
     stream = packet->stream;
     tx = stream->tx;
     flags = 0;
-    type = -1;
 
     if (packet->flags & HTTP_PACKET_HEADER && packet->last) {
-        type = HTTP2_HEADERS_FRAME;
         flags |= HTTP2_END_HEADERS_FLAG;
 
     } else if (packet->flags & HTTP_PACKET_DATA && packet->last) {
-        type = HTTP2_DATA_FRAME;
         flags |= HTTP2_END_STREAM_FLAG;
         tx->allDataSent = 1;
 
     } else if (packet->flags & HTTP_PACKET_END && !tx->allDataSent) {
-        type = HTTP2_DATA_FRAME;
         flags |= HTTP2_END_STREAM_FLAG;
         tx->allDataSent = 1;
     }
-    if (type == HTTP2_DATA_FRAME) {
+    if (packet->flags & HTTP_PACKET_DATA) {
         assert(net->outputq->window > 0);
         net->outputq->window -= httpGetPacketLength(packet);
     }
