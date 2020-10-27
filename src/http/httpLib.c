@@ -9856,6 +9856,15 @@ static ssize resizePacket(HttpQueue *q, ssize max, HttpPacket *packet)
 }
 
 
+PUBLIC void httpFinalizeHttp2Stream(HttpStream *stream)
+{
+    if (stream->h2State >= H2_CLOSED) {
+        httpDestroyStream(stream);
+    }
+}
+
+
+
 /*
     Close the network connection on errors of if instructed to go away.
  */
@@ -25278,6 +25287,10 @@ PUBLIC void httpFinalizeConnector(HttpStream *stream)
     tx = stream->tx;
     tx->finalizedConnector = 1;
     checkFinalized(stream);
+
+    if (stream->net->protocol >= 2) {
+        httpFinalizeHttp2Stream(stream);
+    }
 }
 
 
