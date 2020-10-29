@@ -1410,9 +1410,10 @@ static ssize writeBody(HttpStream *stream)
             }
         }
         if (req->file) {
+            /*
             if (app->verbose) {
                 mprPrintf("Uploading: %s\n", req->path);
-            }
+            } */
             while ((bytes = mprReadFile(req->file, buf, sizeof(buf))) > 0) {
                 sofar = 0;
                 while (bytes > 0) {
