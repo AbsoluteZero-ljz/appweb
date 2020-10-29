@@ -1035,7 +1035,7 @@ static void notifier(HttpStream *stream, int event, int arg)
     case HTTP_EVENT_ERROR:
         break;
     case HTTP_EVENT_DONE:
-        limit = app->files ? mprGetListLength(app->files) : app->iterations;
+        limit = (app->files && mprGetListLength(app->files) > 1) ? mprGetListLength(app->files) : app->iterations;
         if (++req->count >= limit || (!app->success && !app->continueOnErrors)) {
             finishRequest(req);
         } else {
@@ -1194,8 +1194,12 @@ static int prepUri(Request *req)
             mprPrintf("Uploading: %s\n", req->url);
         }
 
-    } else if (app->files && mprGetListLength(app->files) > req->count) {
-        path = mprGetItem(app->files, req->count);
+    } else if (app->files) {
+        if (mprGetListLength(app->files) == 1) {
+            path = mprGetItem(app->files, 0);
+        } else {
+            path = mprGetItem(app->files, req->count);
+        }
         if (strcmp(path, "-") == 0) {
             file = mprAttachFileFd(0, "stdin", O_RDONLY | O_BINARY);
         } else {
