@@ -1190,9 +1190,10 @@ static int prepUri(Request *req)
 
     } else if (req->upload) {
         req->url = extendUrl(app->target);
+        /*
         if (app->verbose) {
             mprPrintf("Uploading: %s\n", req->url);
-        }
+        } */
 
     } else if (app->files) {
         if (mprGetListLength(app->files) == 1) {
@@ -1222,9 +1223,10 @@ static int prepUri(Request *req)
             req->url = sclone(app->target);
         }
         req->url = extendUrl(req->url);
+        /*
         if (app->verbose) {
             mprPrintf("Putting: %s to %s\n", path, req->url);
-        }
+        } */
     } else {
         req->url = extendUrl(app->target);
     }
