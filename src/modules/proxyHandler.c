@@ -405,7 +405,6 @@ static void proxyFrontNotifier(HttpStream *stream, int event, int arg)
     net = stream->net;
     assert(net->endpoint);
 
-    // mprLog("proxyFrontNotifier", 0, "Proxy Front Event %d, state %d", event, stream->state);
     if ((req = stream->writeq->queueData) == 0) {
         return;
     }
@@ -413,7 +412,12 @@ static void proxyFrontNotifier(HttpStream *stream, int event, int arg)
     case HTTP_EVENT_READABLE:
     case HTTP_EVENT_WRITABLE:
     case HTTP_EVENT_ERROR:
+        break;
     case HTTP_EVENT_DESTROY:
+        if (req->proxyStream->state < HTTP_STATE_FINALIZED) {
+            httpError(req->proxyStream, 0, "Client closed connection before receiving a response");
+            httpFinalizeInput(req->proxyStream);
+        }
         break;
 
     case HTTP_EVENT_STATE:
@@ -438,6 +442,8 @@ static void proxyFrontNotifier(HttpStream *stream, int event, int arg)
             break;
         case HTTP_STATE_RUNNING:
         case HTTP_STATE_FINALIZED:
+            break;
+
         case HTTP_STATE_COMPLETE:
             break;
         }
@@ -482,6 +488,7 @@ static void proxyBackNotifier(HttpStream *proxyStream, int event, int arg)
             mprPushItem(req->app->networks, net);
         }
         break;
+
     case HTTP_EVENT_ERROR:
         for (ITERATE_ITEMS(req->app->requests, rq, next)) {
             mprCreateLocalEvent(req->stream->dispatcher, "proxy-reap", 0, proxyCleanRequest, req, 0);
