@@ -5766,7 +5766,7 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.limits.webSocketsFrame", parseLimitsWebSocketsFrame);
 #endif
 
-#if DEPRECATE || 1
+#if DEPRECATED
     httpAddConfig("http.server.log", parseLog);
     httpAddConfig("http.limits.buffer", parseLimitsPacket);
 #endif
@@ -14077,6 +14077,7 @@ PUBLIC void httpDestroyNet(HttpNet *net)
             /* Don't zero just incase another thread (in error) uses net->sock */
         }
         if (net->dispatcher && !(net->sharedDispatcher) && net->dispatcher->flags & MPR_DISPATCHER_AUTO) {
+            assert(net->streams->length == 0);
             mprDestroyDispatcher(net->dispatcher);
             /* Don't NULL net->dispatcher just incase another thread (in error) uses net->dispatcher */
         }
@@ -14118,7 +14119,7 @@ static void manageNet(HttpNet *net, int flags)
         mprMark(net->rxHeaders);
         mprMark(net->txHeaders);
 #endif
-#if DEPRECATE
+#if DEPRECATED
         mprMark(net->pool);
         mprMark(net->ejs);
 #endif
@@ -14247,6 +14248,7 @@ static void manageHeaderTable(HttpHeaderTable *table, int flags)
 
 PUBLIC void httpAddStream(HttpNet *net, HttpStream *stream)
 {
+    assert(!(net->dispatcher->flags & MPR_DISPATCHER_DESTROYED));
     if (mprLookupItem(net->streams, stream) < 0) {
         mprAddItem(net->streams, stream);
     }
@@ -14272,7 +14274,7 @@ PUBLIC void httpNetTimeout(HttpNet *net)
         /*
             Will run on the HttpNet dispatcher unless shutting down and it is destroyed already
          */
-        assert(!(net->dispatcher->flags & MPR_DISPATCHER_DESTROYED));
+        assert(net->dispatcher == NULL || !(net->dispatcher->flags & MPR_DISPATCHER_DESTROYED));
         net->timeoutEvent = mprCreateLocalEvent(net->dispatcher, "netTimeout", 0, netTimeout, net, 0);
     }
 }
@@ -14323,7 +14325,7 @@ PUBLIC void httpSetNetContext(HttpNet *net, void *context)
 }
 
 
-#if DEPRECATE
+#if DEPRECATED
 /*
     Used by ejs
  */
@@ -14352,7 +14354,7 @@ PUBLIC void httpUsePrimary(HttpNet *net)
 #endif
 
 
-#if DEPRECATED || 1
+#if DEPRECATED
 PUBLIC void httpBorrowNet(HttpNet *net)
 {
     assert(!net->borrowed);
@@ -14375,6 +14377,7 @@ PUBLIC void httpReturnNet(HttpNet *net)
 #endif
 
 
+#if DEPRECATE || 1
 /*
     Steal the socket object from a network. This disconnects the socket from management by the Http service.
     It is the callers responsibility to call mprCloseSocket when required.
@@ -14420,6 +14423,7 @@ PUBLIC Socket httpStealSocketHandle(HttpNet *net)
 {
     return mprStealSocketHandle(net->sock);
 }
+#endif
 
 
 PUBLIC cchar *httpGetProtocol(HttpNet *net)
@@ -14673,7 +14677,6 @@ PUBLIC void httpIOEvent(HttpNet *net, MprEvent *event)
      */
     httpServiceNetQueues(net, 0);
 
-    //  MOB - HTTP/1 probably should continue to service request?
     if (net->error || net->eof || (net->sentGoaway && !net->socketq->first)) {
         closeStreams(net);
         if (net->autoDestroy) {
@@ -23322,9 +23325,6 @@ static void manageStream(HttpStream *stream, int flags)
         mprMark(stream->context);
         mprMark(stream->data);
         mprMark(stream->dispatcher);
-#if DEPRECATED
-        mprMark(stream->ejs);
-#endif
         mprMark(stream->endpoint);
         mprMark(stream->errorMsg);
         mprMark(stream->grid);
@@ -23353,6 +23353,9 @@ static void manageStream(HttpStream *stream, int flags)
         mprMark(stream->user);
         mprMark(stream->username);
         mprMark(stream->writeq);
+#if DEPRECATED
+        mprMark(stream->ejs);
+#endif
     }
 }
 
@@ -28186,7 +28189,7 @@ static void addParamsFromBuf(HttpStream *stream, cchar *buf, ssize len)
                 Append to existing keywords
              */
             prior = mprGetJsonObj(params, keyword);
-#if (ME_EJS_PRODUCT || ME_EJSCRIPT_PRODUCT) && (DEPRECATED || 1)
+#if (ME_EJS_PRODUCT || ME_EJSCRIPT_PRODUCT)
             if (prior && prior->type == MPR_JSON_VALUE) {
                 if (*value) {
                     newValue = sjoin(prior->value, " ", value, NULL);
