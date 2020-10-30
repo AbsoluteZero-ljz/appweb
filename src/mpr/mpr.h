@@ -751,17 +751,17 @@ PUBLIC void mprAtomicAdd64(volatile int64 *target, int64 value);
 
 #if ME_COMPILER_HAS_ATOMIC
     #define mprAtomicLoad(ptr, ret, model) __atomic_load(ptr, ret, model)
-    #define mprAtomicStore(ptr, val, model) __atomic_store(ptr, val, model)
+    #define mprAtomicStore(ptr, valptr, model) __atomic_store(ptr, valptr, model)
 #else
     #define mprAtomicLoad(ptr, ret, model) \
         if (1) { \
             mprAtomicBarrier(model); \
-            *ret = *ptr; \
+            *ret = *(ptr); \
         } else
-    #define mprAtomicStore(ptr, val, model) \
+    #define mprAtomicStore(ptr, valptr, model) \
         if (1) { \
             mprAtomicBarrier(model); \
-            *ptr = val; \
+            *ptr = *(valptr); \
         } else
 
 #endif
