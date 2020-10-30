@@ -14056,6 +14056,9 @@ PUBLIC void httpDestroyNet(HttpNet *net)
         if (httpIsServer(net)) {
             for (ITERATE_ITEMS(net->streams, stream, next)) {
                 mprRemoveItem(net->streams, stream);
+                if (HTTP_STATE_BEGIN < stream->state && stream->state < HTTP_STATE_COMPLETE && !stream->destroyed) {
+                    httpSetState(stream, HTTP_STATE_COMPLETE);
+                }
                 httpDestroyStream(stream);
                 next--;
             }
@@ -14266,6 +14269,7 @@ PUBLIC void httpNetTimeout(HttpNet *net)
         /*
             Will run on the HttpNet dispatcher unless shutting down and it is destroyed already
          */
+        assert(!(net->dispatcher->flags & MPR_DISPATCHER_DESTROYED));
         net->timeoutEvent = mprCreateLocalEvent(net->dispatcher, "netTimeout", 0, netTimeout, net, 0);
     }
 }
@@ -14666,11 +14670,11 @@ PUBLIC void httpIOEvent(HttpNet *net, MprEvent *event)
      */
     httpServiceNetQueues(net, 0);
 
+    //  MOB - HTTP/1 probably should continue to service request?
     if (net->error || net->eof || (net->sentGoaway && !net->socketq->first)) {
+        closeStreams(net);
         if (net->autoDestroy) {
             httpDestroyNet(net);
-        } else if (httpIsClient(net)){
-            closeStreams(net);
         }
     } else if (net->async && !net->delay) {
         httpEnableNetEvents(net);
@@ -23572,6 +23576,7 @@ PUBLIC void httpStreamTimeout(HttpStream *stream)
         /*
             Will run on the HttpStream dispatcher unless shutting down and it is destroyed already
          */
+        assert(!(stream->dispatcher->flags & MPR_DISPATCHER_DESTROYED));
         stream->timeoutEvent = mprCreateLocalEvent(stream->dispatcher, "streamTimeout", 0, streamTimeout, stream, 0);
     }
 }

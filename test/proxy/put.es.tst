@@ -8,8 +8,12 @@ let http: Http = new Http
 //  Test http.put with content data
 data = Path("test.dat").readString()
 http.put(HTTP + "/tmp/test.dat", data)
+if (http.status != 201 && http.status != 204) {
+    print("STATUS", http.status)
+    print(http.response)
+}
 ttrue(http.status == 201 || http.status == 204)
-http.reset()
+http.close()
 
 //  This request should hang because we don't write any data and finalize. Wait with a timeout.
 http.setHeader("Content-Length", 1000)
