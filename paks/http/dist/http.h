@@ -1046,9 +1046,6 @@ typedef struct Http {
     struct HttpStage *cgiConnector;         /**< CGI connector */
     struct HttpStage *dirHandler;           /**< Directory listing handler */
     struct HttpStage *egiHandler;           /**< Embedded Gateway Interface (EGI) handler */
-#if DEPRECATED
-    struct HttpStage *ejsHandler;           /**< Ejscript Web Framework handler */
-#endif
     struct HttpStage *espHandler;           /**< ESP Web Framework handler */
     struct HttpStage *fastHandler;          /**< FastCGI handler */
     struct HttpStage *fastConnector;        /**< FastCGI connector */
@@ -1128,6 +1125,9 @@ typedef struct Http {
     HttpRequestCallback  requestCallback;   /**< Request completion callback */
     HttpNetCallback      netCallback;       /**< Default network event callback */
 
+#if DEPRECATED
+    struct HttpStage *ejsHandler;           /**< Ejscript Web Framework handler */
+#endif
 } Http;
 
 #if DOXYGEN
@@ -3223,7 +3223,7 @@ typedef void (*HttpIOCallback)(struct HttpNet *net, MprEvent *event);
     Control object for the network connection. A network connection may multiplex many HttpStream objects that represent
     logical streams over the connection.
     @defgroup HttpNet HttpNet
-    @see HttpNet httpCreateNet httpDestroyNet httpIOEvent httpNetError httpServiceNetQueues httpSetIOCallback httpSetNetContext httpStealSocket httpStealSocketHandle httpEnableNetEvents httpNetTimeout httpGetProtocol httpGetAsync httpSetAsync httpConnectNet
+    @see HttpNet httpCreateNet httpDestroyNet httpIOEvent httpNetError httpServiceNetQueues httpSetIOCallback httpSetNetContext httpEnableNetEvents httpNetTimeout httpGetProtocol httpGetAsync httpSetAsync httpConnectNet
     @stability Internal
  */
 typedef struct HttpNet {
@@ -3270,11 +3270,6 @@ typedef struct HttpNet {
     void            *data;                  /**< Custom data */
     uint64          seqno;                  /**< Unique network sequence number */
 
-#if DEPRECATE
-    void            *ejs;                   /**< Embedding VM */
-    void            *pool;                  /**< Pool of VMs */
-#endif
-
     int             delay;                  /**< Delay servicing requests due to defense strategy */
     int             nextStreamID;           /**< Next stream ID */
     int             lastStreamID;           /**< Last stream ID */
@@ -3289,9 +3284,6 @@ typedef struct HttpNet {
     bool            servicing;              /**< Servicing net request (server side) */
     bool            async: 1;               /**< Network is in async mode (non-blocking) */
     bool            autoDestroy: 1;         /**< Destroy the network automatically after IO events if appropriate */
-#if DEPRECATED || 1
-    bool            borrowed: 1;            /**< Socket has been borrowed */
-#endif
     bool            destroyed: 1;           /**< Net object has been destroyed */
     bool            eof: 1;                 /**< Socket has been closed */
     bool            error: 1;               /**< Hard network error - cannot continue */
@@ -3310,19 +3302,31 @@ typedef struct HttpNet {
     bool            worker: 1;              /**< Use worker */
     bool            writeBlocked: 1;        /**< Transmission writing is blocked */
 
+#if DEPRECATED || 1
+    /*
+        This will be removed in Appweb 10
+     */
+    bool            borrowed: 1;            /**< Socket has been borrowed */
+#endif
+
     /*
         Network connector instance data
      */
     MprIOVec            iovec[ME_MAX_IOVEC];
-    int                 ioIndex;                /**< Next index into iovec */
-    MprOff              ioCount;                /**< Count of bytes in iovec including file I/O */
-    MprOff              ioPos;                  /**< Position in file */
-    //MprOff              ioFileSize;             /**< Size of file */
-    MprFile             *ioFile;                /**< File to send */
+    int                 ioIndex;            /**< Next index into iovec */
+    MprOff              ioCount;            /**< Count of bytes in iovec including file I/O */
+    MprOff              ioPos;              /**< Position in file */
+    //MprOff              ioFileSize;       /**< Size of file */
+    MprFile             *ioFile;            /**< File to send */
+
+#if DEPRECATED
+    void            *ejs;                   /**< Embedding VM */
+    void            *pool;                  /**< Pool of VMs */
+#endif
 
 } HttpNet;
 
-#if DEPRECATED || 1
+#if DEPRECATED
 /**
     Borrow a network connection
     @description Borrow the network from Http. This effectively gains an exclusive loan of the network so that it
@@ -3482,7 +3486,7 @@ PUBLIC void httpNetError(HttpNet *net, cchar *fmt, ...);
   */
 PUBLIC void httpNetTimeout(HttpNet *net);
 
-#if DEPRECATED || 1
+#if DEPRECATED
 /**
     Return a borrowed a network connection
     @description Returns a borrowed network object back to the Http engine. This ends the exclusive loan of the
@@ -3591,6 +3595,7 @@ PUBLIC void httpSetNetError(HttpNet *net);
  */
 PUBLIC void httpSetNetProtocol(HttpNet *net, int protocol);
 
+#if DEPRECATE || 1
 /**
     Steal a socket from a network
     @description Steal the MprSocket object from a network so the caller can assume total responsibility for the socket.
@@ -3619,6 +3624,7 @@ PUBLIC MprSocket *httpStealSocket(HttpNet *net);
     @stability Evolving
  */
 PUBLIC Socket httpStealSocketHandle(HttpNet *net);
+#endif
 
 /*
     Internal
@@ -3772,9 +3778,6 @@ typedef struct HttpStream {
     char            *boundary;              /**< File upload boundary */
     void            *context;               /**< Embedding context (EjsRequest) */
     void            *data;                  /**< Custom data for request - must be a managed reference */
-#if DEPRECATED
-    void            *ejs;                   /**< Embedding VM */
-#endif
     cchar           *errorMsg;              /**< Error message for the last request (if any) */
     void            *grid;                  /**< Current request database grid for MVC apps */
     char            *ip;                    /**< Remote client IP address */
@@ -3822,6 +3825,10 @@ typedef struct HttpStream {
     HttpIOCallback  ioCallback;             /**< I/O event callback */
     HttpHeadersCallback headersCallback;    /**< Callback to fill headers */
     void            *headersCallbackArg;    /**< Arg to fillHeaders */
+
+#if DEPRECATED
+    void            *ejs;                   /**< Embedding VM */
+#endif
 } HttpStream;
 
 /**
@@ -5250,15 +5257,6 @@ typedef struct HttpRoute {
     bool            corsCredentials;        /**< Whether to emit an Access-Control-Allow-Credentials */
     int             corsAge;                /**< Age in seconds of the pre-flight authorization */
 
-#if DEPRECATED
-    /*
-        Used by Ejscript
-     */
-    char            *script;                /**< Startup script for handlers serving this route */
-    char            *scriptPath;            /**< Startup script path for handlers serving this route */
-    int             workers;                /**< Number of workers to use for this route */
-#endif
-
     MprHash         *methods;               /**< Matching HTTP methods */
     MprList         *params;                /**< Matching param field data */
     MprList         *requestHeaders;        /**< Required request header values */
@@ -5274,6 +5272,15 @@ typedef struct HttpRoute {
     struct MprSsl   *ssl;                   /**< SSL configuration */
     char            *webSocketsProtocol;    /**< WebSockets sub-protocol */
     MprTicks        webSocketsPingPeriod;   /**< Time between pings (msec) */
+
+#if DEPRECATED
+    /*
+        Used by Ejscript
+     */
+    char            *script;                /**< Startup script for handlers serving this route */
+    char            *scriptPath;            /**< Startup script path for handlers serving this route */
+    int             workers;                /**< Number of workers to use for this route */
+#endif
 
 } HttpRoute;
 
