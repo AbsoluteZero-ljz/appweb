@@ -414,9 +414,10 @@ static void proxyFrontNotifier(HttpStream *stream, int event, int arg)
     case HTTP_EVENT_ERROR:
         break;
     case HTTP_EVENT_DESTROY:
-        if (req->proxyStream->state < HTTP_STATE_FINALIZED) {
+        if (HTTP_STATE_BEGIN < req->proxyStream->state && req->proxyStream->state < HTTP_STATE_FINALIZED) {
             httpError(req->proxyStream, 0, "Client closed connection before receiving a response");
             httpFinalizeInput(req->proxyStream);
+            req->proxyNet->dispatcher = 0;
         }
         break;
 
