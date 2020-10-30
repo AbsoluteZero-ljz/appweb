@@ -8905,6 +8905,9 @@ static void incomingHttp1(HttpQueue *q, HttpPacket *packet)
             httpPutPacket(stream->inputq, packet);
         }
     }
+    if (stream->error && packet && packet->flags & HTTP_PACKET_END) {
+        httpFinalizeInput(stream);
+    }
 }
 
 
