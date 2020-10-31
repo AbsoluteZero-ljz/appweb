@@ -3147,7 +3147,7 @@ static bool canUse(HttpNet *net, HttpStream *stream, HttpUri *uri, MprSsl *ssl, 
     if (port != net->port || !smatch(ip, net->ip) || uri->secure != (sock->ssl != 0) || sock->ssl != ssl) {
         return 0;
     }
-    if (net->protocol == 0 || (net->protocol < 2 && stream->keepAliveCount <= 1)) {
+    if (net->eof || net->protocol == 0 || (net->protocol < 2 && stream->keepAliveCount <= 1)) {
         return 0;
     }
     return 1;
@@ -3197,6 +3197,7 @@ PUBLIC int httpConnect(HttpStream *stream, cchar *method, cchar *url, MprSsl *ss
         if (net->error) {
             mprCloseSocket(net->sock, 0);
             net->sock = 0;
+            net->eof = 0;
 
         } else if (canUse(net, stream, uri, ssl, ip, port)) {
             httpLog(stream->trace, "client.connection.reuse", "context", "msg:Reuse connection, IP:%s, PORT:%d, KeepAlive:%d", ip, port, stream->keepAliveCount);
@@ -3209,6 +3210,7 @@ PUBLIC int httpConnect(HttpStream *stream, cchar *method, cchar *url, MprSsl *ss
         } else {
             mprCloseSocket(net->sock, 0);
             net->sock = 0;
+            net->eof = 0;
         }
     }
     if (!net->sock) {
@@ -14074,12 +14076,12 @@ PUBLIC void httpDestroyNet(HttpNet *net)
         if (net->sock) {
             mprCloseSocket(net->sock, 0);
             mprLog("net info", 5, "Close connection for IP %s:%d", net->ip, net->port);
-            /* Don't zero just incase another thread (in error) uses net->sock */
+            // Don't zero just incase another thread (in error) uses net->sock
         }
         if (net->dispatcher && !(net->sharedDispatcher) && net->dispatcher->flags & MPR_DISPATCHER_AUTO) {
             assert(net->streams->length == 0);
             mprDestroyDispatcher(net->dispatcher);
-            /* Don't NULL net->dispatcher just incase another thread (in error) uses net->dispatcher */
+            // Don't NULL net->dispatcher just incase another thread (in error) uses net->dispatcher
         }
         net->destroyed = 1;
     }
