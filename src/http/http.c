@@ -884,7 +884,7 @@ static void threadMain(void *data, MprThread *thread)
     /*
         Pre-connect to the network. Required when creating multiple streams.
      */
-    if (httpConnectNet(net, app->ip, app->port, app->ssl) < 0) {
+    if (net->protocol >= 2 && httpConnectNet(net, app->ip, app->port, app->ssl) < 0) {
         httpNetError(net, "Cannot connect to %s:%d", app->ip, app->port);
         mprLog("error http", 0, "%s", net->errorMsg);
         return;
