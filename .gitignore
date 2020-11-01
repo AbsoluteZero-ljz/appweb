@@ -58,3 +58,4 @@ t.es
 .cdrc
 .profile
 *.dmp
+src/server/web/1*.txt
