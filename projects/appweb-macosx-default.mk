@@ -1477,6 +1477,10 @@ installBinary: $(DEPS_73)
 	cp $(BUILD)/bin/libmpr.dylib $(ME_VAPP_PREFIX)/bin/libmpr.dylib ; \
 	cp $(BUILD)/bin/libpcre.dylib $(ME_VAPP_PREFIX)/bin/libpcre.dylib ; \
 	mkdir -p "$(ME_WEB_PREFIX)" ; \
+	cp src/server/web/100K.txt $(ME_WEB_PREFIX)/100K.txt ; \
+	cp src/server/web/10K.txt $(ME_WEB_PREFIX)/10K.txt ; \
+	cp src/server/web/1K.txt $(ME_WEB_PREFIX)/1K.txt ; \
+	cp src/server/web/1M.txt $(ME_WEB_PREFIX)/1M.txt ; \
 	mkdir -p "$(ME_WEB_PREFIX)/bench" ; \
 	cp src/server/web/bench/1b.html $(ME_WEB_PREFIX)/bench/1b.html ; \
 	cp src/server/web/bench/4k.html $(ME_WEB_PREFIX)/bench/4k.html ; \
