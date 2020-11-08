@@ -1723,6 +1723,10 @@ installBinary: $(DEPS_79)
 	copy /Y /B build\$(CONFIG)\bin\libhttp.lib+modified "$(ME_VAPP_PREFIX)\bin\libhttp.lib" $(LOG)
 	copy /Y /B build\$(CONFIG)\bin\libmpr.lib+modified "$(ME_VAPP_PREFIX)\bin\libmpr.lib" $(LOG)
 	if not exist "$(ME_VAPP_PREFIX)\web" md "$(ME_VAPP_PREFIX)\web"
+	copy /Y /B src\server\web\100K.txt+modified "$(ME_VAPP_PREFIX)\web\100K.txt" $(LOG)
+	copy /Y /B src\server\web\10K.txt+modified "$(ME_VAPP_PREFIX)\web\10K.txt" $(LOG)
+	copy /Y /B src\server\web\1K.txt+modified "$(ME_VAPP_PREFIX)\web\1K.txt" $(LOG)
+	copy /Y /B src\server\web\1M.txt+modified "$(ME_VAPP_PREFIX)\web\1M.txt" $(LOG)
 	if not exist "$(ME_VAPP_PREFIX)\web\bench" md "$(ME_VAPP_PREFIX)\web\bench"
 	copy /Y /B src\server\web\bench\1b.html+modified "$(ME_VAPP_PREFIX)\web\bench\1b.html" $(LOG)
 	copy /Y /B src\server\web\bench\4k.html+modified "$(ME_VAPP_PREFIX)\web\bench\4k.html" $(LOG)
