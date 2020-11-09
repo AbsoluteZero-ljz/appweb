@@ -1,5 +1,5 @@
 /*
-    me.h -- MakeMe Configure Header for windows-x86-static
+    me.h -- MakeMe Configure Header for windows-x64-static
 
     This header is created by Me during configuration. To change settings, re-run
     configure or define variables in your Makefile to override these default values.
@@ -22,7 +22,7 @@
     #define ME_COMPANY "embedthis"
 #endif
 #ifndef ME_COMPATIBLE
-    #define ME_COMPATIBLE "7.0"
+    #define ME_COMPATIBLE "6.3"
 #endif
 #ifndef ME_COMPILER_FORTIFY
     #define ME_COMPILER_FORTIFY 1
@@ -136,7 +136,7 @@
     #define ME_MPR_SSL_CACHE 512
 #endif
 #ifndef ME_MPR_SSL_HANDSHAKES
-    #define ME_MPR_SSL_HANDSHAKES 1
+    #define ME_MPR_SSL_HANDSHAKES 3
 #endif
 #ifndef ME_MPR_SSL_LOG_LEVEL
     #define ME_MPR_SSL_LOG_LEVEL 5
@@ -152,6 +152,9 @@
 #endif
 #ifndef ME_NAME
     #define ME_NAME "appweb"
+#endif
+#ifndef ME_OPENSSL_VERSION
+    #define ME_OPENSSL_VERSION "1.0"
 #endif
 #ifndef ME_PLATFORMS
     #define ME_PLATFORMS "local"
@@ -175,7 +178,7 @@
     #define ME_TUNE "size"
 #endif
 #ifndef ME_VERSION
-    #define ME_VERSION "7.0.1"
+    #define ME_VERSION "6.3.0"
 #endif
 #ifndef ME_WATCHDOG_NAME
     #define ME_WATCHDOG_NAME "appman"
@@ -262,7 +265,7 @@
 
 /* Profile */
 #ifndef ME_CONFIG_CMD
-    #define ME_CONFIG_CMD "me -d -q -platform windows-x86-static -static -configure . -without ssl -gen vs"
+    #define ME_CONFIG_CMD "me -d -q -platform windows-x64-static -static -configure . -gen vs"
 #endif
 #ifndef ME_APPWEB_PRODUCT
     #define ME_APPWEB_PRODUCT 1
@@ -276,16 +279,16 @@
 
 /* Miscellaneous */
 #ifndef ME_MAJOR_VERSION
-    #define ME_MAJOR_VERSION 7
+    #define ME_MAJOR_VERSION 6
 #endif
 #ifndef ME_MINOR_VERSION
-    #define ME_MINOR_VERSION 0
+    #define ME_MINOR_VERSION 3
 #endif
 #ifndef ME_PATCH_VERSION
-    #define ME_PATCH_VERSION 1
+    #define ME_PATCH_VERSION 0
 #endif
 #ifndef ME_VNUM
-    #define ME_VNUM 700000001
+    #define ME_VNUM 600030000
 #endif
 
 /* Components */
@@ -313,14 +316,23 @@
 #ifndef ME_COM_LINK
     #define ME_COM_LINK 1
 #endif
+#ifndef ME_COM_MATRIXSSL
+    #define ME_COM_MATRIXSSL 0
+#endif
 #ifndef ME_COM_MBEDTLS
-    #define ME_COM_MBEDTLS 0
+    #define ME_COM_MBEDTLS 1
 #endif
 #ifndef ME_COM_MDB
     #define ME_COM_MDB 1
 #endif
 #ifndef ME_COM_MPR
     #define ME_COM_MPR 1
+#endif
+#ifndef ME_COM_NANOSSL
+    #define ME_COM_NANOSSL 0
+#endif
+#ifndef ME_COM_OPENSSL
+    #define ME_COM_OPENSSL 0
 #endif
 #ifndef ME_COM_OSDEP
     #define ME_COM_OSDEP 1
@@ -335,7 +347,7 @@
     #define ME_COM_RC 1
 #endif
 #ifndef ME_COM_SSL
-    #define ME_COM_SSL 0
+    #define ME_COM_SSL 1
 #endif
 #ifndef ME_COM_VXWORKS
     #define ME_COM_VXWORKS 0

@@ -2,7 +2,11 @@
     "name": "mpr-openssl",
     "title": "OpenSSL support",
     "description": "OpenSSL Support for the MPR",
+<<<<<<< HEAD:paks/mpr-openssl/pak.json
     "version": "1.0.3",
+=======
+    "version": "1.0.2",
+>>>>>>> f595eabdadf943bb756ab25873fe7ffb43c84a51:paks/mpr-openssl/package.json
     "keywords": [
         "me",
         "ssl",

@@ -22,7 +22,7 @@
     #define ME_COMPANY "embedthis"
 #endif
 #ifndef ME_COMPATIBLE
-    #define ME_COMPATIBLE "7.0"
+    #define ME_COMPATIBLE "6.3"
 #endif
 #ifndef ME_COMPILER_FORTIFY
     #define ME_COMPILER_FORTIFY 1
@@ -151,7 +151,7 @@
     #define ME_MPR_SSL_CACHE 512
 #endif
 #ifndef ME_MPR_SSL_HANDSHAKES
-    #define ME_MPR_SSL_HANDSHAKES 1
+    #define ME_MPR_SSL_HANDSHAKES 3
 #endif
 #ifndef ME_MPR_SSL_LOG_LEVEL
     #define ME_MPR_SSL_LOG_LEVEL 5
@@ -167,6 +167,9 @@
 #endif
 #ifndef ME_NAME
     #define ME_NAME "appweb"
+#endif
+#ifndef ME_OPENSSL_VERSION
+    #define ME_OPENSSL_VERSION "1.0"
 #endif
 #ifndef ME_PLATFORMS
     #define ME_PLATFORMS "local"
@@ -190,7 +193,7 @@
     #define ME_TUNE "size"
 #endif
 #ifndef ME_VERSION
-    #define ME_VERSION "7.0.1"
+    #define ME_VERSION "6.3.0"
 #endif
 #ifndef ME_WATCHDOG_NAME
     #define ME_WATCHDOG_NAME "appman"
@@ -219,7 +222,7 @@
     #define ME_APP_PREFIX "/usr/local/lib/appweb"
 #endif
 #ifndef ME_VAPP_PREFIX
-    #define ME_VAPP_PREFIX "/usr/local/lib/appweb/7.0.1"
+    #define ME_VAPP_PREFIX "/usr/local/lib/appweb/6.3.0"
 #endif
 #ifndef ME_BIN_PREFIX
     #define ME_BIN_PREFIX "/usr/local/bin"
@@ -252,7 +255,7 @@
     #define ME_CACHE_PREFIX "/var/spool/appweb/cache"
 #endif
 #ifndef ME_SRC_PREFIX
-    #define ME_SRC_PREFIX "appweb-7.0.1"
+    #define ME_SRC_PREFIX "appweb-6.3.0"
 #endif
 
 /* Suffixes */
@@ -288,16 +291,16 @@
 
 /* Miscellaneous */
 #ifndef ME_MAJOR_VERSION
-    #define ME_MAJOR_VERSION 7
+    #define ME_MAJOR_VERSION 6
 #endif
 #ifndef ME_MINOR_VERSION
-    #define ME_MINOR_VERSION 0
+    #define ME_MINOR_VERSION 3
 #endif
 #ifndef ME_PATCH_VERSION
-    #define ME_PATCH_VERSION 1
+    #define ME_PATCH_VERSION 0
 #endif
 #ifndef ME_VNUM
-    #define ME_VNUM 700000001
+    #define ME_VNUM 600030000
 #endif
 
 /* Components */

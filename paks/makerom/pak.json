@@ -33,15 +33,13 @@
         "mpr": "~6"
     },
     "devDependencies": {
-        "makeme": ">=0.10.0",
-        "pak": ">=0.12.0"
+        "makeme": ">=1.0.0",
+        "pak": ">=1.0.0"
     },
     "files": [
         "dist/",
         "doc/"
     ],
-    "pak": {
-        "import": true,
-        "origin": "embedthis/makerom"
-    }
+    "import": true,
+    "origin": "embedthis/makerom"
 }

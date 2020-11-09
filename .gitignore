@@ -15,4 +15,11 @@ samples/certs
 test/tmp/test.dat
 src/server/certs
 .port.log
+<<<<<<< HEAD
 /start.me
+=======
+/projects/*mine*
+/projects/.vs
+/start.me
+/samples/*/cache/
+>>>>>>> f595eabdadf943bb756ab25873fe7ffb43c84a51

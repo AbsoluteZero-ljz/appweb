@@ -41,11 +41,14 @@
 
 #if OPENSSL_VERSION_NUMBER >= 0x10002000L
     #include    <openssl/x509v3.h>
+<<<<<<< HEAD
 #ifndef OPENSSL_NO_ENGINE
     #include    <openssl/engine.h>
 #else
     #define MPR_HAS_CRYPTO_ENGINE 1
 #endif
+=======
+>>>>>>> f595eabdadf943bb756ab25873fe7ffb43c84a51
 #endif
 
 /************************************* Defines ********************************/
@@ -413,6 +416,7 @@ static void sslStaticLock(int mode, int n, cchar *file, int line)
         } else {
             mprUnlock(olocks[n]);
         }
+<<<<<<< HEAD
     }
 }
 
@@ -436,10 +440,38 @@ static void sslDestroyDynLock(DynLock *dl, cchar *file, int line)
         mutex = dl->mutex;
         dl->mutex = 0;
         mprRelease(mutex);
+=======
+>>>>>>> f595eabdadf943bb756ab25873fe7ffb43c84a51
     }
 }
 
 
+<<<<<<< HEAD
+=======
+static DynLock *sslCreateDynLock(cchar *file, int line)
+{
+    DynLock     *dl;
+
+    dl = mprAllocZeroed(sizeof(DynLock));
+    dl->mutex = mprCreateLock();
+    mprHold(dl->mutex);
+    return dl;
+}
+
+
+static void sslDestroyDynLock(DynLock *dl, cchar *file, int line)
+{
+    MprMutex    *mutex;
+
+    if (dl->mutex) {
+        mutex = dl->mutex;
+        dl->mutex = 0;
+        mprRelease(mutex);
+    }
+}
+
+
+>>>>>>> f595eabdadf943bb756ab25873fe7ffb43c84a51
 static void sslDynLock(int mode, DynLock *dl, cchar *file, int line)
 {
     if (mode & CRYPTO_LOCK) {
@@ -730,12 +762,15 @@ static int configOss(MprSsl *ssl, int flags, char **errorMsg)
         SSL_CTX_set_alpn_select_cb(ctx, selectAlpn, NULL);
     }
 #endif
+<<<<<<< HEAD
 
 #if MPR_HAS_CRYPTO_ENGINE
     if (initEngine(ssl) < 0) {
         /* Continue without engine */
     }
 #endif
+=======
+>>>>>>> f595eabdadf943bb756ab25873fe7ffb43c84a51
     return 0;
 }
 
@@ -758,6 +793,63 @@ static void initEngine(MprSsl *ssl)
 }
 #endif
 
+
+#if ME_MPR_HAS_ALPN
+static int selectAlpn(SSL *ssl, cuchar **out, uchar *outlen, cuchar *in, uint inlen, void *arg)
+{
+    OpenSocket  *osp;
+    cchar       *alpn;
+    ssize       len;
+
+    /*
+    for (i = 0; i < inlen; i += in[i] + 1) {
+        print("Client ALPN: %*s", (int) in[i], &in[i + 1]);
+    } */
+
+    if ((osp = (OpenSocket*) SSL_get_app_data(ssl)) == 0) {
+        return SSL_TLSEXT_ERR_NOACK;
+    }
+    alpn = osp->cfg->alpn;
+    if (alpn == 0) {
+        return SSL_TLSEXT_ERR_NOACK;
+    }
+
+    /*
+        WARNING: this appalling API expects pbuf to be static / persistent and sets *out to refer to it.
+     */
+    len = slen(alpn);
+    if (SSL_select_next_proto((uchar **) out, outlen, (cuchar*) alpn, (int) slen(alpn), in, inlen) != OPENSSL_NPN_NEGOTIATED) {
+        return SSL_TLSEXT_ERR_NOACK;
+    }
+    /* print("SSL ALPN selected: %*s", (int) *outlen, *out); */
+    return SSL_TLSEXT_ERR_OK;
+}
+#endif
+
+
+#if ME_MPR_HAS_ALPN
+static cchar *makeAlpn(MprSsl *ssl)
+{
+    cchar   *proto;
+    char    *dp, *pbuf;
+    ssize   len, plen;
+    int     next;
+
+    len = 1;
+    for (ITERATE_ITEMS(ssl->alpn, proto, next)) {
+        len += slen(proto) + 1;
+    }
+    pbuf = mprAlloc(len);
+    dp = pbuf;
+    for (ITERATE_ITEMS(ssl->alpn, proto, next)) {
+        plen = slen(proto);
+        *dp++ = (uchar) plen;
+        scopy((char*) dp, len - (dp - pbuf), proto);
+        dp += plen;
+    }
+    return pbuf;
+}
+#endif
 
 #if ME_MPR_HAS_ALPN
 static int selectAlpn(SSL *ssl, cuchar **out, uchar *outlen, cuchar *in, uint inlen, void *arg)

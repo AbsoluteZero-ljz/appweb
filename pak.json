@@ -39,7 +39,11 @@
         "osdep": "~1.0",
         "pcre": "~1.0",
         "ssl": "~1",
+<<<<<<< HEAD:pak.json
         "watchdog": "~0.2"
+=======
+        "watchdog": "0.2.0"
+>>>>>>> f595eabdadf943bb756ab25873fe7ffb43c84a51:package.json
     },
     "optionalDependencies": {
         "appweb-ejscript": "~0.2",
