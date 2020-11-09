@@ -1,9 +1,0 @@
-{
-    "name": "upload",
-    "description": "upload",
-    "version": "1.0.0",
-    "http": {
-        deleteUploads: true,
-        renameUploads: false,
-    }
-}
