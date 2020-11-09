@@ -10,6 +10,5 @@ Accept: application/*\r\n\r\n')
 
 let response = new ByteArray
 while (s.read(response, -1) != null) {}
-print(response)
 s.close()
 

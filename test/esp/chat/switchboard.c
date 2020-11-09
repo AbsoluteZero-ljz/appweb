@@ -8,19 +8,9 @@
  */
 static MprList  *clients;
 
-/*
-    Example of a structure to pass to each client.
- */
-typedef struct Msg {
-    HttpPacket  *packet;
-} Msg;
-
-
-static void chat(HttpStream *stream, Msg *msg);
+static void chat(HttpStream *stream, char *msg);
 static void chat_action();
 static void chat_callback(HttpStream *stream, int event, int arg);
-static void manageMsg(Msg *msg, int flags);
-
 
 /*
     Initialize the "chat" loadable module
@@ -63,25 +53,20 @@ static void chat_callback(HttpStream *stream, int event, int arg)
 {
     HttpPacket  *packet;
     void        *client;
-    Msg         *msg;
     int         next;
 
     if (event == HTTP_EVENT_READABLE) {
         packet = httpGetPacket(stream->readq);
-        if (packet->type == WS_MSG_TEXT || packet->type == WS_MSG_BINARY) {
+        if (packet && (packet->type == WS_MSG_TEXT || packet->type == WS_MSG_BINARY)) {
             for (ITERATE_ITEMS(clients, client, next)) {
                 /*
                     Send the message to each stream using the stream sequence number captured earlier.
                     This must be done using each stream event dispatcher to ensure we don't conflict with
                     other activity on the stream that may happen on another worker thread at the same time.
                     The "chat" callback will be invoked on the releveant stream's event dispatcher.
-
-                    We allocate the message object here just to demonstrate how it is done, despite only having one field "packet".
-                    We could have just passed the packet without allocating a Msg. Keep the reference in stream->data to ensure it
-                    is retained by the GC.
+                    The data ("packet") is unmanaged.
                  */
-                stream->data = msg = mprAllocObj(Msg, manageMsg);
-                msg->packet = packet;
+                char *msg = strdup(packet->content->start);
                 httpCreateEvent(PTOL(client), (HttpEventProc) chat, msg);
             }
         }
@@ -105,24 +90,10 @@ static void chat_callback(HttpStream *stream, int event, int arg)
 /*
     Send message to a client
  */
-static void chat(HttpStream *stream, Msg *msg)
+static void chat(HttpStream *stream, char *msg)
 {
-    HttpPacket  *packet;
-
     if (stream) {
-        packet = msg->packet;
-        httpSendBlock(stream, packet->type, httpGetPacketStart(packet), httpGetPacketLength(packet), 0);
-    } else {
-        /* Stream destroyed. Release any custom Msg resources if required here */
+        httpSendBlock(stream, WS_MSG_TEXT, msg, slen(msg), HTTP_BLOCK);
     }
-}
-
-/*
-    Garbage collection rention callback.
- */
-static void manageMsg(Msg *msg, int flags)
-{
-    if (flags & MPR_MANAGE_MARK) {
-        mprMark(msg->packet);
-    }
+    free(msg);
 }

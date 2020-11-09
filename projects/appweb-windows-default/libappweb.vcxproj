@@ -14,7 +14,7 @@
       </ItemDefinitionGroup>
 
       <PropertyGroup Label="Globals">
-        <ProjectGuid>{533e70ac-25fa-40da-920a-ee094f28d670}</ProjectGuid>
+        <ProjectGuid>{aa55c74f-243e-4b00-81f4-ae5c67484d7c}</ProjectGuid>
         <RootNamespace />
         <Keyword>Win32Proj</Keyword>
       </PropertyGroup>
@@ -110,6 +110,7 @@
     <ClCompile Include="..\..\src\modules\cgiHandler.c" />
     <ClCompile Include="..\..\src\modules\espHandler.c" />
     <ClCompile Include="..\..\src\modules\fastHandler.c" />
+    <ClCompile Include="..\..\src\modules\proxyHandler.c" />
     <ClCompile Include="..\..\src\rom.c" />
   </ItemGroup>
 
@@ -125,7 +126,7 @@
         
 
       <Link>
-        <AdditionalDependencies>libmpr-version.lib;libhttp.lib;libpcre.lib;libmpr.lib;libmpr-mbedtls.lib;libmbedtls.lib;%(AdditionalDependencies)</AdditionalDependencies>
+        <AdditionalDependencies>libesp.lib;libmpr-version.lib;libhttp.lib;libpcre.lib;libmpr.lib;libmpr-mbedtls.lib;libmbedtls.lib;%(AdditionalDependencies)</AdditionalDependencies>
         <AdditionalLibraryDirectories>$(OutDir);build\$(Cfg)\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       </Link>
 
@@ -139,22 +140,29 @@ cd ..\projects\appweb-windows-default</Command>
   </ItemDefinitionGroup>
 
     <ItemGroup>
+      <ProjectReference Include="libesp.vcxproj">
+      <Project>53a6c412-c0dc-4619-ad6f-a1acd1d69860</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      </ProjectReference>
+    </ItemGroup>
+
+    <ItemGroup>
       <ProjectReference Include="libhttp.vcxproj">
-      <Project>44cac56f-78aa-4d36-bd2a-8967f1710b2c</Project>
+      <Project>59f9bcb6-59d1-4952-8876-40d3ada2090b</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       </ProjectReference>
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="libmpr.vcxproj">
-      <Project>ca62ff53-ce18-43b8-8254-bf186ca0b493</Project>
+      <Project>c9743826-0a58-4f00-b2cf-5086b63ff233</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       </ProjectReference>
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="libmpr-version.vcxproj">
-      <Project>b9acdefb-4a2e-4db4-a80d-328fddc4217b</Project>
+      <Project>88f94e88-42a9-4a84-b1a2-a1b546e1a3b8</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       </ProjectReference>
     </ItemGroup>

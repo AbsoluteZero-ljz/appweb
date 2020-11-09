@@ -4,8 +4,8 @@ Tiny Server Sample
 This sample shows how to run Appweb while limit resources to be as small as possible
 using appweb.conf configuration directives.
 
-To really shrink appweb, configure appweb from source without all features, and then 
-re-add only those you need:
+To really shrink appweb, build Appweb with MakeMe. Configure appweb from source without 
+all features, and then re-add only those you need:
 
     ./configure --without all --with esp
     me
@@ -17,11 +17,11 @@ Requirements
 
 To build:
 ---
-    me 
+    make 
 
 To run:
 ---
-    me run
+    make run
 
 The server listens on port 8080. Browse to: 
  
@@ -29,6 +29,7 @@ The server listens on port 8080. Browse to:
 
 Code:
 ---
+* [Makefile](Makefile) - Makefile build instructions
 * [appweb.conf](appweb.conf) - Appweb server configuration file
 * [auth.conf](auth.conf) - User/Password/Role authorization file
 * [index.html](index.html) - web page to serve

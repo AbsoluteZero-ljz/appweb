@@ -10,15 +10,14 @@ program executable link, provided the module entry point is manually invoked fro
 Requirements
 ---
 * [Appweb](https://www.embedthis.com/appweb/download.html)
-* [MakeMe Build Tool](https://www.embedthis.com/makeme/download.html)
 
 To build:
 ---
-    me
+    make
 
 To run:
 ---
-    me run
+    make run
 
 You will see trace in the console for the custom directive:
 
@@ -26,6 +25,7 @@ You will see trace in the console for the custom directive:
 
 Code:
 ---
+* [Makefile](Makefile) - Makefile build instructions
 * [simpleModule.c](simpleModule.c) - Simple module
 * [appweb.conf](appweb.conf) - Appweb server configuration file
 * [start.me](start.me) - MakeMe build instructions

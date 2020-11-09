@@ -43,6 +43,7 @@
                     <a class="item" href="../start/source.html">Building from Source</a>
                     <a class="item" href="../start/cgi.html">Building with CGI</a>
                     <a class="item" href="../start/fast.html">Building with FastCGI</a>
+                    <a class="item" href="../start/proxy.html">Building with Proxy</a>
                     <a class="item" href="../start/openssl.html">Building with OpenSSL</a>
                     <a class="item" href="../start/php.html">Building with PHP</a>
                 </div>
@@ -161,7 +162,7 @@
                     <a class="item" href="https://embedthis.com/appweb/">Appweb Site</a>
                     <span class="desktop-only">
                         <a class="item" href="https://embedthis.com/blog/categories/Appweb">Appweb News</a>
-                        <a class="item" href="https://github.com/embedthis/appweb">Repository</a>
+                        <a class="item" href="https://github.com/embedthis/appweb-gpl">Repository</a>
                         <a class="item" href="https://embedthis.com/blog/">Blog</a>
                         <a class="item" href="https://twitter.com/embedthat">Twitter</a>
                     </span>
@@ -202,7 +203,7 @@
 
             <a id="esp"></a>
             <h3>Embedded Server Pages</h3>
-            <p>ESP is a fast, efficient web framework that provides HTML templates, caching, Model-View-Controller paradigm, 
+            <p>ESP is a fast, efficient web framework that provides HTML templates, caching, Model-View-Controller paradigm,
             and an application and scaffold generator. ESP uses the "C" language code
             embedded in web pages for native-speed execution. It is very fast and compact.</p>
             <p>To prevent name clashes on Linux and MacOSX, when Appweb is installed, the "<em>esp</em>" program built
@@ -231,6 +232,11 @@
             external programs to generate dynamic data. It is standard but slow. Unless you have legacy CGI programs or
             need to run a scripting language via CGI, you are better served by using either ESP.
             For more information, please read <a href="cgi.html">Using CGI</a>.</p>
+
+            <a id="fastcgi"></a>
+            <h3>Fast CGI</h3>
+            <p>FastCGI is an optimized CGI and is the preferable way to run CGI programs or to run PHP applications.</p>
+            <p>Whereas CGI launches a new process to serve each and every request, FastCGI launches one or more CGI applications and then maintains a persistent connection to server multiple requests.</p>
 
             <a id="summary"></a>
             <h2>Summary</h2>

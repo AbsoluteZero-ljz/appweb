@@ -7,15 +7,14 @@ security by changing its root directory so that the rest of the operating system
 Requirements
 ---
 * [Appweb](https://www.embedthis.com/appweb/download.html)
-* [MakeMe Build Tool](https://www.embedthis.com/e/download.html)
 
 To build:
 ---
-    me
+    make
 
 To run:
 ---
-    sudo me run
+    sudo make run
 
 The server listens on port 8080. Browse to:
 
@@ -33,6 +32,7 @@ Appweb is configured to load modules before changing the root directory via the 
 
 Code:
 ---
+* [Makefile](Makefile) - Makefile build instructions
 * [server.c](server.c) - Main program
 * [appweb.conf](appweb.conf) - Appweb server configuration file
 * [index.html](index.html) - Web page to serve

@@ -18,15 +18,14 @@ Requirements
 ---
 
 * [Appweb](https://www.embedthis.com/appweb/download.html)
-* [MakeMe Build Tool](https://www.embedthis.com/makeme/download.html)
 
 To build:
 ---
-    me
+    make
 
 To run:
 ---
-    me run
+    make run
 
 The server listens on port 8080. Browse to:
 
@@ -36,6 +35,7 @@ This opens a web socket and sends any messages entered into the text field to al
 
 Code:
 ---
+* [Makefile](Makefile) - Makefile build instructions
 * [cache](cache) - Directory for compiled ESP modules
 * [appweb.conf](appweb.conf) - Appweb server configuration file
 * [chat.c](chat.c) - WebSockets chat server code

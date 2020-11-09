@@ -7,15 +7,14 @@ generate responses.
 Requirements
 ---
 * [Appweb](https://www.embedthis.com/appweb/download.html)
-* [MakeMe Build Tool](https://www.embedthis.com/makeme/download.html)
 
 To build:
 ---
-    me
+    make
 
 To run:
 ---
-    me run
+    make run
 
 The server listens on port 8080. Browse to: 
  
@@ -23,6 +22,7 @@ The server listens on port 8080. Browse to:
 
 Code:
 ---
+* [Makefile](Makefile) - Makefile build instructions
 * [simpleHandler.c](simpleHandler.c) - Simple handler
 * [appweb.conf](appweb.conf) - Appweb server configuration file
 * [start.me](start.me) - MakeMe build instructions

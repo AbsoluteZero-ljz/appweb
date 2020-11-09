@@ -7,7 +7,7 @@
     Create a new resource in the database
  */
 static void createPost() {
-    if (updateRec(createRec("post", params()))) {
+    if (updateRec(createRec("post", params("fields")))) {
         feedback("info", "New post Created");
         renderView("post/list");
     } else {
@@ -65,7 +65,7 @@ static void updatePost() {
     if (smatch(param("submit"), "Delete")) {
         removePost();
     } else {
-        if (updateFields("post", params())) {
+        if (updateFields("post", params("fields"))) {
             feedback("info", "Post Updated Successfully");
             redirect(".");
         } else {

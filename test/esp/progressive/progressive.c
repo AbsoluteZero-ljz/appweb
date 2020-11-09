@@ -1,5 +1,5 @@
 /*
-    progressive.c - Emit progressive output 
+    progressive.c - Emit progressive output
  */
 #include "appweb.h"
 #include "esp.h"

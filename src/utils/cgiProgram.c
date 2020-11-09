@@ -243,6 +243,9 @@ int main(int argc, char **argv, char **envp)
         if (strcmp(safeGetenv("CONTENT_TYPE"), "application/x-www-form-urlencoded") == 0) {
             numPostKeys = getVars(&postKeys, postBuf, postBufLen);
         }
+        if (strstr(safeGetenv("CONTENT_TYPE"), "multipart/form-data") != 0) {
+            numPostKeys = getVars(&postKeys, postBuf, postBufLen);
+        }
     }
 
     if (hasError) {
@@ -515,14 +518,6 @@ static int getPostData(char **bufp, size_t *lenp)
             return -1;
         } else if (bytes == 0) {
             /* EOF */
-#if UNUSED
-            /*
-                If using multipart-mime, the CONTENT_LENGTH won't match the length of the data actually received
-             */
-            if (contentLength && len != limit) {
-                error("Missing content data (Content-Length: %s)", contentLength ? contentLength : "unspecified");
-            }
-#endif
             break;
         }
         len += bytes;

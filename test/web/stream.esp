@@ -12,7 +12,7 @@
             if (event == HTTP_EVENT_READABLE) {
                 while ((packet = httpGetPacket(conn->readq)) != 0) {
                     if (packet->flags & HTTP_PACKET_END) {
-                        render("-done-");
+                        render("-done-\n");
                         finalize();
                     }
                 }

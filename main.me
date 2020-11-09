@@ -21,8 +21,8 @@ Me.load({
 
     configure: {
         requires:  [ 'osdep', 'http', 'mpr', 'pcre'],
-        discovers: [ 'ssl', 'watchdog' ],
-        extras:    [ 'cgi', 'dir', 'ejs', 'esp', 'fast', 'mdb', 'php', 'sqlite' ],
+        discovers: [ 'ssl', 'watchdog', 'esp', 'mdb' ],
+        extras:    [ 'cgi', 'dir', 'ejs', 'fast', 'php', 'proxy', 'sqlite' ],
     },
 
     customize: [
@@ -85,13 +85,14 @@ Me.load({
             basic: true,
             cache: true,
             cmd: true,
+            defense: true,
             digest: true,
             dir: true,
-            pam: true,
             http2: true,
+            pam: true,
+            sendfile: true,
             upload: true,
             webSockets: true,
-            _uploadTimeout: 600,
         },
 
         mbedtls: {
@@ -105,7 +106,7 @@ Me.load({
         mpr: {
             alloc: {
                 // quota: 204800,       /* Amount of memory to allocate before a GC */
-                // cache: 0,            /* Amount of memory to buffer for fast allocations */
+                // cache: 0,            /* Amount of memory to buffer for quick allocations */
                 // check: false,        /* Memory allocation debug and stats (slow) */
             },
             /*
@@ -164,12 +165,19 @@ Me.load({
             configurable: true,
             description: 'Directory Listing Module',
         },
-        
+
         fast: {
             configurable: true,
             description: 'FastCGI Module',
             path: 'src/modules/fastHandler.c',
             depends: [ 'libmod_fast' ],
+        },
+
+        proxy: {
+            configurable: true,
+            description: 'Proxy Module',
+            path: 'src/modules/proxyHandler.c',
+            depends: [ 'libmod_proxy' ],
         },
 
         /*
@@ -180,12 +188,10 @@ Me.load({
         projects: {
             action: `
                 if (me.settings.description == 'Embedthis Appweb Enterprise Edition') {
-                    genProjects('--set openssl.version=1.0 --with openssl --with esp --with cgi --with fast --with ssl', 
-                        'openssl_10', 'windows-x64')
-                    genProjects('--set openssl.version=1.1 --with openssl --with esp --with cgi --with fast --with ssl',
-                         'openssl_11', 'windows-x64')
-                    genProjects('--with openssl --with esp --with cgi --with fast --with ssl', 'openssl', 'macosx-x64')
-                    genProjects('')
+                    genProjects('--set openssl.version=1.0 --with openssl --with esp --with mdb --with cgi --with fast --with proxy', 'openssl_10', 'windows-x64')
+                    genProjects('--set openssl.version=1.1 --with openssl --with esp --with mdb --with cgi --with fast --with proxy', 'openssl_11', 'windows-x64')
+                    genProjects('--with openssl --with esp --with mdb --with cgi --with fast --with proxy', 'openssl', 'macosx-x64')
+                    genProjects('--with esp --with fast -with proxy')
                 } else {
                     genProjects('', ['default'])
                 }
@@ -197,7 +203,7 @@ Me.load({
         },
 
         mine: {
-            action: `genProjects('--with cgi', 'mine', Config.OS + '-' + Config.CPU)`,
+            action: `genProjects('--with cgi --with esp --with fast --with proxy', 'mine', Config.OS + '-' + Config.CPU)`,
         },
 
     },

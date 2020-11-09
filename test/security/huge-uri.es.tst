@@ -28,7 +28,7 @@ try {
 // Server should just close the connection without a response
 response = new ByteArray
 while ((n = s.read(response, -1)) != null ) {}
-ttrue(response.toString() == '')
+ttrue(response.toString().contains('413 -- Request Entity Too Large'))
 s.close()
 
 //  Check server still up

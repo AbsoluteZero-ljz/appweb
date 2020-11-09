@@ -7,7 +7,7 @@ Me.load({
         libappweb: {
             type: 'lib',
             headers: [ '*.h' ],
-            sources: [ '*.c', 'modules/cgiHandler.c', 'modules/espHandler.c', 'modules/fastHandler.c' ],
+            sources: [ '*.c', 'modules/*.c' ], 
             depends: [ 'libesp', 'libhttp', 'libmpr', 'libmpr-version' ],
         }
 	}

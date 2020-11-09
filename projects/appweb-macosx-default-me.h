@@ -25,7 +25,7 @@
     #define ME_COMPAT 1
 #endif
 #ifndef ME_COMPATIBLE
-    #define ME_COMPATIBLE "8.1"
+    #define ME_COMPATIBLE "8.2"
 #endif
 #ifndef ME_COMPILER_FORTIFY
     #define ME_COMPILER_FORTIFY 1
@@ -105,9 +105,6 @@
 #ifndef ME_ESP_NAME
     #define ME_ESP_NAME "appweb-esp"
 #endif
-#ifndef ME_HTTP__UPLOAD_TIMEOUT
-    #define ME_HTTP__UPLOAD_TIMEOUT 600
-#endif
 #ifndef ME_HTTP_BASIC
     #define ME_HTTP_BASIC 1
 #endif
@@ -116,6 +113,9 @@
 #endif
 #ifndef ME_HTTP_CMD
     #define ME_HTTP_CMD 1
+#endif
+#ifndef ME_HTTP_DEFENSE
+    #define ME_HTTP_DEFENSE 1
 #endif
 #ifndef ME_HTTP_DIGEST
     #define ME_HTTP_DIGEST 1
@@ -128,6 +128,9 @@
 #endif
 #ifndef ME_HTTP_PAM
     #define ME_HTTP_PAM 1
+#endif
+#ifndef ME_HTTP_SENDFILE
+    #define ME_HTTP_SENDFILE 1
 #endif
 #ifndef ME_HTTP_UPLOAD
     #define ME_HTTP_UPLOAD 1
@@ -205,7 +208,7 @@
     #define ME_TUNE "size"
 #endif
 #ifndef ME_VERSION
-    #define ME_VERSION "8.1.4"
+    #define ME_VERSION "8.2.0"
 #endif
 #ifndef ME_WATCHDOG_NAME
     #define ME_WATCHDOG_NAME "appman"
@@ -234,7 +237,7 @@
     #define ME_APP_PREFIX "/usr/local/lib/appweb"
 #endif
 #ifndef ME_VAPP_PREFIX
-    #define ME_VAPP_PREFIX "/usr/local/lib/appweb/8.1.4"
+    #define ME_VAPP_PREFIX "/usr/local/lib/appweb/8.2.0"
 #endif
 #ifndef ME_BIN_PREFIX
     #define ME_BIN_PREFIX "/usr/local/bin"
@@ -267,7 +270,7 @@
     #define ME_CACHE_PREFIX "/var/spool/appweb/cache"
 #endif
 #ifndef ME_SRC_PREFIX
-    #define ME_SRC_PREFIX "appweb-8.1.4"
+    #define ME_SRC_PREFIX "appweb-8.2.0"
 #endif
 
 /* Suffixes */
@@ -289,7 +292,7 @@
 
 /* Profile */
 #ifndef ME_CONFIG_CMD
-    #define ME_CONFIG_CMD "me -d -q -platform macosx-x64-default -configure . -gen xcode"
+    #define ME_CONFIG_CMD "me -d -q -platform macosx-x64-default -configure . --with esp --with fast -with proxy -gen xcode"
 #endif
 #ifndef ME_APPWEB_PRODUCT
     #define ME_APPWEB_PRODUCT 1
@@ -306,13 +309,13 @@
     #define ME_MAJOR_VERSION 8
 #endif
 #ifndef ME_MINOR_VERSION
-    #define ME_MINOR_VERSION 1
+    #define ME_MINOR_VERSION 2
 #endif
 #ifndef ME_PATCH_VERSION
-    #define ME_PATCH_VERSION 4
+    #define ME_PATCH_VERSION 0
 #endif
 #ifndef ME_VNUM
-    #define ME_VNUM 800010004
+    #define ME_VNUM 800020000
 #endif
 
 /* Components */
@@ -329,10 +332,10 @@
     #define ME_COM_EJS 0
 #endif
 #ifndef ME_COM_ESP
-    #define ME_COM_ESP 0
+    #define ME_COM_ESP 1
 #endif
 #ifndef ME_COM_FAST
-    #define ME_COM_FAST 0
+    #define ME_COM_FAST 1
 #endif
 #ifndef ME_COM_HTTP
     #define ME_COM_HTTP 1
@@ -347,7 +350,7 @@
     #define ME_COM_MBEDTLS 1
 #endif
 #ifndef ME_COM_MDB
-    #define ME_COM_MDB 0
+    #define ME_COM_MDB 1
 #endif
 #ifndef ME_COM_MPR
     #define ME_COM_MPR 1
@@ -366,6 +369,9 @@
 #endif
 #ifndef ME_COM_PHP
     #define ME_COM_PHP 0
+#endif
+#ifndef ME_COM_PROXY
+    #define ME_COM_PROXY 1
 #endif
 #ifndef ME_COM_SQLITE
     #define ME_COM_SQLITE 0

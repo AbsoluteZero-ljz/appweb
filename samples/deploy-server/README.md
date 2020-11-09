@@ -1,18 +1,18 @@
 Deploy Appweb Sample
 ===
 
-This sample demonstrates the commands to use to deploy Appweb files to a staging directory.
+This sample demonstrates the commands to use to deploy Appweb files to a staging directory using the MakeMe tool.
 
 Requirements
 ---
 * [Appweb](https://www.embedthis.com/appweb/download.html)
-* [MakeMe Build Tool](https://www.embedthis.com/makeme/download.html)
 
 Steps:
 ---
 
-1. Appweb must be built
+1. Appweb must be built via MakeMe
 
+    ./configure
     me
 
 2. Deploy

@@ -14,7 +14,7 @@
       </ItemDefinitionGroup>
 
       <PropertyGroup Label="Globals">
-        <ProjectGuid>{595313be-93e0-4096-8820-851dc451b34f}</ProjectGuid>
+        <ProjectGuid>{dca7f41e-e95c-4492-865d-503cbf245c57}</ProjectGuid>
         <RootNamespace />
         <Keyword>Win32Proj</Keyword>
       </PropertyGroup>
@@ -112,14 +112,14 @@
         
 
       <Link>
-        <AdditionalDependencies>libappweb.lib;libmpr-version.lib;libhttp.lib;libpcre.lib;libmpr.lib;libmpr-mbedtls.lib;libmbedtls.lib;%(AdditionalDependencies)</AdditionalDependencies>
+        <AdditionalDependencies>libappweb.lib;libesp.lib;libmpr-version.lib;libhttp.lib;libpcre.lib;libmpr.lib;libmpr-mbedtls.lib;libmbedtls.lib;%(AdditionalDependencies)</AdditionalDependencies>
         <AdditionalLibraryDirectories>$(OutDir);build\$(Cfg)\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       </Link>
   </ItemDefinitionGroup>
 
     <ItemGroup>
       <ProjectReference Include="libappweb.vcxproj">
-      <Project>533e70ac-25fa-40da-920a-ee094f28d670</Project>
+      <Project>aa55c74f-243e-4b00-81f4-ae5c67484d7c</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       </ProjectReference>
     </ItemGroup>

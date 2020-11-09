@@ -8,7 +8,7 @@ post the uploaded file to the web/upload/upload.esp page.
 
 Requirements
 ---
-* [ESP](https://www.embedthis.com/esp/download.html)
+* [APPWEB](https://www.embedthis.com/appweb/download.html)
 
 To run:
 ---
@@ -26,7 +26,7 @@ Code:
 
 Documentation:
 ---
-* [Apwpeb Documentation](https://www.embedthis.com/appweb/doc/index.html)
+* [Appweb Documentation](https://www.embedthis.com/appweb/doc/index.html)
 * [ESP Documentation](https://www.embedthis.com/esp/doc/index.html)
 * [ESP Configuration in Appweb](https://www.embedthis.com/appweb/doc/users/dir/esp.html)
 * [ESP Configuration](https://www.embedthis.com/esp/doc/users/config.html)

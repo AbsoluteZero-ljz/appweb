@@ -36,12 +36,12 @@ static bool verifyUser(HttpStream *stream, cchar *username, cchar *password)
     rx = stream->rx;
     auth = rx->route->auth;
 
-    if ((urec = readRecWhere("user", "username", "==", username)) == 0) {
-        httpTrace(stream->trace, "auth.login.error", "error", "msg: 'Cannot verify user', username: '%s'", username);
+    if ((urec = findRec("user", sfmt("username == %s", username))) == 0) {
+        httpLog(stream->trace, "auth.login.error", "error", "msg:Cannot verify user, username:%s", username);
         return 0;
     }
     if (!mprCheckPassword(password, getField(urec, "password"))) {
-        httpTrace(stream->trace, "auth.login.error", "error", "msg: 'Password failed to authenticate', username: '%s'", username);
+        httpLog(stream->trace, "auth.login.error", "error", "msg:Password failed to authenticate, username:%s", username);
         mprSleep(500);
         return 0;
     }
@@ -57,7 +57,7 @@ static bool verifyUser(HttpStream *stream, cchar *username, cchar *password)
      */
     httpSetConnUser(stream, user);
 
-    httpTrace(stream->trace, "auth.login.authenticated", "context", "msg: 'User authenticated', username: '%s'", username);
+    httpLog(stream->trace, "auth.login.authenticated", "context", "msg:User authenticated, username:%s", username);
     return 1;
 }
 
@@ -70,7 +70,7 @@ ESP_EXPORT int esp_app_login_database(HttpRoute *route)
     /*
         Define a custom authentication verification callback for the "app" auth store.
      */
-    httpSetAuthStoreVerifyByName("app", verifyUser)
+    httpSetAuthStoreVerifyByName("app", verifyUser);
 
     /*
         Define the common base which is called for all requests before the action function is invoked.
