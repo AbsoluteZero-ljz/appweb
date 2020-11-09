@@ -3,7 +3,7 @@
 #
 
 NAME                  = appweb
-VERSION               = 8.2.0
+VERSION               = 8.2.1
 
 OS                    = windows
 PA                    = $(PROCESSOR_ARCHITECTURE)
