@@ -27,8 +27,8 @@ function run(args): String {
         }
         ttrue(cmd.status == 0) 
         if (cmd.status != 0) {
-            print("CMD", args)
-            print("RESP", cmd.response)
+            // print("CMD", args)
+            // print("RESP", cmd.response)
             throw new Error('Bad command status')
         }
         return cmd.response

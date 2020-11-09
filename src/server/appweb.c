@@ -296,6 +296,11 @@ MAIN(appweb, int argc, char **argv, char **envp)
 
     mprLog("info appweb", 1, "Stopping Appweb ...");
     mprDestroy();
+    /*
+        Kill all children
+     */
+    signal(SIGQUIT, SIG_IGN);
+    kill(0, SIGQUIT);
     return mprGetExitStatus();
 }
 
@@ -511,12 +516,20 @@ static void addSignals(void)
  */
 static void traceHandler(void *ignored, MprSignal *sp)
 {
-    int     level;
+    HttpHost    *host;
+    HttpRoute   *route;
+    int         level, nextHost, nextRoute;
 
     level = mprGetLogLevel() > 2 ? 2 : 4;
     mprLog("info appweb", 0, "Change log and trace level to %d", level);
     mprSetLogLevel(level);
-    httpSetTraceLevel(level);
+
+    for (ITERATE_ITEMS(HTTP->hosts, host, nextHost)) {
+        for (ITERATE_ITEMS(host->routes, route, nextRoute)) {
+            httpSetTraceLevel(route->trace, level);
+        }
+    }
+    httpSetTraceLevel(HTTP->trace, level);
 }
 
 
@@ -527,10 +540,13 @@ static void traceHandler(void *ignored, MprSignal *sp)
 static void statusCheck(void *ignored, MprSignal *sp)
 {
     mprLog(0, 0, "%s", httpStatsReport(0));
+#if ME_HTTP_DEFENSE
+    httpDumpCounters();
+#endif
     if (MPR->heap->track) {
-        mprPrintMem("MPR Memory Report", MPR_MEM_DETAIL);
+        mprPrintMem("\nMPR Memory Report", MPR_MEM_DETAIL);
     } else {
-        mprPrintMem("MPR Memory Report", 0);
+        mprPrintMem("\nMPR Memory Report", 0);
     }
 }
 

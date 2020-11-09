@@ -42,7 +42,10 @@ PUBLIC int maLoadModules(void)
     rc += httpEspInit(HTTP, mprCreateModule("esp", NULL, NULL, HTTP));
 #endif
 #if ME_COM_FAST
-    rc += httpFastInit(HTTP, mprCreateModule("cgi", NULL, NULL, HTTP));
+    rc += httpFastInit(HTTP, mprCreateModule("fast", NULL, NULL, HTTP));
+#endif
+#if ME_COM_PROXY
+    rc += httpProxyInit(HTTP, mprCreateModule("cgi", NULL, NULL, HTTP));
 #endif
     return rc;
 }
@@ -77,7 +80,7 @@ PUBLIC int configureHandlers(HttpRoute *route)
         httpAddRouteHandler(route, "espHandler", "esp");
     }
 #endif
-#if ME_COM_EJS
+#if ME_COM_EJS && DEPRECATED
     if (httpLookupStage("ejsHandler")) {
         httpAddRouteHandler(route, "ejsHandler", "ejs");
     }
@@ -622,9 +625,15 @@ static int cacheDirective(MaState *state, cchar *key, cchar *value)
  */
 static int canonicalNameDirective(MaState *state, cchar *key, cchar *value)
 {
-    return httpSetHostCanonicalName(state->host, value);
+    return httpSetRouteCanonicalName(state->route, value);
 }
 
+
+static int charSetDirective(MaState *state, cchar *key, cchar *value)
+{
+    httpSetRouteCharSet(state->route, value);
+    return 0;
+}
 
 /*
     Chroot path
@@ -761,6 +770,7 @@ static int crossOriginDirective(MaState *state, cchar *key, cchar *value)
 }
 
 
+#if ME_HTTP_DEFENSE
 /*
     Defense name [Arg=Value]...
 
@@ -787,6 +797,7 @@ static int defenseDirective(MaState *state, cchar *key, cchar *value)
     httpAddDefense(name, NULL, args);
     return 0;
 }
+#endif
 
 
 static int defaultLanguageDirective(MaState *state, cchar *key, cchar *value)
@@ -1249,6 +1260,16 @@ static int limitConnectionsDirective(MaState *state, cchar *key, cchar *value)
 
 
 /*
+    LimitConnectionsPerClient count
+ */
+static int limitConnectionsPerClientDirective(MaState *state, cchar *key, cchar *value)
+{
+    httpGraduateLimits(state->route, 0);
+    state->route->limits->connectionsPerClientMax = httpGetInt(value);
+    return 0;
+}
+
+/*
     LimitFiles count
  */
 static int limitFilesDirective(MaState *state, cchar *key, cchar *value)
@@ -1474,9 +1495,10 @@ static int limitWorkersDirective(MaState *state, cchar *key, cchar *value)
 
 
 /*
-    Listen ip:port      Listens only on the specified interface
-    Listen ip           Listens only on the specified interface with the default port
-    Listen port         Listens on both IPv4 and IPv6
+    Listen ip:port          Listens only on the specified interface
+    Listen ip               Listens only on the specified interface with the default port
+    Listen port             Listens on both IPv4 and IPv6
+    Listen port [multiple]  Allow multiple binding on the same port
 
     Where ip may be "::::::" for ipv6 addresses or may be enclosed in "[::]" if appending a port.
     Can provide http:// and https:// prefixes.
@@ -1485,10 +1507,11 @@ static int listenDirective(MaState *state, cchar *key, cchar *value)
 {
     HttpEndpoint    *endpoint, *dual;
     HttpHost        *host;
-    cchar           *ip, *address;
+    cchar           *ip, *address, *multiple;
     int             port;
 
-    if (!maTokenize(state, value, "%S", &address)) {
+    multiple = address = 0;
+    if (!maTokenize(state, value, "%S ?S", &address, &multiple)) {
         return MPR_ERR_BAD_SYNTAX;
     }
     if (mprParseSocketAddress(address, &ip, &port, NULL, 80) < 0) {
@@ -1501,6 +1524,9 @@ static int listenDirective(MaState *state, cchar *key, cchar *value)
     }
     host = state->host;
     endpoint = httpCreateEndpoint(ip, port, NULL);
+    if (smatch(multiple, "multiple")) {
+        endpoint->multiple = 1;
+    }
     if (!host->defaultEndpoint) {
         httpSetHostDefaultEndpoint(host, endpoint);
     }
@@ -1522,6 +1548,7 @@ static int listenDirective(MaState *state, cchar *key, cchar *value)
     ListenSecure ip:port
     ListenSecure ip
     ListenSecure port
+    ListenSecure port [multiple]
 
     Where ip may be "::::::" for ipv6 addresses or may be enclosed in "[]" if appending a port.
  */
@@ -1530,10 +1557,11 @@ static int listenSecureDirective(MaState *state, cchar *key, cchar *value)
 #if ME_COM_SSL
     HttpEndpoint    *endpoint, *dual;
     HttpHost        *host;
-    cchar           *address, *ip;
+    cchar           *address, *ip, *multiple;
     int             port;
 
-    if (!maTokenize(state, value, "%S", &address)) {
+    address = multiple = 0;
+    if (!maTokenize(state, value, "%S ?S", &address, &multiple)) {
         return MPR_ERR_BAD_SYNTAX;
     }
     if (mprParseSocketAddress(address, &ip, &port, NULL, 443) < 0) {
@@ -1545,6 +1573,9 @@ static int listenSecureDirective(MaState *state, cchar *key, cchar *value)
         return -1;
     }
     endpoint = httpCreateEndpoint(ip, port, NULL);
+    if (smatch(multiple, "multiple")) {
+        endpoint->multiple = 1;
+    }
     if (state->route->ssl == 0) {
         if (state->route->parent && state->route->parent->ssl) {
             state->route->ssl = mprCloneSsl(state->route->parent->ssl);
@@ -2625,19 +2656,22 @@ static int threadStackDirective(MaState *state, cchar *key, cchar *value)
  */
 static int traceDirective(MaState *state, cchar *key, cchar *value)
 {
-    HttpRoute   *route;
-    char        *option, *ovalue, *tok;
+    state->route->trace = httpCreateTrace(state->route->trace);
+    return maTraceDirective(state, state->route->trace, key, value);
+}
 
-    route = state->route;
-    route->trace = httpCreateTrace(route->trace);
+
+PUBLIC int maTraceDirective(MaState *state, HttpTrace *trace, cchar *key, cchar *value)
+{
+    char        *option, *ovalue, *tok;
 
     for (option = stok(sclone(value), " \t", &tok); option; option = stok(0, " \t", &tok)) {
         option = ssplit(option, " =\t,", &ovalue);
         ovalue = strim(ovalue, "\"'", MPR_TRIM_BOTH);
         if (smatch(option, "content")) {
-            httpSetTraceContentSize(route->trace, (ssize) httpGetNumber(ovalue));
+            httpSetTraceContentSize(trace, (ssize) httpGetNumber(ovalue));
         } else {
-            httpSetTraceEventLevel(route->trace, option, atoi(ovalue));
+            httpSetTraceEventLevel(trace, option, atoi(ovalue));
         }
     }
     return 0;
@@ -2655,13 +2689,18 @@ static int traceDirective(MaState *state, cchar *key, cchar *value)
  */
 static int traceLogDirective(MaState *state, cchar *key, cchar *value)
 {
-    HttpRoute   *route;
+    state->route->trace = httpCreateTrace(state->route->trace);
+    return maTraceLogDirective(state, state->route->trace, key, value);
+}
+
+
+PUBLIC int maTraceLogDirective(MaState *state, HttpTrace *trace, cchar *key, cchar *value)
+{
     cchar       *path;
     char        *format, *option, *ovalue, *tok, *formatter;
     ssize       size;
     int         flags, backup, level;
 
-    route = state->route;
     size = MAXINT;
     backup = 0;
     flags = 0;
@@ -2670,7 +2709,7 @@ static int traceLogDirective(MaState *state, cchar *key, cchar *value)
     formatter = "detail";
     level = 0;
 
-    if (route->trace->flags & MPR_LOG_CMDLINE) {
+    if (trace->flags & MPR_LOG_CMDLINE) {
         mprLog("info appweb config", 4, "Already tracing. Ignoring TraceLog directive");
         return 0;
     }
@@ -2714,16 +2753,15 @@ static int traceLogDirective(MaState *state, cchar *key, cchar *value)
         return MPR_ERR_BAD_SYNTAX;
     }
     if (formatter) {
-        httpSetTraceFormatterName(route->trace, formatter);
+        httpSetTraceFormatterName(trace, formatter);
     }
     if (!smatch(path, "stdout") && !smatch(path, "stderr")) {
-        path = httpMakePath(route, state->configDir, path);
+        path = httpMakePath(state->route, state->configDir, path);
     }
-    route->trace = httpCreateTrace(route->trace);
-    if (httpSetTraceLogFile(route->trace, path, size, backup, format, flags) < 0) {
+    if (httpSetTraceLogFile(trace, path, size, backup, format, flags) < 0) {
         return MPR_ERR_CANT_OPEN;
     }
-    httpSetTraceLevel(level);
+    httpSetTraceLevel(trace, level);
     return 0;
 }
 
@@ -2784,49 +2822,6 @@ static int updateDirective(MaState *state, cchar *key, cchar *value)
         return MPR_ERR_BAD_SYNTAX;
     }
     return addUpdate(state, name, rest, 0);
-}
-
-
-/*
-    Upload enable
-    This applies globally for all routes.
-
-    Use StreamInput multipart/form-data URI-Prefix to disable upload for a single route
- */
-static int uploadDirective(MaState *state, cchar *key, cchar *value)
-{
-    bool    on;
-
-    if (!maTokenize(state, value, "%B", &on)) {
-        return MPR_ERR_BAD_SYNTAX;
-    }
-    HTTP->upload = on;
-    return 0;
-}
-
-
-/*
-    UploadDir path
- */
-static int uploadDirDirective(MaState *state, cchar *key, cchar *value)
-{
-    httpSetRouteUploadDir(state->route, httpMakePath(state->route, state->configDir, value));
-    return 0;
-}
-
-
-/*
-    UploadAutoDelete on|off
- */
-static int uploadAutoDeleteDirective(MaState *state, cchar *key, cchar *value)
-{
-    bool    on;
-
-    if (!maTokenize(state, value, "%B", &on)) {
-        return MPR_ERR_BAD_SYNTAX;
-    }
-    httpSetRouteAutoDelete(state->route, on);
-    return 0;
 }
 
 
@@ -2972,6 +2967,31 @@ static int limitWebSocketsPacketDirective(MaState *state, cchar *key, cchar *val
 }
 
 
+/*
+    UploadDir path
+ */
+static int uploadDirDirective(MaState *state, cchar *key, cchar *value)
+{
+    httpSetRouteUploadDir(state->route, httpMakePath(state->route, state->configDir, value));
+    return 0;
+}
+
+
+/*
+    UploadAutoDelete on|off
+ */
+static int uploadAutoDeleteDirective(MaState *state, cchar *key, cchar *value)
+{
+    bool    on;
+
+    if (!maTokenize(state, value, "%B", &on)) {
+        return MPR_ERR_BAD_SYNTAX;
+    }
+    httpSetRouteAutoDelete(state->route, on);
+    return 0;
+}
+
+
 static int webSocketsProtocolDirective(MaState *state, cchar *key, cchar *value)
 {
     state->route->webSocketsProtocol = sclone(value);
@@ -3045,6 +3065,9 @@ static bool conditionalDefinition(MaState *state, cchar *key)
 
         } else if (scaselessmatch(key, "PHP_MODULE")) {
             result = ME_COM_PHP;
+
+        } else if (scaselessmatch(key, "PROXY_MODULE")) {
+            result = ME_COM_PROXY;
 
         } else if (scaselessmatch(key, "SSL_MODULE")) {
             result = ME_COM_SSL;
@@ -3362,11 +3385,11 @@ static int parseInit(void)
     maAddDirective("AutoFinalize", autoFinalize);
     maAddDirective("Cache", cacheDirective);
     maAddDirective("CanonicalName", canonicalNameDirective);
+    maAddDirective("CharSet", charSetDirective);
     maAddDirective("Chroot", chrootDirective);
     maAddDirective("Condition", conditionDirective);
     maAddDirective("CrossOrigin", crossOriginDirective);
     maAddDirective("DefaultLanguage", defaultLanguageDirective);
-    maAddDirective("Defense", defenseDirective);
     maAddDirective("Deny", denyDirective);
     maAddDirective("DirectoryIndex", directoryIndexDirective);
     maAddDirective("Documents", documentsDirective);
@@ -3390,6 +3413,7 @@ static int parseInit(void)
     maAddDirective("LimitChunk", limitChunkDirective);
     maAddDirective("LimitClients", limitClientsDirective);
     maAddDirective("LimitConnections", limitConnectionsDirective);
+    maAddDirective("LimitConnectionsPerClient", limitConnectionsPerClientDirective);
     maAddDirective("LimitFiles", limitFilesDirective);
     maAddDirective("LimitFrame", limitFrameDirective);
     maAddDirective("LimitKeepAlive", limitKeepAliveDirective);
@@ -3444,6 +3468,9 @@ static int parseInit(void)
     maAddDirective("ShowErrors", showErrorsDirective);
     maAddDirective("Source", sourceDirective);
 
+#if ME_HTTP_DEFENSE
+    maAddDirective("Defense", defenseDirective);
+#endif
 #if ME_COM_SSL
     maAddDirective("SSLCACertificateFile", sslCaCertificateFileDirective);
     maAddDirective("SSLCACertificatePath", sslCaCertificatePathDirective);
@@ -3467,7 +3494,6 @@ static int parseInit(void)
     maAddDirective("TypesConfig", typesConfigDirective);
     maAddDirective("Update", updateDirective);
     maAddDirective("UnloadModule", unloadModuleDirective);
-    maAddDirective("Upload", uploadDirective);
     maAddDirective("UploadAutoDelete", uploadAutoDeleteDirective);
     maAddDirective("UploadDir", uploadDirDirective);
     maAddDirective("User", userDirective);

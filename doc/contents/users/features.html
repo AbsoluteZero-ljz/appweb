@@ -11,9 +11,9 @@
                 <li>Embedthis Appweb Community Edition</li>
             </ul>
 
-            <p>The Enterprise edition is a royalty free, commercially licensed edition with options for commercial maintenance and support. Contact <a href="mailto:dev@embedthis.com">sales@embedthis.com</a> for details.
-            The Community edition is an open source licensed edition of Appweb provided under the GPL license.</p>
-            <p>You may use Appweb with either license. Please read <a href="../licensing/index.html">Licensing</a> for further details.</p>
+            <p>The Enterprise edition is a royalty free, commercially licensed edition with options for commercial maintenance and support. Contact <a href="mailto:dev@embedthis.com">sales@embedthis.com</a> for details.</p>
+            <p>The Community edition is an open source licensed, limited features edition of Appweb provided under the GPL license. This license is ideal for evaluation of Appweb.</p>
+            <p>Please read <a href="../licensing/index.html">Licensing</a> for further details.</p>
 
             <h2>Components</h2>
             <p>The Appweb product includes the following components:</p>
@@ -33,6 +33,7 @@
                 <li>HTTP/2 support</li>
                 <li>HTTP/1.1 support</li>
                 <li>IPv4 and IPv6</li>
+                <li>HTTP Proxy</li>
                 <li>Multithreaded, event-based server</li>
                 <li>Fast co-routine request pipeline</li>
                 <li>Request routing with RegularExpression request rewriting</li>
@@ -54,13 +55,13 @@
             <ul>
                 <li>Dynamic loading of modules</li>
                 <li>Support for the ESP "C" web framework</li>
-                <li>Modules for CGI, Directory Listings, PHP, file upload and SSL</li>
+                <li>Modules for CGI, FastCGI, Directory Listings, Proxy</li>
                 <li>Configurable request routing</li>
                 <li>Extensible/replaceable authorization, SSL and script</li>
             </ul>
             <h3>Security</h3>
             <ul>
-                <li>Secure Sockets Layer (SSL)</li>
+                <li>Secure Sockets Layer (TLS/SSL)</li>
                 <li>Basic and Digest Authentication</li>
                 <li>Route based authorization</li>
                 <li>Sandbox limits</li>
@@ -102,12 +103,11 @@
             </ul>
             <h3>Platform Support</h3>
             <ul>
-                <li>Linux (2.6)</li>
-                <li>Windows (7 and later)</li>
-                <li>MAC OS (10.9 and later)</li>
-                <li>VxWorks (7.X)</li>
+                <li>Linux (3 and later)</li>
+                <li>Windows (8 and later)</li>
+                <li>MAC OS (10.11 and later)</li>
                 <li>Free BSD</li>
-                <li>Unix</li>
+                <li>VxWorks (7.X and later) - without contact support</li>
             </ul>
             <h3>Embedding Support</h3>
             <ul>
@@ -123,6 +123,8 @@
             <h3>Standards</h3>
             <ul>
                 <li>HTTP/1.1</li>
+                <li>HTTP/2</li>
                 <li>CGI/1.1</li>
+                <li>FastCGI</li>
                 <li>Apache configuration file and logging compatibility</li>
             </ul>

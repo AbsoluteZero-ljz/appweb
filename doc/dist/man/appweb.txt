@@ -32,8 +32,8 @@ DESCRIPTION
 
        Appweb supports HTTP/1.1, HTTP/2, SSL, digest and basic authentication,
        virtual hosting, ranged requests, chunked transfers, file upload,  CGI,
-       FastCGI  and security limits.  Appweb has an Apache style configuration
-       file and supports the ESP and PHP web frameworks.
+       FastCGI, Proxy and security limits.  Appweb has an Apache style config-
+       uration file and supports the ESP and PHP web frameworks.
 
        Appweb normally reads the appweb.conf  file  for  configuration  direc-
        tives.  However, if appweb is invoked with an IP address or port number

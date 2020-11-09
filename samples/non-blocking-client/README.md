@@ -8,15 +8,14 @@ If you only need to issue one HTTP request, consult the simple-client sample.
 Requirements
 ---
 * [Appweb](https://www.embedthis.com/appweb/download.html)
-* [MakeMe Build Tool](https://www.embedthis.com/makeme/download.html)
 
 To build:
 ---
-    me
+    make
 
 To run:
 ---
-    me run
+    make run
 
 The client retrieves:
 
@@ -24,6 +23,7 @@ The client retrieves:
 
 Code:
 ---
+* [Makefile](Makefile) - Makefile build instructions
 * [client.c](client.c) - Main program
 * [start.me](start.me) - MakeMe build instructions
 

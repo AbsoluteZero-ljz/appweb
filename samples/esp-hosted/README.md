@@ -21,17 +21,15 @@ Notes:
 
 Requirements
 ---
-* [ESP](https://www.embedthis.com/esp/download.html)
-* [Pak](https://www.embedthis.com/pak/download.html)
-* [Expansive](https://www.embedthis.com/expansive/download.html)
+* [APPWEB](https://www.embedthis.com/appweb/download.html)
 
 To build:
 ---
-    appweb-esp -r compile
+    make build
 
 To run:
 ---
-    me run
+    make run
 
 or
     appweb -v
@@ -65,7 +63,7 @@ Code:
 
 Documentation:
 ---
-* [Apwpeb Documentation](https://www.embedthis.com/appweb/doc/index.html)
+* [Appweb Documentation](https://www.embedthis.com/appweb/doc/index.html)
 * [ESP Documentation](https://www.embedthis.com/esp/doc/index.html)
 * [ESP Configuration in Appweb](https://www.embedthis.com/appweb/doc/users/dir/esp.html)
 * [ESP Configuration](https://www.embedthis.com/esp/doc/users/config.html)

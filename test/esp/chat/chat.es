@@ -11,7 +11,7 @@ ws.onmessage = function (event) {
 }
 
 ws.onopen = function (event) {
-    print("ONOPEN")
+    // print("ONOPEN")
 }
 
 ws.onclose = function () {
@@ -23,7 +23,10 @@ ws.onclose = function () {
 let i = 0
 while (true) {
     ws.send("Hello WebSocket World: " + i++)
-    App.sleep(50)
+    // stdout.write('Next: ')
+    // stdin.readLine()
+    // App.run(1, true)
+    App.sleep(1000)
 }
 
 ws.close()

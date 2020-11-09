@@ -43,6 +43,7 @@
                     <a class="item" href="../start/source.html">Building from Source</a>
                     <a class="item" href="../start/cgi.html">Building with CGI</a>
                     <a class="item" href="../start/fast.html">Building with FastCGI</a>
+                    <a class="item" href="../start/proxy.html">Building with Proxy</a>
                     <a class="item" href="../start/openssl.html">Building with OpenSSL</a>
                     <a class="item" href="../start/php.html">Building with PHP</a>
                 </div>
@@ -161,7 +162,7 @@
                     <a class="item" href="https://embedthis.com/appweb/">Appweb Site</a>
                     <span class="desktop-only">
                         <a class="item" href="https://embedthis.com/blog/categories/Appweb">Appweb News</a>
-                        <a class="item" href="https://github.com/embedthis/appweb">Repository</a>
+                        <a class="item" href="https://github.com/embedthis/appweb-gpl">Repository</a>
                         <a class="item" href="https://embedthis.com/blog/">Blog</a>
                         <a class="item" href="https://twitter.com/embedthat">Twitter</a>
                     </span>
@@ -211,7 +212,7 @@
 int maSimpleHandlerInit(Http *http, MprModule *module)
 {
     HttpStage   *handler;
-    <b>handler = httpCreateHandler(http, "simpleHandler", 0, module);</b>
+    <b>handler = httpCreateHandler("simpleHandler", module);</b>
     if (handler == 0) {
         return MPR_ERR_CANT_CREATE;
     }
@@ -240,7 +241,7 @@ int maSimpleHandlerInit(Http *http, MprModule *module)
 int maCompressFilterInit(Http *http, MprModule *module)
 {
     HttpStage   *filter;
-    <b>filter = httpCreateFilter(http, "compressFilter", 0, module);</b>
+    <b>filter = httpCreateFilter("compressFilter", module);</b>
     if (filter == 0) {
         return MPR_ERR_CANT_CREATE;
     }
@@ -259,7 +260,7 @@ int maCompressFilterInit(Http *http, MprModule *module)
 int maTurboConnectorInit(Http *http, MprModule *module)
 {
     HttpStage   *connector;
-    <b>connector = httpCreateConnector(http, "turboConnector", 0, module);</b>
+    <b>connector = httpCreateConnector("turboConnector", module);</b>
     if (connector == 0) {
         return MPR_ERR_CANT_CREATE;
     }
@@ -284,9 +285,9 @@ int maTurboConnectorInit(Http *http, MprModule *module)
             <p>The <em>close</em> callback is invoked to give stages an opportunity to release any request specific data. It
             is invoked just prior to dismantling the request pipeline.</p>
             <h3>start</h3>
-            <p>The <em>start</em> callback is invoked to start processing the response for the client. 
+            <p>The <em>start</em> callback is invoked to start processing the response for the client.
             If the request is a form with Content-Type of "application/x-www-form-urlencoded",
-            the start callback is called after processing all input client data. Otherwise, it is called before 
+            the start callback is called after processing all input client data. Otherwise, it is called before
             any input data.</p>
             <h3>ready</h3>
             <p>The <em>ready</em> callback is invoked once all the request body data has been received.</p>
@@ -304,7 +305,7 @@ int maTurboConnectorInit(Http *http, MprModule *module)
             <p>Stages can allocate stage data and store it in the <em>stage-&gt;data</em> field. If the stage needs to
             store per-request data, it can store it in the stage's <em>queue-&gt;data</em> field which is unique for each
             request.</p>
-            
+
             <a id="flags"></a>
             <h3>Stage flags</h3>
             <p>The create handler, filter and connector APIs take a flags word which modified the behavior of the

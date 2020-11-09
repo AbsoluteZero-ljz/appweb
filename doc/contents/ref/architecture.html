@@ -6,9 +6,9 @@
 }
 
             <h1>Appweb Architecture</h1>
-            <p>The Appweb HTTP web server is the fastest little web server. It is a high-performance yet compact embeddable webserver that has a modular, secure core.  It supports an extensive feature set including: HTTP/1, HTTP/1.1, HTTP/2, WebSockets, TLS/SSL, CGI, PHP, ESP, Virtual Hosts, Digest Authentication, Apache style configuration, and logging and security sandboxing. Yet Appweb remains very small (from 1MB) and exceptionally fast (&gt; 7,000 requests per second).</p>
+            <p>The Appweb HTTP web server is the fastest little web server. It is a high-performance yet compact embeddable webserver that has a modular, secure core.  It supports an extensive feature set including: HTTP/1, HTTP/1.1, HTTP/2, WebSockets, TLS/SSL, CGI, FastCGI, Proxy, PHP, ESP, Virtual Hosts, Digest Authentication, Apache style configuration, and logging and security sandboxing. Yet Appweb remains very small (from 2MB) and exceptionally fast (&gt; 7,000 requests per second).</p>
 
-            <p>Appweb supports dynamic web application frameworks like ESP, and PHP. It also supports older web creation strategies like CGI.</p>
+            <p>Appweb supports dynamic web application frameworks like ESP, and PHP. It also supports older web creation strategies like CGI and FastCGI. The Proxy module permits Appweb to front backend applications.</p>
 
             <p>Appweb is an event-driven, multi-threaded web server and is able to support many thousands of requests per second but it does not try to scale out like an enterprise class server for top-tier web sites. Rather, it aims to be robust, secure and blazing fast with low and predictable memory utilization.</p>
 
@@ -113,11 +113,15 @@
                 </tr>
                 <tr>
                     <td>PHP Handler</td>
-                    <td>In-memory handler module for the PHP web environment.</td>
+                    <td>FastCGI handler for the PHP web environment.</td>
                 </tr>
                 <tr>
                     <td>CGI Handler</td>
                     <td>Common Gateway Interface handler.</td>
+                </tr>
+                <tr>
+                    <td>FastCGI Handler</td>
+                    <td>Optimized serving of CGI programs and PHP.</td>
                 </tr>
                 <tr>
                     <td>Chunk Filter</td>
@@ -128,6 +132,10 @@
                 <tr>
                     <td>Range Filter</td>
                     <td>The Range filter selects the requested I/O range by the client.</p>
+                </tr>
+                <tr>
+                    <td>Proxy Module</td>
+                    <td>The Proxy module distributes and load-balances HTTP requests to backend applications over HTTP.</p>
                 </tr>
                 </tbody>
             </table>
@@ -345,8 +353,7 @@ AddHandler espHandler myDoc
             compiled web pages and rendered HTML.
 
             <h3>PHP</h3>
-            <p>PHP is a widely-used general-purpose scripting language that is especially suited for Web development
-            and can be embedded into HTML. Appweb provides a fast, in-memory handler for the PHP web framework.</p>
+            <p>PHP is a widely-used general-purpose scripting language that is especially suited for Web development and can be embedded into HTML. Appweb provides a FastCGI handler for the efficient hosting of the PHP web framework.</p>
 
             <a id="security"></a>
             <h2>Security</h2>

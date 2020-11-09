@@ -39,7 +39,7 @@ if (false) {
                 }
             }
             if (e.eventMask & Http.Read) {
-                print("READ EVENT ")
+                // print("READ EVENT ")
             }
         } else if (e is HttpErrorEvent) {
             throw e
