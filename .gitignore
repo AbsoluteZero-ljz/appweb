@@ -53,3 +53,4 @@ test/web/500K.txt
 test/fast-bin
 test/trace.log*
 test/error.log*
+test/web/*K.txt
