@@ -121,6 +121,12 @@ Build with MakeMe and then:
     me
     me test
 
+### Samples
+
+A library of samples using Appweb are available at the GitHub repository:
+
+https://github.com/embedthis/appweb-samples
+
 Resources
 ---
   - [Appweb web site](https://www.embedthis.com/)

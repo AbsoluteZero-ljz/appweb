@@ -10,7 +10,6 @@ test/regress/tcp
 test/cgi-bin/.prepared
 test/future.json
 test/test.dat
-samples/certs
 test/tmp/test.dat
 test/tmp/*
 src/server/certs
@@ -33,13 +32,10 @@ test/test.dat
 /cache/
 /build
 /projects/setenv.bat
-samples/chroot-server/server
 /projects/appweb-core*
 XCBuildData/
 app-macosx-debug.xcodeproj
 Debug/
-samples/*/client
-samples/*/roots.crt
 cache/
 .local.mk
 src/utils/fcgi
