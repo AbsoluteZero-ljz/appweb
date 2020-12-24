@@ -7309,6 +7309,7 @@ PUBLIC void httpNetError(HttpNet *net, cchar *fmt, ...)
 #endif
         if (httpIsServer(net)) {
             for (ITERATE_ITEMS(net->streams, stream, next)) {
+                httpFinalizeConnector(stream);
                 httpError(stream, HTTP_ABORT | HTTP_CODE_COMMS_ERROR, "%s", msg);
             }
             httpMonitorNetEvent(net, HTTP_COUNTER_BAD_REQUEST_ERRORS, 1);
