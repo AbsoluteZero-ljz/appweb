@@ -989,15 +989,15 @@ static void startRequest(Request *req)
 
     net = stream->net;
 
-    req->redirect = 0;
-    req->written = 0;
-
     if (app->singleStep) {
         waitForUser();
     }
     if (prepUri(req) < 0) {
         return;
     }
+    req->redirect = 0;
+    req->written = 0;
+
     prepHeaders(req);
     if (setContentLength(stream) < 0) {
         return;
