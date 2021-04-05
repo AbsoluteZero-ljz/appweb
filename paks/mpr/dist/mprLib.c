@@ -1,5 +1,5 @@
 /*
- * Embedthis MPR Library Source 9.0.0
+ * Embedthis MPR Library Source 9.0.1
  */
 
 #include "mpr.h"
@@ -3992,10 +3992,6 @@ void asyncDummy() {}
 /*********************************** Includes *********************************/
 
 
-
-#if ME_BSD_LIKE || ME_UNIX_LIKE || ME_WIN_LIKE
-#include <stdatomic.h>
-#endif
 
 /*********************************** Local ************************************/
 
@@ -9603,7 +9599,7 @@ static void dispatchEventsHelper(MprDispatcher *dispatcher);
 static MprTicks getDispatcherIdleTicks(MprDispatcher *dispatcher, MprTicks timeout);
 static MprTicks getIdleTicks(MprEventService *es, MprTicks timeout);
 static MprDispatcher *getNextReadyDispatcher(MprEventService *es);
-static bool hasPendingDispatchers();
+static bool hasPendingDispatchers(void);
 static void initDispatcher(MprDispatcher *q);
 static void manageDispatcher(MprDispatcher *dispatcher, int flags);
 static void manageEventService(MprEventService *es, int flags);
@@ -10610,7 +10606,8 @@ PUBLIC char *mprUriDecode(cchar *inbuf)
         if (*ip == '+') {
             *op = ' ';
 
-        } else if (*ip == '%' && isxdigit((uchar) ip[1]) && isxdigit((uchar) ip[2])) {
+        } else if (*ip == '%' && isxdigit((uchar) ip[1]) && isxdigit((uchar) ip[2]) &&
+                !(ip[1] == '0' && ip[2] == '0')) {
             ip++;
             num = 0;
             for (i = 0; i < 2; i++, ip++) {
