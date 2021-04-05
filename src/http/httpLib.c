@@ -1,5 +1,5 @@
 /*
- * Embedthis Http Library Source 9.0.0
+ * Embedthis Http Library Source 9.0.1
  */
 
 #include "http.h"
@@ -14677,7 +14677,7 @@ PUBLIC void httpIOEvent(HttpNet *net, MprEvent *event)
     /*
         Process packet read above. This will propagate the packet through configured queues for the net.
      */
-    httpServiceNetQueues(net, 0);
+    httpServiceNetQueues(net, HTTP_BLOCK);
 
     if (net->error || net->eof || (net->sentGoaway && !net->socketq->first)) {
         closeStreams(net);
@@ -17191,7 +17191,7 @@ PUBLIC bool httpPumpOutput(HttpQueue *q)
     stream = q->stream;
     tx = stream->tx;
 
-    httpServiceNetQueues(q->net, 0);
+    httpServiceNetQueues(q->net, HTTP_BLOCK);
 
     if (tx->started && !stream->net->writeBlocked) {
         wq = stream->writeq;
@@ -24088,14 +24088,13 @@ static bool willQueueAcceptPacket(HttpQueue *q, HttpPacket *packet)
         (packet->flags & HTTP_PACKET_END));
 
     /*
-        Get the maximum the output stream can absorb that is less than the downstream queue packet size and
-        the per-stream window size if HTTP/2.
+        Get the maximum the output stream can absorb that is less than the downstream
+        queue packet size and the per-stream window size if HTTP/2.
      */
     nextQ = stream->net->outputq;
-    if (packet->flags & HTTP_PACKET_DATA) {
-        room = net->protocol >= 2 ? stream->outputq->window : nextQ->max - nextQ->count;
-    } else {
-        room = nextQ->max - nextQ->count;
+    room = nextQ->max - nextQ->count;
+    if (packet->flags & HTTP_PACKET_DATA && net->protocol >= 2) {
+        room = min(stream->outputq->window, room);
     }
     size = httpGetPacketLength(packet);
     if (size <= room) {
