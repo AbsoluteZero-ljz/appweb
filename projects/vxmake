@@ -33,11 +33,6 @@ LD_LIBRARY_PATH ${WIND_HOME}/lmapi-5.0/${WIND_HOST_TYPE}/lib
 export CC PATH WIND_BASE WIND_HOME WIND_PLATFORM WIND_HOST_TYPE WIND_GNU_PATH
 
 #
-#   Build the tools first. Required if using Ejscript or using BIT_ROM
+#   Build
 #
 make 
-
-#
-#   Cross build
-#   
-make LBIN=`pwd`/linux-x86-debug/bin -f projects/appweb-vxworks-default.mk $*
