@@ -177,7 +177,7 @@ PUBLIC int httpProxyInit(Http *http, MprModule *module)
     handler->incoming = proxyIncomingRequestPacket;
 
 #if ME_DEBUG
-        mprAddRoot(mprAddSignalHandler(SIGINFO, proxyInfo, 0, 0, MPR_SIGNAL_AFTER));
+        mprAddRoot(mprAddSignalHandler(ME_SIGINFO, proxyInfo, 0, 0, MPR_SIGNAL_AFTER));
 #endif
     return 0;
 }

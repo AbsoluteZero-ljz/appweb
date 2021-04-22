@@ -249,7 +249,7 @@ PUBLIC int httpFastInit(Http *http, MprModule *module)
     connector->outgoingService = fastConnectorOutgoingService;
 
 #if ME_DEBUG
-    mprAddRoot(mprAddSignalHandler(SIGINFO, fastInfo, 0, 0, MPR_SIGNAL_AFTER));
+    mprAddRoot(mprAddSignalHandler(ME_SIGINFO, fastInfo, 0, 0, MPR_SIGNAL_AFTER));
 #endif
     return 0;
 }
