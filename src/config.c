@@ -2559,7 +2559,6 @@ static int sslProtocolDirective(MaState *state, cchar *key, cchar *value)
     mprSetSslProtocols(state->route->ssl, protoMask);
     return 0;
 }
-#endif /* ME_COM_SSL */
 
 
 static int sslPreload(MaState *state, cchar *key, cchar *value)
@@ -2571,6 +2570,7 @@ static int sslPreload(MaState *state, cchar *key, cchar *value)
     return 0;
 }
 
+#endif /* ME_COM_SSL */
 
 /*
     Stealth on|off

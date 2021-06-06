@@ -7410,12 +7410,12 @@ static void errorv(HttpStream *stream, int flags, cchar *fmt, va_list args)
     cchar       *uri;
     int         redirected, status;
 
-    rx = stream->rx;
-    tx = stream->tx;
-
     if (stream == 0 || fmt == 0) {
         return;
     }
+    rx = stream->rx;
+    tx = stream->tx;
+
     status = flags & HTTP_CODE_MASK;
     if (status == 0) {
         status = HTTP_CODE_INTERNAL_SERVER_ERROR;
@@ -26299,8 +26299,11 @@ static void incomingUploadService(HttpQueue *q)
                 break;
 
             case HTTP_UPLOAD_CONTENT_END:
+                //  May have already consumed the trailing CRLF
+                if (mprGetBufLength(content) >= 2) {
+                    mprAdjustBufStart(content, 2);
+                }
                 done++;
-                mprAdjustBufStart(content, 2);
                 break;
             }
         }
