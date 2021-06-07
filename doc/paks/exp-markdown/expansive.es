@@ -10,6 +10,10 @@ Expansive.load({
 
             init: function(transform) {
                 transform.md = Cmd.locate('marked')
+                if (!transform.md) {
+                    run('npm install -g marked')
+                    transform.md = Cmd.locate('marked')
+                }
             },
 
             render: function(contents, meta, transform) {

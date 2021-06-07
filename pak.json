@@ -1,7 +1,7 @@
 {
     "name": "appweb",
-    "description": "Embedthis Appweb Enterprise Edition",
-    "title": "Embedthis Appweb Enterprise Edition",
+    "description": "Embedthis Appweb",
+    "title": "Embedthis Appweb",
     "keywords": [
         "appweb",
         "http",
@@ -42,7 +42,7 @@
     "optionalDependencies": {
         "certs": "~1",
         "esp": "~9",
-        "mpr-mbedtls": "~2",
+        "mpr-mbedtls": "~3",
         "mpr-openssl": "~1",
         "sqlite": "~3"
     },

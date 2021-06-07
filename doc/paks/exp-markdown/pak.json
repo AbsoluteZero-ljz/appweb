@@ -1,12 +1,12 @@
 {
     "name": "exp-markdown",
     "description": "Markdown Plugin for Expansive",
-    "version": "0.3.0",
+    "version": "1.0.0",
     "keywords": [
         "expansive-plugin",
         "marked"
     ],
-    "licenses": "GPL",
+    "licenses": "MIT",
     "repository": {
         "type": "git",
         "url": "git://github.com/embedthis/exp-markdown.git"

@@ -2,7 +2,7 @@
     "name": "appweb-doc",
     "title": "Appweb Documentation",
     "dependencies": {
-        "me-docstyle": "~0.9"
+        "me-docstyle": "~1"
     },
     "devDependencies": {
         "expansive": ">=0.6.0"

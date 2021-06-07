@@ -1,4 +1,4 @@
-Embedthis Appweb Enterprise Edition
+Embedthis Appweb
 ===
 
 Appweb is a compact, fast and secure web server for embedded applications. It supports HTTP/1 and HTTP/2 with a web server and HTTP client utility.

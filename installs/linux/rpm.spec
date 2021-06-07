@@ -4,7 +4,7 @@
 Summary: ${settings.title} -- Embeddable HTTP Web Server
 Name: ${settings.name}
 Version: ${settings.version}
-License: Dual GPL/commercial
+License: Commercial
 Group: Applications/Internet
 URL: https://www.embedthis.com/
 Distribution: Embedthis

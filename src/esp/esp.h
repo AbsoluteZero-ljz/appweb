@@ -8,7 +8,7 @@
 #include "osdep.h"
 
 #ifndef ESP_VERSION
-    #define ESP_VERSION "9.0.0"
+    #define ESP_VERSION "9.0.1"
 #endif
 
 /*
@@ -1154,11 +1154,8 @@ PUBLIC void sdbInit(void);
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 /*
@@ -1268,11 +1265,8 @@ typedef struct Mdb {
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 /*
@@ -4434,11 +4428,8 @@ PUBLIC void flash(cchar *type, cchar *fmt, ...);
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 #endif /* ME_COM_ESP */

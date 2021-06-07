@@ -1,11 +1,13 @@
-Embedthis Appweb Enterprise Edition Licenses
+Embedthis Appweb Edition Licenses
 ===
 
-Embedthis Appweb Enterprise Edition is distributed under a commercial license. 
+Embedthis Appweb is distributed under an evaluation commercial license.
 
 An Embedthis commercial license provides a royalty free, commercial license to embed the software into your products with options for ongoing maintenance and support. Contact [sales@embedthis.com](mailto:dev@embdthis.com) for details.
 
-If have a commercial license with an active maintenance agreement you can incorporate new releases, updates and patches for the software into your products. If you do not have active maintenance agreement, you cannot use the GPL license for applying these updates without also fully complying with all the terms of the GPL license for your entire product including publicly offering your source code to the general public. If you choose this option, please provide notification and a copy of your source code to [licensing@embedthis.com](mailto:licensing@embedthis.com).
+An Embedthis evaluation license provides a limited, evaluation license for internal and non-commercial use. See ./doc/contents/licensing/eval.html for details.
+
+If have a commercial license with an active maintenance agreement you can incorporate new releases, updates and patches for the software into your products. If you do not have active maintenance agreement, you cannot use patches from the evaluation license for applying.
 
 Please read the following document for more information:
 
