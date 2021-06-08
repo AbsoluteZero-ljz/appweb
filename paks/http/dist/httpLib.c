@@ -7870,15 +7870,13 @@ static void outgoingFileService(HttpQueue *q)
         }
         if (!tx->finalizedOutput && !q->first) {
             /*
-                Do manually to optimize rather than call httpFinalizeOutput because we want to ensure the HTTP/2 protocol
-                can see the END_DATA packet and set an END_DATA flag on the last data frame. httpFinalize puts the
-                END_DATA packet on this service queue.
+                Optimize FinalizeOutput by putting the end packet manually. The helps the HTTP/2 protocol
+                can see the END_DATA packet now and set an END_DATA flag on the last data frame rather than
+                waiting for this outgoing to be rescheduled later.
              */
+            tx->putEndPacket = 1;
             httpPutPacketToNext(q, httpCreateEndPacket());
-            tx->finalizedOutput = 1;
-            if (tx->finalizedInput) {
-                httpFinalize(stream);
-            }
+            httpFinalizeOutput(stream);
         }
     }
     if (!tx->finalized && tx->finalizedOutput && tx->finalizedInput) {
@@ -9667,6 +9665,10 @@ static void outgoingHttp2Service(HttpQueue *q)
     net = q->net;
     assert(!(q->flags & HTTP_QUEUE_SUSPENDED));
 
+    /*
+        Note: httpGetPacket will not automatically resume the previous queue (which logically is each streams' tailFilter).
+        Note: q->nextQ == q->prevQ == socketq, so we must explicitly re-enable the stream's tail filter below.
+     */
     for (packet = httpGetPacket(q); packet && !net->error; packet = httpGetPacket(q)) {
         net->lastActivity = net->http->now;
 
@@ -25219,6 +25221,7 @@ PUBLIC void httpFinalizeInput(HttpStream *stream)
     }
 }
 
+
 /*
     The handler has generated the entire transmit body. Note: the data may not yet have drained from
     the pipeline or socket and the caller may not have read all the input body content.
@@ -25238,8 +25241,10 @@ PUBLIC void httpFinalizeOutput(HttpStream *stream)
         tx->pendingFinalize = 1;
         return;
     }
-    httpPutPacket(stream->writeq, httpCreateEndPacket());
-    httpScheduleQueue(stream->writeq);
+    if (!tx->putEndPacket) {
+        httpPutPacket(stream->writeq, httpCreateEndPacket());
+        httpScheduleQueue(stream->writeq);
+    }
     checkFinalized(stream);
 }
 

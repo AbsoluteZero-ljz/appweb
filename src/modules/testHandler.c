@@ -60,7 +60,7 @@ static void test_outgoing(HttpQueue *q)
 	int         rc;
 
     for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
-		if (packet->esize && packet->flags & HTTP_PACKET_DATA) {
+		if (packet->esize) {
 			if ((rc = prepPacket(q, packet)) < 0) {
                 assert(0);
                 return;
