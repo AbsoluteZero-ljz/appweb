@@ -25238,8 +25238,10 @@ PUBLIC void httpFinalizeOutput(HttpStream *stream)
         tx->pendingFinalize = 1;
         return;
     }
-    httpPutPacket(stream->writeq, httpCreateEndPacket());
-    httpScheduleQueue(stream->writeq);
+    if (!tx->putEndPacket) {
+        httpPutPacket(stream->writeq, httpCreateEndPacket());
+        httpScheduleQueue(stream->writeq);
+    }
     checkFinalized(stream);
 }
 

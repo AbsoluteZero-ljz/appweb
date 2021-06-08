@@ -7504,6 +7504,7 @@ typedef struct HttpTx {
     bool            finalizedOutput:1;      /**< Handler or surrogate has finished writing output */
     bool            needChunking:1;         /**< Use chunk encoding */
     bool            pendingFinalize:1;      /**< Call httpFinalize again once the Tx pipeline is created */
+    bool            putEndPacket:1;         /**< Handler has manually put the END package (httpFinalizeOutput to skip) */
     bool            responded:1;            /**< The handler has started to respond. Some output has been initiated. */
     bool            startedHeader: 1;       /**< Already started sending at least one header packet in the output queue */
     bool            started:1;              /**< Handler has been started */

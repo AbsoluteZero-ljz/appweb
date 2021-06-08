@@ -47,6 +47,9 @@ PUBLIC int maLoadModules(void)
 #if ME_COM_PROXY
     rc += httpProxyInit(HTTP, mprCreateModule("cgi", NULL, NULL, HTTP));
 #endif
+#if ME_COM_TEST
+    rc += httpTestInit(HTTP, mprCreateModule("test", NULL, NULL, HTTP));
+#endif
     return rc;
 }
 
@@ -3071,6 +3074,9 @@ static bool conditionalDefinition(MaState *state, cchar *key)
 
         } else if (scaselessmatch(key, "SSL_MODULE")) {
             result = ME_COM_SSL;
+
+        } else if (scaselessmatch(key, "TEST_MODULE")) {
+            result = ME_COM_TEST;
 
         } else if (scaselessmatch(key, "BASIC")) {
             result = ME_HTTP_BASIC;
