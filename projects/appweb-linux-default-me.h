@@ -91,7 +91,7 @@
     #define ME_DEPTH 1
 #endif
 #ifndef ME_DESCRIPTION
-    #define ME_DESCRIPTION "Embedthis Appweb Enterprise Edition"
+    #define ME_DESCRIPTION "Embedthis Appweb"
 #endif
 #ifndef ME_ESP_CMD
     #define ME_ESP_CMD 1
@@ -202,7 +202,7 @@
     #define ME_SERVER_ROOT "."
 #endif
 #ifndef ME_TITLE
-    #define ME_TITLE "Embedthis Appweb Enterprise Edition"
+    #define ME_TITLE "Embedthis Appweb"
 #endif
 #ifndef ME_TUNE
     #define ME_TUNE "size"
