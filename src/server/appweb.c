@@ -296,7 +296,7 @@ MAIN(appweb, int argc, char **argv, char **envp)
 
     mprLog("info appweb", 1, "Stopping Appweb ...");
     mprDestroy();
-    
+
 #if ME_UNIX_LIKE
     /*
         Kill all children

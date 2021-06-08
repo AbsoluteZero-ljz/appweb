@@ -38,6 +38,8 @@ static void test_incoming(HttpQueue* q, HttpPacket* packet)
             HttpQueue *tail = q->stream->outputq;
             //  Test code to catch condition when tailFilter stops with data pending
             assert(tail->count == 0 || (tail->scheduleNext && tail->scheduleNext != tail) || tail->flags & HTTP_QUEUE_SUSPENDED);
+            HttpQueue *h2 = q->net->outputq;
+            print("HTTP2 count %d, flags %x, window %d", (int) h2->count, h2->flags, (int) h2->window);
         }
 	}
 }
@@ -55,7 +57,6 @@ static void test_ready(HttpQueue* q)
 static void test_outgoing(HttpQueue *q)
 {
     HttpStream	*stream = q->stream;
-    HttpTx      *tx = stream->tx;
     HttpPacket  *packet;
 	int         rc;
 
