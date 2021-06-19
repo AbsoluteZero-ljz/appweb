@@ -8700,6 +8700,9 @@ PUBLIC char *mprDecode64Block(cchar *buf, ssize *len, int flags);
  */
 PUBLIC char *mprEncode64(cchar *str);
 
+//  Internal
+PUBLIC void mprEncodeGenerate(void);
+
 /**
     Encode buffer using base-46 encoding.
     @param buf Buffer to encode
@@ -8813,10 +8816,10 @@ PUBLIC bool mprCheckPassword(cchar *plainTextPassword, cchar *passwordHash);
 /*
     Character encoding masks
  */
-#define MPR_ENCODE_HTML             0x1
-#define MPR_ENCODE_SHELL            0x2
-#define MPR_ENCODE_URI              0x4             /* Encode for ejs Uri.encode */
-#define MPR_ENCODE_URI_COMPONENT    0x8             /* Encode for ejs Uri.encodeComponent */
+#define MPR_ENCODE_HTML             0x1             /* Encode HTML specials */
+#define MPR_ENCODE_SHELL            0x2             /* Encode shell specials */
+#define MPR_ENCODE_URI              0x4             /* Encode for Uri.encode */
+#define MPR_ENCODE_URI_COMPONENT    0x8             /* Encode for Uri.encodeComponent */
 #define MPR_ENCODE_JS_URI           0x10            /* Encode according to ECMA encodeUri() */
 #define MPR_ENCODE_JS_URI_COMPONENT 0x20            /* Encode according to ECMA encodeUriComponent */
 #define MPR_ENCODE_SQL              0x40            /* Encode for a SQL command */
